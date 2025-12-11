@@ -1,0 +1,154 @@
+<app-button variant="outline" (btnClick)="openModal('BILL-ID-PLACEHOLDER')">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <path d="M2.46585 10.7925C2.23404 10.2899 2.23404 9.71023 2.46585 9.20764C3.78181 6.35442 6.66064 4.375 10.0003 4.375C13.3399 4.375 16.2187 6.35442 17.5347 9.20765C17.7665 9.71024 17.7665 10.2899 17.5347 10.7925C16.2187 13.6458 13.3399 15.6252 10.0003 15.6252C6.66064 15.6252 3.78181 13.6458 2.46585 10.7925Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M13.0212 10C13.0212 11.6684 11.6687 13.0208 10.0003 13.0208C8.33196 13.0208 6.97949 11.6684 6.97949 10C6.97949 8.33164 8.33196 6.97917 10.0003 6.97917C11.6687 6.97917 13.0212 8.33164 13.0212 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  Preview Bill
+</app-button>
+
+<app-modal [isOpen]="isOpen" (close)="closeModal()" className="relative w-full max-w-[800px] rounded-lg bg-white p-0 overflow-hidden">
+  <div *ngIf="isLoading" class="flex items-center justify-center p-10">
+    <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+  </div>
+
+  <div *ngIf="!isLoading && billData" class="p-8 text-sm text-gray-800 font-sans">
+    <!-- Header -->
+    <div class="flex justify-between items-start mb-6 border-b pb-4">
+      <div class="w-20">
+        <img src="/assets/images/coat-of-arms.png" alt="Coat of Arms" class="w-full h-auto">
+      </div>
+      <div class="text-center flex-1 px-4">
+        <h1 class="font-bold text-lg uppercase">The United Republic of Tanzania</h1>
+        <h2 class="font-bold text-md uppercase">Ministry of Industry and Trade</h2>
+        <h3 class="font-bold text-xl uppercase text-gray-900">Weights and Measures Agency</h3>
+        <p class="text-gray-600 mt-1">Government Bill</p>
+      </div>
+      <div class="w-20">
+        <img src="/assets/images/wma-logo.jpg" alt="WMA Logo" class="w-full h-auto">
+      </div>
+    </div>
+
+    <!-- Bill Details & QR -->
+    <div class="flex justify-between items-start mb-8">
+      <div class="space-y-2 w-2/3">
+        <div class="grid grid-cols-[160px_1fr] gap-2">
+          <span class="font-bold text-gray-700">Control Number:</span>
+          <span class="font-bold text-black text-lg">{{ billData.controlNumber }}</span>
+        </div>
+        <div class="grid grid-cols-[160px_1fr] gap-2">
+          <span class="font-bold text-gray-700">Service Provider Code:</span>
+          <span class="font-bold text-black">{{ billData.spCode }}</span>
+        </div>
+        <div class="grid grid-cols-[160px_1fr] gap-2">
+          <span class="font-bold text-gray-700">Payer:</span>
+          <span class="font-bold text-black uppercase">{{ billData.payer.name }}</span>
+        </div>
+        <div class="grid grid-cols-[160px_1fr] gap-2">
+          <span class="font-bold text-gray-700">Payer Phone:</span>
+          <span class="font-bold text-black">{{ billData.payer.phone }}</span>
+        </div>
+        <div class="grid grid-cols-[160px_1fr] gap-2">
+          <span class="font-bold text-gray-700">Bill Description:</span>
+          <span class="text-black">{{ billData.billDescription }}</span>
+        </div>
+      </div>
+      <div class="w-32 h-32 border border-gray-200 p-1">
+        <img [src]="billData.qrCode" alt="QR Code" class="w-full h-full object-contain">
+      </div>
+    </div>
+
+    <!-- Billed Items Table -->
+    <div class="mb-8">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b-2 border-gray-200">
+            <th class="text-left py-2 font-bold w-12">#</th>
+            <th class="text-left py-2 font-bold">Billed Item</th>
+            <th class="text-right py-2 font-bold">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of billData.items; let i = index" class="border-b border-gray-100">
+            <td class="py-3">{{ i + 1 }}</td>
+            <td class="py-3">{{ item.itemName }}</td>
+            <td class="py-3 text-right font-bold">Tsh {{ item.itemAmount | number }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Totals -->
+    <div class="mb-8 space-y-2">
+      <div class="flex justify-between items-center font-bold text-lg">
+        <span>Total Billed Amount:</span>
+        <span>(TZS) {{ billData.totalAmount | number }}</span>
+      </div>
+      <div class="grid grid-cols-[160px_1fr] gap-2">
+        <span class="font-bold text-gray-700">Amount In Words:</span>
+        <span class="capitalize">{{ billData.amountInWords }}</span>
+      </div>
+    </div>
+
+    <!-- Footer Details -->
+    <div class="space-y-3 mb-8 text-sm">
+      <div class="grid grid-cols-[160px_1fr] gap-2">
+        <span class="font-bold text-gray-700">Expires On:</span>
+        <span>{{ billData.expiresOn }}</span>
+      </div>
+      <div class="grid grid-cols-[160px_1fr] gap-2">
+        <span class="font-bold text-gray-700">Prepared By:</span>
+        <span>{{ billData.preparedBy }}</span>
+      </div>
+      <div class="grid grid-cols-[160px_1fr] gap-2">
+        <span class="font-bold text-gray-700">Collection Center:</span>
+        <span>{{ billData.collectionCenter }}</span>
+      </div>
+      <div class="grid grid-cols-[160px_1fr] gap-2">
+        <span class="font-bold text-gray-700">Printed By:</span>
+        <span>{{ billData.payer.name }}</span>
+      </div>
+      <div class="grid grid-cols-[160px_1fr] gap-2">
+        <span class="font-bold text-gray-700">Printed On:</span>
+        <span>{{ billData.printedOn }}</span>
+      </div>
+      <div class="grid grid-cols-[160px_1fr] gap-2 mt-4">
+        <span class="font-bold text-gray-700">Signature:</span>
+        <span class="border-b border-dotted border-gray-400 w-64 inline-block"></span>
+      </div>
+    </div>
+
+    <!-- Payment Instructions -->
+    <div class="grid grid-cols-2 gap-8 text-xs border-t pt-6">
+      <div>
+        <h4 class="font-bold mb-2">How to pay</h4>
+        <ul class="list-disc pl-4 space-y-1 text-gray-600">
+          <li>Via bank: visit any branch or bank agent of CRDB, NMB, reference number: <span class="font-bold text-black">{{ billData.controlNumber }}</span></li>
+          <li>Via Mobile Network Operators (MNO):
+            <ul class="list-disc pl-4 mt-1">
+              <li>Enter respective USSD menu of MNO</li>
+              <li>Select 4 (Make Payments)</li>
+              <li>Select 5 (Government payments enter <span class="font-bold text-black">{{ billData.controlNumber }}</span> as reference number)</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-bold mb-2">Jinsi ya kulipa</h4>
+        <ul class="list-disc pl-4 space-y-1 text-gray-600">
+          <li>(Kupitia Benki: Fika tawi lolote au wakala wa benki ya CRDB, NMB, Namba ya kumbukumbu: <span class="font-bold text-black">{{ billData.controlNumber }}</span>)</li>
+          <li>(Kupitia mitandao ya simu:
+            <ul class="list-disc pl-4 mt-1">
+              <li>Ingia kwenye menu ya mtandao husika</li>
+              <li>Chagua 4 (Lipa bili)</li>
+              <li>Chagua 5 (malipo ya serikali ingiza <span class="font-bold text-black">{{ billData.controlNumber }}</span> kama namba ya kumbukumbu)</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="text-center text-xs text-gray-500 mt-8 border-t pt-2">
+      Weights And Measures Agency Copyright © 2025 All Rights Reserved
+    </div>
+  </div>
+</app-modal>

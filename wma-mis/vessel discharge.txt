@@ -1,0 +1,265 @@
+CREATE TABLE products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    productId VARCHAR(255) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE certificateOfQuantity (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    voyageDetailsId VARCHAR(255) NOT NULL,
+    productId VARCHAR(255) NOT NULL,
+    metricTonesAir DECIMAL(12, 4),
+    metricTonesVac DECIMAL(12, 4),
+    litresAtFifteen DECIMAL(12, 4),
+    litresAtTwenty DECIMAL(12, 4),
+    longTons DECIMAL(12, 4),
+    usbbls DECIMAL(12, 4),
+    usGallons DECIMAL(12, 4),
+    userId VARCHAR(255),
+    densityAtFifteen DECIMAL(12, 4),
+    densityAtTwenty DECIMAL(12, 4),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (voyageDetailsId) REFERENCES vesselVoyageDetails (voyageDetailsId) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+--timeLog table
+CREATE TABLE timeLog (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    voyageDetailsId VARCHAR(255) NOT NULL,
+    date DATE NOT NULL,
+    time TIME NOT NULL,
+    event VARCHAR(255) NOT NULL,
+    userId VARCHAR(255),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (voyageDetailsId) REFERENCES vesselVoyageDetails (voyageDetailsId) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- pressure log table
+
+CREATE TABLE pressureLog (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    voyageDetailsId VARCHAR(255) NOT NULL,
+    date DATE NOT NULL,
+    pressureBar DECIMAL(12, 4),
+    dischargeRate DECIMAL(12, 4),
+    userId VARCHAR(255),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (voyageDetailsId) REFERENCES vesselVoyageDetails (voyageDetailsId) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- table ports
+-- name
+-- portId
+
+-- Vessels table
+CREATE TABLE vessels (
+    id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+    vesselName VARCHAR(255) NOT NULL,
+    vesselId VARCHAR(255) UNIQUE NOT NULL,
+    countryOfOrigin VARCHAR(255) UNIQUE NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Voyages table
+CREATE TABLE voyages (
+    id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+    voyageNumber VARCHAR(255) UNIQUE NOT NULL,
+    vesselId VARCHAR(255) NOT NULL,
+    loadingPort VARCHAR(255),
+    loadingDate DATE,
+    arrivalDate DATE,
+    arrivalPort VARCHAR(255),
+    berth VARCHAR(255),
+    vesselExperienceFactor DECIMAL(12, 4),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (vesselId) REFERENCES vessels (vesselId) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Vessel Voyage Details table
+CREATE TABLE vesselVoyageDetails (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    voyageId VARCHAR(255) NOT NULL,
+    voyageDetailsId VARCHAR(255) UNIQUE NOT NULL,
+    productId VARCHAR(255) NOT NULL,
+    billOfLading DECIMAL(12, 4),
+    shipDensityAtFifteen DECIMAL(12, 4),
+    shipDensityAtTwenty DECIMAL(12, 4),
+    tbsDensityAtFifteen DECIMAL(12, 4),
+    tbsDensityAtTwenty DECIMAL(12, 4),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (voyageId) REFERENCES voyages (voyageNumber) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Time Log table
+CREATE TABLE timeLog (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    voyageId VARCHAR(255) NOT NULL,
+    date DATE NOT NULL,
+    time TIME NOT NULL,
+    event VARCHAR(255) NOT NULL,
+    userId VARCHAR(255),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (voyageId) REFERENCES voyages (voyageNumber) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Ship document table
+-- id
+-- documentName
+-- isRequired
+--
+
+CREATE TABLE shipDocument (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    documentName VARCHAR(255) NOT NULL,
+    isRequired BOOLEAN DEFAULT FALSE,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Document Verification table
+CREATE TABLE documentVerification (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    voyageDetailsId VARCHAR(255) NOT NULL,
+    documentId VARCHAR(255) NOT NULL,
+    remark TEXT,
+    fileName VARCHAR(255),
+    filePath VARCHAR(255),
+    userId VARCHAR(255),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (vesselId) REFERENCES vessels (vesselId) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (voyageDetailsId) REFERENCES vesselVoyageDetails (voyageDetailsId) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Ullage Draft table
+CREATE TABLE ullageDraft (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    vesselId VARCHAR(255) NOT NULL,
+    voyageDetailsId VARCHAR(255) NOT NULL,
+    ullageNumber INT NOT NULL,
+    forward DECIMAL(12, 4),
+    after DECIMAL(12, 4),
+    userId VARCHAR(255),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (vesselId) REFERENCES vessels (vesselId) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (voyageDetailsId) REFERENCES vesselVoyageDetails (voyageDetailsId) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Load Port Ullage table
+
+
+CREATE TABLE ullageTable (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ullageNumber VARCHAR(255) NOT NULL,
+    ullageType VARCHAR(255) NOT NULL, -- e.g., "arrivalUllage", "loadPortUllage" subsequentUllageBeforeDischarge,subsequentUllageLineDisplacemant,subsequentUllageAfterDischarge, 
+    terminalId VARCHAR(255) NOT NULL,
+    voyageDetailsId VARCHAR(255) NOT NULL,
+    tankNumber VARCHAR(255) NOT NULL,
+    correctedUllage DECIMAL(12, 4),
+    observedTemperature DECIMAL(12, 4),
+    totalObservedVolume DECIMAL(12, 4),
+    freeWater DECIMAL(12, 4),
+    freeWaterVolume DECIMAL(12, 4),
+    grossObservedVolume DECIMAL(12, 4),
+    vcfTable54bAtFifteen DECIMAL(12, 4),
+    grossStandardVolumeAtFifteen DECIMAL(12, 4),
+    vcfTable60bAtTwenty DECIMAL(12, 4),
+    grossStandardVolumeAtTwenty DECIMAL(12, 4),
+    userId VARCHAR(255),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (voyageDetailsId) REFERENCES vesselVoyageDetails (voyageDetailsId) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+
+
+-- Product table
+CREATE TABLE products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    productId VARCHAR(255) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+-- Ports table (parent)
+CREATE TABLE port (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Berths table (child)
+CREATE TABLE berths (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    portId INT NOT NULL,  -- Foreign key column
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_port FOREIGN KEY (portId) REFERENCES port(id) ON DELETE CASCADE
+);
+
+-- Deport table
+CREATE TABLE deports (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    capacity DECIMAL(12,4),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Meter table
+CREATE TABLE meters (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Documents table
+CREATE TABLE docs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    docCode VARCHAR(255) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Checklist table
+CREATE TABLE check_list_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Consignees table
+CREATE TABLE consignees (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+
+create a voyages page and route metrology/voyages in this page first add a card with a  select a vessel from the dropdown, when vessel selected display  vessel details and tabks detaile in a realy nice and beautiful way. then bellow add two cards side by side the left for addind voyage and the right for adding voyage products,  but to add the voyage prodyct must be selected first and to add voyage product the voyage must be selected. create voyages and voyageproducts controllers and models also migrations(read ship.sql for -- VOYAGE TABLE and  -- VOYAGE PRODUCT TABLE).A voyage can have one tha one voyage product, so after creating a voyage  using modali can select it and add multiple products using a modal. use fromEngine for form submission review plan and uiplan for other details. mahe this pahe reallt beautiful and stunning
+
+
+
+
+
+add everything  in container and when selecting a vessel display vessel details in a nice way and the  tanks it contains vesel depdoan and the details be on the same card, vessels fropdown be on the card header and the vessel details and the taks all o them in a  list group (tank names). in the the VoyagesController voyageId is autogenerated with format VOYAGEYMDTIME(unix time) like VOYAGE202503251733731200 and  voyageProductId  PRODUCT202503251733731200 ,. all render methods use heredoc syntax, Always use fetch api with async and await and try catch avoid using $ajax, only use jquery for minor stuff like select2 modals and dataTables use vanilla js most of the time and add tru catch in controllers methods. add voyageNumber in voyageNumber which is autogenerated based on the previously  voyage number of the same vessel if YVG-NO-0001 then if the same vessel we add anoyher voyage will be YVG-NO-0002 and so on
+

@@ -1,0 +1,170 @@
+<?php
+
+namespace App\Libraries;
+
+
+class GepgProcess
+{
+
+    public function Submission($content, $params)
+    {
+       
+       
+        if (!$cert_store = file_get_contents("signature/clientprivate.pfx")) {
+
+            echo "Error: Unable to READ the CERTIFICATE file\n";
+            exit;
+        } else {
+            if (openssl_pkcs12_read($cert_store, $cert_info, 'passpass')) {
+
+                // echo "Certificate Information\n";
+
+
+                //create signature
+                openssl_sign($content, $signature, $cert_info['pkey'], OPENSSL_ALGO_SHA256);
+
+                //output encrypted data base64 encoded
+                $signature = base64_encode($signature);
+
+
+                //Combine signature and content signed
+                $data = "<Bepg>" . $content . "<signature>" . $signature . "</signature></Bepg>";
+
+
+                $resultCurlPost = "";
+                $serverIp = "http://testserver/api/";
+               // $serverIp = setting('Bill.apiUrl');
+
+
+                $dataString = $data;
+               
+          
+
+                $ch = curl_init($serverIp . $params->uri);
+                curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $dataString);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt(
+                    $ch,
+                    CURLOPT_HTTPHEADER,
+                    array(
+                        'Content-Type:application/xml',
+                        $params->GepgCom,
+                        'Gepg-Code:SPG1121',
+                        'Gepg-Alg:00S2',
+                        'Content-Length:' . strlen($dataString)
+                    )
+                );
+
+                curl_setopt($ch, CURLOPT_TIMEOUT, 50);
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 50);
+
+                $resultCurlPost = curl_exec($ch);
+                $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                if ($statusCode === 503) {
+                    // $res = Array2XML::createXML([
+                    //     'TrxStsCode' => 5101,
+                    // ]);
+                    return (object)[
+                        'status' => 0,
+                        'msg' => '(503)Service Unavailable  TRY LATER',
+                        'TrxStsCode' => '',
+                        'resultCurlPost' => '',
+                    ];
+                    // echo '503 Error: Service Unavailable    TRY LATER';
+                } elseif ($statusCode >= 400) {
+                    // echo 'HTTP Error: ' . $statusCode;
+                    return (object)[
+                        'status' => 0,
+                        'msg' => 'HTTP Error: ' . $statusCode,
+                        'TrxStsCode' => $statusCode,
+                        'resultCurlPost' => '',
+                    ];
+                } else {
+                    if (!empty($resultCurlPost)) {
+
+
+                        return (object)[
+                            'status' => 1,
+                            'resultCurlPost' => $resultCurlPost,
+                        ];
+                        // return XML2Array::createArray($resultCurlPost);
+
+                        //Tags used in substring response content
+                        // $dataTag = "gepgBillSubReqAck";
+                        $dataTag = $params->dataTag;
+                        $sigTag = "gepgSignature";
+
+                        //Get data and signature from response
+                        $vData = $this->getDataString($resultCurlPost, $dataTag);
+                        $vSignature = $this->getSignatureString($resultCurlPost, $sigTag);
+
+                        // echo "\n";
+                        // echo "Data Received:\n";
+                        return $vData;
+                       
+
+                        //Get Certificate contents
+                        if (!$pCertStore = file_get_contents("signature/publiccertificate.pfx")) {
+                            // echo "Error: Unable to read the cert file\n";
+                            return (object)[
+                                'status' => 0,
+                                'TrxStsCode' => '',
+                                'msg' => 'Error: Unable to read the cert file',
+                            ];
+                            exit;
+                        } else {
+
+                            //Read Certificate
+                            if (openssl_pkcs12_read($pCertStore, $pCertInfo, 'passpass')) {
+                                //Decode Received Signature String
+                                $rawSignature = base64_decode($vSignature);
+
+                                //Verify Signature and state whether signature is okay or not
+                                openssl_verify($vData, $rawSignature, $pCertInfo['extracerts']['0']);
+                              
+                            }
+                        }
+                    } else {
+                        // echo "No result Returned" . "\n";
+                        return (object)[
+                            'status' => 0,
+                            'resultCurlPost' => '',
+                            'TrxStsCode' => '',
+                            'msg' => 'No result Returned From GePG '.$statusCode,
+                        ];
+                    }
+                }
+                curl_close($ch);
+            } else {
+
+                // echo "Error: Unable to read the cert store.\n";
+                return (object)[
+                    'status' => 0,
+                    'resultCurlPost' => '',
+                    'msg' => 'Error: Unable to read the cert store',
+                ];
+
+                // exit;
+            }
+        }
+    }
+
+
+    public function getDataString($inputStr, $dataTag)
+    {
+        $dataStartPos = strpos($inputStr, $dataTag);
+        $dataEndPos = strrpos($inputStr, $dataTag);
+        $data = substr($inputStr, $dataStartPos - 1, $dataEndPos + strlen($dataTag) + 2 - $dataStartPos);
+        return $data;
+    }
+
+    public function getSignatureString($inputStr, $signTag)
+    {
+        $sigStartPos = strpos($inputStr, $signTag);
+        $sigEndPos = strrpos($inputStr, $signTag);
+        $signature = substr($inputStr, $sigStartPos + strlen($signTag) + 1, $sigEndPos - $sigStartPos - strlen($signTag) - 3);
+        return $signature;
+    }
+}

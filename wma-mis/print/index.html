@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bluetooth Printer Connection</title>
+</head>
+<body>
+  <br/>
+  <br/>
+  <button id="connect-btn">Connect to Printer</button>
+  <script>
+    async function printViaBT() {
+      try {
+        // Request Bluetooth device
+        const device = await navigator.bluetooth.requestDevice({
+          filters: [
+            { name: '4B-2044PA-B167' }, // Filter by device name
+          ],
+          optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'], // Printer's GATT service UUIDs
+        });
+
+        // Connect to the device
+        const server = await device.gatt.connect();
+
+        console.log('Connected to printer:', device.name);
+
+        // Access a respective service
+        const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+
+        // Access a respective characteristic
+        const writeCharacteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+        await writeCharacteristic.writeValue(new Uint8Array([0x1B, 0x40])); // Reset everything
+        
+        //parameters to be printed
+        const instrument = "SBL";
+        const verificationDate = "12/12/2024";
+        const reverificationBefore = "12/12/2025";
+        const certificateNo = "CT-3426-U667";
+
+        const textString = `\z\t\t${instrument}\z\t\t\t${verificationDate}\z\t\t\t${reverificationBefore}\z\t\t${certificateNo}`;
+
+        const lowByte = 54;
+        const highByte = 0;
+        const setLeftMargin = new Uint8Array([0x1D, 0x4C, lowByte, highByte]);
+        await writeCharacteristic.writeValue(setLeftMargin);
+        await writeCharacteristic.writeValue(new Uint8Array([0x1B, 0x33, 4])); // 16 = half the default line height (32) - others 16, 20, or 24
+        
+        await writeCharacteristic.writeValue(new Uint8Array([0x1B, 0x64, 1])); // Feed 1 lines
+
+        // Convert the string to bytes
+        const encoder = new TextEncoder();
+        const lines = textString.split('\z');
+        for (const line of lines) {
+            const data = encoder.encode(line + '\n');
+            // Write the data to the printer
+            await writeCharacteristic.writeValue(data);
+            await writeCharacteristic.writeValue(new Uint8Array([0x1B, 0x64, 1])); // Feed 1 lines
+        }
+        await writeCharacteristic.writeValue(new Uint8Array([0x1B, 0x33, 16]));
+
+        // QR Code Example usage
+        const qrText = `https://example.com/verify?code=${certificateNo}`;
+        await printQRCode(writeCharacteristic, qrText); 
+
+        console.log('Print successful!');
+
+      } catch (error) {
+        console.error('Error: ', error);
+        //alert('Error: ' + error.message);
+      }
+    }
+
+    // Attach the function to the button click
+    document.getElementById('connect-btn').addEventListener('click', printViaBT);
+
+    async function printQRCode(characteristic, qrData) {  
+      // Convert QR data to Uint8Array
+      const qrBytes = new TextEncoder().encode(qrData);
+      const qrDataLength = qrBytes.length + 3; // Extra bytes for the command
+
+      const alignLeft = new Uint8Array([0x1B, 0x61, 0]); // 0: Left, 1: Center, 2: Right
+
+      // ESC/POS command to store QR data
+      const storeQRCode = new Uint8Array([
+          0x1D, 0x28, 0x6B, qrDataLength & 0xFF, (qrDataLength >> 8) & 0xFF, 0x31, 0x50, 0x30, ...qrBytes
+      ]);
+  
+      // ESC/POS command to set QR code size
+      const setQRSize = new Uint8Array([0x1D, 0x28, 0x6B, 3, 0, 0x31, 0x43, 4]); // Default Size 6 (1-16)
+  
+      // ESC/POS command to print QR code
+      const printQRCode = new Uint8Array([0x1D, 0x28, 0x6B, 3, 0, 0x31, 0x51, 0x30]);
+  
+      // Send commands in sequence
+      await characteristic.writeValue(storeQRCode);
+      await characteristic.writeValue(setQRSize);
+      await characteristic.writeValue(printQRCode);
+      await characteristic.writeValue(new Uint8Array([0x1B, 0x33, 4])); // 16 = half the default line height (32) - others 16, 20, or 24;
+      await characteristic.writeValue(new Uint8Array([0x1B, 0x64, 1])); // Feed 1 lines
+
+      console.log("QR Code sent to printer");
+    }
+  
+  </script>
+</body>
+</html>

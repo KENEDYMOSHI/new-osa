@@ -1,0 +1,71 @@
+/* Form Styles */
+.input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.input-group.flex-col {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tool-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.3s;
+  background-color: #fff;
+  color: #374151;
+}
+
+.tool-input:focus {
+  border-color: #F7941D;
+  box-shadow: 0 0 0 3px rgba(247, 148, 29, 0.1);
+}
+
+.add-btn {
+  background: #F7941D;
+  color: white;
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.add-btn:hover {
+  background: #d87c0d;
+}
+
+.tools-list {
+  /* Styles handled by tailwind classes in HTML mostly, but keeping custom scrollbar if needed */
+}
+
+.save-btn {
+  background: #F7941D;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+  padding: 12px 24px;
+}
+
+.save-btn:hover {
+  background: #d87c0d;
+}
+
+.save-btn:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}

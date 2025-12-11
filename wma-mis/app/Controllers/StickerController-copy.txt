@@ -1,0 +1,264 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Models\AppModel;
+
+
+use App\Libraries\StickerLibrary;
+use App\Controllers\BaseController;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
+
+
+class StickerController extends BaseController
+{
+
+    protected $user;
+    protected $uniqueId;
+    protected $appModel;
+    protected $token;
+
+
+    public function __construct()
+    {
+        $this->appModel = new AppModel();
+        helper('date');
+        $this->token = csrf_hash();
+        // $this->user = auth()->user();
+        // $this->uniqueId = $this->user->unique_id;
+
+
+
+        //     $dumpSettings = array(),
+        // $pdoSettings = array()
+    }
+
+    public function getVariable($var)
+    {
+        return $this->request->getVar($var, FILTER_SANITIZE_SPECIAL_CHARS);
+    }
+
+    public function index()
+    {
+
+
+
+        $data['page'] = ['title' => 'Sticker Search', 'heading' => 'Sticker Search',];
+
+
+        return view('Pages/Search/StickerSearch', $data);
+    }
+
+
+    public function searchSticker()
+    {
+        try {
+            $controlNumber = trim($this->getVariable('controlNumber'));
+            $activity = $this->getVariable('activity');
+
+
+
+            // Set the folder path
+            $folderPath = 'public/stickers/'; // Adjust the folder path accordingly
+
+            // Set the activity and controlNumber
+            // $controlNumber = '199600002296';
+            // $activity = '142101210004';
+
+            // Combine controlNumber and activity to form the expected name
+            $name = "$controlNumber-$activity";
+
+            // Build the search pattern
+            $searchPattern = $folderPath . "*{$name}*";
+
+            // Use glob to search for matching files
+            $matchingFiles = glob($searchPattern);
+
+            $filePathArray = [];
+
+            if (!empty($matchingFiles)) {
+                // Files matching the pattern were found
+                foreach ($matchingFiles as $file) {
+                    // Get the relative path to the file from the public directory
+                    $relativeFilePath = str_replace(ROOTPATH, '', $file);
+
+                    // Construct the full URL using base_url()
+                    $fileUrl = base_url($relativeFilePath);
+
+                    // Add the URL to the filePathArray
+                    $filePathArray[] = $fileUrl;
+                }
+                return $this->response->setJSON([
+                    'status' => 1,
+                    'stickers' => $this->renderSticker($filePathArray),
+                    'token' => $this->token,
+                    'msg' => '',
+
+                ]);
+            } else {
+                $query = $this->appModel->fetchStickers(['activity' => $activity, 'controlNumber' => $controlNumber]);
+                if (!empty($query)) {
+
+                    $stickerLinks = array_map(fn ($data) => $this->generateSticker($data), $query);
+                    // foreach ($query as $sticker) {
+                    //     # code...
+                    // }
+
+                    return $this->response->setJSON([
+                        'status' => 1,
+                        'stickers' => $this->renderSticker($stickerLinks),
+                        'msg' => '',
+                        'token' => $this->token
+                    ]);
+                } else {
+                    return $this->response->setJSON([
+                        'status' => 0,
+                        'stickers' => '<h5>No Sticker Found</h5>',
+
+                        'token' => $this->token
+                    ]);
+                }
+            }
+        } catch (\Throwable $th) {
+            $response = [
+                'status' => 0,
+                'msg' => $th->getMessage(),
+                'trace' => $th->getTrace(),
+                'token' => $this->token
+            ];
+        }
+        return $this->response->setJSON($response);
+    }
+
+    public function renderSticker($links)
+    {
+        $div = '';
+        
+        foreach ($links as $link) {
+            $stickerPath = str_replace(base_url() . 'public/stickers/', '', $link);
+            $imageUrl = base_url("printSticker/$stickerPath");
+
+            $div .= <<<HTML
+                   <div class="col-md-4">
+                    <div class="card">
+                        <img class="card-img-top" src="$link" alt="">
+                        <div class="card-footer">
+                            <a href="$imageUrl" class="btn btn-primary btn-sm" style="float:right" target="_blank"> <i class="far fa-print"></i> Print</a>
+                            
+                            
+                        </div>
+                    </div>
+                </div>       
+            HTML;
+        }
+
+        return $div;
+    }
+
+
+    public function generateSticker($data)
+    {
+        $imageManager = new ImageManager(new Driver());
+
+
+        $qrCodeData = [
+            'stickerId' => $data->stickerId,
+            // 'stickerNumber' => $data->stickerNumber,
+            // 'controlNumber' => $data->controlNumber,
+        ];
+
+        $fontRegular = 'assets/fonts/Roboto.ttf';
+        $fontLight = 'assets/fonts/Roboto-Light.ttf';
+        $x = 550;
+        $y = 140;
+        $fontSize = 50;
+        $logoSize = 140;
+        // Load the background image
+        $background = $imageManager->read('assets/images/cardbg.png');
+        // Create a new image instance
+        // $img = $imageManager->create(1800, 1200, '#ffffff'); // Width, Height, Background Color
+           $img = $imageManager->create(1800, 786, '#ffffff'); // Width, Height, Background Color
+
+        // Insert the background image
+        $img->place($background, 'top-left');
+
+        // Load the logo image
+        $logo = $imageManager->read(('assets/images/wma-logo.png')); // Replace with the path to your logo image
+
+        // Resize the logo to fit on the top left corner
+        $logo->resize($logoSize, $logoSize);
+
+
+        // Insert the logo at the top left corner
+        $img->place($logo, 'top-right', 20, 25);
+
+        ///************************************************* */
+
+        // Load the logo image
+        $coatOfArm = $imageManager->read('assets/images/emblem.png'); // Replace with the path to your logo image
+
+        // Resize the logo to fit on the top left corner
+        $coatOfArm->resize($logoSize, $logoSize);
+
+        // Insert the logo at the top left corner
+        $img->place($coatOfArm, 'top-left', 560, 25);
+
+
+        //Tittle
+        $img->text('WEIGHTS AND MEASURES AGENCY', 800, 120, function ($font) use ($fontRegular, $fontSize) {
+            $font->size(45);
+            $font->fileName($fontRegular);
+            $font->color('#333333');
+        });
+
+        $img->text('Instrument: ' . activityName($data->activity), $x, $y * 2, function ($font) use ($fontLight, $fontSize) {
+            $font->size($fontSize);
+            $font->fileName($fontLight);
+            $font->color('#333333');
+        });
+
+        $img->text('Sticker Number: ' . $data->stickerNumber, $x, $y * 3, function ($font) use ($fontLight, $fontSize) {
+            $font->size($fontSize);
+            $font->fileName($fontLight);
+            $font->color('#333333');
+        });
+        $img->text('Verification Date: ' . dateFormatter($data->verificationDate), $x, $y * 4, function ($font) use ($fontLight, $fontSize) {
+            $font->size($fontSize);
+            $font->fileName($fontLight);
+            $font->color('#333333');
+        });
+        $img->text('Reverification Before: ' . dateFormatter($data->dueDate), $x, $y * 5, function ($font) use ($fontLight, $fontSize) {
+            $font->size($fontSize);
+            $font->fileName($fontLight);
+            $font->color('#333333');
+        });
+
+
+
+        $qrCode = QRCode($qrCodeData);
+
+        // Load the QR code image and resize it
+        $qrCodeImage = $imageManager->read($qrCode);
+        $qrCodeImage->resize(300, 300);
+
+        // Insert the QR code at the bottom right corner
+        $img->place($qrCodeImage, 'bottom-right', 10, 10);
+
+       $title = "$data->controlNumber-$data->activity-$data->stickerNumber-" . randomString() . '.jpg';
+        // $title = randomString() . '.jpg';
+        $savePath = 'public/stickers/' . $title;
+        // $savePath = 'stickers/' . $title;
+        $img->toJpeg()->save($savePath);
+
+        $imgPath = base_url($savePath);
+
+        return $imgPath;
+    }
+
+    public function printSticker($path)
+    {
+        $stickerUrl = base_url() . 'public/stickers/' . $path;
+        return view('printing', ['stickerUrl' => $stickerUrl]);
+    }
+}

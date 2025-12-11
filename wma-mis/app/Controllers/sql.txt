@@ -1,0 +1,7 @@
+drop database vipimo;
+
+create database vipimo;
+
+use vipimo;
+
+source /var/www/html/wmamis/db/vipimo.sql;

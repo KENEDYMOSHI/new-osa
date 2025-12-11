@@ -1,0 +1,9 @@
+1 adding multi tanks at the same time
+2 calculate trim
+3 remove tank after ullage data inserted
+4 Positioning add button at the bottom of the ullage creation UI
+5 Adding toggle menu to expand and shrink a side bar in ullage process
+6 Adding free water volume in ullage
+7 Add expandable action buttons in tables
+
+

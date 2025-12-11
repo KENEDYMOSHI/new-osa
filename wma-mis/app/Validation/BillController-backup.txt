@@ -1,0 +1,2480 @@
+<?php
+
+namespace App\Controllers;
+
+use DateTime;
+use DateInterval;
+use LSS\Array2XML;
+use LSS\XML2Array;
+use App\Models\VtcModel;
+use App\Models\BillModel;
+use App\Models\LorriesModel;
+use App\Models\ProfileModel;
+use App\Libraries\SmsLibrary;
+use App\Libraries\XmlLibrary;
+use App\Libraries\GepgProcess;
+use App\Models\WaterMeterModel;
+use App\Libraries\StickerLibrary;
+use App\Controllers\BaseController;
+use App\Libraries\ArrayLibrary;
+use App\Libraries\CertificateLibrary;
+
+class BillController extends BaseController
+{
+    protected $billModel;
+    protected $uniqueId;
+    protected $managerId;
+    protected $user;
+    protected $city;
+
+    protected $session;
+    protected $profileModel;
+    protected $CommonTasks;
+
+    protected $billLibrary;
+    protected $xmlLibrary;
+    protected $GepGpProcess;
+    protected $token;
+
+    protected $SpCode;
+    protected $subSpCode;
+    protected $systemId;
+    protected $collectionCenters;
+    protected $collectionCenter;
+    protected $sms;
+    protected $sticker;
+    protected $extendedExpiryDate;
+
+
+
+    public function __construct()
+    {
+        helper('setting');
+        helper(setting('App.helpers'));
+        $this->session = session();
+        $this->token = csrf_hash();
+        $this->billModel = new BillModel();
+        $this->collectionCenters = $this->billModel->getCollectionCenters();
+        $this->xmlLibrary = new XmlLibrary();
+        $this->GepGpProcess = new GepgProcess();
+        $this->profileModel = new profileModel();
+        $this->uniqueId = auth()->user()->unique_id;
+        $this->collectionCenter = auth()->user()->collection_center;
+        $this->user = auth()->user();
+        $this->SpCode = setting('Bill.spCode');
+        $this->subSpCode = setting('Bill.subSpCode');
+        $this->systemId = setting('Bill.systemId');
+        $this->extendedExpiryDate =  (new DateTime())->modify('+360 days')->format('Y-m-d\TH:i:s');
+
+
+
+
+        // $this->SpCode = 'SP19960';
+        // $this->subSpCode = '1001';
+        // $this->systemId = 'WMATOO1';
+
+        //source /var/www/html/wmamis/vipimo.sql;
+
+
+        helper(['bill', 'form', 'array', 'regions', 'date', 'prePackage_helper', 'image', 'url']);
+        $this->sms = new SmsLibrary();
+        $this->sticker = new StickerLibrary();
+    }
+
+    public function getVariable($var)
+    {
+        return $this->request->getVar($var, FILTER_SANITIZE_SPECIAL_CHARS);
+    }
+
+    public function test()
+    {
+        return $this->response->setJSON([40]);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public function index()
+    {
+        $currentPage =  url_is('billManagement') ? "Bill Management" : "Payments";
+        $data['page'] = [
+            "title" => $currentPage,
+            "heading" =>  $currentPage,
+        ];
+        $data['currentPage'] = 'bill';
+
+
+
+
+        $data['user'] = auth()->user();
+        url_is('billManagement') ? "Bill Management" : "Payments";
+
+        return view('Pages/Transactions/searchBill', $data);
+    }
+    public function reconciliationData()
+    {
+        $data['page'] = [
+            "title" => 'Bill Reconciliation',
+            "heading" =>  'Bill Reconciliation',
+        ];
+
+        $data['reconciliations'] = $this->billModel->fetchReconciliation();
+
+
+        $data['user'] = auth()->user();
+
+        $data['currentPage'] = 'bill';
+        return view('Pages/Transactions/reconciliation', $data);
+    }
+
+    public function bill()
+    {
+        $data['page'] = [
+
+            'title' => 'Bill',
+            'heading' => 'Bill'
+        ];
+
+
+        $data['user'] = auth()->user();
+        $data['currentPage'] = 'bill';
+        return view('transfer', $data);
+    }
+    public function cancel()
+    {
+        $data['page'] = [
+            "title" => 'Bill Cancellation',
+            "heading" =>  'Bill Cancellation',
+        ];
+
+
+
+
+        $data['user'] = auth()->user();
+
+        $data['bills'] = $this->billModel->getBills();
+        $data['currentPage'] = 'bill';
+
+        return view('Pages/Transactions/cancellation', $data);
+    }
+
+    public function billCreation()
+    {
+        if ($this->user->can('bill.create')) {
+            // $currentPage =  url_is('billManagement') ? "Bill Management" : "Payments";
+            $data['page'] = [
+                "title" => 'New Bill',
+                "heading" =>  'New Bill',
+            ];
+
+
+
+            $data['user'] = auth()->user();
+            $data['collectionCenters'] = $this->collectionCenters;
+            $data['currentPage'] = 'bill';
+            return view('Pages/Transactions/createBill', $data);
+        } else {
+            return redirect()->to('dashboard');
+        }
+    }
+    public function cancelledBills()
+    {
+        // $currentPage =  url_is('billManagement') ? "Bill Management" : "Payments";
+        $data['page'] = [
+            "title" => 'Cancelled Bills',
+            "heading" =>  'Cancelled Bills',
+        ];
+
+        $queryParams = [
+            'wma_bill.CreatedAt >=' => financialYear()->startDate,
+            'wma_bill.CreatedAt <=' => financialYear()->endDate,
+            'wma_bill.CollectionCenter' => $this->user->inGroup('officer,manager') ? $this->collectionCenter : ''
+        ];
+
+
+        $params = array_filter($queryParams, fn ($param) => $param !== '' || $param != null);
+
+
+        $data['user'] = auth()->user();
+        $data['bills'] = $this->billModel->getCancelledBills($params);
+        $data['currentPage'] = 'bill';
+        return view('Pages/Transactions/cancelledBills', $data);
+    }
+    public function cancellationRequests()
+    {
+        // $currentPage =  url_is('billManagement') ? "Bill Management" : "Payments";
+        $data['page'] = [
+            "title" => 'Bill Cancellation Requests',
+            "heading" =>  'Bill Cancellation Requests',
+        ];
+
+
+
+
+        $data['user'] = auth()->user();
+        $data['bills'] = $this->billModel->getBillCancellationRequests();
+        $data['currentPage'] = 'bill';
+        return view('Pages/Transactions/cancellationRequests', $data);
+    }
+
+    // a request to cancel a bil
+    public function billCancellationRequest()
+    {
+        try {
+            $billId = $this->getVariable('billId');
+            $bill = $this->billModel->getBillDetails($billId);
+
+            $data = [
+                'billId' => $billId,
+                'controlNumber' => $bill->PayCntrNum,
+                'reason' => $this->getVariable('reason'),
+                'requestBy' => $this->user->username,
+                'centerNumber' => $this->user->collection_center,
+                'centerName' => centerName(),
+                'userId' => $this->user->unique_id,
+            ];
+
+
+
+
+            $request =  $this->billModel->saveCancellationRequest($data);
+
+            if ($request) {
+                return  $this->response->setJSON([
+                    'status' => 1,
+                    'msg' => 'Bill Cancellation Request Sent',
+                    'token' => $this->token
+
+                ]);
+            } else {
+                return  $this->response->setJSON([
+                    'status' => 0,
+                    'msg' => 'Something Went Wrong',
+                    'token' => $this->token
+
+                ]);
+            }
+        } catch (\Throwable $th) {
+            $response = [
+                'status' => 0,
+                'msg' => $th->getMessage(),
+                'token' => $this->token
+
+
+            ];
+
+            return $this->response->setJSON($response)->setStatusCode(500);
+        }
+        // return $this->response->setJSON($response);
+    }
+
+
+
+    //bill submission request to GePG
+    public function billSubmissionRequest()
+    {
+
+        try {
+            if ($this->request->getMethod() == 'POST') {
+                $count = count($this->getVariable('BillItemAmt'));
+                $BillId = randomString();
+                $gfsCode  = $this->getVariable('GfsCode');
+                $chartNumber  = $this->getVariable('chartNumber') ?? '';
+
+
+                //  $BillExprDt = date("Y-m-d\TH:i:s", strtotime($expiryDate));
+
+
+                $currentDate = date("Y-m-d\TH:i:s");
+                $days = $this->getVariable('days') ?? 7;
+                $expiryDate  = $this->getVariable('BillExprDt');
+                $xpDate = $expiryDate . '23:59:59';
+                $BillExprDt = (empty($expiryDate) || strtotime($xpDate) < strtotime($currentDate)) ? date("Y-m-d\TH:i:s", strtotime("+$days days")) : date("Y-m-d\TH:i:s", strtotime($xpDate));
+
+                // Now, $BillExprDt contains the desired date value
+
+
+
+                $extendedExpiryDate =  date("Y-m-d\TH:i:s", strtotime("+360 days"));
+                $SwiftCode = $this->getVariable('SwiftCode');
+                $method = $this->getVariable('method');
+                $billAmount = str_replace(',', '', $this->getVariable('BillEqvAmt'));
+                $payer = $this->getVariable('PyrName');
+                $phoneNumber = $this->getVariable('PyrCellNum');
+                // '255' . substr($this->getVariable('PyrCellNum'), 1)
+                $billDetailsArray = [
+
+                    'BillId' => $BillId,
+                    'Activity' =>  implode(',', $gfsCode),
+                    'BillRef' => numString(10),
+                    'BillAmt' => (float)$billAmount,
+                    'BillAmtWords' => toWords($billAmount),
+                    'MiscAmt' =>  0.00,
+                    'BillExprDt' => $BillExprDt,
+                    'extendedExpiryDate' => $extendedExpiryDate,
+                    'PyrId' => randomString(),
+                    'PyrName' =>  $payer,
+                    'BillDesc' =>  $this->getVariable('BillDesc'),
+                    'BillGenDt' => date('Y-m-d\TH:i:s'),
+                    'BillGenBy' =>   $this->user->username,
+                    'CollectionCenter' =>   $this->collectionCenter,
+                    'BillApprBy' =>  'wma-hq',
+                    'PyrCellNum' =>  '255' . substr($phoneNumber, 1),
+                    'PyrEmail' => '',
+                    'Ccy' =>  $this->getVariable('Ccy'),
+                    'BillEqvAmt' => (float) $billAmount,
+                    'RemFlag' =>  $this->getVariable('RemFlag') == "on" ? 'true' : 'false',
+                    'BillPayOpt' =>  (int)$this->getVariable('BillPayOpt'),
+                    'method' =>  $method == '' ? 'MobileTransfer' : $method,
+                    'UserId' =>  $this->uniqueId,
+                    'SwiftCode' =>  $SwiftCode != '' ? $SwiftCode : '',
+
+                ];
+
+                //      return $this->response->setJSON([
+                //        'status' => 0,
+                //        'data' => $this->request->getPost(),
+                //        'token' => $this->token
+                //      ]);
+
+                //    exit;
+
+                $billItemName = [];
+                $serviceItems = [];
+
+                $ItemName = $this->getVariable('ItemName');
+                $task = $this->getVariable('Task');
+                $Capacity = $this->getVariable('Capacity');
+                $ItemUnit = $this->getVariable('ItemUnit');
+                $ItemQuantity = $this->getVariable('ItemQuantity');
+                $SingleItemAmount = $this->getVariable('SingleItemAmount');
+                $chartNumber  = $this->getVariable('chartNumber') ?? '';
+                $itemRef = [];
+                for ($i = 0; $i < $count; $i++) {
+                    $name  = $task[$i] == 'Consultation' ? 'Consultation' : ($task[$i] == 'Other' ? activityName($gfsCode[$i]) : $ItemName[$i]);
+                    array_push($itemRef, randomString());
+                    if (!empty($chartNumber)) {
+                        array_push($billItemName, $name);
+                        array_push($serviceItems, $ItemName[$i]);
+                    } else {
+                        if ($task[$i] == 'Consultation') {
+                            array_push($billItemName, $name);
+                        } elseif ($task[$i] == 'Other') {
+
+                            array_push($billItemName, activityName($gfsCode[$i]));
+                        } else {
+                            array_push($billItemName, $name . ' ' . $Capacity[$i] . ' ' . $ItemUnit[$i] . ' X ' . $ItemQuantity[$i]);
+                            array_push($serviceItems, $name . ' ' . (string)$Capacity[$i] . $ItemUnit[$i]);
+                        }
+                    }
+                }
+
+
+                //calculating next verification date for each item
+                $nextVerification = array_map(fn ($gfs) => nextVerification($gfs), $gfsCode);
+
+
+                $itemAmount = str_replace(',', '', $this->getVariable('BillItemAmt'));
+                $itemsArray = [
+                    'BillItemRef' => $itemRef,
+                    'UseItemRefOnPay' => fillArray($count, 'N'),
+                    'BillItemAmt' =>  $itemAmount,
+                    'BillItemEqvAmt' =>  $itemAmount,
+                    'BillItemMiscAmt' => fillArray($count, 0.00),
+                    'GfsCode' =>  $gfsCode,
+                    'ItemName' =>  $billItemName,
+                    'Task' => $task,
+                    'Status' => $this->getVariable('Status'),
+                    'UserId' => fillArray($count, $this->uniqueId),
+                    'BillId' => fillArray($count, $BillId),
+                    'SingleItemAmount' =>  $SingleItemAmount,
+                    'ItemQuantity' =>  $ItemQuantity,
+                    'NextVerification' =>  $nextVerification,
+                    'fob' => $this->getVariable('fob'),
+                    'tansardNumber' => $this->getVariable('tansardNumber'),
+                    'date' => $this->getVariable('date'),
+                ];
+
+
+
+
+                $items =  multiDimensionArray($itemsArray);
+                $ppgImported = array_filter($items, fn ($item) => $item['GfsCode'] == setting('Gfs.prePackages'));
+                // $ppgAmount = (new ArrayLibrary($ppgImported))->map(fn ($item) => $item['BillItemAmt'])->reduce(fn ($x, $y) => $x + $y)->get();
+
+
+                $ppgData = [
+                    'customer' => $payer,
+                    'billId' => $BillId,
+                    'region' => $this->collectionCenter,
+                    'phoneNumber' =>  '255' . substr($phoneNumber, 1),
+                    'products' => json_encode($ppgImported),
+                    'userId' => $this->uniqueId,
+                ];
+
+                // $this->billModel->savePrepackageData($ppgData);
+
+
+                // return $this->response->setJSON([
+                //     'status' => 0,
+                //     // 'serviceItems' => $serviceItems,
+                //     'items' => $items,
+                //     'days' => $days,
+                //     'BillExprDt ' => $BillExprDt,
+                //     'token' => $this->token
+                // ]);
+
+                // exit;
+
+
+
+                //force payment option to exact if user selects multiple items and opt partial payment
+                $paymentOption = count($items) > 1 ? 3 : $billDetailsArray['BillPayOpt'];
+
+
+                $xml = Array2XML::createXML('BillItems', ['BillItem' => arrayExcept($items, ['BillId', 'ItemName', 'UserId', 'Task', 'Status', 'ItemQuantity', 'SingleItemAmount', 'NextVerification', 'fob', 'tansardNumber', 'date'])])->saveXML();
+                $BillItems = ltrim(str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', $xml));
+
+                $billDetails = (object)$billDetailsArray;
+                //$content = "";
+                $content = "<gepgBillSubReq>
+                         <BillHdr>
+                            <SpCode>$this->SpCode</SpCode>
+                            <RtrRespFlg>true</RtrRespFlg>
+                         </BillHdr>
+                         <BillTrxInf>
+                           <BillId>$BillId</BillId>
+                           <SubSpCode>$this->subSpCode</SubSpCode>
+                           <SpSysId>$this->systemId</SpSysId>
+                           <BillAmt>$billDetails->BillEqvAmt</BillAmt>
+                           <MiscAmt>$billDetails->MiscAmt</MiscAmt>
+                            <BillExprDt>$extendedExpiryDate</BillExprDt>
+                           <PyrId>$billDetails->PyrId</PyrId>
+                           <PyrName>$billDetails->PyrName</PyrName>
+                           <BillDesc>$billDetails->BillDesc</BillDesc>
+                           <BillGenDt>$billDetails->BillGenDt</BillGenDt>
+                           <BillGenBy>$billDetails->BillGenBy</BillGenBy>
+                           <BillApprBy>$billDetails->BillApprBy</BillApprBy>
+                           <PyrCellNum>$billDetails->PyrCellNum</PyrCellNum>
+                           <PyrEmail>$billDetails->PyrEmail</PyrEmail>
+                           <Ccy>$billDetails->Ccy</Ccy>
+                           <BillEqvAmt>$billDetails->BillEqvAmt</BillEqvAmt>
+                           <RemFlag>$billDetails->RemFlag</RemFlag>
+                           <BillPayOpt>$paymentOption</BillPayOpt>
+                            " . $BillItems . "
+                         </BillTrxInf>
+                   </gepgBillSubReq>";
+
+                //    $file = base_url().'Res/bill.txt';
+                //    file_put_contents($file, $content);
+
+
+                //switching uri and request headers based on type of request being sent
+                $uri = "bill/sigqrequest";
+                $GepgCom = "Gepg-Com:default.sp.in";
+
+
+                $params = (object)[
+                    "dataTag" => "gepgBillSubReqAck",
+                    "uri" => $uri,
+                    'GepgCom' => $GepgCom,
+                ];
+
+
+
+
+
+
+                //adding certificate data to to the database.
+                //  (new CertificateLibrary())->createCertificateData($certificateData);
+                // ================certificates=================================
+
+                //sending request to gepg server 
+                $submission = $this->GepGpProcess->billSubmission(formatXml($content), $params);
+               // $this->sms->sendSms('0659851709', 'STATUS: ' . $submission->status);
+                if ($submission->status == 1) {
+                    if($submission->resultCurlPost == ''){
+                        $this->sms->sendSms('0659851709', 'no response from server try again later');
+                        return $this->response->setJSON([
+                            'status' => 0,
+                            'TrxStsCode' =>  '',
+                            'msg' => 'No response from server try again later',
+                        ]);
+                    }
+                    $response = XML2Array::createArray($submission->resultCurlPost);
+                    $code = $response['Gepg']['gepgBillSubReqAck']['TrxStsCode'];
+                    if ($code == '7101') {
+
+                        $stickerLib = new StickerLibrary();
+                        //save bill info to database
+                        $billDetailsArray['TrxStsCode'] = $code;
+                        $this->billModel->saveBill($billDetailsArray);
+                        //save bill items to database
+                        $this->billModel->saveBillItems($items);
+                        //  $stickerLib->attachSticker($items, '');
+                        if (!empty($ppgImported)) $this->billModel->savePrepackageData($ppgData);
+
+
+                        // return $this->response->setJSON([
+                        //     'billId' => $BillId,
+                        //     'submission' => $submission,
+                        //     'response' => $response,
+                        //     'token' => $this->token,
+                        // ]);
+                        // exit;
+                        $maxAttempts = 60; // Set a maximum number of attempts to avoid an infinite loop
+                        $attempt = 0;
+                        $startTime = microtime(true); // Record the start time
+
+
+                        while ($attempt < $maxAttempts) {
+                            $billRes = $this->billModel->getBillResponse($BillId);
+
+
+
+
+
+                            if (!empty($billRes)) {
+                                $gepgResponseCode = $billRes->resCode;
+                                //check if the ststus code returned to callback response code is 7101
+                                if (strlen($gepgResponseCode) == 4 && $gepgResponseCode == '7101') {
+
+
+                                    // $currentBill = $this->billModel->getControlNumber($BillId);
+                                    $controlNumber =  $billRes->PayCntrNum;
+                                    $method =  $billDetailsArray['method'];
+                                    $SwiftCode =  $billDetailsArray['SwiftCode'];
+                                    $accountNumber = '';
+                                    $bank = '';
+                                    $itemsArray['BillId'] = fillArray($count, $BillId);
+                                    $billDetailsArray['PayCntrNum'] = $billRes->PayCntrNum;
+                                    $billDetailsArray['TrxStsCode'] = $gepgResponseCode;
+
+
+                                    $updatedBillItems = $stickerLib->attachSticker($items, $billRes->PayCntrNum);
+
+
+                                    // ================certificates=================================
+                                    $certificateData = (object)[
+
+                                        'customer' => $billDetails->PyrName,
+                                        'activity' => json_encode($gfsCode),
+                                        'mobile' => $billDetails->PyrCellNum,
+                                        'address' => 'P O Box',
+                                        'items' =>  json_encode($billItemName),
+                                        'controlNumber' =>  $controlNumber,
+
+                                    ];
+                                    //adding certificate data
+                                    (new CertificateLibrary())->createCertificateData($certificateData);
+
+
+                                    if (!empty($updatedBillItems)) $this->billModel->updateBillItems($updatedBillItems);
+
+
+                                    //get center name
+                                    $center = wmaCenter($this->collectionCenter)->centerName;
+
+                                    //sms notification parameters
+                                    $textParams = (object)[
+                                        'payer' => $payer,
+                                        'center' => $center,
+                                        'amount' => $billAmount,
+                                        'items' => (string)implode(',', $serviceItems),
+                                        'expiryDate' => $expiryDate,
+                                        'controlNumber' => (int)$controlNumber,
+
+                                    ];
+
+
+                                    $this->billModel->updateControlNumber($BillId, ['PayCntrNum' => $controlNumber]);
+
+
+
+                                    //sending sms if bill is okay
+                                    $this->sms->sendSms(recipient: $phoneNumber, message: billTextTemplate($textParams));
+
+                                    //fetch bill details
+                                    $bill = $this->billModel->fetchBill($billDetailsArray['BillId']);
+                                    switch ($bill->SwiftCode) {
+                                        case 'NMIBTZTZ':
+                                            $accountNumber .= '20301000002';
+                                            $bank .= 'National Microfinance Bank';
+                                            break;
+                                        case 'CORUTZTZ':
+                                            $accountNumber .= '0150357655550';
+                                            $bank .= 'CRDB Bank';
+                                            break;
+                                        case 'TANZTZTX':
+                                            $accountNumber .= '9925261001';
+                                            $bank .= 'Bank Of Tanzania (BOT)';
+                                            break;
+                                    }
+                                    $billData = (object)[
+                                        'bill' => $bill,
+                                        'billItems' => $this->billModel->fetchBillItems($billDetailsArray['BillId']),
+                                        'printedBy' => $this->user->username,
+                                        'printedOn' => dateFormatter(date('Y-m-d')),
+                                        'bank' => $bank,
+                                        'accountNumber' => $accountNumber,
+                                    ];
+
+                                    //logic for vtv chart download control
+                                    if (isset($chartNumber) && !empty($chartNumber)) {
+                                        $today = new DateTime();
+                                        $today->add(new DateInterval('PT15M'));
+                                        $limit = $today->format('Y-m-d H:i:s');
+                                        (new VtcModel)->updateChartIfo($chartNumber, [
+                                            'controlNumber' => $bill->PayCntrNum,
+                                            'downloadLimit' => $limit
+                                        ]);
+                                    }
+
+                                    //qr code obj data for bill
+                                    $qrCodeObject = (object)[
+                                        'opType' => '2',
+                                        'shortCode' => '001001',
+                                        'billReference' => $bill->PayCntrNum,
+                                        'amount' => $bill->BillAmt,
+                                        'billCcy' => 'TZS',
+                                        'billExprDt' => $bill->BillExprDt,
+                                        'billPayOpt' => $bill->BillPayOpt,
+                                        'billRsv01' => "Weights And Measure Agency|$bill->PyrName"
+                                    ];
+                                    $endTime = microtime(true); // Record the start time
+                                    return $this->response->setJSON([
+                                        'status' => 1,
+
+                                        'token' => $this->token,
+                                        'TrxStsCode' =>  $gepgResponseCode,
+                                        'bill' => $bill->method == 'BankTransfer' ? transferBill($billData) : normalBill($billData),
+                                        'qrCodeObject' =>  $qrCodeObject,
+                                        'msg' => 'Bill Created Successfully',
+                                        'RESPONSE' => $billRes,
+                                        'heading' => $bill->method == 'BankTransfer' ? "Order Form For Electronic Fund Transfer To $bank " : "Government Bill",
+                                        'time' => $endTime - $startTime
+                                        // 'sms' => 
+
+                                    ]);
+                                } else {
+                                    //if gepg response code is not 7101 return error codes and messages
+                                    $errorCode = substr($gepgResponseCode, 0, 4);
+                                    $transactionStatus = substr($gepgResponseCode, -4);
+
+                                    return $this->response->setJSON([
+                                        'status' => 0,
+                                        'msg' =>  tnxCode($errorCode),
+                                        'TrxStsCode' =>  $errorCode,
+                                        'token' => $this->token,
+                                        'billId' => $BillId
+                                    ]);
+                                }
+
+
+                                break;
+                            } else {
+                                sleep(1);
+                                $attempt++;
+                            }
+                        }
+                        $endTime = microtime(true); // Record the start time
+                        // If the loop completes without receiving the expected data, return an error
+                        return $this->response->setJSON([
+                            'status' => 0,
+                            'BillId' => $BillId,
+                            'token' => $this->token,
+                            'msg' => 'Timeout: Try to search the bill if it is already created if not try again',
+                            'attempt' => $attempt,
+                            'time' => $endTime - $startTime,
+
+                        ])->setStatusCode(500);
+
+                        // }
+                    } else {
+                        return $this->response->setJSON([
+                            'status' => 0,
+                            'msg' => tnxCode($code),
+                            'TrxStsCode' =>  $code,
+                            'token' => $this->token,
+                            'billId' => $BillId
+                        ]);
+                    }
+                } else {
+                    return $this->response->setJSON([
+                        'status' => 0,
+                        'msg' => $submission->msg,
+                        'TrxStsCode' =>  '',
+                        'token' => $this->token,
+                        'billId' => $BillId
+                    ]);
+                }
+            }
+        } catch (\Throwable $th) {
+            $response = [
+                'status' => 0,
+                'msg' => $th->getMessage(),
+                'trace' => $th->getTrace(),
+                'token' => $this->token
+            ];
+            return $this->response->setJSON($response)->setStatusCode(500);
+        }
+    }
+
+
+
+
+
+
+
+
+    //get all paid bills at the end of the day
+    public function billReconciliation()
+    {
+        try {
+
+            $reconId = numString(10);
+            // $date = date("Y-m-d", strtotime("-1 day"));
+            $date = $this->getVariable('date');
+            // $date = $this->getVariable('');
+            $usr = $this->user->username;
+            $this->sms->sendSms('255659851709', "User:  ($usr) has requested a recon $date");
+            $ReconcOpt = 1;
+            $data = [
+                'SpReconcReqId' => $reconId,
+                'SpCode' => $this->SpCode,
+                'SpSysId' => $this->systemId,
+                'TnxDt' => $date,
+                'ReconcOpt' => $ReconcOpt,
+            ];
+
+
+            $content =
+                "<gepgSpReconcReq> 
+                    <SpReconcReqId>$reconId</SpReconcReqId> 
+                    <SpCode>$this->SpCode</SpCode>
+                    <SpSysId>$this->systemId</SpSysId>
+                    <TnxDt>$date</TnxDt> 
+                    <ReconcOpt>$ReconcOpt</ReconcOpt> 
+            </gepgSpReconcReq>";
+
+            $this->billModel->saveReconciliationRequest($data);
+            $params = (object)[
+                "dataTag" => "gepgSpReconcReqAck",
+                "uri" => "reconciliations/sig_sp_qrequest",
+                'GepgCom' => 'Gepg-Com:default.sp.in',
+            ];
+            $submission = $this->GepGpProcess->billSubmission(formatXml($content), $params);
+            if ($submission->status == 0) {
+                return $this->response->setJSON([
+                    'status' => 0,
+                    'msg' =>  $submission->msg,
+                    'token' =>  $this->token,
+                ]);
+            } else {
+                $reconArr = XML2Array::createArray($submission->resultCurlPost);
+                $TnxCode =  $reconArr['Gepg']['gepgSpReconcReqAck']['ReconcStsCode'];
+                $reconStatus  = $this->billModel->getLastReconStatus();
+                $code = $reconStatus[0]->ReconcStsCode;
+                $id = $reconStatus[0]->SpReconcReqId;
+                return $this->response->setJSON([
+                    'TnxCode' => $TnxCode,
+                    'reconStatusCode' =>  $code,
+                    'reconId' =>  $id,
+                    'msg' =>  tnxCode($code),
+                    'token' =>  $this->token,
+                ]);
+            }
+        } catch (\Throwable $th) {
+            $response = [
+                'status' => 0,
+                'msg' => $th->getMessage(),
+                'token' => $this->token
+            ];
+        }
+        return $this->response->setJSON($response);
+    }
+
+
+
+
+
+
+    //bill  re submission request to GePG
+    public function billResubmissionRequest()
+    {
+
+
+        try {
+            if ($this->request->getMethod() == 'POST') {
+                $id = $this->getVariable('billId');
+
+
+
+                // Fetch bill and bill items from the model
+                $bill = $this->billModel->fetchBill($id);
+                if ($bill->PayCntrNum != '') {
+                    return $this->response->setJSON([
+                        'status' => 0,
+                        'msg' => 'This Bill Has A Control Number Please Refresh And Search Again',
+                        'token' => $this->token
+                    ]);
+                }
+                $billItems = $this->billModel->fetchBillItems($id);
+
+                if (empty($bill)) return $this->response->setJSON([
+                    'status' => 0,
+                    'data' => [],
+                    'msg' => 'Invalid Bill ID'
+                ])->setStatusCode(500);
+
+                if (empty($billItems)) return $this->response->setJSON([
+                    'status' => 0,
+                    'data' => [],
+                    'msg' => 'Invalid Bill Items'
+                ])->setStatusCode(500);
+
+                $billedAmount = $bill->BillAmt;
+                $expireDate = $bill->BillExprDt;
+
+
+
+                $billId = $id;
+
+
+                $phoneNumber = $bill->PyrCellNum;
+                $payer = $bill->PyrName;
+                $serviceItems = array_map(fn ($item) => $item->ItemName, $billItems);
+
+
+
+                // return $this->response->setJSON([
+                //     'status' => 1,
+                //     // 'newPercentage' => $newPercentage,
+                //     'oldBillDays' => $billDays,
+                //     // 'daysPassed' => $daysPassed,
+                //     'og amount' => $newBillAmount,
+                //     // 'penaltyAmount' => $penaltyAmount,
+                //     // 'THE BILL' => $bill,
+                //     'BILL ITEMS' => $billItems,
+                //     'token' => $this->token,
+                // ]);
+
+                // exit;
+
+
+
+                $amt = (float)$billedAmount;
+
+                $billDetailsArray = [
+
+                    'BillId' => $billId,
+                    'BillAmt' => $billedAmount,
+                    'BillAmt' => $billedAmount,
+                    'BillAmtWords' => toWords($amt),
+                    'BillGenBy' => auth()->user()->username,
+
+
+                ];
+
+
+
+
+                $items = (new ArrayLibrary($billItems))->map(fn ($item) => [
+                    'id' => $item->id,
+                    'BillId' => $billId,
+                    'BillItemRef' => $item->BillItemRef,
+                    'UseItemRefOnPay' => $item->UseItemRefOnPay,
+                    'BillItemAmt' => $item->BillItemAmt,
+                    'BillItemEqvAmt' => $item->BillItemEqvAmt,
+                    'BillItemMiscAmt' => $item->BillItemMiscAmt,
+                    'GfsCode' => $item->GfsCode,
+
+                ])->get();
+
+
+
+
+                // return $this->response->setJSON([
+                //     'status' => 1,
+                //     // 'daysPassed' => $daysPassed,
+                //     'newExpireDate' => $newExpireDate,
+                //     'gen date' => $newGeneratedDate,
+                //     // 'newPercentage' => $newPercentage,
+                //     // 'penaltyAmount' => $penaltyAmount,
+                //     'bill' => $bill,
+                //     'method' => $bill->method,
+                //     // 'billItems' => $items,
+                //     'token' => $this->token,
+                // ]);
+
+
+                // exit;
+
+                $xml = Array2XML::createXML('BillItems', ['BillItem' => arrayExcept($items, ['id', 'BillId'])])->saveXML();
+                $BillItems = ltrim(str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', $xml));
+
+                $extendedExpiryDate =  date("Y-m-d\TH:i:s", strtotime("+360 days"));
+                //$content = "";
+                $content = "<gepgBillSubReq>
+                    <BillHdr>
+                        <SpCode>$this->SpCode</SpCode>
+                        <RtrRespFlg>true</RtrRespFlg>
+                    </BillHdr>
+                    <BillTrxInf>
+                        <BillId>$billId</BillId>
+                        <SubSpCode>$this->subSpCode</SubSpCode>
+                        <SpSysId>$this->systemId</SpSysId>
+                        <BillAmt>$billedAmount</BillAmt>
+                        <MiscAmt>0.00</MiscAmt>
+                        <BillExprDt>$extendedExpiryDate</BillExprDt>
+                        <PyrId>$bill->PyrId</PyrId>
+                        <PyrName>$bill->PyrName</PyrName>
+                        <BillDesc>$bill->BillDesc</BillDesc>
+                        <BillGenDt>$bill->BillGenDt</BillGenDt>
+                        <BillGenBy>$bill->BillGenBy</BillGenBy>
+                        <BillApprBy>$bill->BillApprBy</BillApprBy>
+                        <PyrCellNum>$phoneNumber</PyrCellNum>
+                        <PyrEmail>$bill->PyrEmail</PyrEmail>
+                        <Ccy>$bill->Ccy</Ccy>
+                        <BillEqvAmt>$billedAmount</BillEqvAmt>
+                        <RemFlag>$bill->RemFlag</RemFlag>
+                        <BillPayOpt>$bill->BillPayOpt</BillPayOpt>
+                        " . $BillItems . "
+                    </BillTrxInf>
+                </gepgBillSubReq>";
+
+
+
+
+
+                //switching uri and request headers based on type of request being sent
+                $uri = "bill/sigqrequest";
+                $GepgCom = "Gepg-Com:default.sp.in";
+
+
+
+
+
+
+                $params = (object)[
+                    "dataTag" => "gepgBillSubReqAck",
+                    "uri" => $uri,
+                    'GepgCom' => $GepgCom,
+                ];
+
+                //sending request to gepg server 
+                $submission = $this->GepGpProcess->billSubmission(formatXml($content), $params);
+               // $this->sms->sendSms('0659851709', 'STATUS: ' . $submission->status);
+                if ($submission->status == 1) {
+                    if($submission->resultCurlPost == ''){
+                        $this->sms->sendSms('0659851709', 'no response from server try again later');
+                        return $this->response->setJSON([
+                            'status' => 0,
+                            'TrxStsCode' =>  '',
+                            'msg' => 'No response from server try again later',
+                        ]);
+                    }
+                    $response = XML2Array::createArray($submission->resultCurlPost);
+                    $code = $response['Gepg']['gepgBillSubReqAck']['TrxStsCode'];
+                    if ($code == '7101' || $code == '7226') {
+
+                        //save bill info to database
+                        $billDetailsArray['TrxStsCode'] = $code;
+
+
+
+                        // return $this->response->setJSON([
+                        //     'billId' => $BillId,
+                        //     'submission' => $submission,
+                        //     'response' => $response,
+                        //     'token' => $this->token,
+                        // ]);
+                        // exit;
+                        $maxAttempts = 120; // Set a maximum number of attempts to avoid an infinite loop
+                        $attempt = 0;
+                        $startTime = microtime(true); // Record the start time
+
+
+
+                        while ($attempt < $maxAttempts) {
+                            $billRes = $this->billModel->getBillResponse($billId);
+
+
+                            if (!empty($billRes)) {
+                                $gepgResponseCode = $billRes->resCode;
+                                //check if the status code returned to callback response code is 7101 or 7226
+                                if (strlen($gepgResponseCode) == 4 && ($gepgResponseCode == '7101' || $gepgResponseCode == '7226')) {
+
+
+                                    $billDetailsArray['PayCntrNum'] = $billRes->PayCntrNum;
+                                    $billDetailsArray['TrxStsCode'] = $gepgResponseCode;
+                                    $this->billModel->updateControlNumber($billId, ['PayCntrNum' => $billRes->PayCntrNum]);
+                                    //save bill items to database
+                                    $this->billModel->updateBillItems($items);
+                                    // $currentBill = $this->billModel->getControlNumber($BillId);
+                                    $controlNumber =  $billRes->PayCntrNum;
+
+                                    $accountNumber = '';
+                                    $bank = '';
+
+
+
+
+
+
+                                    //get center name
+                                    $center = wmaCenter($this->collectionCenter)->centerName;
+
+                                    //sms notification parameters
+                                    $textParams = (object)[
+                                        'payer' => $payer,
+                                        'center' => $center,
+                                        'amount' => $billedAmount,
+                                        'items' => (string)implode(',', $serviceItems),
+                                        'expiryDate' => $expireDate,
+                                        'controlNumber' => (int)$controlNumber,
+
+                                    ];
+
+
+
+                                    //sending sms if bill is okay
+                                    $this->sms->sendSms(recipient: $phoneNumber, message: billTextTemplate($textParams));
+
+                                    //fetch bill details
+                                    $bill = $this->billModel->fetchBill($billDetailsArray['BillId']);
+                                    switch ($bill->SwiftCode) {
+                                        case 'NMIBTZTZ':
+                                            $accountNumber .= '20301000002';
+                                            $bank .= 'National Microfinance Bank';
+                                            break;
+                                        case 'CORUTZTZ':
+                                            $accountNumber .= '0150357655550';
+                                            $bank .= 'CRDB Bank';
+                                            break;
+                                        case 'TANZTZTX':
+                                            $accountNumber .= '9925261001';
+                                            $bank .= 'Bank Of Tanzania (BOT)';
+                                            break;
+                                    }
+                                    $billData = (object)[
+                                        'bill' => $bill,
+                                        'billItems' => $this->billModel->fetchBillItems($billDetailsArray['BillId']),
+                                        'printedBy' => $this->user->username,
+                                        'printedOn' => dateFormatter(date('Y-m-d')),
+                                        'bank' => $bank,
+                                        'accountNumber' => $accountNumber,
+                                    ];
+
+
+                                    //qr code obj data for bill
+                                    $qrCodeObject = (object)[
+                                        'opType' => '2',
+                                        'shortCode' => '001001',
+                                        'billReference' => $bill->PayCntrNum,
+                                        'amount' => $bill->BillAmt,
+                                        'billCcy' => 'TZS',
+                                        'billExprDt' => $bill->BillExprDt,
+                                        'billPayOpt' => $bill->BillPayOpt,
+                                        'billRsv01' => "Weights And Measure Agency|$bill->PyrName"
+                                    ];
+                                    $endTime = microtime(true); // Record the start time
+                                    return $this->response->setJSON([
+                                        'status' => 1,
+
+                                        'token' => $this->token,
+                                        'TrxStsCode' =>  $gepgResponseCode,
+                                        'bill' => $bill->method == 'BankTransfer' ? transferBill($billData) : normalBill($billData),
+                                        'qrCodeObject' =>  $qrCodeObject,
+                                        'msg' => 'Bill Renewed Successfully',
+                                        'RESPONSE' => $billRes,
+                                        'heading' => $bill->method == 'BankTransfer' ? "Order Form For Electronic Fund Transfer To $bank " : "Government Bill",
+                                        'time' => $endTime - $startTime
+                                        // 'sms' => 
+
+                                    ]);
+                                } else {
+                                    //if gepg response code is not 7101 return error codes and messages
+                                    $errorCode = substr($gepgResponseCode, 0, 4);
+                                    $transactionStatus = substr($gepgResponseCode, -4);
+
+                                    return $this->response->setJSON([
+                                        'status' => 0,
+                                        'msg' =>  tnxCode($errorCode),
+                                        'TrxStsCode' =>  $errorCode,
+                                        'token' => $this->token,
+                                        'billId' => $billId
+                                    ]);
+                                }
+
+
+                                break;
+                            } else {
+                                sleep(1);
+                                $attempt++;
+                            }
+                        }
+                        $endTime = microtime(true); // Record the start time
+                        // If the loop completes without receiving the expected data, return an error
+                        return $this->response->setJSON([
+                            'status' => 0,
+                            'BillId' => $billId,
+                            'token' => $this->token,
+                            'msg' => 'Timeout: Try to search the bill if it is already Resubmitted if not try again',
+                            'attempt' => $attempt,
+                            'time' => $endTime - $startTime,
+
+                        ])->setStatusCode(500);
+
+                        // }
+                    } else {
+                        return $this->response->setJSON([
+                            'status' => 0,
+                            'msg' => tnxCode($code),
+                            'TrxStsCode' =>  $code,
+                            'token' => $this->token,
+                            'billId' => $billId
+                        ]);
+                    }
+                } else {
+                    return $this->response->setJSON([
+                        'status' => 0,
+                        'msg' => $submission->msg,
+                        'TrxStsCode' =>  '',
+                        'token' => $this->token,
+                        'billId' => $billId
+                    ]);
+                }
+            }
+        } catch (\Throwable $th) {
+            $response = [
+                'status' => 0,
+                'msg' => $th->getMessage(),
+                'trace' => $th->getTrace(),
+                'token' => $this->token
+            ];
+        }
+        return $this->response->setJSON($response)->setStatusCode(500);
+    }
+    //bill submission request to GePG
+    public function billRenewRequest()
+    {
+
+
+        try {
+            if ($this->request->getMethod() == 'POST') {
+                $id = $this->getVariable('billId');
+                $percentage = 1;
+                $currentDate = new DateTime(); // Current date and time
+
+                // Fetch bill and bill items from the model
+                $bill = $this->billModel->fetchBill($id);
+                $billItems = $this->billModel->fetchBillItems($id);
+
+                if (empty($bill)) return $this->response->setJSON([
+                    'status' => 0,
+                    'data' => [],
+                    'msg' => 'Invalid Bill ID'
+                ])->setStatusCode(500);
+
+                if (empty($billItems)) return $this->response->setJSON([
+                    'status' => 0,
+                    'data' => [],
+                    'msg' => 'Invalid Bill Items'
+                ])->setStatusCode(500);
+
+                $billedAmount = $bill->BillAmt;
+                $oldBillAmount = $bill->BillAmt;
+
+                $generatedDate = new DateTime($bill->BillGenDt);
+                $expiredDate = new DateTime($bill->BillExprDt);
+
+                $oldBillDays = $generatedDate->diff($expiredDate)->days;
+
+                // $daysPassed = $currentDate->diff($expiredDate)->days;
+
+
+                $billDays = $oldBillDays < 2 ? 2 : $oldBillDays;
+                // Calculate new percentage based on the ratio of days passed
+                // $newPercentage = intval($daysPassed / $billDays) * $percentage;
+
+
+
+                // Calculate penalty amount based on the new percentage
+                //  $penaltyAmount = ($newPercentage / 100) * $oldBillAmount;
+
+
+                $newBillAmount = $oldBillAmount;
+
+                // Calculate new expiration date by adding the old days to the current date
+                $newExpireDate = $currentDate->add(new DateInterval("P{$billDays}D"))->format('Y-m-d\TH:i:s');
+
+                // Format the current date as the new generated date
+                $newGeneratedDate = (new DateTime())->format('Y-m-d\TH:i:s');
+
+                $billId = randomString();
+                // $billId = $id;
+
+
+                $phoneNumber = $bill->PyrCellNum;
+                $payer = $bill->PyrName;
+                $serviceItems = array_map(fn ($item) => $item->ItemName, $billItems);
+
+
+
+                // return $this->response->setJSON([
+                //     'status' => 1,
+                //     // 'newPercentage' => $newPercentage,
+                //     'oldBillDays' => $billDays,
+                //     // 'daysPassed' => $daysPassed,
+                //     'og amount' => $newBillAmount,
+                //     // 'penaltyAmount' => $penaltyAmount,
+                //     // 'THE BILL' => $bill,
+                //     'BILL ITEMS' => $billItems,
+                //     'token' => $this->token,
+                // ]);
+
+                // exit;
+
+
+
+                $amt = (float)$billedAmount;
+
+                $billDetailsArray = [
+
+                    'BillId' => $billId,
+                    'BillAmt' => $billedAmount,
+                    'BillAmt' => $billedAmount,
+                    'BillAmtWords' => toWords($amt),
+                    'BillExprDt' => $newExpireDate,
+                    'BillGenDt' => $newGeneratedDate,
+                    'BillGenBy' => auth()->user()->username,
+
+
+                ];
+
+
+
+                $paymentOption = $bill->BillPayOpt;
+                $itemsCount = count($billItems);
+                $combinedAmount = (new ArrayLibrary($billItems))->reduce(fn ($x, $y) => $x + $y->BillItemAmt)->get();
+
+                $activityItems = [
+                    [
+                        'BillId' => $billId,
+                        'BillItemRef' => randomString(),
+                        'UseItemRefOnPay' => 'N',
+                        'BillItemAmt' => $combinedAmount,
+                        'BillItemEqvAmt' => $combinedAmount,
+                        'BillItemMiscAmt' => 0,
+                        'GfsCode' => $billItems[0]->GfsCode,
+                    ]
+                ];
+
+                if ($paymentOption == 2 && $itemsCount > 1) {
+                    $items = $activityItems;
+                } else {
+                    $items = (new ArrayLibrary($billItems))->map(fn ($item) => [
+                        'id' => $item->id,
+                        'BillId' => $billId,
+                        'BillItemRef' => $item->BillItemRef,
+                        'UseItemRefOnPay' => $item->UseItemRefOnPay,
+                        'BillItemAmt' => $item->BillItemAmt,
+                        'BillItemEqvAmt' => $item->BillItemEqvAmt,
+                        'BillItemMiscAmt' => $item->BillItemMiscAmt,
+                        'GfsCode' => $item->GfsCode,
+
+                    ])->get();
+                }
+
+
+
+                //2020
+                // return $this->response->setJSON([
+                //     'status' => 1,
+                //     'billItems' => $items,
+                //     'newExpireDate' => $newExpireDate,
+                //     'gen date' => $newGeneratedDate,
+                //     // 'newPercentage' => $newPercentage,
+                //     // 'penaltyAmount' => $penaltyAmount,
+                //     'bill' => $billDetailsArray,
+                //     'method' => $bill->method,
+                //     // 'billItems' => $items,
+                //     'token' => $this->token,
+                // ]);
+
+
+                // exit;
+
+                $xml = Array2XML::createXML('BillItems', ['BillItem' => arrayExcept($items, ['id', 'BillId'])])->saveXML();
+                $BillItems = ltrim(str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', $xml));
+
+                $extendedExpiryDate =  $this->extendedExpiryDate;
+                //$content = "";
+                $content = "<gepgBillSubReq>
+                    <BillHdr>
+                        <SpCode>$this->SpCode</SpCode>
+                        <RtrRespFlg>true</RtrRespFlg>
+                    </BillHdr>
+                    <BillTrxInf>
+                        <BillId>$billId</BillId>
+                        <SubSpCode>$this->subSpCode</SubSpCode>
+                        <SpSysId>$this->systemId</SpSysId>
+                        <BillAmt>$billedAmount</BillAmt>
+                        <MiscAmt>0.00</MiscAmt>
+                        <BillExprDt>$extendedExpiryDate</BillExprDt>
+                        <PyrId>$bill->PyrId</PyrId>
+                        <PyrName>$bill->PyrName</PyrName>
+                        <BillDesc>$bill->BillDesc</BillDesc>
+                        <BillGenDt>$newGeneratedDate</BillGenDt>
+                        <BillGenBy>$bill->BillGenBy</BillGenBy>
+                        <BillApprBy>$bill->BillApprBy</BillApprBy>
+                        <PyrCellNum>$phoneNumber</PyrCellNum>
+                        <PyrEmail>$bill->PyrEmail</PyrEmail>
+                        <Ccy>$bill->Ccy</Ccy>
+                        <BillEqvAmt>$billedAmount</BillEqvAmt>
+                        <RemFlag>$bill->RemFlag</RemFlag>
+                        <BillPayOpt>$bill->BillPayOpt</BillPayOpt>
+                        <PayCntrNum>$bill->PayCntrNum</PayCntrNum>
+                        <ReuseReasn>Reactivation of  control number</ReuseReasn>
+                        " . $BillItems . "
+                    </BillTrxInf>
+                </gepgBillSubReq>";
+
+
+
+
+
+                //switching uri and request headers based on type of request being sent
+                $uri = "bill/sigqrequest_reuse";
+                $GepgCom = "Gepg-Com:reusebill.sp.in";
+
+
+
+
+
+
+                $params = (object)[
+                    "dataTag" => "gepgBillSubReqAck",
+                    "uri" => $uri,
+                    'GepgCom' => $GepgCom,
+                ];
+
+                //sending request to gepg server 
+                $submission = $this->GepGpProcess->billSubmission(formatXml($content), $params);
+
+                if ($submission->status == 1) {
+                    $response = XML2Array::createArray($submission->resultCurlPost);
+                    $code = $response['Gepg']['gepgBillSubReqAck']['TrxStsCode'];
+                    if ($code == '7101') {
+
+                        //save bill info to database
+                        $billDetailsArray['TrxStsCode'] = $code;
+
+
+
+                        // return $this->response->setJSON([
+                        //     'billId' => $BillId,
+                        //     'submission' => $submission,
+                        //     'response' => $response,
+                        //     'token' => $this->token,
+                        // ]);
+                        // exit;
+                        $maxAttempts = 120; // Set a maximum number of attempts to avoid an infinite loop
+                        $attempt = 0;
+                        $startTime = microtime(true); // Record the start time
+
+
+
+                        while ($attempt < $maxAttempts) {
+                            $billRes = $this->billModel->getBillResponse($billId);
+
+
+                            if (!empty($billRes)) {
+                                $gepgResponseCode = $billRes->resCode;
+                                //check if the status code returned to callback response code is 7101
+                                if (strlen($gepgResponseCode) == 4 && $gepgResponseCode == '7101') {
+
+                                    if ($paymentOption == 2) {
+                                        unset($activityItems['BillId']);
+                                        $this->billModel->savePartialReference($activityItems);
+                                    }
+
+                                    $this->billModel->updateBill($bill->PayCntrNum, [
+                                        'BillId' => $billId,
+                                        'BillGenDt' => $newGeneratedDate,
+                                        'extendedExpiryDate' => (new DateTime())->modify('+360 days')->format('Y-m-d\TH:i:s'),
+                                        'BillExprDt' => $newExpireDate
+                                    ]);
+                                    //update bill items to database
+                                    $this->billModel->updateBillItems($items);
+                                    // $currentBill = $this->billModel->getControlNumber($BillId);
+                                    $controlNumber =  $billRes->PayCntrNum;
+
+                                    $accountNumber = '';
+                                    $bank = '';
+
+                                    $billDetailsArray['PayCntrNum'] = $billRes->PayCntrNum;
+                                    $billDetailsArray['TrxStsCode'] = $gepgResponseCode;
+
+
+
+
+
+
+                                    //get center name
+                                    $center = wmaCenter($this->collectionCenter)->centerName;
+
+                                    //sms notification parameters
+                                    $textParams = (object)[
+                                        'payer' => $payer,
+                                        'center' => $center,
+                                        'amount' => $newBillAmount,
+                                        'items' => (string)implode(',', $serviceItems),
+                                        'expiryDate' => $newExpireDate,
+                                        'controlNumber' => (int)$controlNumber,
+
+                                    ];
+
+
+
+                                    //sending sms if bill is okay
+                                    // $this->sms->sendSms(recipient: $phoneNumber, message: billTextTemplate($textParams));
+
+                                    //fetch bill details
+                                    $bill = $this->billModel->fetchBill($billDetailsArray['BillId']);
+                                    switch ($bill->SwiftCode) {
+                                        case 'NMIBTZTZ':
+                                            $accountNumber .= '20301000002';
+                                            $bank .= 'National Microfinance Bank';
+                                            break;
+                                        case 'CORUTZTZ':
+                                            $accountNumber .= '0150357655550';
+                                            $bank .= 'CRDB Bank';
+                                            break;
+                                        case 'TANZTZTX':
+                                            $accountNumber .= '9925261001';
+                                            $bank .= 'Bank Of Tanzania (BOT)';
+                                            break;
+                                    }
+                                    $billData = (object)[
+                                        'bill' => $bill,
+                                        'billItems' => $this->billModel->fetchBillItems($billDetailsArray['BillId']),
+                                        'printedBy' => $this->user->username,
+                                        'printedOn' => dateFormatter(date('Y-m-d')),
+                                        'bank' => $bank,
+                                        'accountNumber' => $accountNumber,
+                                    ];
+
+
+                                    //qr code obj data for bill
+                                    $qrCodeObject = (object)[
+                                        'opType' => '2',
+                                        'shortCode' => '001001',
+                                        'billReference' => $bill->PayCntrNum,
+                                        'amount' => $bill->BillAmt,
+                                        'billCcy' => 'TZS',
+                                        'billExprDt' => $bill->BillExprDt,
+                                        'billPayOpt' => $bill->BillPayOpt,
+                                        'billRsv01' => "Weights And Measure Agency|$bill->PyrName"
+                                    ];
+                                    $endTime = microtime(true); // Record the start time
+                                    return $this->response->setJSON([
+                                        'status' => 1,
+
+                                        'token' => $this->token,
+                                        'TrxStsCode' =>  $gepgResponseCode,
+                                        'bill' => $bill->method == 'BankTransfer' ? transferBill($billData) : normalBill($billData),
+                                        'qrCodeObject' =>  $qrCodeObject,
+                                        'msg' => 'Bill Renewed Successfully',
+                                        'RESPONSE' => $billRes,
+                                        'heading' => $bill->method == 'BankTransfer' ? "Order Form For Electronic Fund Transfer To $bank " : "Government Bill",
+                                        'time' => $endTime - $startTime
+                                        // 'sms' => 
+
+                                    ]);
+                                } else {
+                                    //if gepg response code is not 7101 return error codes and messages
+                                    $errorCode = substr($gepgResponseCode, 0, 4);
+                                    $transactionStatus = substr($gepgResponseCode, -4);
+
+                                    return $this->response->setJSON([
+                                        'status' => 0,
+                                        'msg' =>  tnxCode($errorCode),
+                                        'TrxStsCode' =>  $errorCode,
+                                        'token' => $this->token,
+                                        'billId' => $billId
+                                    ]);
+                                }
+
+
+                                break;
+                            } else {
+                                sleep(1);
+                                $attempt++;
+                            }
+                        }
+                        $endTime = microtime(true); // Record the start time
+                        // If the loop completes without receiving the expected data, return an error
+                        return $this->response->setJSON([
+                            'status' => 0,
+                            'BillId' => $billId,
+                            'token' => $this->token,
+                            'msg' => 'Timeout: Try to search the bill if it is already renewed if not try again',
+                            'attempt' => $attempt,
+                            'time' => $endTime - $startTime,
+
+                        ])->setStatusCode(500);
+
+                        // }
+                    } else {
+                        return $this->response->setJSON([
+                            'status' => 0,
+                            'msg' => tnxCode($code),
+                            'TrxStsCode' =>  $code,
+                            'token' => $this->token,
+                            'billId' => $billId
+                        ]);
+                    }
+                } else {
+                    return $this->response->setJSON([
+                        'status' => 0,
+                        'msg' => $submission->msg,
+                        'TrxStsCode' =>  '',
+                        'token' => $this->token,
+                        'billId' => $billId
+                    ]);
+                }
+            }
+        } catch (\Throwable $th) {
+            $response = [
+                'status' => 0,
+                'msg' => $th->getMessage(),
+                'trace' => $th->getTrace(),
+                'token' => $this->token
+            ];
+        }
+        return $this->response->setJSON($response)->setStatusCode(500);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //=================################################====================
+    //canceling generated bill
+    public function billCancellationApproval()
+    {
+
+        try {
+            if ($this->request->isAJAX()) {
+
+                $billId = $this->getVariable('billId');
+                $cancelReason = $this->getVariable('reason');
+                $requestedBy = $this->getVariable('requestedBy');
+
+
+
+                $req = [
+                    'BillId' => $billId,
+                    'CanclReasn' => $cancelReason,
+                    'CanceledBy' =>  $requestedBy,
+                    'ApprovedBy' =>  $this->user->username,
+                ];
+                $content =
+                    "<gepgBillCanclReq>
+                <SpCode>$this->SpCode</SpCode>
+                <SpSysId>$this->systemId</SpSysId> 
+                <CanclReasn>$cancelReason</CanclReasn>
+                <BillId>$billId</BillId>
+            </gepgBillCanclReq>";
+
+                // $this->billModel->saveCancellation($req);
+                $this->billModel->deleteCancellationRequest($billId);
+
+
+
+
+
+                //mapping bill item data for for soft deleting data
+                $items = array_map(fn ($item) => (object)[
+                    'gfs' => $item->GfsCode,
+                    'id' => $item->BillItemRef,
+                ], $this->billModel->fetchBillItems($billId));
+
+                //  return $this->response->setJSON([
+                //    'status' => 0,
+                //    'data' => $items,
+                //    'token' => $this->token
+                //  ]);
+
+
+
+
+
+                // exit;
+
+                $params = (object)[
+                    "dataTag" => "gepgBillCanclResp",
+                    "uri" => "bill/sigcancel_request",
+                    'GepgCom' => 'Gepg-Com:default.sp.in',
+                ];
+                $submission = $this->GepGpProcess->billSubmission(formatXml($content), $params);
+
+                if ($submission->status == 1) {
+                    $array =   XML2Array::createArray($submission->resultCurlPost);
+
+                    $data = $array['Gepg']['gepgBillCanclResp']['BillCanclTrxDt'];
+                    $txCode = $data['TrxStsCode'];
+                    $id = $data['BillId'];
+
+                    if ($txCode == '7283') {
+                        $this->billModel->saveCancellation($req);
+                        $this->billModel->updateCancellationStatus($id, ['IsCancelled' => 'Yes']);
+                        $this->billModel->updateCancellationRequest(
+                            $id,
+                            [
+                                'approved' => 'Yes',
+                                'approvedBy' => $this->user->username,
+                                'approvalDate' => dateFormatter(date('Y-m-d')),
+                            ]
+                        );
+
+
+                        $this->softDeleteInstrument($items);
+                        $this->billModel->deleteCancellationRequest($billId);
+                        return $this->response->setJSON([
+                            'status' => 1,
+                            'token' => $this->token,
+                            'msg' => 'Bill Has Been Cancelled',
+                            'billId' => $id,
+                            'code' => $txCode,
+
+                        ]);
+                    } else {
+                        return $this->response->setJSON([
+                            'status' => 0,
+                            'token' => $this->token,
+                            'msg' => tnxCode($txCode),
+                            'billId' => $id,
+                            'code' => $txCode,
+
+
+                        ]);
+                    }
+                } else {
+                    return $this->response->setJSON([
+                        'status' => 0,
+                        'token' => $this->token,
+                        'msg' => $submission->msg,
+
+
+
+                    ]);
+                }
+
+                // return $this->response->setJSON([$submission]);
+                // exit;
+                //converting gepg xml response to array
+
+            }
+        } catch (\Throwable $th) {
+            $response = [
+                'status' => 0,
+                'msg' => $th->getMessage(),
+                'token' => $this->token,
+                'code' => 500
+            ];
+        }
+        return $this->response->setJSON($response)->setStatusCode(500);
+    }
+
+    public function softDeleteInstrument($items)
+    {
+        $data = ['deletedAt' => date('Y-m-d H:i:s')];
+        foreach ($items as $item) {
+            switch ($item->gfs) {
+                case setting('Gfs.vtv'):
+
+                    (new VtcModel())->updateTank($item->id, $data);
+                    break;
+
+                case setting('Gfs.sbl'):
+                    (new LorriesModel())->updateVerifiedLorry($item->id, $data);
+
+                    break;
+                case setting('Gfs.waterMeter'):
+                    (new WaterMeterModel())->updateVerifiedMeters($item->id, $data);
+                    break;
+
+
+                case setting('Gfs.balance'):
+                case setting('Gfs.fst'):
+                case setting('Gfs.bst'):
+                case setting('Gfs.fuelPump'):
+                case setting('Gfs.beamScale'):
+                case setting('Gfs.automaticWeigher'):
+                case setting('Gfs.weigher'):
+                case setting('Gfs.pishi'):
+                case setting('Gfs.vibaba'):
+                case setting('Gfs.koroboi'):
+                case setting('Gfs.balance'):
+                case setting('Gfs.springBalance'):
+                case setting('Gfs.platformScale'):
+                case setting('Gfs.counterScale'):
+                case setting('Gfs.suspendedDigitalWare'):
+                case setting('Gfs.brimMeasureSystem'):
+                case setting('Gfs.steelYard'):
+                case setting('Gfs.measuresOfLength'):
+                case setting('Gfs.tapeMeasure'):
+                case setting('Gfs.metreRule'):
+                case setting('Gfs.taxiMeter'):
+                case setting('Gfs.provingTank'):
+                case setting('Gfs.pressureGauges'):
+                case setting('Gfs.metrological'):
+                case setting('Gfs.checkPump'):
+                case setting('Gfs.flowMeter'):
+                case setting('Gfs.cngFillingStation'):
+                case setting('Gfs.fuelPump'):
+                case setting('Gfs.wagonTank'):
+                case setting('Gfs.bst'):
+                case setting('Gfs.bst'):
+
+                    $this->billModel->updateBillItem($item->id, $data);
+                default:
+                    // Code to be executed if $value does not match any of the cases
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    public function billCancellation()
+    {
+
+        try {
+            if ($this->request->isAJAX()) {
+
+                $billId = $this->getVariable('billId');
+                $cancelReason = $this->getVariable('reason');
+
+                $req = [
+                    'BillId' => $billId,
+                    'CanclReasn' => $cancelReason,
+                    'CanceledBy' =>  $this->user->username,
+                ];
+                $content =
+                    "<gepgBillCanclReq>
+                <SpCode>$this->SpCode</SpCode>
+                <SpSysId>$this->systemId</SpSysId> 
+                <CanclReasn>$cancelReason</CanclReasn>
+                <BillId>$billId</BillId>
+            </gepgBillCanclReq>";
+
+                // $this->billModel->saveCancellation($req);
+
+                // return $this->response->setJSON([
+                //     $req
+                // ]);
+                // exit;
+
+                $params = (object)[
+                    "dataTag" => "gepgBillCanclResp",
+                    "uri" => "bill/sigcancel_request",
+                    'GepgCom' => 'Gepg-Com:default.sp.in',
+                ];
+                $submission = $this->GepGpProcess->billSubmission(formatXml($content), $params);
+
+                if ($submission->status == 1) {
+                    $array =   XML2Array::createArray($submission->resultCurlPost);
+
+                    $data = $array['Gepg']['gepgBillCanclResp']['BillCanclTrxDt'];
+                    $txCode = $data['TrxStsCode'];
+                    $id = $data['BillId'];
+
+                    if ($txCode == '7283') {
+                        $this->billModel->saveCancellation($req);
+                        $this->billModel->updateCancellationStatus($id, ['IsCancelled' => 'Yes']);
+                        return $this->response->setJSON([
+                            'status' => 1,
+                            'token' => $this->token,
+                            'msg' => 'Bill Has Been Cancelled',
+                            'billId' => $id,
+                            'code' => $txCode,
+
+                        ]);
+                    } else {
+                        return $this->response->setJSON([
+                            'status' => 0,
+                            'token' => $this->token,
+                            'msg' => tnxCode($txCode),
+                            'billId' => $id,
+                            'code' => $txCode,
+
+
+                        ]);
+                    }
+                } else {
+                    return $this->response->setJSON([
+                        'status' => 0,
+                        'token' => $this->token,
+                        'msg' => $submission->msg,
+
+
+
+                    ]);
+                }
+
+                // return $this->response->setJSON([$submission]);
+                // exit;
+                //converting gepg xml response to array
+
+            }
+        } catch (\Throwable $th) {
+            $response = [
+                'status' => 0,
+                'msg' => $th->getMessage(),
+                'token' => $this->token
+            ];
+        }
+        return $this->response->setJSON($response)->setStatusCode(500);
+    }
+
+    //=================Bill change request====================
+    public function billChange()
+    {
+
+        $BillId = $this->getVariable('BillId');
+        $date = $this->getVariable('BillExprDt');
+        $BillExprDt = date('Y-m-d\TH:i:s', strtotime($date . ' + 20 days'));
+        // echo $BillExprDt;  
+
+        $data = [
+            'BillId' => $BillId,
+            'BillExprDt' => $BillExprDt,
+        ];
+
+
+        $content =
+            "<gepgBillSubReq> 
+            <BillHdr> 
+                <SpCode>$this->SpCode</SpCode> 
+                <RtrRespFlg>true</RtrRespFlg> 
+                </BillHdr> 
+            <BillTrxInf> 
+                <BillId>$BillId</BillId> 
+                <SpSysId>$this->systemId</SpSysId> 
+                <BillExprDt>$BillExprDt</BillExprDt> 
+            </BillTrxInf> 
+            </gepgBillSubReq>";
+
+
+
+        // echo formatXml($content);
+
+        // // printer($data);
+        // exit;
+
+        $this->billModel->updateDate($BillId, ['BillExprDt' => $BillExprDt]);
+        $params = (object)[
+            "dataTag" => "gepgBillSubReqAck",
+            "uri" => "bill/sigqrequest_change",
+            'GepgCom' => 'Gepg-Com:changebill.sp.in',
+        ];
+        $xml = $this->GepGpProcess->billSubmission(formatXml($content), $params);
+        echo $xml;
+    }
+
+
+
+
+    public function payments()
+    {
+
+        $data['page'] = [
+            "title" => 'Payments',
+            "heading" =>  'Payments',
+        ];
+
+
+
+
+        $data['user'] = auth()->user();
+
+        $data['currentPage'] = 'bill';
+        return view('Pages/Transactions/searchReceipt', $data);
+    }
+
+
+    public function searchBill()
+    {
+        try {
+            $activity = $this->getVariable('activity');
+            $status = $this->getVariable('payment');
+            $name = $this->getVariable('name');
+            $phone = $this->getVariable('phone');
+            $date = $this->getVariable('date');
+            $controlNumber = $this->getVariable('controlNumber');
+            $dateRange = $this->getVariable('dateRange');
+
+            // Split the date range string into an array using the " - " separator
+            $dateParts = explode(' - ', $dateRange);
+
+            // Use the null coalescing operator to handle the case where $dateRange is empty
+            $startDate = isset($dateParts[0]) ? date('Y-m-d H:i:s', strtotime($dateParts[0] . ' 23:59:59')) : '';
+            $endDate = isset($dateParts[1]) ? date('Y-m-d H:i:s', strtotime($dateParts[1] . ' 23:59:59')) : '';
+
+            // Check if $dateRange is empty, and set both dates to empty strings
+            if (empty($dateRange)) {
+                $startDate = '';
+                $endDate = '';
+            }
+
+            $billParams = [
+                //'activity' => $activity,
+                'IsCancelled' => 'No',
+                'PaymentStatus' => $status,
+                'wma_bill.PayCntrNum' => $controlNumber,
+                'wma_bill.PyrCellNum' => $phone,
+                'wma_bill.CollectionCenter' => $this->user->inGroup('officer', 'manager') ? $this->user->collection_center : '',
+                'DATE(wma_bill.CreatedAt)' => $date,
+                'DATE(wma_bill.CreatedAt) >=' => $startDate,
+                'DATE(wma_bill.CreatedAt) <=' => $endDate,
+            ];
+
+            foreach ($billParams as $key => $value) {
+                if ($value == '') {
+                    unset($billParams[$key]);
+                }
+            }
+
+
+            // return $this->response->setJSON([
+            //     'status' => 0,
+            //     'data' => $billParams,
+            //     'dateRange' => $dateRange,
+            //     'dateParts' => $dateParts,
+            //     'token' => $this->token
+            // ]);
+
+            // exit;
+            // if($name == '' && count() ){
+
+            // }
+            $request =  $this->billModel->searchBill($billParams, $name, $activity);
+            // return $this->response->setJSON([$request]);
+            // exit;
+
+
+
+            if ($request) {
+
+                $billResults = '';
+                foreach ($request as $bill) {
+                    $cancelBill = '';
+                    $renewBill = '';
+                    $billId = '';
+                    $amount = number_format($bill->BillAmt);
+                    $paidAmount = number_format($bill->PaidAmount);
+                    $outstanding = number_format($bill->BillAmt - $bill->PaidAmount);
+                    $billDate = timeDate($bill->CreatedAt);
+                    $expiryDate = dateFormatter($bill->BillExprDt);
+
+                    $phoneNumber = str_replace('255', '0', $bill->PyrCellNum);
+
+
+
+                    $expirationDate = $bill->extendedExpiryDate;
+                    $currentDate = new DateTime();
+                    $expDate = new DateTime($bill->extendedExpiryDate);
+
+                    $exactExpirationDate = new DateTime($bill->BillExprDt);
+
+
+
+
+
+                    $time = $bill->CreatedAt;
+
+                    // Create DateTime objects,
+                    $startTime = (new DateTime($time))->add(new DateInterval('PT5M'));
+
+                    // Check if five minutes have passed
+                    $canResubmit = ($currentDate >= $startTime) && $bill->PayCntrNum  == '' ? true : false;
+
+
+
+
+
+                    $unextended = $currentDate > $exactExpirationDate  && $bill->extendedExpiryDate  == null ? true : false;
+                    $isExpired = ($currentDate > $expDate) || $unextended ? true : false;
+                    $billExpiryDate = $bill->BillExprDt;
+
+                    // Assuming $isExpired and $bill->extendedExpiryDate are defined elsewhere
+                    //$xprDt = '';
+
+                    if (($currentDate > $billExpiryDate) && $bill->extendedExpiryDate != null) {
+                        // Get today's date
+                        $todayDate = new DateTime();
+                        
+                        // Get the bill expiry date
+                        $expirationDate = new DateTime($billExpiryDate);
+                        
+                        // Calculate the difference in days between today and the bill expiry date
+                        $interval = $todayDate->diff($expirationDate)->days;
+                    
+                        // Create a new DateTime object for the expiry date
+                        $expiryDateTime = new DateTime();
+                        
+                        // Add the interval (difference in days) to the extended expiry date
+                        $expiryDateTime->add(new DateInterval("P{$interval}D"));
+                    
+                        // Format the new expiry date as desired
+                        $newExpiryDate = $expiryDateTime->format('Y-m-d');
+                        $xprDt = dateFormatter($newExpiryDate);
+                    } else {
+                        $xprDt = dateFormatter($billExpiryDate);
+                    }
+                    
+
+                    // Now $xpDate contains the formatted date with 5 days added, or it's empty if conditions weren't met
+
+
+
+                    if ($bill->UserId == $this->uniqueId || $this->user->inGroup('superadmin')) {
+                        $cancelBill .= <<<"HTML"
+                           <button data-toggle="tooltip" data-placement="top" title="Cancel Bill"   onclick="cancelBill('$bill->BillId','$bill->PayCntrNum')" type="button" class="btn btn-dark btn-xs">
+                           <i class="fal fa-ban"></i>
+                           </button> 
+                        HTML;
+                    }
+                 
+                    if ($isExpired &&   $this->user->inGroup('superadmin')) {
+                        $renewBill .= <<<"HTML"
+                           <button data-toggle="tooltip" data-placement="top" title="Renew Bill"   onclick="renewBill('$bill->BillId','$bill->PayCntrNum')" type="button" class="btn  btn-xs" style="background:#22ae32;color:#fff">
+                           <i spin class="fal fa-redo"></i>
+                           </button> 
+                        HTML;
+                    }
+                    if ($canResubmit) {
+                        $renewBill .= <<<"HTML"
+                           <button data-toggle="tooltip" id="b-$bill->BillId" data-placement="top" title="Re-Submit Bill"   onclick="resubmitBill('$bill->BillId')" type="button" class="btn  btn-xs " style="background:#6A6A69;color:#fff">
+                           <i class="far fa-paper-plane"></i>
+                           </button> 
+                        HTML;
+                    }
+
+                    if ($this->user->inGroup('superadmin', 'admin')) {
+                        $billId .= <<<"HTML"
+                        <button  data-toggle="tooltip" data-placement="top" title="Bill Id"  onclick="viewBillId('$bill->BillId')" type="button" class="btn btn-default btn-xs">
+                        <i class="fal fa-clone"></i>
+                        </button> 
+                     HTML;
+                    }
+
+
+                    $billResults .= <<<"HTML"
+                      <tr class="$bill->BillId">
+                        <td>$billDate   </td>
+                        <td>$bill->PyrName</td>
+                        <td>$phoneNumber</td>
+                        <td>$bill->PayCntrNum</td>
+                        <td>$amount</td>
+                        <td>$paidAmount</td>
+                        <td>$outstanding</td>
+                        <td>$bill->BillGenBy</td>
+                        <td>$xprDt   </td>
+                        <td>
+                            <button data-toggle="tooltip" data-placement="top" title="View Bill" onclick="viewBill('$bill->BillId')" type="button" class="btn btn-primary btn-xs">
+                                <i class="fal fa-eye"></i>
+                            </button>
+                            
+                            $cancelBill
+                            $renewBill
+                            $billId
+                        </td>
+                      
+                      </tr>
+                     HTML;
+                }
+
+                $bill = <<<"HTML"
+                  
+                    <thead class="thead-dark">
+                        <tr >
+                            <th>Date</th>
+                            <th>Payer Name</th>
+                            <th>Phone Number</th>
+                            <th>Control Number</th>
+                            <th>Bill Amount</th>
+                            <th>Paid Amount</th>
+                            <th>Outstanding</th>
+                            <th>Generated By</th>
+                            <th>Expiry Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="billResults">
+                        $billResults
+    
+                    </tbody>
+                
+            HTML;
+                return $this->response->setJSON([
+
+                    'status' => 1,
+                    'bill' => $bill,
+                    'activity' => $activity,
+                    'token' => $this->token
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'status' => 0,
+                    'bill' => '',
+                    'activity' => $activity,
+                    'token' => $this->token
+                ]);
+            }
+        } catch (\Throwable $th) {
+            $response = [
+                'status' => 0,
+                'msg' => $th->getMessage(),
+                'trace' => $th->getTrace(),
+                'token' => $this->token
+            ];
+        }
+        return $this->response->setJSON($response);
+
+
+        // return $this->response->setJSON([$bill]);
+    }
+    public function searchPayment()
+    {
+        $activity = $this->getVariable('activity');
+        $status = $this->getVariable('payment');
+        $name = $this->getVariable('name');
+        $phone = $this->getVariable('phone');
+        $date = $this->getVariable('date');
+        $controlNumber = $this->getVariable('controlNumber');
+
+        $dateRange = $this->getVariable('dateRange');
+
+        // Split the date range string into an array using the " - " separator
+        $dateParts = explode(' - ', $dateRange);
+
+        // Use the null coalescing operator to handle the case where $dateRange is empty
+        $startDate = isset($dateParts[0]) ? date('Y-m-d H:i:s', strtotime($dateParts[0] . ' 00:00:00')) : '';
+        $endDate = isset($dateParts[1]) ? date('Y-m-d H:i:s', strtotime($dateParts[1] . ' 23:59:59')) : '';
+
+        // Check if $dateRange is empty, and set both dates to empty strings
+        if (empty($dateRange)) {
+            $startDate = '';
+            $endDate = '';
+        }
+
+        $billParams = [
+            'activity' => $activity,
+            'IsCancelled' => 'No',
+            'PaymentStatus' => $status,
+            'bill_payment.PayCtrNum' => $controlNumber,
+            'bill_payment.PyrCellNum' => $phone,
+            'wma_bill.CollectionCenter' => $this->user->inGroup('officer', 'manager') ? $this->collectionCenter : '',
+            'DATE(TrxDtTm)' => $date,
+            'DATE(TrxDtTm) >=' => $startDate,
+            'DATE(TrxDtTm) <=' => $endDate,
+        ];
+
+        foreach ($billParams as $key => $value) {
+            if ($value == '') {
+                unset($billParams[$key]);
+            }
+        }
+
+
+        // return $this->response->setJSON([
+        //     'status' => 0,
+
+        //     'params' => $billParams,
+
+        //     'token' => $this->token
+        // ]);
+        // exit;
+        // // return $this->response->setJSON([$request]);
+        // exit;
+        $request =  $this->billModel->searchPayment($billParams, $name);
+
+
+        if ($request) {
+
+            $billResults = '';
+            foreach ($request as $bill) {
+                $amount = number_format($bill->PaidAmt);
+                $pay = $bill->PaidAmount;
+
+                $phoneNumber = str_replace('255', '0', $bill->PyrCellNum);
+                // $outstanding = $bill->PaidAmount == $bill->BillAmt ? 0 : number_format($bill->BillAmt - $bill->PaidAmt) ;
+                $outstanding = number_format($bill->BillAmt - $bill->clearedAmount);
+                $billed = number_format($bill->BillAmt);
+                $date = dateFormatter($bill->TrxDtTm);
+                $billResults .= <<<"HTML"
+                  <tr id="$bill->BillId">
+                    <td>$date</td>
+                    <td>$bill->BillRef</td>
+                    <td>$bill->PyrName</td>
+                    <td>$phoneNumber</td>
+                    <td>$bill->PayCtrNum</td>
+                    <td>$billed</td> 
+                    <td>$amount</td> 
+                    <td>$outstanding</td>
+                    <td>$bill->UsdPayChnl</td>
+                    <td>$bill->PspName</td>
+                
+                    
+                    <td>
+                        <button data-toggle="tooltip" data-placement="top" title="View Receipt" onclick="viewPayment('$bill->BillId','$bill->PayRefId')" type="button" class="btn btn-primary btn-xs">
+                            <i class="fal fa-eye"></i>
+                        </button>
+                     
+                    </td>
+                  
+                  </tr>
+                 HTML;
+            }
+
+            $payments = <<<"HTML"
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Date</th>
+                        <th>Bill Reference</th>
+                        <th>Payer Name</th>
+                        <th>Phone Number</th>
+                        <th>Control Number</th>
+                        <th>Billed Amount</th>
+                        <th>Paid Amount</th>
+                        <th>Outstanding Balance</th>
+                        <th>Payment Chanel</th>
+                        <th>Payment Provider</th>
+                      
+                        
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="billResults">
+                    $billResults
+
+                </tbody>
+           
+        HTML;
+            return $this->response->setJSON([
+
+                'status' => 1,
+                'payments' => $payments,
+                'activity' => $activity,
+                'token' => $this->token
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'status' => 0,
+                'msg' => 'No Match Found',
+                'bill' => '',
+                'activity' => $activity,
+                'token' => $this->token
+            ]);
+        }
+
+
+        // return $this->response->setJSON([$bill]);
+    }
+
+    public function selectBill()
+    {
+        $activity = $this->getVariable('activity');
+        $billId = $this->getVariable('billId');
+        $document = $this->getVariable('document');
+
+        // return $this->response->setJSON([$controlNumber,$activity]);
+        // exit;
+
+
+
+        $bill =  $this->billModel->fetchBill($billId);
+        $billItems =  $this->billModel->fetchBillItems($billId);
+
+
+        $billDetails = $this->billModel->getBillDetails($billId);
+        $controlNumber =  $billDetails->PayCntrNum;
+        $method =  $billDetails->method;
+        $SwiftCode =  $billDetails->SwiftCode;
+        $accountNumber = '';
+        $bank = '';
+
+        //         return  $this->response->setJSON([
+        //           'bill' => $bill,
+        //           'token' => $this->token,
+        //         ]);
+        // exit;
+
+        switch ($SwiftCode) {
+            case 'NMIBTZTZ':
+                $accountNumber .= '20301000002';
+                $bank .= 'National Microfinance Bank';
+                break;
+            case 'CORUTZTZ':
+                $accountNumber .= '0150357655550';
+                $bank .= 'CRDB Bank';
+                break;
+            case 'TANZTZTX':
+                $accountNumber .= '9925261001';
+                $bank .= 'Bank Of Tanzania (BOT)';
+                break;
+        }
+
+
+        if (!empty($bill)) {
+            $billData = (object)[
+                'bill' => $this->billModel->fetchBill($billId),
+                'billItems' => $this->billModel->fetchBillItems($billId),
+                'printedBy' => $this->user->username,
+                'printedOn' => dateFormatter(date('Y-m-d')),
+                'bank' => $bank,
+                'accountNumber' => $accountNumber,
+            ];
+
+
+
+            $qrCodeObject = (object)[
+                'opType' => '2',
+                'shortCode' => '001001',
+                'billReference' => $bill->PayCntrNum,
+                'amount' => $bill->BillAmt,
+                'billCcy' => 'TZS',
+                'billExprDt' => $bill->BillExprDt,
+                'billPayOpt' => $bill->BillPayOpt,
+                'billRsv01' => "Weights And Measure Agency|$bill->PyrName"
+            ];
+
+            return $this->response->setJSON([
+                'status' => 1,
+                'token' => $this->token,
+                'bill' => $method == 'BankTransfer' ? transferBill($billData)  : normalBill($billData),
+                'qrCodeObject' =>   $qrCodeObject,
+                'msg' => 'Bill Created Successfully',
+                'heading' => $method == 'BankTransfer' ? "Order Form For Electronic Fund Transfer To $bank " : "Government Bill",
+                'items' => $this->billModel->fetchBillItems($billId)
+
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'status' => 0,
+                'token' => $this->token
+            ]);
+        }
+    }
+    public function selectPayment()
+    {
+        $billId = $this->getVariable('billId');
+        $paymentRef = $this->getVariable('paymentRef');
+
+
+        $user = $this->profileModel->getLoggedUserData($this->uniqueId);
+
+
+        $payment =  $this->billModel->fetchPayment($paymentRef);
+
+
+        // return $this->response->setJSON([$payment]);
+        // exit;
+
+
+
+
+
+        if (!empty($payment)) {
+            $receiptData = (object)[
+                'receipt' => $payment,
+                'billItems' => $this->billModel->fetchBillItems($billId),
+
+            ];
+
+
+
+
+            return $this->response->setJSON([
+                'status' => 1,
+                'receipt' => receipt($receiptData),
+                'msg' => 'Receipt Created Successfully',
+                'token' => $this->token
+
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'status' => 0,
+                'token' => $this->token
+            ]);
+        }
+    }
+
+    public function dom()
+    {
+        return view('dom');
+    }
+    public function domAjax()
+    {
+        $amt = $this->getVariable('BillItemAmt');
+        return $this->response->setJSON([$amt]);
+    }
+
+
+
+    public function getUser(): string
+    {
+        $user = $this->profileModel->getLoggedUserData($this->uniqueId);
+        return $user->first_name . ' ' . $user->last_name;
+    }
+
+    public function billPayment()
+    {
+    }
+}

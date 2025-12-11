@@ -1,0 +1,698 @@
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10 bg-gray-50 min-h-screen font-sans">
+  
+  <!-- Page Header -->
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h2 class="text-title-md2 font-bold text-black dark:text-white text-2xl">
+      {{ activeView === 'password' ? 'Change Password' : 'Profile' }}
+    </h2>
+    <nav>
+      <ol class="flex items-center gap-2">
+        <li><a class="font-medium text-primary hover:text-primary" routerLink="/">Dashboard /</a></li>
+        <li class="font-medium text-primary">{{ activeView === 'password' ? 'Password' : 'Profile' }}</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="space-y-6">
+    
+    <!-- Profile Header Card -->
+    <div *ngIf="activeView === 'profile'" class="flex flex-col gap-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden border-t-4 border-t-[#e79a3f] p-6 md:p-10">
+      <div class="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10">
+        <!-- Avatar -->
+        <div class="relative h-24 w-24 md:h-32 md:w-32 rounded-full overflow-hidden border-4 border-white shadow-sm shrink-0">
+          <div class="h-full w-full bg-orange-100 flex items-center justify-center text-4xl font-bold text-orange-500">
+            {{ userInfo.name.charAt(0).toUpperCase() }}
+          </div>
+          <label for="profile" class="absolute bottom-0 right-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-primary text-white hover:bg-opacity-90">
+            <svg class="fill-current" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M4.76464 1.42638C4.87283 1.2641 5.05496 1.16663 5.25 1.16663H8.75C8.94504 1.16663 9.12717 1.2641 9.23536 1.42638L10.2289 2.91663H12.25C12.7141 2.91663 13.1592 3.10098 13.4874 3.42919C13.8156 3.7574 14 4.2025 14 4.66663V11.0833C14 11.5474 13.8156 11.9925 13.4874 12.3207C13.1592 12.6489 12.7141 12.8333 12.25 12.8333H1.75C1.28587 12.8333 0.840752 12.6489 0.512563 12.3207C0.184375 11.9925 0 11.5474 0 11.0833V4.66663C0 4.2025 0.184374 3.7574 0.512563 3.42919C0.840752 3.10098 1.28587 2.91663 1.75 2.91663H3.77114L4.76464 1.42638ZM5.56219 2.33329L4.5687 3.82353C4.46051 3.98582 4.27839 4.08329 4.08333 4.08329H1.75C1.59529 4.08329 1.44692 4.14475 1.33752 4.25415C1.22812 4.36354 1.16667 4.51192 1.16667 4.66663V11.0833C1.16667 11.238 1.22812 11.3864 1.33752 11.4958C1.44692 11.6052 1.59529 11.6666 1.75 11.6666H12.25C12.4047 11.6666 12.5531 11.6052 12.6625 11.4958C12.7719 11.3864 12.8333 11.238 12.8333 11.0833V4.66663C12.8333 4.51192 12.7719 4.36354 12.6625 4.25415C12.5531 4.14475 12.4047 4.08329 12.25 4.08329H9.91667C9.72161 4.08329 9.53949 3.98582 9.4313 3.82353L8.43781 2.33329H5.56219Z" fill="" />
+            </svg>
+            <input type="file" name="profile" id="profile" class="sr-only" />
+          </label>
+        </div>
+
+        <!-- Info -->
+        <div class="flex-grow text-center md:text-left">
+          <h3 class="text-2xl font-bold text-black dark:text-white mb-1">{{ userInfo.name }}</h3>
+          <div class="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-gray-500 text-sm">
+            <span class="font-medium">Practitioner</span>
+            <span class="hidden md:inline text-gray-300">|</span>
+            <span>{{ personalInfo.region || 'Tanzania' }}</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-4">
+          <!-- Social Icons (Placeholder) -->
+          <!-- Social Icons (Removed) -->
+          <div class="hidden sm:flex items-center gap-2">
+            <!-- Icons removed as per request -->
+          </div>
+          
+          <button (click)="openEditModal()" class="bg-[#F59E0B] hover:bg-[#D97706] text-white font-medium py-2 px-6 rounded-lg shadow-sm transition-colors flex items-center gap-2 text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+            </svg>
+            Edit
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Personal Information Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden border-t-4 border-t-[#e79a3f]">
+      <div class="bg-orange-50 px-6 py-4 border-b border-orange-100 flex justify-between items-center">
+        <h3 class="text-lg font-bold text-gray-800">
+          Personal Information
+        </h3>
+      </div>
+      
+      <div class="p-7">
+
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          <!-- NIDA Number -->
+          <div class="relative">
+            <input type="text" [value]="personalInfo.identityNumber || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              {{ personalInfo.nationality === 'Tanzania' ? 'NIDA Number' : 'Passport Number' }}
+            </label>
+          </div>
+
+
+
+          <!-- First Name -->
+          <div class="relative">
+            <input type="text" [value]="personalInfo.firstName || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              First Name
+            </label>
+          </div>
+
+          <!-- Middle Name -->
+          <div class="relative">
+            <input type="text" [value]="personalInfo.secondName || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Middle Name
+            </label>
+          </div>
+
+          <!-- Last Name -->
+          <div class="relative">
+            <input type="text" [value]="personalInfo.lastName || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Last Name
+            </label>
+          </div>
+
+          <!-- Gender -->
+          <div class="relative">
+            <input type="text" [value]="personalInfo.gender || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Gender
+            </label>
+          </div>
+
+          <!-- Date of Birth -->
+          <div class="relative">
+            <input type="text" [value]="personalInfo.dateOfBirth || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Date of Birth
+            </label>
+          </div>
+
+          <!-- Email -->
+          <div class="relative">
+            <input type="text" [value]="personalInfo.email || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Email
+            </label>
+          </div>
+
+          <!-- Phone -->
+          <div class="relative">
+            <input type="text" [value]="personalInfo.phone || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Phone
+            </label>
+          </div>
+
+          <!-- Region -->
+          <div class="relative">
+            <input type="text" [value]="personalInfo.region || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Region
+            </label>
+          </div>
+
+          <!-- District -->
+          <div class="relative">
+            <input type="text" [value]="personalInfo.district || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              District
+            </label>
+          </div>
+
+          <!-- Street -->
+          <div class="relative">
+            <input type="text" [value]="personalInfo.street || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Street
+            </label>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Company Information Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden border-t-4 border-t-[#e79a3f]">
+      <div class="bg-orange-50 px-6 py-4 border-b border-orange-100 flex justify-between items-center">
+        <h3 class="text-lg font-bold text-gray-800">
+          Company Information
+        </h3>
+        <button (click)="openCompanyEditModal()" class="bg-[#F59E0B] hover:bg-[#D97706] text-white font-medium py-2 px-6 rounded-lg shadow-sm transition-colors flex items-center gap-2 text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+            </svg>
+            Edit
+        </button>
+        <!-- Company Edit temporarily disabled until modal support added -->
+      </div>
+      <div class="p-7">
+
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          <!-- Company Name -->
+          <div class="relative">
+            <input type="text" [value]="companyInfo.companyName || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Company Name
+            </label>
+          </div>
+
+          <!-- Registration Number (BRELA) -->
+          <div class="relative">
+            <input type="text" [value]="companyInfo.brelaNumber || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Registration Number (BRELA)
+            </label>
+          </div>
+
+          <!-- Tax Number (TIN) -->
+          <div class="relative">
+            <input type="text" [value]="companyInfo.tin || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Tax Number (TIN)
+            </label>
+          </div>
+
+          <!-- Company Email -->
+          <div class="relative">
+            <input type="text" [value]="companyInfo.companyEmail || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Company Email
+            </label>
+          </div>
+
+          <!-- Company Phone -->
+          <div class="relative">
+            <input type="text" [value]="companyInfo.companyPhone || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Company Phone
+            </label>
+          </div>
+
+          <!-- Region -->
+          <div class="relative">
+            <input type="text" [value]="companyInfo.region || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Region
+            </label>
+          </div>
+
+          <!-- District -->
+          <div class="relative">
+            <input type="text" [value]="companyInfo.district || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              District
+            </label>
+          </div>
+
+          <!-- Town -->
+          <div class="relative">
+            <input type="text" [value]="companyInfo.town || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Town
+            </label>
+          </div>
+
+          <!-- Postal Code -->
+          <div class="relative">
+            <input type="text" [value]="companyInfo.postalCode || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Postal Code
+            </label>
+          </div>
+
+          <!-- Street/Village -->
+          <div class="relative">
+            <input type="text" [value]="companyInfo.street || '-'" readonly
+              class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
+            <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
+              Street/Village
+            </label>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- License Information Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden border-t-4 border-t-[#e79a3f]">
+      <div class="bg-orange-50 px-6 py-4 border-b border-orange-100">
+        <h3 class="text-lg font-bold text-gray-800">
+          License Information
+        </h3>
+      </div>
+      <div class="p-7">
+        <button class="mb-6 bg-[#F59E0B] hover:bg-[#D97706] text-white font-medium py-2 px-6 rounded-lg shadow-sm transition-colors flex items-center gap-2 text-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+          </svg>
+          Renew License
+        </button>
+
+        <div class="max-w-full overflow-x-auto">
+          <table class="w-full table-auto">
+            <thead>
+              <tr class="bg-gray-2 text-left dark:bg-meta-4">
+                <th class="min-w-[220px] py-4 px-4 font-medium text-black dark:text-white xl:pl-11">
+                  LICENSE TYPE
+                </th>
+                <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
+                  LICENSE NUMBER
+                </th>
+                <th class="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
+                  ISSUE DATE
+                </th>
+                <th class="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
+                  EXPIRY DATE
+                </th>
+                <th class="py-4 px-4 font-medium text-black dark:text-white">
+                  STATUS
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let license of licenseData">
+                <td class="border-b border-[#eee] py-5 px-4 pl-9 dark:border-strokedark xl:pl-11">
+                  <div class="flex items-center gap-3">
+                    <div class="text-orange-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
+                      </svg>
+                    </div>
+                    <p class="text-black dark:text-white">{{ license.type }}</p>
+                  </div>
+                </td>
+                <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                  <span class="inline-block rounded bg-orange-50 px-2.5 py-0.5 text-sm font-medium text-orange-400 dark:bg-orange-400/10">
+                    {{ license.number }}
+                  </span>
+                </td>
+                <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                  <p class="text-black dark:text-white">{{ license.issueDate }}</p>
+                </td>
+                <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                  <p class="text-black dark:text-white">{{ license.expiryDate }}</p>
+                </td>
+                <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                  <span [class]="license.status === 'Active' ? 'bg-[#d1fae5] text-[#10b981]' : 'bg-[#fee2e2] text-[#ef4444]'"
+                        class="inline-flex rounded-full py-1 px-3 text-sm font-medium">
+                    <span class="mr-1.5 flex h-2 w-2 items-center justify-center rounded-full"
+                          [class]="license.status === 'Active' ? 'bg-[#10b981]' : 'bg-[#ef4444]'">
+                    </span>
+                    {{ license.status }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- Security Settings Card -->
+    <div *ngIf="activeView === 'password'">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden border-t-4 border-t-[#e79a3f]">
+      <div class="bg-orange-50 px-6 py-4 border-b border-orange-100">
+        <h3 class="text-lg font-bold text-gray-800">
+          Change Password
+        </h3>
+      </div>
+      <div class="p-7">
+        <div class="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
+            <div class="w-full sm:w-1/2">
+
+        <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+            Regularly updating your password helps keep your account secure.
+        </p>
+
+        <!-- General Error Alert -->
+        <div *ngIf="passwordErrors.general" class="mb-6 rounded-lg bg-red-50 p-4 text-sm text-red-500 border border-red-200">
+            {{ passwordErrors.general }}
+        </div>
+
+        <form (ngSubmit)="updatePassword()">
+
+                    <div class="mb-5.5">
+                        <label
+                            class="mb-2.5 block text-sm font-medium text-black dark:text-white"
+                            for="currentPassword"
+                        >
+                            Current Password
+                        </label>
+                        <div class="relative">
+                            <input
+                                [type]="showCurrentPassword ? 'text' : 'password'"
+                                name="currentPassword"
+                                [(ngModel)]="securityInfo.currentPassword"
+                                placeholder="Current Password"
+                                [class.border-red-500]="passwordErrors.currentPassword"
+                                class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
+                            />
+                            <span class="absolute right-4 top-4 cursor-pointer" (click)="showCurrentPassword = !showCurrentPassword">
+                                <svg *ngIf="!showCurrentPassword" class="fill-current" width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M11 15.675C13.5817 15.675 15.675 13.5817 15.675 11C15.675 8.41828 13.5817 6.325 11 6.325C8.41828 6.325 6.325 8.41828 6.325 11C6.325 13.5817 8.41828 15.675 11 15.675Z" fill=""/>
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M11 2.0625C6.05 2.0625 1.83333 5.18833 0 11C1.83333 16.8117 6.05 19.9375 11 19.9375C15.95 19.9375 20.1667 16.8117 22 11C20.1667 5.18833 15.95 2.0625 11 2.0625ZM11 17.325C7.5075 17.325 4.675 14.4925 4.675 11C4.675 7.5075 7.5075 4.675 11 4.675C14.4925 4.675 17.325 7.5075 17.325 11C17.325 14.4925 14.4925 17.325 11 17.325Z" fill=""/>
+                                </svg>
+                                <svg *ngIf="showCurrentPassword" class="fill-current" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M2 2L22 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M6.71277 6.7226C3.66479 8.79527 2 12 2 12C2 12 5.63636 19 12 19C14.0503 19 15.8174 18.2734 17.2711 17.2884M11 5.05822C11.3254 5.02013 11.6588 5 12 5C18.3636 5 22 12 22 12C22 12 21.3082 13.3317 20 14.8335" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M14 14.2362C13.4692 14.7112 12.7684 15.0001 12 15.0001C10.3431 15.0001 9 13.657 9 12.0001C9 11.1764 9.33193 10.4303 9.86932 9.88818" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                        </div>
+                        <div *ngIf="passwordErrors.currentPassword" class="mt-1 text-xs text-red-500">
+                            {{ passwordErrors.currentPassword }}
+                        </div>
+                    </div>
+
+                    <div class="mb-5.5">
+                        <label class="mb-2.5 block text-sm font-medium text-black dark:text-white">
+                            New Password
+                        </label>
+                        <div class="relative">
+                            <input
+                                [type]="showNewPassword ? 'text' : 'password'"
+                                name="newPassword"
+                                [(ngModel)]="securityInfo.newPassword"
+                                placeholder="New Password"
+                                [class.border-red-500]="passwordErrors.newPassword"
+                                class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
+                            />
+                            <span class="absolute right-4 top-4 cursor-pointer" (click)="showNewPassword = !showNewPassword">
+                                <svg *ngIf="!showNewPassword" class="fill-current" width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M11 15.675C13.5817 15.675 15.675 13.5817 15.675 11C15.675 8.41828 13.5817 6.325 11 6.325C8.41828 6.325 6.325 8.41828 6.325 11C6.325 13.5817 8.41828 15.675 11 15.675Z" fill=""/>
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M11 2.0625C6.05 2.0625 1.83333 5.18833 0 11C1.83333 16.8117 6.05 19.9375 11 19.9375C15.95 19.9375 20.1667 16.8117 22 11C20.1667 5.18833 15.95 2.0625 11 2.0625ZM11 17.325C7.5075 17.325 4.675 14.4925 4.675 11C4.675 7.5075 7.5075 4.675 11 4.675C14.4925 4.675 17.325 7.5075 17.325 11C17.325 14.4925 14.4925 17.325 11 17.325Z" fill=""/>
+                                </svg>
+                                <svg *ngIf="showNewPassword" class="fill-current" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M2 2L22 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M6.71277 6.7226C3.66479 8.79527 2 12 2 12C2 12 5.63636 19 12 19C14.0503 19 15.8174 18.2734 17.2711 17.2884M11 5.05822C11.3254 5.02013 11.6588 5 12 5C18.3636 5 22 12 22 12C22 12 21.3082 13.3317 20 14.8335" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M14 14.2362C13.4692 14.7112 12.7684 15.0001 12 15.0001C10.3431 15.0001 9 13.657 9 12.0001C9 11.1764 9.33193 10.4303 9.86932 9.88818" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                        </div>
+                        <div *ngIf="passwordErrors.newPassword" class="mt-1 text-xs text-red-500">
+                            {{ passwordErrors.newPassword }}
+                        </div>
+                    </div>
+
+                    <div class="mb-5.5">
+                        <label class="mb-2.5 block text-sm font-medium text-black dark:text-white">
+                            Confirm New Password
+                        </label>
+                        <div class="relative">
+                            <input
+                                [type]="showConfirmPassword ? 'text' : 'password'"
+                                name="confirmPassword"
+                                [(ngModel)]="securityInfo.confirmPassword"
+                                placeholder="Confirm New Password"
+                                [class.border-red-500]="passwordErrors.confirmPassword"
+                                class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
+                            />
+                            <span class="absolute right-4 top-4 cursor-pointer" (click)="showConfirmPassword = !showConfirmPassword">
+                                <svg *ngIf="!showConfirmPassword" class="fill-current" width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M11 15.675C13.5817 15.675 15.675 13.5817 15.675 11C15.675 8.41828 13.5817 6.325 11 6.325C8.41828 6.325 6.325 8.41828 6.325 11C6.325 13.5817 8.41828 15.675 11 15.675Z" fill=""/>
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M11 2.0625C6.05 2.0625 1.83333 5.18833 0 11C1.83333 16.8117 6.05 19.9375 11 19.9375C15.95 19.9375 20.1667 16.8117 22 11C20.1667 5.18833 15.95 2.0625 11 2.0625ZM11 17.325C7.5075 17.325 4.675 14.4925 4.675 11C4.675 7.5075 7.5075 4.675 11 4.675C14.4925 4.675 17.325 7.5075 17.325 11C17.325 14.4925 14.4925 17.325 11 17.325Z" fill=""/>
+                                </svg>
+                                <svg *ngIf="showConfirmPassword" class="fill-current" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M2 2L22 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M6.71277 6.7226C3.66479 8.79527 2 12 2 12C2 12 5.63636 19 12 19C14.0503 19 15.8174 18.2734 17.2711 17.2884M11 5.05822C11.3254 5.02013 11.6588 5 12 5C18.3636 5 22 12 22 12C22 12 21.3082 13.3317 20 14.8335" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M14 14.2362C13.4692 14.7112 12.7684 15.0001 12 15.0001C10.3431 15.0001 9 13.657 9 12.0001C9 11.1764 9.33193 10.4303 9.86932 9.88818" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                        </div>
+                        <div *ngIf="passwordErrors.confirmPassword" class="mt-1 text-xs text-red-500">
+                            {{ passwordErrors.confirmPassword }}
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-4.5">
+                        <button
+                            class="flex justify-center rounded border border-stroke py-2 px-6 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white"
+                            type="button"
+                            (click)="securityInfo = {currentPassword: '', newPassword: '', confirmPassword: ''}"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            class="flex justify-center rounded-full bg-[#d58512] py-2 px-6 font-medium text-black hover:bg-opacity-90"
+                            type="submit"
+                        >
+                            Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="w-full sm:w-1/2">
+                <div class="rounded-sm border border-stroke bg-gray p-6 dark:border-strokedark dark:bg-meta-4">
+                    <h4 class="mb-4 text-title-sm font-semibold text-black dark:text-white">
+                        Password Requirements
+                    </h4>
+                    <ul class="flex flex-col gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <li class="flex items-center gap-2">
+                            <span class="h-1.5 w-1.5 rounded-full bg-gray-500"></span>
+                            At least 8 characters long
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="h-1.5 w-1.5 rounded-full bg-gray-500"></span>
+                            At least one uppercase letter
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="h-1.5 w-1.5 rounded-full bg-gray-500"></span>
+                            At least one lowercase letter
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="h-1.5 w-1.5 rounded-full bg-gray-500"></span>
+                            At least one number
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="h-1.5 w-1.5 rounded-full bg-gray-500"></span>
+                            At least one special character
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div *ngIf="showModal" class="fixed inset-0 z-999999 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-y-auto">
+  <div class="relative w-full max-w-2xl rounded-lg bg-white p-8 shadow-lg dark:bg-boxdark my-8">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h3 class="text-xl font-bold text-black dark:text-white">
+          Edit Personal Information
+        </h3>
+        <p class="text-sm text-gray-500 mt-1">Update your details to keep your profile up-to-date.</p>
+      </div>
+      <button (click)="closeModal()" class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-meta-4 dark:hover:bg-opacity-90">
+        <svg class="fill-current" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M13.232 0.768025C13.525 1.06092 13.525 1.53579 13.232 1.82869L7.56066 7.5L13.232 13.1713C13.525 13.4642 13.525 13.9391 13.232 14.232C12.939 14.5249 12.464 14.5249 12.171 14.232L6.5 8.56066L0.828956 14.232C0.535956 14.5249 0.0609564 14.5249 -0.232044 14.232C-0.525044 13.9391 -0.525044 13.4642 -0.232044 13.1713L5.43934 7.5L-0.232044 1.82869C-0.525044 1.53579 -0.525044 1.06092 -0.232044 0.768025C0.0609564 0.475132 0.535956 0.475132 0.828956 0.768025L6.5 6.43934L12.171 0.768025C12.464 0.475132 12.939 0.475132 13.232 0.768025Z" fill="" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="space-y-6">
+      
+      <!-- Social Links -->
+      <!-- Social Links (Removed) -->
+
+      <!-- Personal Information -->
+      <div>
+        <h4 class="font-semibold text-black dark:text-white mb-4">Personal Information</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">First Name</label>
+            <input [(ngModel)]="personalInfo.firstName" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">Last Name</label>
+            <input [(ngModel)]="personalInfo.lastName" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">Email Address</label>
+            <input [(ngModel)]="personalInfo.email" type="email" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">Phone</label>
+            <input [(ngModel)]="personalInfo.phone" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">Date of Birth</label>
+            <input [(ngModel)]="personalInfo.dateOfBirth" type="date" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="flex justify-end gap-4 mt-8">
+      <button (click)="closeModal()" class="rounded border border-stroke py-2 px-6 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white">
+        Close
+      </button>
+      <button (click)="saveProfile()" class="rounded bg-primary py-2 px-6 font-medium text-white hover:bg-opacity-90">
+        Save Changes
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Company Edit Modal -->
+<div *ngIf="showCompanyModal" class="fixed inset-0 z-999999 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-y-auto">
+  <div class="relative w-full max-w-2xl rounded-lg bg-white p-8 shadow-lg dark:bg-boxdark my-8">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h3 class="text-xl font-bold text-black dark:text-white">
+          Edit Company Information
+        </h3>
+        <p class="text-sm text-gray-500 mt-1">Update your company details.</p>
+      </div>
+      <button (click)="closeCompanyModal()" class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-meta-4 dark:hover:bg-opacity-90">
+        <svg class="fill-current" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M13.232 0.768025C13.525 1.06092 13.525 1.53579 13.232 1.82869L7.56066 7.5L13.232 13.1713C13.525 13.4642 13.525 13.9391 13.232 14.232C12.939 14.5249 12.464 14.5249 12.171 14.232L6.5 8.56066L0.828956 14.232C0.535956 14.5249 0.0609564 14.5249 -0.232044 14.232C-0.525044 13.9391 -0.525044 13.4642 -0.232044 13.1713L5.43934 7.5L-0.232044 1.82869C-0.525044 1.53579 -0.525044 1.06092 -0.232044 0.768025C0.0609564 0.475132 0.535956 0.475132 0.828956 0.768025L6.5 6.43934L12.171 0.768025C12.464 0.475132 12.939 0.475132 13.232 0.768025Z" fill="" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="space-y-6">
+      
+      <!-- Company Information -->
+      <div>
+        <h4 class="font-semibold text-black dark:text-white mb-4">Company Details</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">Company Name</label>
+            <input [(ngModel)]="companyInfo.companyName" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">BRELA Number</label>
+            <input [(ngModel)]="companyInfo.brelaNumber" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">TIN</label>
+            <input [(ngModel)]="companyInfo.tin" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">Company Email</label>
+            <input [(ngModel)]="companyInfo.companyEmail" type="email" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">Company Phone</label>
+            <input [(ngModel)]="companyInfo.companyPhone" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Location Information -->
+      <div>
+        <h4 class="font-semibold text-black dark:text-white mb-4">Location</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">Region</label>
+            <input [(ngModel)]="companyInfo.region" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">District</label>
+            <input [(ngModel)]="companyInfo.district" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">Town</label>
+            <input [(ngModel)]="companyInfo.town" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">Postal Code</label>
+            <input [(ngModel)]="companyInfo.postalCode" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+          </div>
+          <div class="md:col-span-2">
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">Street/Village</label>
+            <input [(ngModel)]="companyInfo.street" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="flex justify-end gap-4 mt-8">
+      <button (click)="closeCompanyModal()" class="rounded border border-stroke py-2 px-6 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white">
+        Cancel
+      </button>
+      <button (click)="saveCompanyProfile()" [disabled]="isLoading" class="flex items-center gap-2 rounded-full bg-[#d58512] py-2 px-6 font-medium text-black hover:bg-opacity-90 disabled:opacity-70">
+        <span *ngIf="isLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+        Save Changes
+      </button>
+    </div>
+
+  </div>
+</div>

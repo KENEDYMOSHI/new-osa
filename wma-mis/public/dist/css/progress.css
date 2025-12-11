@@ -1,0 +1,1285 @@
+:root{
+    --progressBg:#efefef;
+    --progressColor:#DB611E;
+    --borderWidth:13px;
+}
+
+.the-progress {
+    width: 160px;
+    height: 160px;
+    line-height: 160px;
+    background: none;
+    margin: 0 auto;
+    box-shadow: none;
+    position: relative;
+  }
+  .the-progress:after {
+    content: "";
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: var(--borderWidth) solid var(--progressBg);
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .the-progress > span {
+    width: 50%;
+    height: 100%;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    z-index: 1;
+  }
+  .the-progress .the-progress-left {
+    left: 0;
+  }
+  .the-progress .the-progress-bar {
+    width: 100%;
+    height: 100%;
+    background: none;
+    border-width: var(--borderWidth);
+    border-style: solid;
+    position: absolute;
+    top: 0;
+    border-color: var(--progressColor);
+  }
+  .the-progress .the-progress-left .the-progress-bar {
+    left: 100%;
+    border-top-right-radius: 80px;
+    border-bottom-right-radius: 80px;
+    border-left: 0;
+    -webkit-transform-origin: center left;
+    transform-origin: center left;
+  }
+  .the-progress .the-progress-right {
+    right: 0;
+  }
+  .the-progress .the-progress-right .the-progress-bar {
+    left: -100%;
+    border-top-left-radius: 80px;
+    border-bottom-left-radius: 80px;
+    border-right: 0;
+    -webkit-transform-origin: center right;
+    transform-origin: center right;
+  }
+  .the-progress .the-progress-value {
+    display: flex;
+    border-radius: 50%;
+    font-size: 1rem;
+    text-align: center;
+    line-height: 20px;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    /* font-weight: 300; */
+  }
+  .the-progress .the-progress-value span {
+    font-size: 16px;
+    /* text-transform: uppercase; */
+  }
+  
+  /* This for loop creates the necessary css animation names 
+  Due to the split circle of the-progress-left and the-progress right, we must use the animations on each side. 
+  */
+  .the-progress[data-percentage="1"] .the-progress-right .the-progress-bar {
+    animation: loading-1 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="1"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="2"] .the-progress-right .the-progress-bar {
+    animation: loading-2 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="2"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="3"] .the-progress-right .the-progress-bar {
+    animation: loading-3 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="3"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="4"] .the-progress-right .the-progress-bar {
+    animation: loading-4 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="4"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="5"] .the-progress-right .the-progress-bar {
+    animation: loading-5 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="5"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="6"] .the-progress-right .the-progress-bar {
+    animation: loading-6 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="6"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="7"] .the-progress-right .the-progress-bar {
+    animation: loading-7 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="7"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="8"] .the-progress-right .the-progress-bar {
+    animation: loading-8 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="8"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="9"] .the-progress-right .the-progress-bar {
+    animation: loading-9 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="9"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="10"] .the-progress-right .the-progress-bar {
+    animation: loading-10 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="10"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="11"] .the-progress-right .the-progress-bar {
+    animation: loading-11 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="11"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="12"] .the-progress-right .the-progress-bar {
+    animation: loading-12 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="12"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="13"] .the-progress-right .the-progress-bar {
+    animation: loading-13 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="13"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="14"] .the-progress-right .the-progress-bar {
+    animation: loading-14 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="14"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="15"] .the-progress-right .the-progress-bar {
+    animation: loading-15 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="15"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="16"] .the-progress-right .the-progress-bar {
+    animation: loading-16 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="16"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="17"] .the-progress-right .the-progress-bar {
+    animation: loading-17 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="17"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="18"] .the-progress-right .the-progress-bar {
+    animation: loading-18 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="18"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="19"] .the-progress-right .the-progress-bar {
+    animation: loading-19 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="19"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="20"] .the-progress-right .the-progress-bar {
+    animation: loading-20 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="20"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="21"] .the-progress-right .the-progress-bar {
+    animation: loading-21 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="21"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="22"] .the-progress-right .the-progress-bar {
+    animation: loading-22 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="22"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="23"] .the-progress-right .the-progress-bar {
+    animation: loading-23 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="23"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="24"] .the-progress-right .the-progress-bar {
+    animation: loading-24 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="24"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="25"] .the-progress-right .the-progress-bar {
+    animation: loading-25 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="25"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="26"] .the-progress-right .the-progress-bar {
+    animation: loading-26 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="26"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="27"] .the-progress-right .the-progress-bar {
+    animation: loading-27 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="27"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="28"] .the-progress-right .the-progress-bar {
+    animation: loading-28 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="28"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="29"] .the-progress-right .the-progress-bar {
+    animation: loading-29 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="29"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="30"] .the-progress-right .the-progress-bar {
+    animation: loading-30 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="30"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="31"] .the-progress-right .the-progress-bar {
+    animation: loading-31 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="31"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="32"] .the-progress-right .the-progress-bar {
+    animation: loading-32 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="32"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="33"] .the-progress-right .the-progress-bar {
+    animation: loading-33 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="33"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="34"] .the-progress-right .the-progress-bar {
+    animation: loading-34 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="34"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="35"] .the-progress-right .the-progress-bar {
+    animation: loading-35 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="35"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="36"] .the-progress-right .the-progress-bar {
+    animation: loading-36 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="36"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="37"] .the-progress-right .the-progress-bar {
+    animation: loading-37 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="37"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="38"] .the-progress-right .the-progress-bar {
+    animation: loading-38 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="38"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="39"] .the-progress-right .the-progress-bar {
+    animation: loading-39 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="39"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="40"] .the-progress-right .the-progress-bar {
+    animation: loading-40 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="40"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="41"] .the-progress-right .the-progress-bar {
+    animation: loading-41 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="41"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="42"] .the-progress-right .the-progress-bar {
+    animation: loading-42 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="42"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="43"] .the-progress-right .the-progress-bar {
+    animation: loading-43 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="43"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="44"] .the-progress-right .the-progress-bar {
+    animation: loading-44 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="44"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="45"] .the-progress-right .the-progress-bar {
+    animation: loading-45 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="45"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="46"] .the-progress-right .the-progress-bar {
+    animation: loading-46 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="46"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="47"] .the-progress-right .the-progress-bar {
+    animation: loading-47 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="47"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="48"] .the-progress-right .the-progress-bar {
+    animation: loading-48 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="48"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="49"] .the-progress-right .the-progress-bar {
+    animation: loading-49 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="49"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="50"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="50"] .the-progress-left .the-progress-bar {
+    animation: 0;
+  }
+  
+  .the-progress[data-percentage="51"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="51"] .the-progress-left .the-progress-bar {
+    animation: loading-1 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="52"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="52"] .the-progress-left .the-progress-bar {
+    animation: loading-2 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="53"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="53"] .the-progress-left .the-progress-bar {
+    animation: loading-3 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="54"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="54"] .the-progress-left .the-progress-bar {
+    animation: loading-4 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="55"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="55"] .the-progress-left .the-progress-bar {
+    animation: loading-5 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="56"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="56"] .the-progress-left .the-progress-bar {
+    animation: loading-6 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="57"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="57"] .the-progress-left .the-progress-bar {
+    animation: loading-7 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="58"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="58"] .the-progress-left .the-progress-bar {
+    animation: loading-8 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="59"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="59"] .the-progress-left .the-progress-bar {
+    animation: loading-9 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="60"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="60"] .the-progress-left .the-progress-bar {
+    animation: loading-10 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="61"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="61"] .the-progress-left .the-progress-bar {
+    animation: loading-11 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="62"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="62"] .the-progress-left .the-progress-bar {
+    animation: loading-12 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="63"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="63"] .the-progress-left .the-progress-bar {
+    animation: loading-13 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="64"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="64"] .the-progress-left .the-progress-bar {
+    animation: loading-14 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="65"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="65"] .the-progress-left .the-progress-bar {
+    animation: loading-15 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="66"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="66"] .the-progress-left .the-progress-bar {
+    animation: loading-16 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="67"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="67"] .the-progress-left .the-progress-bar {
+    animation: loading-17 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="68"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="68"] .the-progress-left .the-progress-bar {
+    animation: loading-18 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="69"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="69"] .the-progress-left .the-progress-bar {
+    animation: loading-19 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="70"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="70"] .the-progress-left .the-progress-bar {
+    animation: loading-20 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="71"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="71"] .the-progress-left .the-progress-bar {
+    animation: loading-21 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="72"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="72"] .the-progress-left .the-progress-bar {
+    animation: loading-22 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="73"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="73"] .the-progress-left .the-progress-bar {
+    animation: loading-23 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="74"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="74"] .the-progress-left .the-progress-bar {
+    animation: loading-24 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="75"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="75"] .the-progress-left .the-progress-bar {
+    animation: loading-25 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="76"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="76"] .the-progress-left .the-progress-bar {
+    animation: loading-26 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="77"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="77"] .the-progress-left .the-progress-bar {
+    animation: loading-27 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="78"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="78"] .the-progress-left .the-progress-bar {
+    animation: loading-28 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="79"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="79"] .the-progress-left .the-progress-bar {
+    animation: loading-29 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="80"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="80"] .the-progress-left .the-progress-bar {
+    animation: loading-30 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="81"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="81"] .the-progress-left .the-progress-bar {
+    animation: loading-31 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="82"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="82"] .the-progress-left .the-progress-bar {
+    animation: loading-32 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="83"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="83"] .the-progress-left .the-progress-bar {
+    animation: loading-33 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="84"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="84"] .the-progress-left .the-progress-bar {
+    animation: loading-34 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="85"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="85"] .the-progress-left .the-progress-bar {
+    animation: loading-35 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="86"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="86"] .the-progress-left .the-progress-bar {
+    animation: loading-36 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="87"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="87"] .the-progress-left .the-progress-bar {
+    animation: loading-37 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="88"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="88"] .the-progress-left .the-progress-bar {
+    animation: loading-38 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="89"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="89"] .the-progress-left .the-progress-bar {
+    animation: loading-39 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="90"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="90"] .the-progress-left .the-progress-bar {
+    animation: loading-40 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="91"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="91"] .the-progress-left .the-progress-bar {
+    animation: loading-41 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="92"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="92"] .the-progress-left .the-progress-bar {
+    animation: loading-42 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="93"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="93"] .the-progress-left .the-progress-bar {
+    animation: loading-43 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="94"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="94"] .the-progress-left .the-progress-bar {
+    animation: loading-44 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="95"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="95"] .the-progress-left .the-progress-bar {
+    animation: loading-45 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="96"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="96"] .the-progress-left .the-progress-bar {
+    animation: loading-46 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="97"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="97"] .the-progress-left .the-progress-bar {
+    animation: loading-47 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="98"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="98"] .the-progress-left .the-progress-bar {
+    animation: loading-48 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="99"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="99"] .the-progress-left .the-progress-bar {
+    animation: loading-49 0.5s linear forwards 0.5s;
+  }
+  
+  .the-progress[data-percentage="100"] .the-progress-right .the-progress-bar {
+    animation: loading-50 0.5s linear forwards;
+  }
+  .the-progress[data-percentage="100"] .the-progress-left .the-progress-bar {
+    animation: loading-50 0.5s linear forwards 0.5s;
+  }
+  
+  @keyframes loading-1 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(3.6);
+      transform: rotate(3.6deg);
+    }
+  }
+  @keyframes loading-2 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(7.2);
+      transform: rotate(7.2deg);
+    }
+  }
+  @keyframes loading-3 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(10.8);
+      transform: rotate(10.8deg);
+    }
+  }
+  @keyframes loading-4 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(14.4);
+      transform: rotate(14.4deg);
+    }
+  }
+  @keyframes loading-5 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(18);
+      transform: rotate(18deg);
+    }
+  }
+  @keyframes loading-6 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(21.6);
+      transform: rotate(21.6deg);
+    }
+  }
+  @keyframes loading-7 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(25.2);
+      transform: rotate(25.2deg);
+    }
+  }
+  @keyframes loading-8 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(28.8);
+      transform: rotate(28.8deg);
+    }
+  }
+  @keyframes loading-9 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(32.4);
+      transform: rotate(32.4deg);
+    }
+  }
+  @keyframes loading-10 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(36);
+      transform: rotate(36deg);
+    }
+  }
+  @keyframes loading-11 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(39.6);
+      transform: rotate(39.6deg);
+    }
+  }
+  @keyframes loading-12 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(43.2);
+      transform: rotate(43.2deg);
+    }
+  }
+  @keyframes loading-13 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(46.8);
+      transform: rotate(46.8deg);
+    }
+  }
+  @keyframes loading-14 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(50.4);
+      transform: rotate(50.4deg);
+    }
+  }
+  @keyframes loading-15 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(54);
+      transform: rotate(54deg);
+    }
+  }
+  @keyframes loading-16 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(57.6);
+      transform: rotate(57.6deg);
+    }
+  }
+  @keyframes loading-17 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(61.2);
+      transform: rotate(61.2deg);
+    }
+  }
+  @keyframes loading-18 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(64.8);
+      transform: rotate(64.8deg);
+    }
+  }
+  @keyframes loading-19 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(68.4);
+      transform: rotate(68.4deg);
+    }
+  }
+  @keyframes loading-20 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(72);
+      transform: rotate(72deg);
+    }
+  }
+  @keyframes loading-21 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(75.6);
+      transform: rotate(75.6deg);
+    }
+  }
+  @keyframes loading-22 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(79.2);
+      transform: rotate(79.2deg);
+    }
+  }
+  @keyframes loading-23 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(82.8);
+      transform: rotate(82.8deg);
+    }
+  }
+  @keyframes loading-24 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(86.4);
+      transform: rotate(86.4deg);
+    }
+  }
+  @keyframes loading-25 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(90);
+      transform: rotate(90deg);
+    }
+  }
+  @keyframes loading-26 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(93.6);
+      transform: rotate(93.6deg);
+    }
+  }
+  @keyframes loading-27 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(97.2);
+      transform: rotate(97.2deg);
+    }
+  }
+  @keyframes loading-28 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(100.8);
+      transform: rotate(100.8deg);
+    }
+  }
+  @keyframes loading-29 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(104.4);
+      transform: rotate(104.4deg);
+    }
+  }
+  @keyframes loading-30 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(108);
+      transform: rotate(108deg);
+    }
+  }
+  @keyframes loading-31 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(111.6);
+      transform: rotate(111.6deg);
+    }
+  }
+  @keyframes loading-32 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(115.2);
+      transform: rotate(115.2deg);
+    }
+  }
+  @keyframes loading-33 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(118.8);
+      transform: rotate(118.8deg);
+    }
+  }
+  @keyframes loading-34 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(122.4);
+      transform: rotate(122.4deg);
+    }
+  }
+  @keyframes loading-35 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(126);
+      transform: rotate(126deg);
+    }
+  }
+  @keyframes loading-36 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(129.6);
+      transform: rotate(129.6deg);
+    }
+  }
+  @keyframes loading-37 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(133.2);
+      transform: rotate(133.2deg);
+    }
+  }
+  @keyframes loading-38 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(136.8);
+      transform: rotate(136.8deg);
+    }
+  }
+  @keyframes loading-39 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(140.4);
+      transform: rotate(140.4deg);
+    }
+  }
+  @keyframes loading-40 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(144);
+      transform: rotate(144deg);
+    }
+  }
+  @keyframes loading-41 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(147.6);
+      transform: rotate(147.6deg);
+    }
+  }
+  @keyframes loading-42 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(151.2);
+      transform: rotate(151.2deg);
+    }
+  }
+  @keyframes loading-43 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(154.8);
+      transform: rotate(154.8deg);
+    }
+  }
+  @keyframes loading-44 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(158.4);
+      transform: rotate(158.4deg);
+    }
+  }
+  @keyframes loading-45 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(162);
+      transform: rotate(162deg);
+    }
+  }
+  @keyframes loading-46 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(165.6);
+      transform: rotate(165.6deg);
+    }
+  }
+  @keyframes loading-47 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(169.2);
+      transform: rotate(169.2deg);
+    }
+  }
+  @keyframes loading-48 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(172.8);
+      transform: rotate(172.8deg);
+    }
+  }
+  @keyframes loading-49 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(176.4);
+      transform: rotate(176.4deg);
+    }
+  }
+  @keyframes loading-50 {
+    0% {
+      -webkit-transform: rotate(0deg);
+      transform: rotate(0deg);
+    }
+    100% {
+      -webkit-transform: rotate(180);
+      transform: rotate(180deg);
+    }
+  }

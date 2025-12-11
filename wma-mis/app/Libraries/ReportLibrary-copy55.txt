@@ -1,0 +1,335 @@
+<?php
+
+namespace App\Libraries;
+
+class ReportLibrary
+{
+
+
+
+
+    //sums u all numbers within an array
+    public function reducer($data)
+    {
+        if (!empty($data)) {
+            return  number_format(array_reduce($data, fn ($x, $y) => $x + $y));
+        } else {
+            return 0;
+        }
+    }
+
+    // public function getItemCount($gfsCode)
+    // {
+    //     $data = $this->billM;
+    //     $instruments = (new ArrayLibrary($data))->map(fn ($instrument) => $instrument->ItemQuantity)->reduce(fn ($x, $y) => $x + $y)->get();
+    // }
+
+    function reportTemplateAllActivities($collection)
+    {
+        // $activities = [
+        //     (object)[
+        //         'title' => 'Vehicle Tank Verification',
+        //         'tag' => setting('Gfs.vtv')
+        //     ],
+
+        // ];
+        $codes = (array)gfsCodes();
+
+        $activities =   array_map(fn ($value, $key) => (object)['title' => $value, 'code' => $key], $codes, array_keys($codes));
+
+        $reportData = array_map(function ($data) use ($collection) {
+
+            $rawData = array_filter($collection, fn ($activity) => $activity->Activity == $data->code);
+            // $itemData = array_filter($rawData['billItems'], fn ($activity) => $activity->code == $data->code);
+
+
+            $itm = [];
+
+            // $items = array_values(array_map(fn ($data) => $data->billItems, $rawData));
+            
+
+            $code = $data->code;
+
+            // $filteredItems = (new ArrayLibrary($rawData))
+            // ->filter(fn ($item) => $item->Activity == $code)
+            // ->map(fn ($item) => $item->ItemQuantity ?? 1)
+            // ->reduce(fn($x,$y)=>$x + $y)
+            // ->get();
+
+            //  $paidAmount = reducer(array_map(fn ($paid) => $paid->amount, array_filter($rawData, fn ($status) => $status->PaymentStatus == 'Paid')));
+            $paidAmount = (new ArrayLibrary($rawData))
+                ->filter(fn ($data) => $data->PaymentStatus == 'Paid')
+                ->map(fn ($data) => $data->amount)
+                ->reduce(fn ($x, $y) => $x + $y)->get();
+
+       
+
+            $partialPending = (new ArrayLibrary($rawData))
+                ->filter(fn ($data) => $data->PaymentStatus == 'Partial')
+                ->map(fn ($data) =>  $data->BilledAmount - $data->amount)
+                ->reduce(fn ($x, $y) => $x + $y)->get();
+
+            $pending = (new ArrayLibrary($rawData))
+                ->filter(fn ($data) => $data->PaymentStatus == 'Pending')
+                ->map(fn ($data) =>  $data->amount)
+                ->reduce(fn ($x, $y) => $x + $y)->get();
+
+
+
+
+            // $partialPending = reducer(array_map(fn ($bill) => $bill->BilledAmount - $bill->BilledAmount, array_filter($rawData, fn ($status) => $status->PaymentStatus == 'Partial')));
+
+            $dataArray = [
+                'activity' => $data->title,
+                'paid' => number_format($paidAmount) ?? 0,
+                'pending' => number_format($pending) ?? 0,
+                'partial' => number_format($partialPending) ?? 0,
+                'total' => number_format($paidAmount +  $partialPending + $pending),
+               // 'xxx' =>  $items,
+              //  'ITM' =>  $filteredItems,
+               // 'instruments' => ($filteredItems),
+
+
+            ];
+
+            return $dataArray;
+        }, $activities);
+
+        //341,4577,664.3999996
+
+
+        $tr = '';
+        $sn = 1;
+        foreach ($reportData as $report) {
+            $index = $sn++;
+            $activity = $report['activity'];
+            $paid = $report['paid'];
+            $pending = $report['pending'];
+            $partial = $report['partial'];
+            $total = $report['total'];
+          //  $instruments = $report['instruments'];
+
+            $tr .= <<<"HTML"
+            <tr>
+                <td>$index</td>
+                <td>$activity</td>
+                <td>$paid</td>
+                <td>$pending</td>
+                <td>$partial</td>
+                <td>$total</td>
+                <!-- <td></td> -->
+            </tr>
+   HTML;
+        }
+        $html = <<<"HTML"
+
+     <thead class="thead-dark" id="4464">
+      <tr>
+        <th>#</th>
+        <th>Activity name</th>
+       <th>Paid Amount</th>
+       <th>Pending Amount</th>
+       <th>Partial Amount</th>
+       <th>Total Amount</th>
+       <!-- <th>Number Of Instruments(Items)</th> -->
+      </tr>
+     </thead>
+                <tbody>
+                  $tr
+                </tbody>
+
+HTML;
+        $paid = (new ArrayLibrary($collection))
+            ->filter(fn ($data) => $data->PaymentStatus === 'Paid')
+            ->map(fn ($data) => $data->amount)
+            ->reduce(fn ($x, $y) => $x + $y)
+            ->get();
+
+
+
+        $partialPaid = (new ArrayLibrary($collection))
+            ->filter(fn ($data) => $data->PaymentStatus == 'Partial')
+            ->map(fn ($data) => $data->PaidAmount)
+            ->reduce(fn ($x, $y) => $x + $y)
+            ->get();
+
+        //  $paid = $paidAmount + $partialPaid;
+
+        $partial = (new ArrayLibrary($collection))
+            ->filter(fn ($data) => $data->PaymentStatus == 'Partial')
+            ->map(fn ($data) => $data->BilledAmount - $data->PaidAmount)
+            ->reduce(fn ($x, $y) => $x + $y)
+            ->get();
+
+        $pending = (new ArrayLibrary($collection))
+            ->filter(fn ($data) => $data->PaymentStatus == 'Pending')
+            ->map(fn ($data) =>  $data->amount)
+            ->reduce(fn ($x, $y) => $x + $y)
+            ->get();
+            
+
+        $total = number_format($paid + $partial + $partialPaid + $pending);
+
+        $paidAmount = number_format($paid + $partialPaid);
+        $pendingAmount = number_format($pending);
+        $partialAmount = number_format($partial);
+
+
+        $summary = <<<"HTML"
+    <div class="row">
+                    <div class="col-md-6"></div>
+                    <div class="col-md-6">
+                    <h5 class="txt-center"><b>Collection Summary</b></h5>
+                     <table class="table table-sm table table-bordered">
+                     <tr class="paidAmount">
+                     <td><b>Paid Amount</b></td>
+                     <td>Tsh $paidAmount</td>
+                     </tr>
+                     <tr class="pendingAmount">
+                     <td><b>Pending Amount</b></td>
+                     <td>Tsh $pendingAmount</td>
+                     </tr>
+                     <tr class="pendingAmount">
+                     <td><b>Partial Amount</b></td>
+                     <td>Tsh $partialAmount</td>
+                     </tr>
+                     <tr class="totalAmount">
+                     <td><b>Total Amount</b></td>
+                     <td>Tsh $total</td>
+                     </tr>
+                     </table>
+                    </div>
+                    </div>
+  HTML;
+
+        return (object)[
+            'report' => $html,
+            'summary' => $summary,
+            'itm' => $reportData,
+        ];
+    }
+
+
+
+    public function reportTemplate($collection)
+    {
+
+
+        $data = 
+        $tr = '';
+        foreach ($collection as $report) {
+            $ul = '';
+            $i = 1;
+           
+            $date = dateFormatter($report->CreatedAt);
+            $amount = number_format($report->amount);
+            // $amount = number_format((new ArrayLibrary($items))->map(fn ($item) => $item['amount'])->reduce(fn ($x, $y) => $x + $y)->get());
+            // $amount = json_encode( $items);
+
+            $phoneNumber = str_replace('255', '0', $report->PyrCellNum);
+
+           
+            $tr .= <<<"HTML"
+    <tr>
+        <td>$report->PyrName</td>
+        <td>$phoneNumber</td>
+        <td>$report->PayCntrNum</td>
+        <td>$amount</td>
+        <td>$report->PaymentStatus</td>
+        <td>$report->ItemName</td>
+        
+        <td>$date</td>
+    </tr>
+   HTML;
+        }
+        $html = <<<"HTML"
+                <thead class="thead-dark">
+               <tr>
+                     <th>Payer Name</th>
+                     <th>Mobile Number</th>
+                    <th>Control Number</th>
+                    <th>Amount</th>
+                    <th>Payment Status</th>
+                    <th>BillItems</th>
+                    <th>Date</th>
+               </tr>
+                </thead>
+                <tbody>
+                   $tr
+                </tbody>
+
+          
+  HTML;
+
+        $paid = (new ArrayLibrary($collection))
+            ->filter(fn ($data) => $data->PaymentStatus === 'Paid')
+            ->map(fn ($data) => $data->amount)
+            ->reduce(fn ($x, $y) => $x + $y)
+            ->get();
+
+
+
+        $partialPaid = (new ArrayLibrary($collection))
+            ->filter(fn ($data) => $data->PaymentStatus == 'Partial')
+            ->map(fn ($data) => $data->PaidAmount)
+            ->reduce(fn ($x, $y) => $x + $y)
+            ->get();
+
+        //  $paid = $paidAmount + $partialPaid;
+
+        $partial = (new ArrayLibrary($collection))
+            ->filter(fn ($data) => $data->PaymentStatus == 'Partial')
+            ->map(fn ($data) => $data->BilledAmount - $data->PaidAmount)
+            ->reduce(fn ($x, $y) => $x + $y)
+            ->get();
+
+        $pending = (new ArrayLibrary($collection))
+            ->filter(fn ($data) => $data->PaymentStatus == 'Pending')
+            ->map(fn ($data) =>  $data->amount)
+            ->reduce(fn ($x, $y) => $x + $y)
+            ->get();
+
+        $total = number_format($paid + $partial + $partialPaid + $pending);
+
+        $paidAmount = number_format($paid + $partialPaid);
+        $pendingAmount = number_format($pending);
+        $partialAmount = number_format($partial);
+
+
+
+
+        $summary = <<<"HTML"
+    <div class="row">
+                    <div class="col-md-6"></div>
+                    <div class="col-md-6">
+                    <h5 class="txt-center"><b>Collection Summary</b></h5>
+                     <table class="table table-bordered table-sm">
+                     <tr class="paidAmount">
+                     <td><b>Paid Amount</b></td>
+                     <td>Tsh $paidAmount</td>
+                     </tr>
+                     <tr class="pendingAmount">
+                     <td><b>Pending Amount</b></td>
+                     <td>Tsh $pendingAmount</td>
+                     </tr>
+                     <tr class="pendingAmount">
+                     <td><b>Partial Amount</b></td>
+                     <td>Tsh $partialAmount</td>
+                     </tr>
+                     <tr class="totalAmount">
+                     <td><b>Total Amount</b></td>
+                     <td>Tsh $total</td>
+                     </tr>
+                     </table>
+                    </div>
+                    </div>
+  HTML;
+
+        return (object)[
+            'report' => (string)$html,
+            'summary' => (string)$summary,
+            'itm' => '',
+
+        ];
+    }
+}

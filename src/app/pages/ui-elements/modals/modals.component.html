@@ -1,0 +1,145 @@
+<div>
+  <app-page-breadcrumb pageTitle="Modals" />
+  <div class="space-y-5 sm:space-y-6">
+    <!-- Small Modal -->
+    <div>
+      <app-component-card title="Small Modal">
+        <app-button variant="primary" (click)="openSmallModal()">
+          Open Small Modal
+        </app-button>
+      </app-component-card>
+    </div>
+
+    <!-- Large Modal -->
+    <div>
+      <app-component-card title="Large Modal">
+        <app-button variant="primary" (click)="openLargeModal()">
+          Open Large Modal
+        </app-button>
+      </app-component-card>
+    </div>
+  </div>
+
+  <!-- Small Modal Backdrop -->
+  <div
+    *ngIf="isSmallModalOpen"
+    class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+  >
+    <!-- Modal Content -->
+    <div
+      class="relative w-full max-w-md p-6 bg-white rounded-lg shadow-xl dark:bg-gray-800 transform transition-all duration-300 scale-100 opacity-100"
+    >
+      <!-- Close Button -->
+      <button
+        (click)="closeSmallModal()"
+        class="absolute top-4 right-4 text-gray-400 hover:text-gray-500 focus:outline-none"
+      >
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          ></path>
+        </svg>
+      </button>
+
+      <!-- Header -->
+      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+        Small Modal Title
+      </h3>
+
+      <!-- Body -->
+      <div class="text-gray-500 dark:text-gray-400 mb-6">
+        <p>
+          This is a small modal. It has a max-width of 'max-w-md'. You can put
+          any content here.
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" (click)="closeSmallModal()"
+          >Cancel</app-button
+        >
+        <app-button variant="primary" (click)="closeSmallModal()"
+          >Confirm</app-button
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- Large Modal Backdrop -->
+  <div
+    *ngIf="isLargeModalOpen"
+    class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+  >
+    <!-- Modal Content -->
+    <div
+      class="relative w-full max-w-4xl p-8 bg-white rounded-lg shadow-xl dark:bg-gray-800 transform transition-all duration-300 scale-100 opacity-100"
+    >
+      <!-- Close Button -->
+      <button
+        (click)="closeLargeModal()"
+        class="absolute top-4 right-4 text-gray-400 hover:text-gray-500 focus:outline-none"
+      >
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          ></path>
+        </svg>
+      </button>
+
+      <!-- Header -->
+      <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+        Large Modal Title
+      </h3>
+
+      <!-- Body -->
+      <div class="text-gray-500 dark:text-gray-400 mb-8 space-y-4">
+        <p>
+          This is a large modal. It has a max-width of 'max-w-4xl'. It is
+          suitable for displaying large amounts of content, forms, or data
+          tables.
+        </p>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
+          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+          aliquip ex ea commodo consequat.
+        </p>
+        <p>
+          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
+          dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+          proident, sunt in culpa qui officia deserunt mollit anim id est
+          laborum.
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex justify-end gap-3">
+        <app-button variant="outline" (click)="closeLargeModal()"
+          >Close</app-button
+        >
+        <app-button variant="primary" (click)="closeLargeModal()"
+          >Save Changes</app-button
+        >
+      </div>
+    </div>
+  </div>
+</div>

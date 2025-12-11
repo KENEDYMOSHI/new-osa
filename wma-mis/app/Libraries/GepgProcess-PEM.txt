@@ -1,0 +1,523 @@
+<?php
+
+namespace App\Libraries;
+
+use LSS\XML2Array;
+
+//live
+
+class GepgProcess
+{
+
+
+
+    public function billTest()
+    {
+        $privateKeyFile = "signature/gepgclientprivatekey.pem";
+        $certificateFile = "signature/gepgpubliccertificate.pem";
+
+        // Load the private key
+        $privateKey = file_get_contents($privateKeyFile);
+        if ($privateKey === false) {
+           
+            return  [
+                'result' => [],
+                'message' => "Error: Unable to read the private key file",
+            ];
+            exit(1);
+        }
+
+        // Load the certificate
+        $certificate = file_get_contents($certificateFile);
+        if ($certificate === false) {
+  
+            return  [
+                'result' => [],
+                'message' => "Error: Unable to read the certificate file",
+            ];
+            exit(1);
+        }
+
+        // Payment Request
+        $requestId = numString(10);
+        $billId = randomString();
+        $content = "<billSubReq>
+  <BillHdr>
+    <ReqId>$requestId</ReqId>
+    <SpGrpCode>SPG1121</SpGrpCode>
+    <SysCode>TWMATR001</SysCode>
+    <BillTyp>2</BillTyp>
+    <PayTyp>2</PayTyp>
+    <GrpBillId>$billId</GrpBillId>
+  </BillHdr>
+  <BillDtls>
+    <BillDtl>
+      <BillId>$billId</BillId>
+      <SpCode>SP19960</SpCode>
+      <CollCentCode>HQ</CollCentCode>
+      <BillDesc>Verification of Engine</BillDesc>
+      <CustTin/>
+      <CustId>30997</CustId>
+      <CustIdTyp>5</CustIdTyp>
+      <CustAccnt>30997</CustAccnt>
+      <CustName>Apex Inc</CustName>
+      <CustCellNum>255659851709</CustCellNum>
+      <CustEmail>payer@yahoo.com</CustEmail>
+      <BillGenDt>2024-08-02T10:00:00</BillGenDt>
+      <BillExprDt>2024-10-11T10:00:30</BillExprDt>
+      <BillGenBy>Allen Scott</BillGenBy>
+      <BillApprBy>Leon Legend</BillApprBy>
+      <BillAmt>30000.00</BillAmt>
+      <BillEqvAmt>30000.00</BillEqvAmt>
+      <MinPayAmt>0.01</MinPayAmt>
+      <Ccy>TZS</Ccy>
+      <ExchRate>1.00</ExchRate>
+      <BillPayOpt>1</BillPayOpt>
+      <PayPlan>1</PayPlan>
+      <PayLimTyp>1</PayLimTyp>
+      <PayLimAmt>0.00</PayLimAmt>
+      <CollPsp/>
+      <BillItems>
+        <BillItem>
+          <RefBillId>1648854730JK</RefBillId>
+          <SubSpCode>1001</SubSpCode>
+          <GfsCode>140206</GfsCode>
+          <BillItemRef>3794153651</BillItemRef>
+          <UseItemRefOnPay>N</UseItemRefOnPay>
+          <BillItemAmt>10000.00</BillItemAmt>
+          <BillItemEqvAmt>10000.00</BillItemEqvAmt>
+          <CollSp>SP19960</CollSp>
+        </BillItem>
+        <BillItem>
+          <RefBillId>$billId</RefBillId>
+          <SubSpCode>1001</SubSpCode>
+          <GfsCode>140202</GfsCode>
+          <BillItemRef>5539214877</BillItemRef>
+          <UseItemRefOnPay>N</UseItemRefOnPay>
+          <BillItemAmt>20000.00</BillItemAmt>
+          <BillItemEqvAmt>20000.00</BillItemEqvAmt>
+          <CollSp>SP19960</CollSp>
+        </BillItem>
+      </BillItems>
+    </BillDtl>
+    <BillDtl>
+      <BillId>$billId</BillId>
+      <SpCode>SP19966</SpCode>
+      <CollCentCode>HQ</CollCentCode>
+      <BillDesc>Verification of Engine</BillDesc>
+      <CustTin/>
+      <CustId>30997</CustId>
+      <CustIdTyp>5</CustIdTyp>
+      <CustAccnt>30997</CustAccnt>
+      <CustName>Apex Inc</CustName>
+      <CustCellNum>255659851709</CustCellNum>
+      <CustEmail>payer@yahoo.com</CustEmail>
+      <BillGenDt>2024-07-31T10:00:00</BillGenDt>
+      <BillExprDt>2024-10-11T10:00:30</BillExprDt>
+      <BillGenBy>Allen Scott</BillGenBy>
+      <BillApprBy>Leon Legend</BillApprBy>
+      <BillAmt>4500.00</BillAmt>
+      <BillEqvAmt>4500.00</BillEqvAmt>
+      <MinPayAmt>0.01</MinPayAmt>
+      <Ccy>TZS</Ccy>
+      <ExchRate>1.00</ExchRate>
+      <BillPayOpt>1</BillPayOpt>
+      <PayPlan>1</PayPlan>
+      <PayLimTyp>1</PayLimTyp>
+      <PayLimAmt>0.00</PayLimAmt>
+      <CollPsp/>
+      <BillItems>
+        <BillItem>
+          <RefBillId>$billId</RefBillId>
+          <SubSpCode>1001</SubSpCode>
+          <GfsCode>142201660008</GfsCode>
+          <BillItemRef>4614852765</BillItemRef>
+          <UseItemRefOnPay>N</UseItemRefOnPay>
+          <BillItemAmt>4500.00</BillItemAmt>
+          <BillItemEqvAmt>4500.00</BillItemEqvAmt>
+          <CollSp>SP19966</CollSp>
+        </BillItem>
+      </BillItems>
+    </BillDtl>
+  </BillDtls>
+</billSubReq>";
+
+        // Create a new certificate resource with the loaded certificate and private key
+        $privateKeyResource = openssl_pkey_get_private($privateKey);
+        $certificateResource = openssl_x509_read($certificate);
+
+        if ($privateKeyResource === false || $certificateResource === false) {
+            
+            while ($msg = openssl_error_string()) {
+                
+                return  [
+                    'result' => [],
+                    'message' => "Error: Unable to parse the private key or certificate | $msg",
+                ];
+            }
+            exit(1);
+        }
+
+        // Create signature
+        if (!openssl_sign($content, $signature, $privateKeyResource, OPENSSL_ALGO_SHA256)) {
+           
+            while ($msg = openssl_error_string()) {
+                return  [
+                    'result' => [],
+                    'message' => "Error: Unable to create signature | $msg ",
+                ];
+            }
+            exit(1);
+        }
+
+        // Output crypted data base64 encoded
+        $signature = base64_encode($signature);
+
+        // Combine signature and content signed
+        $data = "<Gepg>" . $content . "<signature>" . $signature . "</signature></Gepg>";
+       // echo "Request sent\n";
+        // echo $data;
+        // Send data to the server
+        $serverIp = "https://uat1.gepg.go.tz";
+        $uri = "/api/bill/20/submission";
+
+        $ch = curl_init($serverIp . $uri);
+        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Content-Type:application/xml',
+            'Gepg-Com:default.sp.in',
+            'Gepg-Code:SPG1121',
+            'Gepg-Alg:00S2',
+            'Content-Length:' . strlen($data)
+        ));
+        curl_setopt($ch, CURLOPT_TIMEOUT, 50);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 50);
+
+        $resultCurlPost = curl_exec($ch);
+        curl_close($ch);
+
+        if (!empty($resultCurlPost)) {
+            // echo "\n";
+            // echo "\n";
+            // echo "\n";
+            // echo "\nReceived Response\n";
+            return  [
+                'requestId' => $requestId,
+                'billId' => $billId,
+                'result' => XML2Array::createArray($resultCurlPost),
+                'message' => "Received Response",
+            ];
+           // echo "\n";
+
+            // exit;
+
+            // Extract data and signature from response
+            $datatag = "gepgBillSubReqAck";
+            $sigtag = "gepgSignature";
+
+            $vdata = $this->getDataString($resultCurlPost, $datatag);
+            $vsignature = $this->getSignatureString($resultCurlPost, $sigtag);
+
+            // Get Certificate contents
+            $pcertFile = "gepgpubliccertificate.pfx";
+            $pcertPassword = "passpass";
+
+            if (!file_exists($pcertFile) || !is_readable($pcertFile)) {
+               // echo "Error: Unable to read the public cert file\n";
+                return  [
+                    'result' => [],
+                    'message' => "Error: Unable to read the public cert file",
+                ];
+                exit(1);
+            }
+
+            $pcert_store = file_get_contents($pcertFile);
+            if ($pcert_store === false) {
+                return  [
+                    'result' => [],
+                    'message' => "Error: Unable to read the public cert file",
+                ];
+                // echo "Error: Unable to read the public cert file\n";
+                exit(1);
+            }
+
+            $pcert_info = [];
+            if (openssl_pkcs12_read($pcert_store, $pcert_info, $pcertPassword)) {
+                $rawsignature = base64_decode($vsignature);
+                $ok = openssl_verify($vdata, $rawsignature, $pcert_info['extracerts'][0]);
+
+                if ($ok == 0) {
+                    return  [
+                        'result' => [],
+                        'message' => "Bad Signature",
+                    ];
+                } 
+            }
+        } else {
+            echo "No result Returned\n";
+            return  [
+                'result' => [],
+                'message' => "No result Returned",
+            ];
+        }
+
+
+
+
+
+     
+      
+    }
+
+
+
+
+
+
+        // Function to get Data string
+        function getDataString($inputstr, $datatag)
+        {
+            $datastartpos = strpos($inputstr, $datatag);
+            $dataendpos = strrpos($inputstr, $datatag);
+            return substr($inputstr, $datastartpos - 1, $dataendpos + strlen($datatag) + 2 - $datastartpos);
+        }
+
+        // Function to get Signature string
+        function getSignatureString($inputstr, $sigtag)
+        {
+            $sigstartpos = strpos($inputstr, $sigtag);
+            $sigendpos = strrpos($inputstr, $sigtag);
+            return substr($inputstr, $sigstartpos + strlen($sigtag) + 1, $sigendpos - $sigstartpos - strlen($sigtag) - 3);
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // public function billSubmission($content, $params)
+    // {
+    //     $env = setting('System.env');
+    //     //$env = 'testing';
+    //     if ($env == 'testing') {
+    //         $gepgPublicKey = 'gepgpubliccertificate.pfx';
+    //         $password = 'passpass';
+    //     } else {
+    //         $gepgPublicKey = 'GePGNewPublicKey.pfx';
+    //         $password = 'S3R1KAL1';
+    //     }
+
+    //     $private = 'gepgclientprivate.pfx';
+    //     $privatePass = 'passpass';
+
+
+
+
+    //     // $gepgPublicKey = 'GePGNewPublicKey.pfx';
+    //     // $password = 'S3R1KAL1';
+
+    //     // echo $content;
+    //     // exit;
+    //     if (!$cert_store = file_get_contents("signature/$private")) {
+
+    //         echo "Error: Unable to read the cert file\n";
+    //         exit;
+    //     } else {
+    //         if (openssl_pkcs12_read($cert_store, $cert_info, $privatePass)) {
+
+    //             // echo "Certificate Information\n";
+
+
+
+    //             //create signature
+    //             openssl_sign($content, $signature, $cert_info['pkey'], "sha1WithRSAEncryption");
+
+    //             //output encrypted data base64 encoded
+    //             $signature = base64_encode($signature);
+
+
+    //             //Combine signature and content signed
+    //             $data = "<Gepg>" . $content . " <gepgSignature>" . $signature . "</gepgSignature></Gepg>";
+
+
+    //             $resultCurlPost = "";
+    //             $serverIp = "https://uat1.gepg.go.tz/api/";
+    //             // $serverIp = setting('Bill.apiUrl');
+
+
+    //             $dataString = $data;
+    //             // echo "Message details" . "\n" . $dataString . "\n";
+    //             // echo "\n";
+    //             // echo "Request Length :\n";
+    //             // echo strlen($dataString);
+    //             // echo "\n";
+
+    //             // echo $dataString;
+    //             // exit;Gepg-Com:default.sp.in
+
+    //             $ch = curl_init($serverIp . $params->uri);
+    //             curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+    //             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+    //             curl_setopt($ch, CURLOPT_POSTFIELDS, $dataString);
+    //             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    //             curl_setopt(
+    //                 $ch,
+    //                 CURLOPT_HTTPHEADER,
+    //                 array(
+    //                     'Content-Type:application/xml',
+    //                     $params->GepgCom,
+    //                     'Gepg-Code:SPG1121',
+    //                     'Gepg-Alg:00S2',
+    //                     'Content-Length:' . strlen($dataString)
+    //                 )
+    //             );
+
+    //             curl_setopt($ch, CURLOPT_TIMEOUT, 50);
+    //             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 50);
+
+    //             $resultCurlPost = curl_exec($ch);
+    //             $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    //             if ($statusCode === 503) {
+    //                 // $res = Array2XML::createXML([
+    //                 //     'TrxStsCode' => 5101,
+    //                 // ]);
+    //                 return (object)[
+    //                     'status' => 0,
+    //                     'msg' => '(503)Service Unavailable  TRY LATER',
+    //                     'TrxStsCode' => '',
+    //                     'resultCurlPost' => '',
+    //                 ];
+    //                 // echo '503 Error: Service Unavailable    TRY LATER';
+    //             } elseif ($statusCode >= 400) {
+    //                 // echo 'HTTP Error: ' . $statusCode;
+    //                 return (object)[
+    //                     'status' => 0,
+    //                     'msg' => 'HTTP Error: ' . $statusCode,
+    //                     'TrxStsCode' => $statusCode,
+    //                     'resultCurlPost' => '',
+    //                 ];
+    //             } else {
+    //                 if (!empty($resultCurlPost)) {
+
+
+    //                     return (object)[
+    //                         'status' => 1,
+    //                         'resultCurlPost' => $resultCurlPost,
+    //                     ];
+    //                     // return XML2Array::createArray($resultCurlPost);
+
+    //                     //Tags used in substring response content
+    //                     // $dataTag = "gepgBillSubReqAck";
+    //                     $dataTag = $params->dataTag;
+    //                     $sigTag = "gepgSignature";
+
+    //                     //Get data and signature from response
+    //                     $vData = $this->getDataString($resultCurlPost, $dataTag);
+    //                     $vSignature = $this->getSignatureString($resultCurlPost, $sigTag);
+
+    //                     // echo "\n";
+    //                     // echo "Data Received:\n";
+    //                     return $vData;
+    //                     // echo "\n";
+    //                     // echo "Data Length:\n";
+    //                     // echo strlen($vData);
+    //                     // echo "\n";
+    //                     // echo "Signature Received:\n";
+    //                     //echo $vSignature;
+    //                     // echo "\n";
+
+    //                     //Get Certificate contents
+    //                     if (!$pCertStore = file_get_contents("signature/$gepgPublicKey")) {
+    //                         // echo "Error: Unable to read the cert file\n";
+    //                         return (object)[
+    //                             'status' => 0,
+    //                             'TrxStsCode' => '',
+    //                             'msg' => 'Error: Unable to read the cert file',
+    //                         ];
+    //                         exit;
+    //                     } else {
+
+    //                         //Read Certificate
+    //                         if (openssl_pkcs12_read($pCertStore, $pCertInfo, $password)) {
+    //                             //Decode Received Signature String
+    //                             $rawSignature = base64_decode($vSignature);
+
+    //                             //Verify Signature and state whether signature is okay or not
+    //                             openssl_verify($vData, $rawSignature, $pCertInfo['extracerts']['0']);
+    //                             // $ok = openssl_verify($vData, $rawSignature, $pCertInfo['extracerts']['0']);
+    //                             // if ($ok == 1) {
+    //                             //     echo "Signature Status:";
+    //                             //     echo "GOOD";
+    //                             // } elseif ($ok == 0) {
+    //                             //     echo "Signature Status:";
+    //                             //     echo "BAD";
+    //                             // } else {
+    //                             //     echo "Signature Status:";
+    //                             //     echo "UGLY, Error checking signature";
+    //                             // }
+    //                         }
+    //                     }
+    //                 } else {
+    //                     // echo "No result Returned" . "\n";
+    //                     return (object)[
+    //                         'status' => 0,
+    //                         'resultCurlPost' => '',
+    //                         'TrxStsCode' => '',
+    //                         'msg' => 'No result Returned From GePG' . $statusCode,
+    //                     ];
+    //                 }
+    //             }
+    //             curl_close($ch);
+    //         } else {
+
+    //             // echo "Error: Unable to read the cert store.\n";
+    //             return (object)[
+    //                 'status' => 0,
+    //                 'resultCurlPost' => '',
+    //                 'msg' => 'Error: Unable to read the cert store',
+    //             ];
+
+    //             // exit;
+    //         }
+    //     }
+    // }
+
+
+    // public function getDataString($inputStr, $dataTag)
+    // {
+    //     $dataStartPos = strpos($inputStr, $dataTag);
+    //     $dataEndPos = strrpos($inputStr, $dataTag);
+    //     $data = substr($inputStr, $dataStartPos - 1, $dataEndPos + strlen($dataTag) + 2 - $dataStartPos);
+    //     return $data;
+    // }
+
+    // public function getSignatureString($inputStr, $signTag)
+    // {
+    //     $sigStartPos = strpos($inputStr, $signTag);
+    //     $sigEndPos = strrpos($inputStr, $signTag);
+    //     $signature = substr($inputStr, $sigStartPos + strlen($signTag) + 1, $sigEndPos - $sigStartPos - strlen($signTag) - 3);
+    //     return $signature;
+    // }
+}

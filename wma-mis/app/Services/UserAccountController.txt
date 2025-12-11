@@ -1,0 +1,295 @@
+<?php
+
+namespace App\Controllers;
+
+use DateTime;
+use DateTimeZone;
+use App\Models\UsersModel;
+use App\Models\ProfileModel;
+use App\Controllers\BaseController;
+
+
+class UserAccountController extends BaseController
+{
+
+    protected $profileModel;
+    protected $userModel;
+
+
+
+
+    public $appRequest;
+    public function __construct()
+    {
+        $this->appRequest = service('request');
+        $this->profileModel = new ProfileModel();
+        $this->userModel = new UsersModel();
+
+        helper(['form', 'url', 'array', 'date']);
+    }
+    public function index()
+    {
+        echo 'hello';
+    }
+    public function getVariable($var)
+    {
+        return $this->appRequest->getVar($var, FILTER_SANITIZE_SPECIAL_CHARS);
+    }
+
+
+    //UPDATE wma_bill SET PaymentStatus = "Paid" WHERE PayCntrNum IN(SELECT PayCtrNum FROM `bill_payment` WHERE DATE(CreatedAt) >= '2024-05-16' AND BillPayOpt = 3);
+    public function activateAccount($contact, $token, $hash)
+
+    {
+        try {
+
+            $userToken = $this->userModel->getUserToken($token);
+
+
+            if (!$userToken) {
+                $data['message'] = 'Something went wrong please contact system administrator';
+                return view('Pages/Auth/Expired', $data);
+                exit;
+            }
+
+
+
+            // Create a DateTime object for the token creation time with East Africa Time (EAT)
+            $tokenCreatedAtUTC = new DateTime($userToken->createdAt, new DateTimeZone('UTC'));
+
+            // Convert the token creation time to East Africa Time (EAT)
+            $tokenCreatedAtEAT = $tokenCreatedAtUTC->setTimezone(new DateTimeZone('Africa/Dar_es_Salaam'));
+
+            // Create a DateTime object for the current time in East Africa Time (EAT)
+            $currentTime = new DateTime('now', new DateTimeZone('Africa/Dar_es_Salaam'));
+
+            // Calculate the time difference in seconds
+            $timeDifference = $currentTime->getTimestamp() - $tokenCreatedAtEAT->getTimestamp();
+
+            // Check if 30 minutes (1800 seconds) have passed
+            if ($timeDifference >= 1800) {
+                $data['message'] = 'Your Activation link has expired please contact system administrator!';
+                return view('Pages/Auth/Expired', $data);
+                exit;
+            }
+
+
+
+
+            // if(($currentTime - $tokenCreatedAt) > 300){
+            //     return view('Pages/Expired');
+            // }
+
+
+            $params = [];
+            $data = [];
+            $data['validation'] = null;
+            // $contact = $contact;
+            $data['contact'] = $contact;
+            $data['page'] = [
+                'title' => 'Account Activation',
+            ];
+            if ($this->appRequest->getMethod() == 'POST') {
+                $rules = [
+
+
+                    // "phone"        => "required|min_length[10]|max_length[10]",
+                    "password"   => "required|min_length[8]|max_length[20]|includeUpperCase[password]|includeLowerCase[password]|includeNumber[password]",
+                    "confirm-password" => "required|matches[password]",
+                ];
+
+                if ($contact == 1) {
+                    $rules = [
+
+                        "phone"        => "required|min_length[10]|max_length[10]",
+                        "password"        => "required|min_length[8]|max_length[20]|includeUpperCase[password]|includeLowerCase[password]|includeNumber[password]|includeSpecialChars[password]",
+                        //  "password"        => "required|min_length[6]",
+                        "confirm-password" => "required|matches[password]",
+                    ];
+                } else {
+                    $rules = [
+                        "password"        => "required|min_length[8]|max_length[20]|includeUpperCase[password]|includeLowerCase[password]|includeNumber[password]|includeSpecialChars[password]",
+                        //  "password"        => "required|min_length[6]",
+                        "confirm-password" => "required|matches[password]",
+                    ];
+                }
+
+
+
+                $messages = [
+                    'password' => [
+                        'includeUpperCase' => 'Password Must Contain  Uppercase Latter',
+                        'includeLowerCase' => 'Password Must Contain  Lowercase Latter',
+                        'includeNumber' => 'Password Must Contain  Number',
+                        'includeSpecialChars' => 'Password Must Contain  Special Character',
+                    ]
+                ];
+
+
+
+                if ($this->validate($rules, $messages)) {
+
+                    $password = $this->appRequest->getVar('password');
+                    if ($contact == 1) {
+                        $userData = [
+                            'secret2' => password_hash($password, PASSWORD_DEFAULT),
+                        ];
+                    } else {
+                        $userData = [
+                            'secret2' => password_hash($password, PASSWORD_DEFAULT),
+                        ];
+                    }
+
+                    $user = $this->profileModel->getUser($hash);
+
+                    if (!$user) return redirect()->to('/');
+
+                    $secret = $user->email;
+
+                    // printer($user);
+                    // exit;
+
+
+                    $request = $this->profileModel->savePassword($secret, $userData);
+                    if ($request) {
+                        $user->activate();
+                        $this->userModel->deleteToken($userToken->token);
+                        return redirect()->to('/');
+                    }
+                } else {
+                    $data['validation'] = $this->validator;
+                }
+            }
+            return view('Pages/Auth/ActivationPage', $data);
+        } catch (\Throwable $th) {
+
+            // return $this->response->setJSON([
+            //     'status' => 0,
+            //     'data' => $th->getTrace(),
+
+            // ]);
+            session()->setFlashdata('error', 'Account Error Contact System Admin');
+            return redirect()->to(base_url("user/activateAccount/0/$token/$hash"));
+        }
+    }
+
+
+
+    public function activate($contact, $hash)
+
+    {
+        // var_dump($hash);
+        // exit;
+
+
+
+
+        $params = [];
+        $data = [];
+        $data['validation'] = null;
+        $data['contact'] = $contact;
+        $data['page'] = [
+            'title' => 'Account Activation',
+        ];
+        if ($this->appRequest->getMethod() == 'POST') {
+            $rules = [
+
+
+                "phone" => "required|min_length[10]|max_length[10]",
+                "password"   => "required|min_length[8]|max_length[20]|includeUpperCase[password]|includeLowerCase[password]|includeNumber[password]|includeSpecialChars[password]",
+                "confirm-password" => "required|matches[password]",
+            ];
+
+
+            $errors = [
+                'password' => [
+                    'includeUpperCase' => 'Password Must Contain  Uppercase Latter',
+                    'includeLowerCase' => 'Password Must Contain  Lowercase Latter',
+                    'includeNumber' => 'Password Must Contain  Number',
+                    'includeSpecialChars' => 'Password Must Contain  Special Character',
+                ]
+            ];
+
+
+            if ($this->validate($rules, $errors)) {
+
+                $password = $this->appRequest->getVar('password');
+                if ($contact == 1) {
+                    $userData = [
+                        'phone_number' => $this->getVariable('phone'),
+                        'password' => $password->hash(),
+                        'status' => 'active'
+                    ];
+                } else {
+                    $userData = [
+                        'password' => password_hash($password, setting('Auth.hashAlgorithm')),
+                        'status' => 'active'
+                    ];
+                }
+
+                printer($userData);
+                exit;
+
+
+                $request = $this->profileModel->savePassword($hash, $userData);
+                if ($request) {
+                    return redirect()->to('/');
+                }
+            } else {
+                $data['validation'] = $this->validator;
+            }
+        }
+        //return view('Pages/auth/ActivationPage', $data);
+    }
+
+
+    public function sendActivationLink()
+    {
+        try {
+            $email = \Config\Services::email();
+
+            $name = $this->getVariable('name');
+            $userEmail = $this->getVariable('userEmail');
+            $userId = $this->getVariable('userId');
+
+
+
+            $to = $userEmail;
+            $subject = 'SETTING UP ACCOUNT  PASSWORD';
+
+            // $message = emailTemplate($name, $id, 'Hello', 'Your password has been reset');
+            $data['user'] = (object)[
+                'id' => $userId,
+                'name' => $name,
+                'contact' => 0,
+                'greetings' => 'Hello',
+                'msg' => 'Your account  has been created',
+            ];
+            $message = view('Pages/EmailTemplate', $data);
+
+
+            // ================Email configurations==============
+            $email->setTo($to);
+            $email->setSubject($subject);
+            $email->setMessage($message);
+            $email->send();
+
+            echo 'Email Sent';
+        } catch (\Throwable $th) {
+            $response = [
+                'status' => 0,
+                'msg' => $th->getMessage(),
+
+            ];
+        }
+        return $this->response->setJSON($response);
+
+        // return $this->response->setJSON([
+        //     'status' => 1,
+        //     'msg' => 'Password Is Reset Successfully',
+        //     'token' => $this->token,
+
+
+        // ]);
+    }
+}

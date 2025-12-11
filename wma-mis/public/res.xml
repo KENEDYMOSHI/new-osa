@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Gepg>
+    <gepgPmtSpInfo>
+        <PymtTrxInf>
+            <TrxId>GWX101299815208
+</TrxId>
+            <SpCode>SP419
+</SpCode>
+            <PayRefId>924326292247383
+</PayRefId>
+            <BillId>ccc51f93a788f05dab94cdf45bc3c782
+</BillId>
+            <PayCtrNum>994191656522
+</PayCtrNum>
+            <BillAmt>200
+</BillAmt>
+            <PaidAmt>100
+</PaidAmt>
+            <BillPayOpt>2
+</BillPayOpt>
+            <CCy>TZS
+</CCy>
+            <TrxDtTm>2024-11-21T23:04:02
+</TrxDtTm>
+            <UsdPayChnl>MB
+</UsdPayChnl>
+            <PyrCellNum>255659851709
+</PyrCellNum>
+            <PyrEmail>
+</PyrEmail>
+            <PyrName>KASSIM SAIDI MUSHI
+</PyrName>
+            <PspReceiptNumber>GWX101299815208
+</PspReceiptNumber>
+            <PspName>National Microfinance Bank
+</PspName>
+            <CtrAccNum>20301000002
+</CtrAccNum>
+        </PymtTrxInf>
+    </gepgPmtSpInfo>
+    <gepgSignature>
+        gJ8WuPuSg+F5H40PxTbi7PLh/QPWy8okjsaSOYZd4bDAeGh2TbQBv26f+kQ1+EtcJjI8asEK2+B+YPrnD7LOihBXoHiOnXPH/Ox2xtkwQjHaopgKGiTwKcqXLNL3IdnZzcvkQcHpMgcadRYyQ2AKNLV8tJ6RiMxDv+AYjGAo2EwWFaPY6SRSwoH72eZoAdD2QxbtuTks2MKjvZDUvcQUZO1cSmB6zxG7ZI3NM7QebkaFuiqOpSPJM8JcPnbxowrXY0J6sFp9Z9NiUn9MGDisQorCofAfq/RUGH3f2jp/6A==
+</gepgSignature>
+</Gepg>

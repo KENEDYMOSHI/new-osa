@@ -1,0 +1,165 @@
+class TableEditor {
+    constructor(options) {
+        this.table = document.getElementById(options.tableId);
+        this.updateUrl = options.updateUrl;
+        this.deleteUrl = options.deleteUrl;
+        this.init();
+    }
+
+    init() {
+        this.table.addEventListener('click', (event) => this.handleTableClick(event));
+    }
+
+    handleTableClick(event) {
+        const target = event.target.closest('button');
+        if (!target) return;
+
+        const row = target.closest('tr');
+        const recordId = row.getAttribute('data-id');
+
+        if (target.classList.contains('edit-btn')) {
+            this.toggleRowEdit(row, recordId);
+        } else if (target.classList.contains('delete-btn')) {
+            this.confirmDelete(recordId, row);
+        }
+    }
+
+    toggleRowEdit(row, recordId) {
+        const editBtn = row.querySelector('.edit-btn');
+
+        if (editBtn.dataset.mode === 'edit') {
+            editBtn.innerHTML = '<i class="fas fa-save"></i> Save';
+            editBtn.classList.replace('btn-primary', 'btn-success');
+            editBtn.dataset.mode = 'save';
+            this.makeRowEditable(row);
+        } else {
+            this.saveRowChanges(row, recordId);
+        }
+    }
+
+    makeRowEditable(row) {
+        row.querySelectorAll('[data-field]').forEach((cell) => {
+            const fieldType = cell.getAttribute('data-type') || 'text';
+            const value = cell.innerText.trim();
+            let input;
+
+            if (fieldType === 'select') {
+                input = this.createSelectInput(cell);
+            } else {
+                input = document.createElement('input');
+                input.type = fieldType;
+                input.value = value;
+                input.classList.add('form-control', 'form-control-sm');
+            }
+
+            cell.dataset.originalValue = value; // Store original value in case of cancel/error
+            cell.innerHTML = '';
+            cell.appendChild(input);
+        });
+    }
+
+    createSelectInput(cell) {
+        const select = document.createElement('select');
+        select.classList.add('form-select', 'form-select-sm');
+
+        const options = ['Active', 'Inactive', 'Pending'];
+        options.forEach(option => {
+            const opt = document.createElement('option');
+            opt.value = option;
+            opt.innerText = option;
+            if (option === cell.dataset.originalValue) opt.selected = true;
+            select.appendChild(opt);
+        });
+
+        return select;
+    }
+
+    async saveRowChanges(row, recordId) {
+        const data = { id: recordId };
+
+        row.querySelectorAll('[data-field]').forEach((cell) => {
+            const input = cell.querySelector('input, select');
+            if (input) {
+                data[cell.getAttribute('data-field')] = input.value;
+            }
+        });
+
+        this.revertToStaticCells(row, data);
+
+        const editBtn = row.querySelector('.edit-btn');
+        editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+        editBtn.classList.replace('btn-success', 'btn-primary');
+        editBtn.dataset.mode = 'edit';
+        swal("Success", "Record updated successfully!", "success");
+        // try {
+        //     const response = await fetch(this.updateUrl, {
+        //         method: 'POST',
+        //         headers: { 'Content-Type': 'application/json' },
+        //         body: JSON.stringify(data),
+        //     });
+
+        //     const result = await response.json();
+        //     if (result.success) {
+        //         this.revertToStaticCells(row, data);
+
+        //         const editBtn = row.querySelector('.edit-btn');
+        //         editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+        //         editBtn.classList.replace('btn-success', 'btn-primary');
+        //         editBtn.dataset.mode = 'edit';
+
+        //         swal("Success", "Record updated successfully!", "success");
+        //     } else {
+        //         swal("Error", result.message || "Failed to update record.", "error");
+        //     }
+        // } catch (error) {
+        //     console.error('Error saving changes:', error);
+        //     swal("Error", "Something went wrong. Please try again.", "error");
+        // }
+    }
+
+    revertToStaticCells(row, data) {
+        row.querySelectorAll('[data-field]').forEach((cell) => {
+            const fieldName = cell.getAttribute('data-field');
+            cell.innerText = data[fieldName]; // Set new saved value
+        });
+    }
+
+    confirmDelete(recordId, row) {
+        swal({
+            title: "Are you sure?",
+            text: "Once deleted, this record cannot be recovered!",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        })
+        .then((willDelete) => {
+            if (willDelete) {
+                this.handleDelete(recordId, row);
+            }
+        });
+    }
+
+    async handleDelete(recordId, row) {
+        try {
+            const response = await fetch(`${this.deleteUrl}/${recordId}`, { method: 'DELETE' });
+            const result = await response.json();
+
+            if (result.success) {
+                row.remove();
+                swal("Deleted!", "Your record has been deleted.", "success");
+            } else {
+                swal("Error", "Failed to delete record.", "error");
+            }
+        } catch (error) {
+            console.error('Error deleting record:', error);
+            swal("Error", "Something went wrong.", "error");
+        }
+    }
+}
+
+// ✅ **Usage**
+const tableEditor = new TableEditor({
+    tableId: 'myTable',
+    updateUrl: '/api/update-record',
+    deleteUrl: '/api/delete-record'
+});

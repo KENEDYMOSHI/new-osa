@@ -1,0 +1,32 @@
+make a controller PetroleumImportersController, add a constructor add model PetroleumImporterModel, all crud methods with implementation,with try catch,also return json object with status 1 or 0 ,message and token. i need full implementation of the logic for create ,update,delete
+
+$data = [
+    'vesselName' => $this->getVariable('vesselName'),
+    'productType' => $this->getVariable('productType'),
+    'arrivalDate' => $this->getVariable('arrivalDate'),
+    'berthingDate' => $this->getVariable('berthingDate'),
+    'importStatus' => $this->getVariable('importStatus'),
+    'storageDepotName' => $this->getVariable('storageDepotName'),
+    'portOfDischarge' => $this->getVariable('portOfDischarge'),
+    'billOfLadingNo' => $this->getVariable('billOfLadingNo'),
+    'importerLicenseNumber' => $this->getVariable('importerLicenseNumber'),
+    'importerName' => $this->getVariable('importerName'),
+
+    'notifyingPartyName' => $this->getVariable('notifyingPartyName'),
+
+    'billOfLadingQuantityMT' => $this->getVariable('billOfLadingQuantityMT'),
+    'billOfLadingQuantityLitre' => $this->getVariable('billOfLadingQuantityLitre'),
+    'loadPortQuantityMT' => $this->getVariable('loadPortQuantityMT'),
+    'loadPortQuantityLitre' => $this->getVariable('loadPortQuantityLitre'),
+    'arrivalQuantityMT' => $this->getVariable('arrivalQuantityMT'),
+    'arrivalQuantityLitre' => $this->getVariable('arrivalQuantityLitre'),
+    'dischargePortQuantityMT' => $this->getVariable('dischargePortQuantityMT'),
+    'dischargePortQuantityLitre' => $this->getVariable('dischargePortQuantityLitre'),
+
+    'outturnQuantityMT' => $this->getVariable('outturnQuantityMT'),
+    'outturnQuantityLitre' => $this->getVariable('outturnQuantityLitre'),
+    'differenceOutturnBillMT' => $this->getVariable('differenceOutturnBillMT'),
+    'differenceOutturnBillLitre' => $this->getVariable('differenceOutturnBillLitre'),
+    'differenceOutturnArrivalMT' => $this->getVariable('differenceOutturnArrivalMT'),
+    'differenceOutturnArrivalLitre' => $this->getVariable('differenceOutturnArrivalLitre'),
+];
