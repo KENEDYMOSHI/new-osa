@@ -499,61 +499,124 @@
                 </td>
                 <td class="py-3 px-4">
                   <div class="flex items-center gap-2">
-                    <button *ngIf="doc.status === 'Not Uploaded'" (click)="triggerFileUpload(doc)" 
+                    <!-- BEFORE SUBMISSION: Upload button for all not-uploaded docs -->
+                    <button *ngIf="!isApplicationSubmitted && doc.status === 'Not Uploaded'" 
+                            (click)="triggerFileUpload(doc)" 
                             class="p-1.5 rounded-lg bg-orange-50 text-orange-600 border border-orange-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-orange-100" 
                             title="Upload">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                       </svg>
                     </button>
-                    <ng-container *ngIf="doc.status === 'Uploaded' || doc.status === 'Resubmitted'">
-                      <!-- View Button (Always visible if uploaded) -->
-                      <button (click)="viewDocument(doc)" class="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-blue-100" title="View">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </button>
 
-                      <!-- Edit Button (Visible if NOT submitted OR (Submitted AND Not yet doc-submitted)) -->
-                      <button *ngIf="(!isApplicationSubmitted || (isApplicationSubmitted && !doc.submitted)) && $any(doc).status !== 'Resubmitted'" (click)="triggerFileUpload(doc)" class="p-1.5 rounded-lg bg-green-50 text-green-600 border border-green-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-green-100" title="Edit">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                        </svg>
-                      </button>
-
-                      <!-- Submit Button (Visible if Application Submitted AND Doc Uploaded AND Not yet doc-submitted AND Not Resubmitted) -->
-                      <button *ngIf="isApplicationSubmitted && !doc.submitted && $any(doc).status !== 'Resubmitted'" (click)="submitDocument(doc)" class="p-1.5 rounded-lg bg-purple-50 text-purple-600 border border-purple-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-purple-100" title="Submit">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                        </svg>
-                      </button>
-
-                      <!-- Delete Button (Visible ONLY if Application NOT Submitted) -->
-                      <button *ngIf="!isApplicationSubmitted" (click)="deleteDocument(doc)" class="p-1.5 rounded-lg bg-red-50 text-red-600 border border-red-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-red-100" title="Delete">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                        </svg>
-                      </button>
-                    </ng-container>
-                    
-                    <!-- Returned Status: Show View and Edit buttons -->
-                    <ng-container *ngIf="doc.status === 'Returned'">
+                    <!-- BEFORE SUBMISSION: View, Edit, Delete for uploaded docs -->
+                    <ng-container *ngIf="!isApplicationSubmitted && (doc.status === 'Uploaded' || doc.status === 'Resubmitted')">
                       <!-- View Button -->
-                      <button (click)="viewDocument(doc)" class="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-blue-100" title="View">
+                      <button (click)="viewDocument(doc)" 
+                              class="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-blue-100" 
+                              title="View">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                           <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                       </button>
                       
-                      <!-- Edit/Re-upload Button (Always visible for returned documents) -->
-                      <button (click)="triggerFileUpload(doc)" class="p-1.5 rounded-lg bg-green-50 text-green-600 border border-green-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-green-100" title="Re-upload">
+                      <!-- Edit Button -->
+                      <button (click)="triggerFileUpload(doc)" 
+                              class="p-1.5 rounded-lg bg-green-50 text-green-600 border border-green-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-green-100" 
+                              title="Edit">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                        </svg>
+                      </button>
+                      
+                      <!-- Delete Button -->
+                      <button (click)="deleteDocument(doc)" 
+                              class="p-1.5 rounded-lg bg-red-50 text-red-600 border border-red-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-red-100" 
+                              title="Delete">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                      </button>
+                    </ng-container>
+
+                    <!-- AFTER SUBMISSION - UPLOADED DOCS: Only View button (read-only) -->
+                    <ng-container *ngIf="isApplicationSubmitted && (doc.status === 'Uploaded' || doc.status === 'Resubmitted')">
+                      <button (click)="viewDocument(doc)" 
+                              class="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-blue-100" 
+                              title="View">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </button>
+                    </ng-container>
+
+                    <!-- AFTER SUBMISSION - MISSING DOCS: Save button to upload -->
+                    <ng-container *ngIf="isApplicationSubmitted && doc.status === 'Not Uploaded'">
+                      <button (click)="triggerFileUpload(doc)" 
+                              class="p-1.5 rounded-lg bg-purple-50 text-purple-600 border border-purple-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-purple-100" 
+                              title="Upload Missing Document">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                        </svg>
+                      </button>
+                    </ng-container>
+
+                    <!-- PENDING STATE: View, Edit and Save buttons after file selection -->
+                    <ng-container *ngIf="doc.status === 'Pending'">
+                      <!-- View Button (if there was a previous upload) -->
+                      <button *ngIf="doc.dbId" 
+                              (click)="viewDocument(doc)" 
+                              class="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-blue-100" 
+                              title="View Previous Document">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </button>
+                      
+                      <!-- Edit Button (to change the selected file) -->
+                      <button (click)="triggerFileUpload(doc)" 
+                              class="p-1.5 rounded-lg bg-green-50 text-green-600 border border-green-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-green-100" 
+                              title="Edit (Change File)">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                        </svg>
+                      </button>
+                      
+                      <!-- Save Button (to upload the selected file) -->
+                      <button (click)="saveDocument(doc)" 
+                              class="p-1.5 rounded-lg bg-purple-50 text-purple-600 border border-purple-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-purple-100" 
+                              title="Save (Upload Document)">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                        </svg>
+                      </button>
+                    </ng-container>
+
+                    <!-- RETURNED DOCS: View + Edit buttons (regardless of submission status) -->
+                    <ng-container *ngIf="doc.status === 'Returned'">
+                      <!-- View Button -->
+                      <button (click)="viewDocument(doc)" 
+                              class="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-blue-100" 
+                              title="View">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </button>
+                      
+                      <!-- Edit/Re-upload Button -->
+                      <button (click)="triggerFileUpload(doc)" 
+                              class="p-1.5 rounded-lg bg-green-50 text-green-600 border border-green-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-green-100" 
+                              title="Edit (Re-upload)">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                         </svg>
                       </button>
                     </ng-container>
+
                     <!-- Hidden File Input -->
                     <input type="file" [id]="'fileInput-' + doc.id" class="hidden" (change)="onFileSelected($event, doc.id)" accept="application/pdf">
                   </div>

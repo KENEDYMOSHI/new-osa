@@ -88,7 +88,7 @@ export class LicenseApplicationComponent implements OnInit {
   };
 
 
-  baseDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned' | 'Resubmitted'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string; viewed?: boolean }[] = [
+  baseDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned' | 'Resubmitted' | 'Pending'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string; viewed?: boolean; pendingFile?: File }[] = [
     { id: 'tin', name: 'Tax Payer Identification Number (TIN)', date: '-', status: 'Not Uploaded', viewed: false },
     { id: 'businessLicense', name: 'Business License', date: '-', status: 'Not Uploaded', viewed: false },
     { id: 'taxClearance', name: 'Certificate Of Tax Clearance', date: '-', status: 'Not Uploaded', viewed: false },
@@ -96,12 +96,12 @@ export class LicenseApplicationComponent implements OnInit {
     { id: 'identity', name: 'Identity Card (National ID / Driver\'s License / Voter ID)', date: '-', status: 'Not Uploaded', viewed: false }
   ];
 
-  renewalDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned' | 'Resubmitted'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string; viewed?: boolean }[] = [
+  renewalDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned' | 'Resubmitted' | 'Pending'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string; viewed?: boolean; pendingFile?: File }[] = [
     { id: 'correctness', name: 'Certificate of Correctness', date: '-', status: 'Not Uploaded', viewed: false },
     { id: 'previousLicense', name: 'Previous License', date: '-', status: 'Not Uploaded', viewed: false }
   ];
 
-  qualificationDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned' | 'Resubmitted'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string; viewed?: boolean }[] = [
+  qualificationDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned' | 'Resubmitted' | 'Pending'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string; viewed?: boolean; pendingFile?: File }[] = [
     { id: 'psle', name: 'Primary School Leaving Certificate (PSLE)', date: '-', status: 'Not Uploaded', viewed: false },
     { id: 'csee', name: 'Certificate of Secondary Education Examination (CSEE)', date: '-', status: 'Not Uploaded', viewed: false },
     { id: 'acsee', name: 'Advanced Certificate of Secondary Education Examination (ACSEE)', date: '-', status: 'Not Uploaded', viewed: false },
@@ -113,7 +113,7 @@ export class LicenseApplicationComponent implements OnInit {
     { id: 'bachelor', name: 'Bachelor\'s Degree', date: '-', status: 'Not Uploaded', viewed: false }
   ];
 
-  requiredDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned' | 'Resubmitted'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string; viewed?: boolean }[] = [];
+  requiredDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned' | 'Resubmitted' | 'Pending'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string; viewed?: boolean; pendingFile?: File }[] = [];
 
   selectedDoc: any = null;
 
@@ -388,6 +388,25 @@ export class LicenseApplicationComponent implements OnInit {
       // Get the document reference
       const targetDoc = this.selectedDoc;
       
+      // NEW LOGIC: If application is submitted and doc was not uploaded, set pending state
+      if (this.isApplicationSubmitted && targetDoc && targetDoc.status === 'Not Uploaded') {
+        // Store the file temporarily and show Edit/Save buttons
+        targetDoc.pendingFile = file;
+        targetDoc.fileName = file.name;
+        targetDoc.status = 'Pending'; // Temporary status to show Edit/Save buttons
+        event.target.value = ''; // Clear the file input
+        this.selectedDoc = null;
+        
+        Swal.fire({
+          icon: 'info',
+          title: 'Document Selected',
+          text: 'You can now edit or save this document.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        return;
+      }
+      
       // Check if this is a returned document that needs to be deleted first
       if (targetDoc && targetDoc.status === 'Returned' && targetDoc.dbId) {
         // Show loading
@@ -581,6 +600,65 @@ export class LicenseApplicationComponent implements OnInit {
            doc.date = '-';
            doc.fileName = null;
         }
+      }
+    });
+  }
+
+  // New method to save a pending document
+  saveDocument(doc: any) {
+    if (!doc.pendingFile) {
+      Swal.fire('Error', 'No file selected for upload.', 'error');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Uploading...',
+      text: 'Please wait while your document is being uploaded.',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Determine application ID
+    const appId = this.isApplicationSubmitted ? (this.applicationId || undefined) : undefined;
+
+    // Determine Category
+    let category = 'attachment'; // Default
+    const isQual = this.qualificationDocuments.some(d => d.id === doc.id || d.name === doc.name);
+    if (isQual) {
+      category = 'qualification';
+    }
+
+    this.licenseService.uploadDocument(doc.pendingFile, doc.id, appId, category).subscribe({
+      next: (response: any) => {
+        // Update the document
+        doc.status = response.status || 'Uploaded';
+        doc.date = new Date(response.created_at || Date.now()).toLocaleDateString('en-GB');
+        doc.fileName = response.original_name;
+        doc.dbId = response.id;
+        doc.pendingFile = null; // Clear pending file
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Upload Successful',
+          text: `${doc.name} has been successfully uploaded.`,
+          timer: 2000,
+          showConfirmButton: false
+        });
+      },
+      error: (err: any) => {
+        console.error('Upload failed', err);
+        const errorMessage = err?.error?.message || err?.message || 'Failed to upload document.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Upload Failed',
+          text: errorMessage,
+        });
+        // Reset to Not Uploaded on error
+        doc.status = 'Not Uploaded';
+        doc.fileName = null;
+        doc.pendingFile = null;
       }
     });
   }

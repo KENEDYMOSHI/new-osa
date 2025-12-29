@@ -369,6 +369,19 @@
                         <!-- Documents (Combined Attachments & Qualifications) -->
                         <div class="tab-pane" id="documents">
                             <h5 class="mb-3 text-primary"><i class="fas fa-paperclip mr-2"></i>Required Attachments</h5>
+                            <style>
+                                .returned-document {
+                                    border: 2px dashed #dc3545 !important;
+                                    background-color: #fff5f5 !important;
+                                }
+                                .returned-document .document-icon {
+                                    background-color: #f8d7da !important;
+                                }
+                                .returned-document .alert-danger {
+                                    background-color: #ffebec;
+                                    border-color: #f5c6cb;
+                                }
+                            </style>
                             <div class="row">
                                 <?php if (!empty($application->attachments)): ?>
                     <?php foreach ($application->attachments as $doc): ?>
@@ -467,6 +480,20 @@
 
                             <!-- Qualification Documents Section -->
                              <h5 class="mb-3 text-primary"><i class="fas fa-graduation-cap mr-2"></i>Qualification Documents</h5>
+                             <style>
+                                .returned-document {
+                                    border: 2px dashed #dc3545 !important;
+                                    background-color: #fff5f5 !important;
+                                }
+                                .returned-document .document-icon {
+                                    background-color: #f8d7da !important;
+                                }
+                                .returned-document .alert-danger {
+                                    background-color: #ffebec;
+                                    border-color: #f5c6cb;
+                                    border-left: 4px solid #dc3545;
+                                }
+                             </style>
                              <div class="row">
                                 <?php if (!empty($application->attachments)): ?>
                                     <?php foreach ($application->attachments as $doc): ?>
@@ -535,12 +562,12 @@
                                                             <i class="fas fa-check mr-1"></i> Accept
                                                         </button>
                                                         <?php endif; ?>
-                                                        <button onclick="showReturnModal('<?= $doc->id ?? '' ?>', '<?= addslashes($doc->document_name ?? $doc->file_name ?? 'Document') ?>')" 
+                                                        <button onclick="showReturnModal('<?= $doc->id ?? '' ?>', '<?= addslashes($doc->document_name ?? $doc->file_name ?? 'Document') ?>')"
                                                                 class="btn btn-warning btn-sm flex-fill">
                                                             <i class="fas fa-undo mr-1"></i> Return
                                                         </button>
                                                     </div>
-                                                    
+
                                                     <!-- Rejection Reason Alert -->
                                                     <?php if (isset($doc->rejection_reason) && !empty($doc->rejection_reason)): ?>
                                                     <div class="alert alert-danger mt-3 mb-0 py-2 px-3 border-left" style="border-left: 4px solid #dc3545 !important;">
