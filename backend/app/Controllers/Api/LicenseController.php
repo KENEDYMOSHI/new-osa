@@ -1224,9 +1224,9 @@ class LicenseController extends ResourceController
         // 4. Join Exam Results (Left join because Renewals don't need it, but we filter later)
         $builder->join('interview_assessments', 'interview_assessments.application_id = license_applications.id', 'left');
         
-        // 5. Only show applications that are ready for completion (exist in license_completions)
-        $builder->join('license_completions', 'license_completions.application_id = license_applications.id', 'left');
-        $builder->where('license_completions.id IS NOT NULL'); // Only show applications that are approved and ready
+        // 5. REMOVED: Only show applications that are ready for completion (exist in license_completions)
+        // $builder->join('license_completions', 'license_completions.application_id = license_applications.id', 'left');
+        // $builder->where('license_completions.id IS NOT NULL'); 
         
         $builder->where('license_applications.user_id', $user->id);
         

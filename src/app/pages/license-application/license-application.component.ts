@@ -217,21 +217,31 @@ export class LicenseApplicationComponent implements OnInit {
   }
 
   loadLicenseTypes() {
-    this.licenseService.getLicenseTypes().subscribe({
+    this.licenseService.getEligibleApplications().subscribe({
       next: (types: any[]) => {
+        // Map the eligible (passed) applications to the licenseTypes structure
         this.licenseTypes = types.map((t: any) => ({
-          id: t.id,
+          id: t.id, // This is the APPLICATION ID now
           name: t.name,
           fee: parseFloat(t.fee),
-          description: t.description,
+          description: t.type === 'Renewal' ? 'Renewal Application' : 'New Application', // Simplified description
           selected: false,
           submitted: false
         }));
-        console.log('License types loaded from database:', this.licenseTypes);
+        console.log('Eligible license types loaded:', this.licenseTypes);
+        
+        if (this.licenseTypes.length === 0) {
+             Swal.fire({
+                 icon: 'info',
+                 title: 'No Eligible Applications',
+                 text: 'You do not have any applications that are ready for this stage (Passed Interview/Surveillance).'
+             });
+        }
+
         this.updateRequiredDocuments(); // Now called after types are loaded
       },
       error: (err: any) => {
-        console.error('Failed to load license types:', err);
+        console.error('Failed to load eligible license types:', err);
         Swal.fire('Error', 'Failed to load license types. Please refresh the page.', 'error');
       }
     });
