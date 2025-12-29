@@ -29,6 +29,9 @@ $routes->group('api/approval', function($routes) {
     $routes->post('update-status', 'ApprovalController::updateApplicationStatus');
     $routes->post('update-exam-scores', 'ApprovalController::updateExamScores');
     
+    // Document Operations
+    $routes->post('document/(:segment)/accept', 'Api\\DocumentApiController::acceptDocument/$1');
+    
     // Payment API
     $routes->group('payment', function($routes) {
         $routes->post('collection', 'Api\PaymentController::getPaymentCollection');

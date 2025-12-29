@@ -133,4 +133,73 @@ class DocumentApiController extends ResourceController
 
         return $this->respond(['message' => 'Document returned successfully']);
     }
+    
+    /**
+     * Accept a resubmitted document
+     * POST /api/documents/:id/accept
+     */
+    public function acceptDocument($documentId = null)
+    {
+        // Check API key
+        $apiKey = $this->request->getHeaderLine('X-API-KEY');
+        if ($apiKey !== 'osa_approval_api_key_12345') {
+            return $this->failUnauthorized('Invalid API key');
+        }
+
+        if (!$documentId) {
+            return $this->fail('Document ID is required');
+        }
+
+        try {
+            $db = \Config\Database::connect();
+            $builder = $db->table('license_application_attachments');
+            
+            // Get document
+            $document = $builder->where('id', $documentId)->get()->getRow();
+            
+            if (!$document) {
+                return $this->failNotFound('Document not found');
+            }
+
+            // Validate status is Resubmitted
+            if ($document->status !== 'Resubmitted') {
+                return $this->fail('Only resubmitted documents can be accepted. Current status: ' . $document->status);
+            }
+
+            // Update status to Uploaded
+            $data = [
+                'status' => 'Uploaded',
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+
+            $builder->where('id', $documentId);
+            if (!$builder->update($data)) {
+                return $this->fail('Failed to update document status');
+            }
+
+            // Log in audit trail
+            $auditBuilder = $db->table('document_audit_trails');
+            $auditData = [
+                'id' => md5(uniqid(rand(), true)),
+                'document_id' => $documentId,
+                'action' => 'Accepted',
+                'performed_by' => 'WMA-MIS Approver',
+                'old_status' => 'Resubmitted',
+                'new_status' => 'Uploaded',
+                'comments' => 'Document accepted by approver',
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            
+            $auditBuilder->insert($auditData);
+
+            return $this->respond([
+                'success' => true,
+                'message' => 'Document accepted successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Error accepting document: ' . $e->getMessage());
+            return $this->fail('Server Error: ' . $e->getMessage());
+        }
+    }
 }

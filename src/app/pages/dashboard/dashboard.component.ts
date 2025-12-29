@@ -76,7 +76,8 @@ export class DashboardComponent implements OnInit {
     // Load applications to calculate stats
     this.licenseService.getUserApplications().subscribe(
       (response: any) => {
-        const applications = response.data || [];
+        // Handle response layout: backend returns direct array or object with data property
+        const applications = Array.isArray(response) ? response : (response.data || []);
         
         // Calculate statistics
         this.stats.total = applications.length;
@@ -96,8 +97,8 @@ export class DashboardComponent implements OnInit {
           .slice(0, 5)
           .map((app: any) => ({
             id: app.id,
-            licenseType: app.license_class || 'License Application',
-            controlNumber: app.control_number || `APP-${app.id}`,
+            licenseType: app.license_class || 'License Application', // Map correctly if needed
+            controlNumber: app.control_number || `APP-${app.id?.substring(0, 8)}`,
             date: this.formatDate(app.created_at),
             status: this.getStatusLabel(app.status)
           }));

@@ -437,6 +437,8 @@ class LicenseModel extends Model
                 if(isset($att->document_type) && isset($docMap[$att->document_type])) {
                     $att->document_type = $docMap[$att->document_type];
                 }
+                // Add category for proper display
+                $att->category = 'attachment';
                 $app->attachments[] = $att;
             }
         }
@@ -445,6 +447,8 @@ class LicenseModel extends Model
                 if(isset($att->document_type) && isset($docMap[$att->document_type])) {
                     $att->document_type = $docMap[$att->document_type];
                 }
+                // Add category for proper display
+                $att->category = 'qualification';
                 $app->attachments[] = $att;
             }
         }

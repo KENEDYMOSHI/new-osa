@@ -499,7 +499,8 @@
                                     <?php foreach ($application->attachments as $doc): ?>
                                         <?php if (isset($doc->category) && $doc->category == 'qualification'): ?>
                                         <div class="col-md-6 col-lg-4 mb-4">
-                                             <div class="card border-0 shadow-sm h-100 hover-shadow transition <?= (isset($doc->status) && $doc->status == 'Returned') ? 'returned-document' : '' ?>">
+                                             <div class="card hover-shadow mb-3 <?= (isset($doc->status) && $doc->status == 'Returned') ? 'returned-document' : '' ?>" 
+                                      data-doc-id="<?= $doc->id ?? '' ?>">
                                                 <div class="card-body p-4">
                                                     <!-- Header with Icon and Badge -->
                                                     <div class="d-flex align-items-start mb-3">
@@ -1451,19 +1452,20 @@ function acceptDocument(docId) {
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         
-        fetch('http://localhost:8080/api/admin/document/' + docId + '/accept', {
+        fetch('http://localhost:8080/api/approval/document/' + docId + '/accept', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json' // Add auth headers if needed, but dev mode bypasses
+                'Content-Type': 'application/json',
+                'X-API-KEY': '<?= $apiKey ?>'
             }
         })
         .then(response => response.json())
         .then(data => {
-            if (data.status === 'success') {
+            if (data.success) {
                 alert('Document accepted successfully!');
                 location.reload();
             } else {
-                alert('Failed to accept document: ' + (data.error || data.message || 'Unknown error'));
+                alert('Failed to accept document: ' + (data.message || 'Unknown error'));
                 btn.disabled = false;
                 btn.innerHTML = originalHtml;
             }
@@ -1580,9 +1582,45 @@ function submitReturn() {
         submitBtn.innerHTML = originalText;
         
         if (data.status === 'success' || data.message) {
+            // Close modal
             $('#returnDocumentModal').modal('hide');
+            
+            // Show success message
             alert('Document has been returned successfully');
-            location.reload(); // Reload to show updated status
+            
+            // Update document badge and status without reloading
+            const docCards = document.querySelectorAll('[data-doc-id="' + currentDocId + '"]');
+            docCards.forEach(card => {
+                // Update badge
+                const badge = card.querySelector('.badge');
+                if (badge) {
+                    badge.className = 'badge badge-danger badge-pill px-3 py-1 mb-2';
+                    badge.style = 'font-weight: bold; font-size: 0.75rem; padding: 0.4rem 0.8rem;';
+                    badge.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> RETURNED';
+                }
+                
+                // Add rejection reason alert if not exists
+                const existingAlert = card.querySelector('.alert-danger');
+                if (!existingAlert) {
+                    const actionButtons = card.querySelector('.d-flex.gap-2');
+                    if (actionButtons) {
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-danger mt-3 mb-0 py-2 px-3 border-left';
+                        alertDiv.style = 'border-left: 4px solid #dc3545 !important;';
+                        alertDiv.innerHTML = `
+                            <small class="font-weight-bold">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                <strong>Reason:</strong> ${reason}
+                            </small>
+                        `;
+                        actionButtons.parentNode.appendChild(alertDiv);
+                    }
+                }
+            });
+            
+            // Clear the form
+            document.getElementById('returnReason').value = '';
+            currentDocId = null;
         } else {
             alert('Failed to return document: ' + (data.error || 'Unknown error'));
         }

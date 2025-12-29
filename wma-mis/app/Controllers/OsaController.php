@@ -113,6 +113,7 @@ public function viewApplication($id)
 
   $data['user']= $this->user;
   $data['application'] = $application;
+  $data['apiKey'] = 'osa_approval_api_key_12345';
 
   return view('Pages/Osa/ApplicationDetail',$data);
 }

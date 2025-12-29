@@ -92,33 +92,33 @@ class DocumentService
 
     public function uploadDocument($appId, $userId, $documentType, $file)
     {
+        // CRITICAL: Ensure application_id is never null
+        if (empty($appId)) {
+            throw new \Exception("Application ID is required for document upload.");
+        }
+        
         // 1. Check App Status
         $app = $this->initialAppModel->find($appId);
-        $appStatus = $appStatus ?? 'Draft'; // Default
+        $appStatus = $app['status'] ?? 'Draft'; // Fixed: use $app['status'] instead of undefined $appStatus
 
-        // 2. Compute Permission (Can we edit/upload?)
-        // If app is Draft, yes.
-        // If app is Submitted/UnderReview/Approved, NO (unless missing docs scenario, handled below).
-        // If app is Returned, only if doc specific status is Draft or Returned (or if missing).
-        
+        // 2. Check for existing document to preserve category
+        $existingDoc = $this->attachmentModel->where('application_id', $appId)
+                                              ->where('document_type', $documentType)
+                                              ->orderBy('created_at', 'DESC')
+                                              ->first();
+
+        // 3. Compute Permission (Can we edit/upload?)
         $canUpload = false;
         if ($appStatus === 'Draft') {
             $canUpload = true;
         } elseif ($appStatus === 'Returned') {
             // Check specific document status if it exists
-            $existing = $this->attachmentModel->where('application_id', $appId)
-                                              ->where('document_type', $documentType)
-                                              ->orderBy('created_at', 'DESC')
-                                              ->first();
-            if (!$existing || $existing->status === 'Returned' || $existing->status === 'Draft') {
+            if (!$existingDoc || $existingDoc->status === 'Returned' || $existingDoc->status === 'Draft') {
                  $canUpload = true;
             }
         } elseif ($appStatus === 'Submitted' || $appStatus === 'Under Review') {
              // Allow upload ONLY if document is MISSING (Rule 5)
-             $existing = $this->attachmentModel->where('application_id', $appId)
-                                               ->where('document_type', $documentType)
-                                               ->countAllResults();
-             if ($existing === 0) {
+             if (!$existingDoc) {
                  $canUpload = true;
              }
         }
@@ -127,21 +127,38 @@ class DocumentService
             throw new \Exception("Upload not allowed for this document in current application status.");
         }
 
-        // 3. Handle File Upload
+        // 4. Handle File Upload
         if (!$file->isValid()) {
              throw new \Exception($file->getErrorString());
         }
 
         $newName = $file->getRandomName();
-        // Assuming writable/uploads/licenses is the path
         $file->move(WRITEPATH . 'uploads/licenses', $newName);
 
-        // 4. Save to DB
+        // 5. Determine category - PRESERVE existing category if document exists
+        $category = null;
+        
+        if ($existingDoc && !empty($existingDoc->category)) {
+            // PRESERVE: Use existing category to keep document in same section
+            $category = $existingDoc->category;
+        } else {
+            // NEW DOCUMENT: Determine category based on document type
+            $qualificationTypes = [
+                'psle', 'csee', 'acsee', 'veta', 'nta4', 'nta5', 'nta6',
+                'specialized', 'bachelor', 'diploma', 'degree', 'master', 'phd',
+                'cv', 'certificate', 'professional_certificate'
+            ];
+            
+            $category = in_array(strtolower($documentType), $qualificationTypes) ? 'qualification' : 'attachment';
+        }
+
+        // 6. Save to DB with MANDATORY application_id and preserved category
         $data = [
             'id' => (string) \CodeIgniter\Uuid::uuid4(),
             'user_id' => $userId,
-            'application_id' => $appId, // Link immediately if app exists
+            'application_id' => $appId, // CRITICAL: This must NEVER be null
             'document_type' => $documentType,
+            'category' => $category, // PRESERVED from existing or auto-determined
             'file_path' => 'uploads/licenses/' . $newName,
             'original_name' => $file->getClientName(),
             'mime_type' => $file->getClientMimeType(),

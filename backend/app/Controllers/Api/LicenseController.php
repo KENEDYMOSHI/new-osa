@@ -98,6 +98,11 @@ class LicenseController extends ResourceController
                                            ->first();
             
             if ($existingDoc) {
+                // PRESERVE category from existing document
+                if (!$category && !empty($existingDoc->category)) {
+                    $category = $existingDoc->category;
+                }
+                
                 // Check if we are replacing a returned document
                 if ($existingDoc->status === 'Returned') {
                     $notifyAdmin = true;
@@ -116,6 +121,11 @@ class LicenseController extends ResourceController
                                            ->first();
     
             if ($existingDoc) {
+                // PRESERVE category from existing document
+                if (!$category && !empty($existingDoc->category)) {
+                    $category = $existingDoc->category;
+                }
+                
                 // Delete the existing document
                 $attachmentModel->delete($existingDoc->id);
             }

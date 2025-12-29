@@ -226,27 +226,24 @@ class ApprovalController extends BaseController
             }
         }
         
-        // 4. Get all attachments
+        // 4. Get all attachments with category
         $attachmentBuilder = $db->table('license_application_attachments');
-        $attachmentBuilder->select('id, user_id, application_id, document_type, original_name as file_name, document_type as type, mime_type, status, created_at'); // Exclude file_content
+        $attachmentBuilder->select('id, user_id, application_id, document_type, original_name as file_name, document_type as type, mime_type, status, category, created_at'); // Include category
         $attachmentBuilder->where('application_id', $id);
         $attachments = $attachmentBuilder->get()->getResult();
         
-        // Categorize attachments
+        // Categorize attachments based on database category field
         $requiredAttachments = [];
         $qualificationAttachments = [];
-        $qualTypes = ['csee', 'acsee', 'diploma', 'degree', 'bachelor', 'master', 'phd', 'cv', 'certificate', 'professional_certificate'];
         
         foreach ($attachments as $attachment) {
-            $docType = strtolower($attachment->document_type ?? '');
+            // Use database category if available, otherwise fallback to heuristic
+            $category = $attachment->category ?? 'attachment';
             
-            // Heuristic to determine category
-            if (in_array($docType, $qualTypes) || strpos($docType, 'cert') !== false || strpos($docType, 'cv') !== false) {
-                 $attachment->category = 'qualification';
-                 $qualificationAttachments[] = $attachment;
+            if ($category === 'qualification') {
+                $qualificationAttachments[] = $attachment;
             } else {
-                 $attachment->category = 'required';
-                 $requiredAttachments[] = $attachment;
+                $requiredAttachments[] = $attachment;
             }
         }
         

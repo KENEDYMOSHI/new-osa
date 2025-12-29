@@ -311,6 +311,7 @@ export class LicenseApplicationComponent implements OnInit {
             reqDoc.fileName = doc.original_name;
             reqDoc.dbId = doc.id;
             reqDoc.submitted = (this.isApplicationSubmitted && doc.application_id === this.applicationId);
+            (reqDoc as any).category = doc.category || 'attachment'; // PRESERVE category from database
             if (doc.status === 'Returned') {
                 reqDoc.rejectionReason = doc.rejection_reason;
                 reqDoc.viewed = false; // Initialize as not viewed
@@ -327,6 +328,7 @@ export class LicenseApplicationComponent implements OnInit {
             qualDoc.fileName = doc.original_name;
             qualDoc.dbId = doc.id;
             qualDoc.submitted = (this.isApplicationSubmitted && doc.application_id === this.applicationId);
+            (qualDoc as any).category = doc.category || 'qualification'; // PRESERVE category from database
             if (doc.status === 'Returned') {
                 qualDoc.rejectionReason = doc.rejection_reason;
                 qualDoc.viewed = false; // Initialize as not viewed
@@ -466,12 +468,20 @@ export class LicenseApplicationComponent implements OnInit {
     // Determine application ID to pass
     const appId = this.isApplicationSubmitted ? (this.applicationId || undefined) : undefined;
 
-    // Determine Category
+    // Determine Category - PRESERVE from existing document if available
     let category = 'attachment'; // Default
-    // Check if it exists in qualificationDocuments list
-    const isQual = this.qualificationDocuments.some(d => d.id === documentType || d.name === documentType);
-    if (isQual) {
+    
+    // First check if this document already has a category (from database)
+    // This happens when re-uploading a returned or existing document
+    if (targetDoc && targetDoc.category) {
+      category = targetDoc.category;
+    } else {
+      // For new documents, determine category based on document type
+      // Check if it exists in qualificationDocuments list
+      const isQual = this.qualificationDocuments.some(d => d.id === documentType || d.name === documentType);
+      if (isQual) {
         category = 'qualification';
+      }
     }
 
     this.licenseService.uploadDocument(file, documentType, appId, category).subscribe({
