@@ -33,10 +33,10 @@ class AuthFilter implements FilterInterface
         if (!auth()->loggedIn()) {
             return redirect()->to('/');
         } 
-        else if (empty(auth()->user()->phone_number)) {
-            return redirect()->to('updateMobile/' . auth()->user()->unique_id);
-            
-        }
+        // Phone number update is now optional - users can log in without updating
+        // else if (empty(auth()->user()->phone_number)) {
+        //     return redirect()->to('updateMobile/' . auth()->user()->unique_id);
+        // }
     }
 
     /**

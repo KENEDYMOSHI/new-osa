@@ -1,9 +1,21 @@
 <div class="p-6 bg-gray-50 min-h-screen font-sans">
   
   <!-- Header -->
-  <div class="mb-8">
-    <h1 class="text-2xl font-bold text-gray-800 mb-1">License Application</h1>
-    <p class="text-gray-500 text-sm">Apply for a new license or renew an existing one.</p>
+  <div class="mb-8 flex justify-between items-center">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800 mb-1">License Application</h1>
+      <p class="text-gray-500 text-sm">Apply for a new license or renew an existing one.</p>
+    </div>
+    
+    <!-- Test Button for Interview Modal (Remove in production) -->
+    <button (click)="openInterviewModal(mockInterview)" 
+            class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg shadow-sm transition-all flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+      View Result (Test)
+    </button>
   </div>
 
   <div class="space-y-8">
@@ -337,28 +349,39 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let doc of requiredDocuments" class="border-b border-gray-100 hover:bg-gray-50">
+              <tr *ngFor="let doc of requiredDocuments" 
+                  [ngClass]="{
+                    'border-b border-gray-100 hover:bg-gray-50': doc.status !== 'Returned' || doc.viewed,
+                    'returned-document': doc.status === 'Returned' && !doc.viewed
+                  }">
                 <td class="py-3 px-4 text-sm text-gray-800">
-                  <div>{{ doc.name }}</div>
+                  <div class="flex items-center gap-2">
+                    <!-- Red warning icon for unviewed returned documents -->
+                    <svg *ngIf="doc.status === 'Returned' && !doc.viewed" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-red-600 pulse-animation">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                    <span>{{ doc.name }}</span>
+                  </div>
                   <div *ngIf="doc.status === 'Uploaded' && doc.fileName" class="text-xs text-gray-500 mt-1 flex items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                     </svg>
                     {{ doc.fileName }}
                   </div>
-                  <div *ngIf="doc.status === 'Returned' && doc.rejectionReason" class="text-xs text-red-600 mt-1 font-medium bg-red-50 p-1 rounded">
-                    Reason: {{ doc.rejectionReason }}
+                  <div *ngIf="doc.status === 'Returned' && doc.rejectionReason" class="text-xs mt-2 p-2 rounded rejection-alert">
+                    <span class="font-bold">Reason:</span> {{ doc.rejectionReason }}
                   </div>
                 </td>
                 <td class="py-3 px-4 text-sm text-gray-600">{{ doc.date }}</td>
                 <td class="py-3 px-4">
                   <span [ngClass]="{
                     'bg-green-100 text-green-700': doc.status === 'Uploaded', 
+                    'bg-blue-100 text-blue-700 font-semibold': doc.status === 'Resubmitted',
                     'bg-gray-100 text-gray-600': doc.status === 'Not Uploaded',
-                    'bg-red-100 text-red-700': doc.status === 'Returned'
+                    'returned-badge': doc.status === 'Returned'
                   }" 
-                        class="px-2 py-1 rounded-full text-xs font-medium">
-                    {{ doc.status }}
+                        class="px-3 py-1.5 rounded-full text-xs font-medium uppercase">
+                    {{ doc.status === 'Resubmitted' ? 'Under Review' : doc.status }}
                   </span>
                 </td>
                 <td class="py-3 px-4">
@@ -368,7 +391,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                       </svg>
                     </button>
-                    <ng-container *ngIf="doc.status === 'Uploaded'">
+                    <ng-container *ngIf="doc.status === 'Uploaded' || doc.status === 'Resubmitted'">
                       <button (click)="viewDocument(doc)" class="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-blue-100" title="View">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
@@ -383,6 +406,24 @@
                       <button *ngIf="!isApplicationSubmitted" (click)="deleteDocument(doc)" class="p-1.5 rounded-lg bg-red-50 text-red-600 border border-red-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-red-100" title="Delete">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                      </button>
+                    </ng-container>
+
+                    <!-- Returned Status: Show View and Edit buttons -->
+                    <ng-container *ngIf="doc.status === 'Returned'">
+                      <!-- View Button -->
+                      <button (click)="viewDocument(doc)" class="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-blue-100" title="View">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </button>
+                      
+                      <!-- Edit/Re-upload Button (Always visible for returned documents) -->
+                      <button (click)="triggerFileUpload(doc)" class="p-1.5 rounded-lg bg-green-50 text-green-600 border border-green-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-green-100" title="Re-upload">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                         </svg>
                       </button>
                     </ng-container>
@@ -421,28 +462,39 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let doc of qualificationDocuments" class="border-b border-gray-100 hover:bg-gray-50">
+              <tr *ngFor="let doc of qualificationDocuments" 
+                  [ngClass]="{
+                    'border-b border-gray-100 hover:bg-gray-50': doc.status !== 'Returned' || doc.viewed,
+                    'returned-document': doc.status === 'Returned' && !doc.viewed
+                  }">
                 <td class="py-3 px-4 text-sm text-gray-800">
-                  <div>{{ doc.name }}</div>
+                  <div class="flex items-center gap-2">
+                    <!-- Red warning icon for unviewed returned documents -->
+                    <svg *ngIf="doc.status === 'Returned' && !doc.viewed" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-red-600 pulse-animation">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                    <span>{{ doc.name }}</span>
+                  </div>
                   <div *ngIf="doc.status === 'Uploaded' && doc.fileName" class="text-xs text-gray-500 mt-1 flex items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                     </svg>
                     {{ doc.fileName }}
                   </div>
-                  <div *ngIf="doc.status === 'Returned' && doc.rejectionReason" class="text-xs text-red-600 mt-1 font-medium bg-red-50 p-1 rounded">
-                    Reason: {{ doc.rejectionReason }}
+                  <div *ngIf="doc.status === 'Returned' && doc.rejectionReason" class="text-xs mt-2 p-2 rounded rejection-alert">
+                    <span class="font-bold">Reason:</span> {{ doc.rejectionReason }}
                   </div>
                 </td>
                 <td class="py-3 px-4 text-sm text-gray-600">{{ doc.date }}</td>
                 <td class="py-3 px-4">
                   <span [ngClass]="{
                     'bg-green-100 text-green-700': doc.status === 'Uploaded', 
+                    'bg-blue-100 text-blue-700 font-semibold': doc.status === 'Resubmitted',
                     'bg-gray-100 text-gray-600': doc.status === 'Not Uploaded',
-                    'bg-red-100 text-red-700': doc.status === 'Returned'
+                    'returned-badge': doc.status === 'Returned'
                   }" 
-                        class="px-2 py-1 rounded-full text-xs font-medium">
-                    {{ doc.status }}
+                        class="px-3 py-1.5 rounded-full text-xs font-medium uppercase">
+                    {{ doc.status === 'Resubmitted' ? 'Under Review' : doc.status }}
                   </span>
                 </td>
                 <td class="py-3 px-4">
@@ -454,7 +506,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                       </svg>
                     </button>
-                    <ng-container *ngIf="doc.status === 'Uploaded'">
+                    <ng-container *ngIf="doc.status === 'Uploaded' || doc.status === 'Resubmitted'">
                       <!-- View Button (Always visible if uploaded) -->
                       <button (click)="viewDocument(doc)" class="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-blue-100" title="View">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
@@ -464,14 +516,14 @@
                       </button>
 
                       <!-- Edit Button (Visible if NOT submitted OR (Submitted AND Not yet doc-submitted)) -->
-                      <button *ngIf="!isApplicationSubmitted || (isApplicationSubmitted && !doc.submitted)" (click)="triggerFileUpload(doc)" class="p-1.5 rounded-lg bg-green-50 text-green-600 border border-green-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-green-100" title="Edit">
+                      <button *ngIf="(!isApplicationSubmitted || (isApplicationSubmitted && !doc.submitted)) && $any(doc).status !== 'Resubmitted'" (click)="triggerFileUpload(doc)" class="p-1.5 rounded-lg bg-green-50 text-green-600 border border-green-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-green-100" title="Edit">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                         </svg>
                       </button>
 
-                      <!-- Submit Button (Visible if Application Submitted AND Doc Uploaded AND Not yet doc-submitted) -->
-                      <button *ngIf="isApplicationSubmitted && !doc.submitted" (click)="submitDocument(doc)" class="p-1.5 rounded-lg bg-purple-50 text-purple-600 border border-purple-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-purple-100" title="Submit">
+                      <!-- Submit Button (Visible if Application Submitted AND Doc Uploaded AND Not yet doc-submitted AND Not Resubmitted) -->
+                      <button *ngIf="isApplicationSubmitted && !doc.submitted && $any(doc).status !== 'Resubmitted'" (click)="submitDocument(doc)" class="p-1.5 rounded-lg bg-purple-50 text-purple-600 border border-purple-200 border-b-4 active:border-b-0 active:translate-y-1 transition-all hover:bg-purple-100" title="Submit">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
                         </svg>
@@ -608,42 +660,84 @@
   <!-- PDF Preview Modal -->
   <!-- PDF Preview Modal -->
   <!-- PDF Preview Modal -->
-  <app-modal [isOpen]="isModalOpen" (close)="closeModal()" className="w-11/12 max-w-6xl h-[85vh] flex flex-col rounded-xl overflow-hidden" [showCloseButton]="false">
-      <!-- Modal Header -->
-      <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200 bg-white">
-        <div class="flex items-center gap-3">
-          <div class="p-2 bg-orange-50 rounded-lg text-[#F59E0B]">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-            </svg>
-          </div>
-          <h3 class="text-lg font-bold text-gray-800">{{ previewDocName }}</h3>
-        </div>
-        <div class="flex items-center gap-2">
-          <button (click)="closeModal()" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" title="Close">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </div>
-      
-      <!-- Modal Body (Iframe) -->
-      <div class="flex-1 bg-gray-900 p-0 overflow-hidden relative">
-        <iframe [src]="previewUrl" class="w-full h-full border-0" title="Document Preview"></iframe>
-      </div>
 
-      <!-- Modal Footer -->
-      <div class="px-6 py-3 border-t border-gray-200 flex justify-between items-center bg-white">
-         <span class="text-sm text-gray-500">Previewing document...</span>
-         <a [href]="previewUrl" download="document.pdf" class="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-bold py-2 px-6 rounded-lg transition-colors text-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-            Download
-         </a>
+
+<!-- Interview Result Modal -->
+<div *ngIf="showInterviewModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" (click)="closeInterviewModal()"></div>
+
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <div class="sm:flex sm:items-start">
+          <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4 border-b pb-2">
+              Interview Assessment Details
+            </h3>
+            
+            <div class="space-y-4" *ngIf="selectedInterview">
+                
+                <!-- Status Badge -->
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium text-gray-500">Result</span>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold uppercase"
+                        [ngClass]="{
+                          'bg-green-100 text-green-700': selectedInterview.result === 'PASS',
+                          'bg-red-100 text-red-700': selectedInterview.result === 'FAIL'
+                        }">
+                      {{ selectedInterview.result }}
+                    </span>
+                </div>
+
+                <!-- Date -->
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium text-gray-500">Date</span>
+                    <span class="text-sm text-gray-900">{{ selectedInterview.date | date:'medium' }}</span>
+                </div>
+
+                <!-- Panel -->
+                <div class="flex justify-between items-start">
+                    <span class="text-sm font-medium text-gray-500 whitespace-nowrap mr-4">Panel Members</span>
+                    <span class="text-sm text-gray-900 text-right">{{ selectedInterview.panel || 'N/A' }}</span>
+                </div>
+
+                <!-- Scores Grid -->
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-gray-50 border border-gray-100 p-3 rounded-lg text-center">
+                        <div class="text-[10px] uppercase font-bold text-gray-500 mb-1">Theory</div>
+                         <div class="text-lg font-bold text-gray-800">{{ selectedInterview.theory !== undefined ? selectedInterview.theory : '-' }}</div>
+                    </div>
+                    <div class="bg-gray-50 border border-gray-100 p-3 rounded-lg text-center">
+                        <div class="text-[10px] uppercase font-bold text-gray-500 mb-1">Practical</div>
+                         <div class="text-lg font-bold text-gray-800">{{ selectedInterview.practical !== undefined ? selectedInterview.practical : '-' }}</div>
+                    </div>
+                    <div class="bg-orange-50 border border-orange-100 p-3 rounded-lg text-center">
+                        <div class="text-[10px] uppercase font-bold text-orange-600 mb-1">Total</div>
+                         <div class="text-lg font-bold text-orange-700">{{ selectedInterview.total !== undefined ? selectedInterview.total : '-' }}</div>
+                    </div>
+                </div>
+
+                 <!-- Comments -->
+                 <div class="bg-gray-50 p-3 rounded-md">
+                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Comments</h4>
+                    <p class="text-sm text-gray-800 whitespace-pre-line">{{ selectedInterview.comments || 'No comments provided.' }}</p>
+                </div>
+
+            </div>
+          </div>
+        </div>
       </div>
-  </app-modal>
+      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-orange-600 text-base font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:ml-3 sm:w-auto sm:text-sm" (click)="closeInterviewModal()">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 </div>
 
 <!-- Bill Modal -->

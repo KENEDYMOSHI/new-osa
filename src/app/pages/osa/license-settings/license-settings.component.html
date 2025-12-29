@@ -1,0 +1,108 @@
+<div class="container-fluid">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="h3 mb-0 text-gray-800">License Settings</h2>
+      <p class="text-muted">Manage license types, fees, and descriptions.</p>
+    </div>
+    <button class="btn btn-primary" (click)="openModal()">
+      <i class="fas fa-plus mr-2"></i> Add New License Type
+    </button>
+  </div>
+
+  <!-- Content Card -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">License Types Configuration</h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered" width="100%" cellspacing="0">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Fee (TZS)</th>
+              <th>Currency</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let type of licenseTypes">
+              <td>{{ type.name }}</td>
+              <td>{{ type.description || 'N/A' }}</td>
+              <td>{{ type.fee | number:'1.2-2' }}</td>
+              <td>{{ type.currency }}</td>
+              <td>
+                <button class="btn btn-sm btn-info mr-2" (click)="editLicenseType(type)">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="deleteLicenseType(type.id)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="licenseTypes.length === 0">
+              <td colspan="5" class="text-center py-4">
+                No license types found. Click "Add New" to get started.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-backdrop fade show" *ngIf="isModalOpen"></div>
+<div class="modal fade show" *ngIf="isModalOpen" style="display: block;" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ isEditMode ? 'Edit' : 'Add' }} License Type</h5>
+        <button type="button" class="close" (click)="closeModal()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="saveLicenseType()">
+          <div class="form-group">
+            <label>License Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="currentType.name" name="name" required placeholder="e.g. Class A - Verification">
+          </div>
+          
+          <div class="form-group">
+            <label>Description</label>
+            <textarea class="form-control" [(ngModel)]="currentType.description" name="description" rows="3"></textarea>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-8">
+              <div class="form-group">
+                <label>Fee Amount <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" [(ngModel)]="currentType.fee" name="fee" required min="0">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Currency</label>
+                <select class="form-control" [(ngModel)]="currentType.currency" name="currency">
+                  <option value="TZS">TZS</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 text-right">
+            <button type="button" class="btn btn-secondary mr-2" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="!currentType.name || !currentType.fee">
+              {{ isEditMode ? 'Update' : 'Save' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

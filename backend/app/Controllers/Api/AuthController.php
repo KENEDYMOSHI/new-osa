@@ -113,7 +113,7 @@ class AuthController extends ResourceController
                 'dob' => $data['personalInfo']['dateOfBirth'],
                 'region' => $data['personalInfo']['region'],
                 'district' => $data['personalInfo']['district'],
-                'town' => $data['personalInfo']['town'],
+                'ward' => $data['personalInfo']['ward'],
                 'street' => $data['personalInfo']['street'],
                 'phone' => $data['personalInfo']['phoneNumber'],
             ];
@@ -130,7 +130,7 @@ class AuthController extends ResourceController
                 'brela_number' => $data['businessInfo']['brelaNumber'],
                 'bus_region' => $data['businessInfo']['region'],
                 'bus_district' => $data['businessInfo']['district'],
-                'bus_town' => $data['businessInfo']['town'],
+                'bus_ward' => $data['businessInfo']['ward'],
                 'postal_code' => $data['businessInfo']['postalCode'],
                 'bus_street' => $data['businessInfo']['street'],
             ];
@@ -242,9 +242,30 @@ class AuthController extends ResourceController
                 $personalInfoModel = new \App\Models\PractitionerPersonalInfoModel();
                 $personalInfo = $personalInfoModel->where('user_uuid', $uuid)->first();
 
-                // Fetch Business Info
+            // Fetch Business Info
                 $businessInfoModel = new \App\Models\PractitionerBusinessInfoModel();
                 $businessInfo = $businessInfoModel->where('user_uuid', $uuid)->first();
+            }
+
+            // Fetch Licenses
+            $licenses = [];
+            if (isset($user->id)) {
+                 $db = \Config\Database::connect();
+                 $builder = $db->table('license_applications');
+                 // Select relevant fields, especially license_type from items
+                 $builder->select('
+                    license_applications.id as app_id,
+                    license_applications.created_at,
+                    license_applications.valid_from,
+                    license_applications.valid_to,
+                    license_applications.license_number,
+                    license_application_items.license_type,
+                    license_application_items.status
+                 ');
+                 $builder->join('license_application_items', 'license_application_items.application_id = license_applications.id');
+                 $builder->where('license_applications.user_id', $user->id);
+                 $builder->orderBy('license_applications.created_at', 'DESC');
+                 $licenses = $builder->get()->getResult();
             }
 
             return $this->respond([
@@ -255,7 +276,8 @@ class AuthController extends ResourceController
                     'uuid' => $uuid
                 ],
                 'personalInfo' => $personalInfo,
-                'businessInfo' => $businessInfo
+                'businessInfo' => $businessInfo,
+                'licenses' => $licenses
             ]);
         } catch (\Exception $e) {
             return $this->failServerError('Server Error: ' . $e->getMessage());
@@ -314,7 +336,7 @@ class AuthController extends ResourceController
             'company_phone' => $data['companyPhone'] ?? ($existing->company_phone ?? null),
             'bus_region'    => $data['region'] ?? ($existing->bus_region ?? null),
             'bus_district'  => $data['district'] ?? ($existing->bus_district ?? null),
-            'bus_town'      => $data['town'] ?? ($existing->bus_town ?? null),
+            'bus_ward'      => $data['ward'] ?? ($existing->bus_ward ?? null),
             'postal_code'   => $data['postalCode'] ?? ($existing->postal_code ?? null),
             'bus_street'    => $data['street'] ?? ($existing->bus_street ?? null),
             'tin'           => $data['tin'] ?? ($existing->tin ?? null),

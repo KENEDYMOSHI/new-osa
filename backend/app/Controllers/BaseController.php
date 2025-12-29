@@ -7,6 +7,9 @@ use CodeIgniter\HTTP\CLIRequest;
 use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
+use CodeIgniter\Shield\Models\UserModel;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -54,5 +57,39 @@ abstract class BaseController extends Controller
         // Preload any models, libraries, etc, here.
 
         // E.g.: $this->session = service('session');
+    }
+
+    /**
+     * Get user from JWT token
+     * 
+     * @return \CodeIgniter\Shield\Entities\User|null
+     */
+    protected function getUserFromToken()
+    {
+        $header = $this->request->getHeaderLine('Authorization');
+        if (empty($header)) {
+            // log_message('error', 'Auth: No Authorization header found.');
+            return null;
+        }
+
+        if (preg_match('/Bearer\s(\S+)/', $header, $matches)) {
+            $token = $matches[1];
+        } else {
+            // log_message('error', 'Auth: Invalid header format: ' . $header);
+            return null;
+        }
+
+        try {
+            $key = getenv('JWT_SECRET') ?: 'your_secret_key_here';
+            $decoded = JWT::decode($token, new Key($key, 'HS256'));
+            
+            $users = model(UserModel::class);
+            $user = $users->findById($decoded->uid);
+            
+            return $user;
+        } catch (\Exception $e) {
+            // log_message('error', 'Auth: Token validation failed: ' . $e->getMessage());
+            return null;
+        }
     }
 }

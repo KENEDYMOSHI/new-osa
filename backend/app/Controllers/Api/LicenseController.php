@@ -7,6 +7,7 @@ use CodeIgniter\API\ResponseTrait;
 use App\Models\LicenseApplicationModel;
 use App\Models\LicenseApplicationItemModel;
 use App\Models\LicenseApplicationAttachmentModel;
+use App\Models\LicenseCompletionModel;
 use CodeIgniter\Shield\Models\UserModel;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
@@ -79,6 +80,7 @@ class LicenseController extends ResourceController
         $attachmentModel = new LicenseApplicationAttachmentModel();
         $docType = $this->request->getPost('documentType');
         $applicationId = $this->request->getPost('applicationId');
+        $category = $this->request->getPost('category');
 
         // If applicationId is provided, we are updating a specific application's document
         if ($applicationId && $applicationId !== 'null' && $applicationId !== 'undefined') {
@@ -96,6 +98,13 @@ class LicenseController extends ResourceController
                                            ->first();
             
             if ($existingDoc) {
+                // Check if we are replacing a returned document
+                if ($existingDoc->status === 'Returned') {
+                    $notifyAdmin = true;
+                    // Keep application details for notification logic later
+                    $currentApp = $app; 
+                }
+
                 // Delete the existing document to replace it
                 $attachmentModel->delete($existingDoc->id);
             }
@@ -115,21 +124,66 @@ class LicenseController extends ResourceController
 
         $id = md5(uniqid(rand(), true));
 
+        // Determine status: if re-uploading a returned document, mark as Resubmitted
+        $status = 'Draft'; // Default status
+        if (isset($notifyAdmin) && $notifyAdmin) {
+            $status = 'Resubmitted'; // Document was returned and now re-uploaded
+        }
+
         $data = [
             'id'             => $id,
             'user_id'        => $user->id,
             'application_id' => $applicationId,
             'document_type'  => $docType,
+            'category'       => $category,
             'file_path'      => null, // Not using file system
             'original_name'  => $file->getClientName(),
             'mime_type'      => 'application/pdf', // Enforced by validation
-            'file_content'   => $fileContent // Storing as BLOB
+            'file_content'   => $fileContent, // Storing as BLOB
+            'status'         => $status,
+            'rejection_reason' => null // Clear rejection reason on re-upload
         ];
 
         try {
             if (!$attachmentModel->insert($data)) {
                 return $this->failServerError('Failed to insert record: ' . json_encode($attachmentModel->errors()));
             }
+
+            // --- Notification Logic for Re-upload ---
+            if (isset($notifyAdmin) && $notifyAdmin && isset($currentApp)) {
+                $db = \Config\Database::connect();
+                
+                // Determine the approver based on current stage
+                $currentStage = $currentApp['current_stage'] ?? 1;
+                $approverColumn = 'approver_stage_' . $currentStage;
+                $approverId = $currentApp[$approverColumn] ?? null;
+
+                // Only send notification if an approver is assigned
+                if ($approverId) {
+                    $notifId = md5(uniqid(rand(), true));
+                    // Get applicant name for better message
+                    $personalInfo = $db->table('practitioner_personal_infos')->where('user_uuid', $user->uuid)->get()->getRow();
+                    $applicantName = $personalInfo ? ($personalInfo->first_name . ' ' . $personalInfo->last_name) : 'Applicant';
+
+                    $controlNumber = $currentApp['control_number'] ?? 'Unknown';
+
+                    $notifData = [
+                        'id' => $notifId,
+                        'user_id' => $approverId, // Target the Admin/Approver
+                        'title' => 'Document Re-uploaded',
+                        'message' => "Applicant {$applicantName} has re-uploaded '{$docType}' for Application {$controlNumber}.",
+                        'type' => 'document_reuploaded',
+                        'related_entity_id' => $currentApp['id'],
+                        'is_read' => 0,
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s')
+                    ];
+                    
+                    $db->table('notifications')->insert($notifData);
+                }
+            }
+            // ----------------------------------------
+
         } catch (\Exception $e) {
             return $this->failServerError('Exception: ' . $e->getMessage());
         }
@@ -166,31 +220,30 @@ class LicenseController extends ResourceController
 
         foreach ($allDocs as $doc) {
             if (!in_array($doc->document_type, $seenTypes)) {
-                log_message('error', 'getUserDocuments: keeping ' . $doc->document_type . ' (ID: ' . $doc->id . ')');
-                
                 // Remove file_content to reduce payload size
                 unset($doc->file_content);
                 $latestDocs[] = $doc;
                 $seenTypes[] = $doc->document_type;
-            } else {
-                log_message('error', 'getUserDocuments: skipping duplicate ' . $doc->document_type);
             }
         }
 
-        // Check for active licenses (Approved by CEO within the last year) OR In-Progress applications
-        $licenseTypes = [
-            'Class A - Verification',
-            'Class B - Repair',
-            'Class C - Manufacturing',
-            'Class D - Import/Export'
-        ];
+        // Logic for "The system shall display the license(s) that an applicant has already applied for and approved."
+        // And "Prevent re-application for 1 year from CEO approval date"
 
         $db = \Config\Database::connect();
-        $availableLicenseTypes = [];
         $oneYearAgo = date('Y-m-d H:i:s', strtotime('-1 year'));
 
-        foreach ($licenseTypes as $type) {
+        // Fetch ALL valid license types from database to check against
+        $allLicenseTypes = model('App\Models\LicenseTypeModel')->findAll();
+        
+        $availableLicenseTypes = [];
+        $submittedLicenseTypes = [];
+
+        foreach ($allLicenseTypes as $licenseType) {
+            $type = $licenseType['name'];
+
             // 1. Check for Active/In-Progress Applications (Block these regardless of date)
+            // Statuses where application is still "alive" and not fully rejected or finalized/expired
             $inProgressExists = $db->table('license_application_items')
                 ->select('license_application_items.id')
                 ->join('license_applications', 'license_applications.id = license_application_items.application_id')
@@ -202,11 +255,15 @@ class LicenseController extends ResourceController
                     'Approved_Stage_1', 
                     'Approved_Stage_2', 
                     'Approved_Stage_3',
-                    'Returned' 
+                    'Returned',
+                    'Draft' // Should we block drafts? Usually yes, continue that draft.
                 ])
                 ->countAllResults();
 
             // 2. Check for Valid Approved Licenses (Block if approved within last 1 year)
+            // "The one-year restriction period shall start counting from the date the license is approved by the CEO"
+            // We use 'updated_at' when status became 'Approved_CEO' as a proxy, or 'valid_from' if available.
+            // Using updated_at for now as simplest proxy for approval time for existing records.
             $approvedExists = $db->table('license_application_items')
                 ->select('license_application_items.id')
                 ->join('license_applications', 'license_applications.id = license_application_items.application_id')
@@ -216,17 +273,36 @@ class LicenseController extends ResourceController
                 ->where('license_applications.updated_at >=', $oneYearAgo)
                 ->countAllResults();
 
-            if ($inProgressExists === 0 && $approvedExists === 0) {
+            if ($inProgressExists > 0 || $approvedExists > 0) {
+                 // Fetch the actual details for the in-progress/approved item
+                 $latestItem = $db->table('license_application_items')
+                    ->select('license_application_items.*, osabill.control_number, osabill.payment_status, osabill.amount as bill_amount, license_applications.status as app_status')
+                    ->join('license_applications', 'license_applications.id = license_application_items.application_id')
+                    ->join('osabill', 'osabill.bill_id = license_applications.id', 'left')
+                    ->where('license_applications.user_id', $user->id)
+                    ->where('license_application_items.license_type', $type)
+                    ->orderBy('license_applications.created_at', 'DESC')
+                    ->get(1)
+                    ->getRow();
+
+                 $submittedLicenseTypes[] = [
+                    'license_type' => $type,
+                    'status' => ($approvedExists > 0) ? 'Restricted (1 Year)' : 'In Progress',
+                    'control_number' => $latestItem ? $latestItem->control_number : null,
+                    'payment_status' => $latestItem ? $latestItem->payment_status : null,
+                    'bill_amount' => $latestItem ? $latestItem->bill_amount : null,
+                    'application_fee' => $latestItem ? $latestItem->application_fee : null
+                 ];
+            } else {
                  $availableLicenseTypes[] = [
                     'name' => $type,
-                    'type' => 'New', // Default, could be refined
+                    'type' => 'New',
                     'date' => null
                  ];
             }
         }
 
-        // Fetch the most recent active/submitted application for this user
-        // This is crucial for restoring the "Initial Application" state in the frontend
+        // Fetch the most recent active/submitted application for this user (for dashboard/wizard context)
         $appModel = new LicenseApplicationModel();
         $latestApp = $appModel->where('user_id', $user->id)
                               ->orderBy('created_at', 'DESC')
@@ -250,7 +326,8 @@ class LicenseController extends ResourceController
             'applicationId' => $appId,
             'applicationStatus' => $appStatus,
             'licenseItems' => $currentLicenseItems,
-            'availableLicenseTypes' => $availableLicenseTypes 
+            'availableLicenseTypes' => $availableLicenseTypes,
+            'submittedLicenseTypes' => $submittedLicenseTypes
         ]);
     }
 
@@ -272,10 +349,16 @@ class LicenseController extends ResourceController
             return $this->failForbidden('You are not allowed to delete this document');
         }
 
-        // Only allow deleting drafts (application_id is null)
-        // If it's attached to an application, we shouldn't delete it as it's part of history
-        if ($doc->application_id !== null) {
+        // Allow deletion in these cases:
+        // 1. Document is a draft (application_id is null)
+        // 2. Document status is 'Returned' (needs to be re-uploaded)
+        if ($doc->application_id !== null && $doc->status !== 'Returned') {
              return $this->failForbidden('Cannot delete a document that is attached to a submitted application.');
+        }
+
+        // Delete the physical file if it exists
+        if (!empty($doc->file_path) && file_exists($doc->file_path)) {
+            unlink($doc->file_path);
         }
 
         $attachmentModel->delete($id);
@@ -301,11 +384,24 @@ class LicenseController extends ResourceController
             return $this->failForbidden('You are not allowed to submit this document');
         }
 
-        // Here we could update a status field if we had one, e.g., 'submitted'
-        // For now, we'll just acknowledge the request as a success
-        // You might want to add a 'status' column to the attachments table later
+        if ($doc->status === 'Submitted') {
+            return $this->respond(['message' => 'Document submitted successfully', 'status' => 'Submitted']);
+        }
+        
+        // If document is Resubmitted (re-uploaded after return), keep it as Resubmitted until Admin accepts it.
+        if ($doc->status === 'Resubmitted') {
+            return $this->respond(['message' => 'Document submitted for review', 'status' => 'Resubmitted']);
+        }
 
-        return $this->respond(['message' => 'Document submitted successfully']);
+        // Update status to Submitted
+        $result = $attachmentModel->update($id, ['status' => 'Submitted']);
+        
+        if ($result === false) {
+            log_message('error', 'Failed to update document status for ID: ' . $id);
+            return $this->fail('Failed to submit document. Update rejected.');
+        }
+        
+        return $this->respond(['message' => 'Document submitted successfully', 'status' => 'Submitted']);
     }
 
     public function view($id)
@@ -359,161 +455,276 @@ class LicenseController extends ResourceController
 
     public function submit()
     {
+        log_message('error', '[LicenseSubmission] Request received.'); // Debug log
         $data = $this->request->getJSON(true);
-
-        $rules = [
-            // 'applicationType' => 'required|in_list[New,Renewal]', // Frontend might not send this yet, defaulting to New
-            // 'totalAmount'     => 'required|numeric', // Frontend might not send this yet
-            // 'declaration'     => 'required',
-        ];
-
-        // Relax validation for now to get it working with current frontend
-        // if (!$this->validateData($data, $rules)) {
-        //     return $this->failValidationErrors($this->validator->getErrors());
-        // }
 
         $user = $this->getUserFromToken();
         if (!$user) {
+            log_message('error', '[LicenseSubmission] User unauthorized.');
             return $this->failUnauthorized('User not logged in or invalid token');
         }
         $userId = $user->id;
+        log_message('error', '[LicenseSubmission] User ID: ' . $userId);
 
         $applicationType = $data['applicationType'] ?? 'New';
-        $totalAmount     = $data['totalAmount'] ?? 0;
+        // Total amount passed from frontend is aggregated, but for separate apps we need individual fees.
+        // We will recalculate fees per license type.
         
         // Handle licenseTypes: could be array of strings or objects
         $licenseTypesInput = $data['licenseTypes'] ?? [];
-        // If it's a JSON string, decode it (frontend sends array, getJSON handles it, but check)
         if (is_string($licenseTypesInput)) {
             $licenseTypesInput = json_decode($licenseTypesInput, true);
+        }
+
+        if (empty($licenseTypesInput)) {
+            return $this->fail('No license types selected');
         }
 
         $previousLicenses = $data['previousLicenses'] ?? [];
         $qualifications   = $data['qualifications'] ?? [];
         $experiences      = $data['experiences'] ?? [];
         $tools            = $data['tools'] ?? [];
+        $declaration      = $data['declaration'] ?? false;
+
+        // Fetch draft attachments ONCE before the loop
+        $attachmentModel = new LicenseApplicationAttachmentModel();
+        $draftAttachments = $attachmentModel->where('user_id', $userId)
+                                            ->where('application_id', null)
+                                            ->findAll();
 
         // Start Transaction
         $db = \Config\Database::connect();
         $db->transStart();
 
         try {
-            // 1. Create Application
+            $createdApplications = [];
+            $generatedBills = [];
+
+            // Helper to get license details
+            $licenseTypeModel = model('App\Models\LicenseTypeModel');
+            
+            // Initialize models for completion and application updates
+            $completionModel = new LicenseCompletionModel();
             $appModel = new LicenseApplicationModel();
-            $appId = $this->generateUuid(); // Standard UUID v4
-            
-            $appData = [
-                'id'                => $appId,
-                'user_id'           => $userId,
-                'application_type'  => $applicationType,
-                'status'            => 'Submitted', // Changed from Pending to Submitted to match validation
-                'total_amount'      => $totalAmount,
-                'previous_licenses' => json_encode($previousLicenses),
-                'qualifications'    => json_encode($qualifications),
-                'experiences'       => json_encode($experiences),
-                'tools'             => json_encode($tools),
-            ];
-            
-            if ($appModel->insert($appData) === false) {
-                 $errors = $appModel->errors();
-                 throw new \Exception('Failed to create application: ' . implode(', ', $errors));
-            }
 
-            // 2. Create Items (License Types)
-            $itemModel = new LicenseApplicationItemModel();
-            $billItems = [];
+            $lastBillData = null;
 
-            if (is_array($licenseTypesInput)) {
-                foreach ($licenseTypesInput as $item) {
-                    $licenseName = '';
-                    $fee = 0;
-
-                    if (is_string($item)) {
-                        $licenseName = $item;
-                        $fee = 100000; // Default fee for now
-                    } elseif (is_array($item)) {
-                        $licenseName = $item['name'] ?? 'Unknown';
-                        $fee = $item['fee'] ?? 0;
-                        // Check if 'selected' key exists and is false, skip
-                        if (isset($item['selected']) && !$item['selected']) {
-                            continue;
-                        }
-                    }
-
-                    if ($licenseName) {
-                        $itemModel->insert([
-                            'id'             => $this->generateUuid(),
-                            'application_id' => $appId,
-                            'license_type'   => $licenseName,
-                            'fee'            => $fee,
-                            'application_type' => $applicationType // 'New' or 'Renewal'
-                        ]);
-
-                        $billItems[] = (object) [
-                            'itemName' => $licenseName,
-                            'itemAmount' => $fee
-                        ];
+            foreach ($licenseTypesInput as $item) {
+                // Ensure ID exists (link to approved app)
+                if (is_string($item) || !isset($item['id'])) continue;
+                
+                $appId = $item['id'];
+                $licenseName = $item['name'] ?? 'License';
+                // Fee is the License Fee (not application fee)
+                $fee = $item['fee'] ?? 100000; 
+                
+                // Check Eligibility
+                $checkBuilder = $db->table('license_applications');
+                $checkBuilder->join('application_reviews as manager_review', "manager_review.application_id = license_applications.id AND manager_review.stage = 'Manager' AND manager_review.status = 'Approved'");
+                $checkBuilder->join('application_reviews as surveillance_review', "surveillance_review.application_id = license_applications.id AND surveillance_review.stage = 'Surveillance' AND surveillance_review.status = 'Approved'");
+                $checkBuilder->join('interview_assessments', 'interview_assessments.application_id = license_applications.id', 'left');
+                $checkBuilder->where('license_applications.id', $appId);
+                $checkBuilder->where('license_applications.user_id', $userId);
+                $checkBuilder->groupStart();
+                    $checkBuilder->where('license_applications.application_type', 'Renewal');
+                    $checkBuilder->orGroupStart();
+                        $checkBuilder->where('license_applications.application_type !=', 'Renewal');
+                        $checkBuilder->where('interview_assessments.result', 'PASS');
+                    $checkBuilder->groupEnd();
+                $checkBuilder->groupEnd();
+                
+                $isEligible = ($checkBuilder->countAllResults() > 0);
+                
+                $billType = 'License Fee';
+                $appFee = 50000; // Default Citizen
+                
+                // Fetch Nationality for Fee Calculation
+                $userInfo = $db->table('users')->select('uuid')->where('id', $userId)->get()->getRow();
+                $nationality = 'Tanzanian';
+                if ($userInfo) {
+                    $pInfo = $db->table('practitioner_personal_infos')->where('user_uuid', $userInfo->uuid)->get()->getRow();
+                    if ($pInfo && !empty($pInfo->nationality)) {
+                        $nationality = $pInfo->nationality;
                     }
                 }
-            }
+                
+                $isCitizen = (stripos($nationality, 'Tanzania') !== false);
+                $appFee = $isCitizen ? 50000 : 100000; // Application Fee logic
 
-            // 3. Link Documents (Drafts)
-            $attachmentModel = new LicenseApplicationAttachmentModel();
-            $attachmentModel->where('user_id', $userId)
-                            ->where('application_id', null)
-                            ->set(['application_id' => $appId])
-                            ->update();
+                if (!$isEligible) {
+                    // NEW APPLICATION (Phase 1)
+                     log_message('error', '[LicenseSubmission] New Application for: ' . $licenseName . ' (Fee: ' . $appFee . ')');
+                     
+                     $newAppId = $this->generateUuid(); // Use built-in generateUuid if available or md5/uniqid
+                     // If generateUuid is not available in Controller, use md5(uniqid())
+                     if (!method_exists($this, 'generateUuid')) {
+                        $newAppId = md5(uniqid(rand(), true));
+                     } else {
+                        $newAppId = $this->generateUuid();
+                     }
 
+                     $appData = [
+                        'id' => $newAppId,
+                        'user_id' => $userId,
+                        'status' => 'Pending',
+                        'approval_stage' => 'Manager', // Start flow
+                        'application_type' => $applicationType,
+                        'total_amount' => $appFee,
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s')
+                     ];
+                     $db->table('license_applications')->insert($appData);
+                     
+                     // Insert Item
+                     $itemData = [
+                        'id' => md5(uniqid(rand(), true)),
+                        'application_id' => $newAppId,
+                        'license_type' => $licenseName,
+                        'fee' => $appFee, // Correct column name is 'fee'
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s')
+                     ];
+                     $db->table('license_application_items')->insert($itemData);
+                     
+                     // Use NEW ID for Bill and reference
+                     $appId = $newAppId;
+                     $fee = $appFee;
+                     $billType = 'Application Fee';
 
-            // 5. Generate Bill using BillLibrary (handles API and fallback)
-            $billLibrary = new \App\Libraries\BillLibrary();
-            $billLibrary->setUser($user); // Ensure user is set
+                } else {
+                    // EXISTING APPLICATION (Phase 2 - Completion)
+                    log_message('error', '[LicenseSubmission] Completing Eligible App ID: ' . $appId);
+                    
+                    // Update existing LicenseCompletion record
+                    $existingCompletion = $completionModel->where('application_id', $appId)->first();
+                
+                    // Safely Handle Completion Record
+                    if ($existingCompletion) {
+                        $completionModel->update($existingCompletion['id'], [
+                            'previous_licenses' => $previousLicenses,
+                            'qualifications'    => $qualifications,
+                            'experiences'       => $experiences,
+                            'tools'             => $tools,
+                            'declaration'       => $declaration ? 1 : 0
+                        ]);
+                    } else {
+                         // Insert Completion
+                         $newCompId = md5(uniqid(rand(), true));
+                         $completionModel->insert([
+                            'id'                => $newCompId,
+                            'application_id'    => $appId,
+                            'user_id'           => $userId,
+                            'license_type'      => $licenseName,
+                            'previous_licenses' => $previousLicenses,
+                            'qualifications'    => $qualifications,
+                            'experiences'       => $experiences,
+                            'tools'             => $tools,
+                            'declaration'       => $declaration ? 1 : 0
+                        ]);
+                    }
+                    
+                    // Update Status
+                    $appModel->update($appId, [
+                        'status' => 'Applicant_Submission',
+                        'approval_stage' => 'DTS' 
+                    ]);
+                    
+                    // Copy Attachments
+                    if (!empty($draftAttachments)) {
+                        foreach ($draftAttachments as $draft) {
+                            $attId = md5(uniqid(rand(), true));
+                            $attData = [
+                               'id' => $attId,
+                               'user_id' => $userId,
+                               'application_id' => $appId,
+                               'document_type' => $draft->document_type,
+                               'file_path' => $draft->file_path,
+                               'original_name' => $draft->original_name,
+                               'mime_type' => $draft->mime_type,
+                               'status'    => 'Uploaded'
+                            ];
+                            $attachmentModel->insert($attData);
+                        }
+                    }
+                    // Fee is determined by input (License Fee)
+                    // $fee already set from $item['fee']
+                }
+                
+                // 4. Generate Bill (Common)
+                 $billId = md5(uniqid(rand(), true));
+                 $cn = '99' . rand(1000000000, 9999999999);
+                 
+                 // Map numeric bill type for backward compatibility if needed? 
+                 // osabill column might be INT or String.
+                 // backend logs show 'bill_type' => 1 or 2 often usage.
+                 // 1 = Application Fee, 2 = License Fee.
+                 $billTypeInt = ($billType === 'Application Fee') ? 1 : 2;
 
-            // Format items for BillLibrary
-            // BillLibrary expects object with itemName and itemAmount
-            $libItems = [];
-            foreach ($billItems as $item) {
-                $libItems[] = (object) [
-                    'itemName' => $item->itemName,
-                    'itemAmount' => (float)$item->itemAmount
+                 $billData = [
+                    'id' => $billId,
+                    'bill_id' => $appId, // Link bill to application
+                    'control_number' => $cn,
+                    'amount' => $fee,
+                    'bill_type' => $billTypeInt, 
+                    'payer_name' => $user->username,
+                    'payer_phone' => 'N/A',
+                    'bill_description' => $billType . ' - ' . $licenseName,
+                    'bill_expiry_date' => date('Y-m-d', strtotime('+30 days')),
+                    'collection_center' => 'Headquarters',
+                    'user_id' => $userId,
+                    'payment_status' => 'Pending',
+                    'items' => json_encode([['name' => $licenseName, 'amount' => $fee]]),
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s')
+                 ];
+                 $db->table('osabill')->insert($billData);
+                 
+                $createdApplications[] = $appId;
+                
+                 $generatedBills[] = [
+                    'license' => $licenseName,
+                    'controlNumber' => $cn,
+                    'amount' => $fee,
+                    'billId' => $billId
+                ];
+                $lastBillData = (object)[
+                    'controlNumber' => $cn,
+                    'amount' => $fee,
+                    'billId' => $billId
                 ];
             }
 
-            $billResponse = $billLibrary->generateBill($appId, $libItems, 1); // 1 = Application Fee
-
-            if ($billResponse->status !== 1) {
-                // If bill generation fails (even with fallback), rollback
-                 throw new \Exception('Bill generation failed: ' . ($billResponse->message ?? 'Unknown error'));
+            if (empty($createdApplications)) {
+                throw new \Exception('No applications were created. Please check selected licenses.');
             }
-            
-            // Extract data for response
-            $generatedBillData = $billResponse->billData;
-
-            $billResponseMock = (object) [
-                'billData' => (object) [
-                    'controlNumber' => $generatedBillData->controlNumber,
-                    'amount' => $generatedBillData->amount,
-                    'billId' => $appId, 
-                    'expiryDate' => $generatedBillData->expireDate,
-                    'billDesc' => 'License Application Fee' // Or from response
-                ]
-            ];
 
             $db->transComplete();
 
             if ($db->transStatus() === false) {
-                return $this->failServerError('Transaction failed');
+                return $this->failServerError('Transaction failed during separated submission.');
             }
 
-            return $this->respondCreated([
-                'message' => 'Application submitted successfully',
-                'id' => $appId,
-                'billData' => $billResponseMock->billData
-            ]);
+            // Return success. 
+            // If multiple applications, do NOT return billData, so frontend redirects to dashboard for individual payment.
+            // If single application, return billData to show the modal immediately.
+            $responseData = [
+                'message' => 'Applications submitted successfully',
+                'count' => count($createdApplications),
+                'ids' => $createdApplications,
+                'bills' => $generatedBills
+            ];
+
+            if (count($createdApplications) === 1) {
+                // Return the last (and only) bill data for the modal
+                $responseData['id'] = $createdApplications[0];
+                $responseData['billData'] = $lastBillData;
+            }
+
+            return $this->respondCreated($responseData);
 
         } catch (\Exception $e) {
             $db->transRollback();
-            log_message('error', '[LicenseSubmission] Error: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            log_message('error', '[LicenseSubmission] Separatation Error: ' . $e->getMessage());
             return $this->failServerError($e->getMessage());
         }
     }
@@ -604,6 +815,7 @@ class LicenseController extends ResourceController
             $builder->where('osabill.created_at >=', $fromDate . ' 00:00:00');
         }
 
+
         $toDate = $this->request->getGet('toDate');
         if (!empty($toDate)) {
             $builder->where('osabill.created_at <=', $toDate . ' 23:59:59');
@@ -639,7 +851,7 @@ class LicenseController extends ResourceController
 
         $db = \Config\Database::connect();
         $builder = $db->table('license_applications');
-        $builder->select('license_applications.*, license_bill.amount as bill_amount, license_bill.control_number, license_applications.status, practitioner_personal_infos.nationality, interview_assessments.result as interview_result, interview_assessments.scores as interview_scores, interview_assessments.comments as interview_comments, interview_assessments.interview_date, interview_assessments.panel_names, app_fee_bill.amount as application_fee_amount');
+        $builder->select('license_applications.*, license_bill.amount as bill_amount, license_bill.control_number, license_applications.status, practitioner_personal_infos.nationality, interview_assessments.result as interview_result, interview_assessments.scores as interview_scores, interview_assessments.comments as interview_comments, interview_assessments.interview_date, interview_assessments.panel_names, interview_assessments.theory_score, interview_assessments.practical_score, interview_assessments.total_score, app_fee_bill.amount as application_fee_amount');
         
         // Join for License Fee
         $builder->join('osabill as license_bill', 'license_bill.bill_id = license_applications.id', 'left');
@@ -669,20 +881,55 @@ class LicenseController extends ResourceController
             $licenseTypes = array_column($items, 'license_type');
             $licenseClass = !empty($licenseTypes) ? implode(', ', $licenseTypes) : 'N/A';
             
-            // Determine progress and steps based on status and current_stage
-            $currentStage = isset($app['current_stage']) ? (int)$app['current_stage'] : 1;
+            // Determine progress and steps based on status and approval_stage
+            $stageMap = [
+                'Manager' => 1,
+                'Surveillance' => 2,
+                'DTS' => 3,
+                'CEO' => 4,
+                'Completed' => 5
+            ];
+            $dbStage = $app['approval_stage'] ?? ($app['current_stage'] ?? 'Manager'); 
+            $currentStage = is_numeric($dbStage) ? (int)$dbStage : ($stageMap[$dbStage] ?? 1);
+            
             $status = $app['status'];
+            
+            // Get interview result not just for display but logic
+            $interviewResult = $app['interview_result'] ?? null;
+            
+            // Show advanced stages (DTS & CEO) only if stage is beyond Surveillance (3+)
+            // This happens after applicant submits the License Application Module
+            $showAdvancedStages = ($currentStage >= 3);
+            
+            // Applicant Action: Fill License Application Module
+            // Unlocked when Surveillance Approves (and implicity Exam Passed)
+            $canFillLicenseApp = ($status === 'Approved_Surveillance');
 
+            // Base steps (always shown): Regional Manager and Surveillance
             $steps = [
                 ['number' => 1, 'title' => 'Regional Manager', 'subtitle' => 'Initial Review', 'status' => 'pending', 'approver' => $app['approver_stage_1'] ?? null],
                 ['number' => 2, 'title' => 'Surveillance', 'subtitle' => 'Compliance', 'status' => 'pending', 'approver' => $app['approver_stage_2'] ?? null],
-                ['number' => 3, 'title' => 'Technical Director', 'subtitle' => 'Technical Review', 'status' => 'pending', 'approver' => $app['approver_stage_3'] ?? null],
-                ['number' => 4, 'title' => 'CEO', 'subtitle' => 'Final Approval', 'status' => 'pending', 'approver' => $app['approver_stage_4'] ?? null]
             ];
+            
+            // Only add Technical Director and CEO stages if advanced stages are active
+            if ($showAdvancedStages) {
+                $steps[] = ['number' => 3, 'title' => 'Technical Director', 'subtitle' => 'Technical Review', 'status' => 'pending', 'approver' => $app['approver_stage_3'] ?? null];
+                $steps[] = ['number' => 4, 'title' => 'CEO', 'subtitle' => 'Final Approval', 'status' => 'pending', 'approver' => $app['approver_stage_4'] ?? null];
+            }
+            
+            $totalSteps = count($steps); // Will be 2 or 4 depending on interview result
 
             $progress = 0;
 
-            if ($status === 'Approved') {
+            // normalize status for easier logic
+            $normalizedStatus = $status;
+            if (in_array($status, ['Approved_CEO', 'License_Generated', 'Approved'])) {
+                $normalizedStatus = 'Approved';
+            } elseif (in_array($status, ['Submitted', 'Approved_DTS', 'Pending', 'Approved_Stage_1', 'Approved_Stage_2', 'Approved_Stage_3'])) {
+                $normalizedStatus = 'Pending';
+            }
+
+            if ($normalizedStatus === 'Approved') {
                 $progress = 100;
                 foreach ($steps as &$step) {
                     $step['status'] = 'completed';
@@ -692,14 +939,11 @@ class LicenseController extends ResourceController
                 $steps[0]['status'] = 'current'; 
             } else {
                 // Pending/In Progress
-                // If currentStage is 1, Step 1 is current.
-                // If currentStage is 2, Step 1 is completed, Step 2 is current.
-                
-                // Calculate progress roughly
-                $progress = ($currentStage - 1) * 25; 
-                // if ($currentStage == 1) $progress = 10; // Removed to start at 0%
+                // Calculate progress based on actual number of steps
+                $progressPerStep = 100 / $totalSteps;
+                $progress = ($currentStage - 1) * $progressPerStep;
 
-                for ($i = 0; $i < 4; $i++) {
+                for ($i = 0; $i < $totalSteps; $i++) {
                     $stepNum = $i + 1;
                     if ($stepNum < $currentStage) {
                         $steps[$i]['status'] = 'completed';
@@ -718,11 +962,16 @@ class LicenseController extends ResourceController
             
             // Map status color
             $statusColor = 'bg-gray-500';
-            if ($status === 'Approved') $statusColor = 'bg-green-500';
-            if ($status === 'Pending') $statusColor = 'bg-yellow-500';
+            if ($normalizedStatus === 'Approved') $statusColor = 'bg-green-500';
+            if ($normalizedStatus === 'Pending') $statusColor = 'bg-yellow-500';
             if ($status === 'Returned') $statusColor = 'bg-red-500';
             // Add a blue for in-progress if not just pending
-            if ($status === 'Pending' && $currentStage > 1) $statusColor = 'bg-blue-500';
+            if ($normalizedStatus === 'Pending' && $currentStage > 1) $statusColor = 'bg-blue-500 text-white';
+            // Status Tag text fix if necessary (Backend returns specific string, frontend displays it)
+            // If user wants 'Approved' instead of 'Approved_CEO' display, we could override $app['status'] or create a new display field.
+            // But frontend typically uses {{ app.status }}. 
+            // If the user wants "Approved" to be shown, we should update $status variable passed to frontend.
+            if ($normalizedStatus === 'Approved') $status = 'Approved';
 
             // Application Fee Logic
             // User Request: "ANGALIA total amount kwenye table ya license_applications ndio fee ya application inapaswa kua desplayed hapo"
@@ -743,9 +992,22 @@ class LicenseController extends ResourceController
                  $applicationFeeText .= ' (Non-Tanzanian)';
             }
 
+            // Check bill status for license fee workflow
+            $billModel = new \App\Models\LicenseBillModel();
+            $bill = $billModel->getBillByApplicationId($app['id']);
+            $billStatus = $bill ? $bill['payment_status'] : null;
+            
+            // Safely get control number - check bill first, then application, then generate placeholder
+            if ($bill && isset($bill['control_number'])) {
+                $controlNumber = $bill['control_number'];
+            } elseif (isset($app['control_number']) && !empty($app['control_number'])) {
+                $controlNumber = $app['control_number'];
+            } else {
+                $controlNumber = null;
+            }
 
             $data[] = [
-                'id' => $app['control_number'] ? $app['control_number'] : 'APP-' . substr($app['id'], 0, 8),
+                'id' => $controlNumber ? $controlNumber : 'APP-' . substr($app['id'], 0, 8),
                 'original_id' => $app['id'],
                 'status' => $status,
                 'statusColor' => $statusColor,
@@ -758,12 +1020,18 @@ class LicenseController extends ResourceController
                 'progress' => $progress,
                 'steps' => $steps,
                 'interview' => [
-                    'result' => $app['interview_result'] ?? 'Pending',
+                    'result' => $interviewResult ?? 'Pending',
                     'scores' => $app['interview_scores'],
+                    'theory' => $app['theory_score'],
+                    'practical' => $app['practical_score'],
+                    'total' => $app['total_score'],
                     'comments' => $app['interview_comments'],
                     'date' => $app['interview_date'],
                     'panel' => $app['panel_names']
-                ]
+                ],
+                'canFillLicenseApp' => $canFillLicenseApp,
+                'bill_status' => $billStatus, // For license fee workflow
+                'control_number' => $controlNumber
             ];
         }
 
@@ -879,5 +1147,385 @@ class LicenseController extends ResourceController
         }
     
         return $string;
+    }
+    public function getApplicationFees()
+    {
+        $feeModel = model('App\Models\ApplicationTypeFeeModel');
+        $fees = $feeModel->findAll();
+        return $this->respond($fees);
+    }
+
+    public function getLicenseTypes()
+    {
+        $user = $this->getUserFromToken();
+        if (!$user) {
+            return $this->failUnauthorized();
+        }
+
+        $model = model('App\Models\LicenseTypeModel');
+        $types = $model->findAll();
+        
+        return $this->respond($types);
+    }
+    public function checkEligibility()
+    {
+        $user = $this->getUserFromToken();
+        if (!$user) {
+            return $this->failUnauthorized();
+        }
+
+        $db = \Config\Database::connect();
+        
+        // Check if there is ANY application in 'Approved_Surveillance' status
+        // This unlocks the License Application Module for the applicant to complete details.
+        $builder = $db->table('license_applications');
+        $builder->where('license_applications.user_id', $user->id);
+        $builder->where('license_applications.status', 'Approved_Surveillance');
+        
+        $count = $builder->countAllResults();
+        
+        return $this->respond([
+            'canApply' => $count > 0,
+            'message' => 'Checked eligibility based on Surveillance approval.'
+        ]);
+    }
+
+    public function getEligibleApplications()
+    {
+        $user = $this->getUserFromToken();
+        if (!$user) {
+            return $this->failUnauthorized();
+        }
+
+        $db = \Config\Database::connect();
+        
+        $builder = $db->table('license_applications');
+        $builder->select('license_applications.id, license_applications.status, license_applications.application_type, license_application_items.license_type as name, license_application_items.fee'); 
+        
+        // 1. Join Application Items (for name/fee)
+        $builder->join('license_application_items', 'license_application_items.application_id = license_applications.id');
+        
+        // 2. Verified Manager Approval (Must exist and be Approved)
+        $builder->join('application_reviews as manager_review', "manager_review.application_id = license_applications.id AND manager_review.stage = 'Manager' AND manager_review.status = 'Approved'");
+        
+        // 3. Verified Surveillance Approval (Must exist and be Approved)
+        $builder->join('application_reviews as surveillance_review', "surveillance_review.application_id = license_applications.id AND surveillance_review.stage = 'Surveillance' AND surveillance_review.status = 'Approved'");
+
+        // 4. Join Exam Results (Left join because Renewals don't need it, but we filter later)
+        $builder->join('interview_assessments', 'interview_assessments.application_id = license_applications.id', 'left');
+        
+        // 5. Only show applications that are ready for completion (exist in license_completions)
+        $builder->join('license_completions', 'license_completions.application_id = license_applications.id', 'left');
+        $builder->where('license_completions.id IS NOT NULL'); // Only show applications that are approved and ready
+        
+        $builder->where('license_applications.user_id', $user->id);
+        
+        // Exclude applications that have already been submitted or processed further
+        $builder->whereNotIn('license_applications.status', [
+            'Applicant_Submission', 
+            'DTS', 
+            'Approved_DTS', 
+            'Recommend_DTS', 
+            'Approved_CEO', 
+            'License_Generated',
+            'Rejected'
+        ]);
+        
+        // 6. Strict Logic for New vs Renewal
+        // If Renewal: Just the approvals above are enough (implied by the joins).
+        // If New: Must ALSO have interview_assessments.result = 'PASS' (uppercase enum)
+        $builder->groupStart();
+            $builder->where('license_applications.application_type', 'Renewal');
+            $builder->orGroupStart();
+                $builder->where('license_applications.application_type !=', 'Renewal'); 
+                $builder->where('interview_assessments.result', 'PASS');
+            $builder->groupEnd();
+        $builder->groupEnd();
+        
+        $query = $builder->get();
+        $applications = $query->getResult();
+        
+        // Map to format expected by frontend (name, type, etc.)
+        $eligible = [];
+        foreach ($applications as $app) {
+             $eligible[] = [
+                 'id' => $app->id, // The application ID
+                 'name' => $app->name, // License Type Name (e.g., Class A)
+                 'fee' => $app->fee,
+                 'type' => $app->application_type ?? 'New', // Defaulting to New
+                 'date' => null
+             ];
+        }
+
+        return $this->respond($eligible);
+    }
+
+    /**
+     * Generate license fee and control number for approved application
+     * POST /api/license/generate-fee/{applicationId}
+     */
+    public function generateLicenseFee($applicationId)
+    {
+        $user = $this->getUserFromToken();
+        if (!$user) {
+            return $this->failUnauthorized();
+        }
+
+        $appModel = new LicenseApplicationModel();
+        $billModel = new \App\Models\LicenseBillModel();
+
+        // Verify application exists and belongs to user
+        $application = $appModel->where('id', $applicationId)
+                                ->where('user_id', $user->id)
+                                ->first();
+
+        if (!$application) {
+            return $this->failNotFound('Application not found');
+        }
+
+        // Check if application is approved
+        if ($application['status'] !== 'Approved' && $application['status'] !== 'Approved_CEO') {
+            return $this->fail('Application must be approved before generating license fee');
+        }
+
+        // Check if bill already exists
+        $existingBill = $billModel->getBillByApplicationId($applicationId);
+        if ($existingBill) {
+            return $this->respond([
+                'message' => 'Bill already exists',
+                'bill' => $existingBill
+            ]);
+        }
+
+        // Use existing control number from license application
+        $controlNumber = isset($application['control_number']) && !empty($application['control_number']) 
+                        ? $application['control_number'] 
+                        : null;
+        
+        // If no control number exists, generate one and save it
+        if (empty($controlNumber)) {
+            $controlNumber = $this->generateControlNumber();
+            // Update the application with the new control number
+            $appModel->update($applicationId, ['control_number' => $controlNumber]);
+        }
+
+        // Calculate license fee (from license_application_items)
+        $itemModel = new LicenseApplicationItemModel();
+        $items = $itemModel->where('application_id', $applicationId)->findAll();
+
+        $licenseFee = 0;
+        $applicationFee = 0;
+
+        foreach ($items as $item) {
+            $licenseFee += $item->fee ?? 0;
+            $applicationFee += $item->application_fee ?? 0;
+        }
+
+        $totalAmount = $licenseFee + $applicationFee;
+
+        // Create bill record using the same control number as the license
+        $billData = [
+            'id' => $this->generateUuid(),
+            'application_id' => $applicationId,
+            'control_number' => $controlNumber, // Same as license control number
+            'license_fee' => $licenseFee,
+            'application_fee' => $applicationFee,
+            'total_amount' => $totalAmount,
+            'payment_status' => 'Pending',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
+        ];
+
+        $billModel->insert($billData);
+
+        return $this->respondCreated([
+            'message' => 'License fee generated successfully',
+            'bill' => $billData
+        ]);
+    }
+
+    /**
+     * Check payment status for an application
+     * GET /api/license/payment-status/{applicationId}
+     */
+    public function checkPaymentStatus($applicationId)
+    {
+        $user = $this->getUserFromToken();
+        if (!$user) {
+            return $this->failUnauthorized();
+        }
+
+        $appModel = new LicenseApplicationModel();
+        $billModel = new \App\Models\LicenseBillModel();
+
+        // Verify application belongs to user
+        $application = $appModel->where('id', $applicationId)
+                                ->where('user_id', $user->id)
+                                ->first();
+
+        if (!$application) {
+            return $this->failNotFound('Application not found');
+        }
+
+        // Get bill
+        $bill = $billModel->getBillByApplicationId($applicationId);
+
+        if (!$bill) {
+            return $this->respond([
+                'has_bill' => false,
+                'payment_completed' => false,
+                'message' => 'No bill generated yet'
+            ]);
+        }
+
+        return $this->respond([
+            'has_bill' => true,
+            'payment_completed' => $bill['payment_status'] === 'Paid',
+            'bill' => $bill
+        ]);
+    }
+
+    /**
+     * View license (only if payment is completed)
+     * GET /api/license/view/{applicationId}
+     */
+    public function viewLicense($applicationId)
+    {
+        $user = $this->getUserFromToken();
+        if (!$user) {
+            return $this->failUnauthorized();
+        }
+
+        $appModel = new LicenseApplicationModel();
+        $billModel = new \App\Models\LicenseBillModel();
+
+        // Verify application belongs to user
+        $application = $appModel->where('id', $applicationId)
+                                ->where('user_id', $user->id)
+                                ->first();
+
+        if (!$application) {
+            return $this->failNotFound('Application not found');
+        }
+
+        // Check payment status
+        if (!$billModel->isPaymentCompleted($applicationId)) {
+            $bill = $billModel->getBillByApplicationId($applicationId);
+            return $this->fail('Payment must be completed before viewing license', 402, [
+                'bill' => $bill,
+                'message' => 'Please complete payment to view your license'
+            ]);
+        }
+
+        // Return license details (you can expand this to include actual license document)
+        return $this->respond([
+            'message' => 'License is ready',
+            'application' => $application,
+            'license_url' => base_url("api/license/download/{$applicationId}")
+        ]);
+    }
+
+    /**
+     * Helper method to generate control number
+     */
+    private function generateControlNumber()
+    {
+        // Generate a unique control number (customize format as needed)
+        $prefix = date('Y');
+        $random = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 10));
+        return $prefix . $random;
+    }
+
+    /**
+     * Get full application details for CV view
+     * GET /api/license/details/{applicationId}
+     */
+    public function getApplicationDetails($applicationId)
+    {
+        $user = $this->getUserFromToken();
+        if (!$user) {
+            return $this->failUnauthorized();
+        }
+
+        $db = \Config\Database::connect();
+        
+        // 1. Fetch Basic Application Data
+        $appBuilder = $db->table('license_applications');
+        $appBuilder->select('license_applications.*, practitioner_personal_infos.*, license_applications.id as app_id, license_applications.status as app_status, license_applications.created_at as app_date');
+        $appBuilder->join('users', 'users.id = license_applications.user_id');
+        $appBuilder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid', 'left');
+        $appBuilder->where('license_applications.id', $applicationId);
+        
+        // Security: Ensure it belongs to the user
+        $appBuilder->where('license_applications.user_id', $user->id);
+        
+        $application = $appBuilder->get()->getRowArray();
+        
+        if (!$application) {
+            return $this->failNotFound('Application not found');
+        }
+
+        // 2. Fetch License Items (License Name, Fee)
+        $itemsBuilder = $db->table('license_application_items');
+        $itemsBuilder->where('application_id', $applicationId);
+        $items = $itemsBuilder->get()->getResultArray();
+        
+        // 3. Fetch Completion Data (Qualifications, Experience, Tools, Previous Licenses)
+        $compBuilder = $db->table('license_completions');
+        $compBuilder->where('application_id', $applicationId);
+        $completion = $compBuilder->get()->getRowArray();
+        
+        // Decode JSON fields if they exist
+        $qualifications = isset($completion['qualifications']) ? json_decode($completion['qualifications'], true) : [];
+        $experiences = isset($completion['experiences']) ? json_decode($completion['experiences'], true) : [];
+        $tools = isset($completion['tools']) ? json_decode($completion['tools'], true) : [];
+        $previousLicenses = isset($completion['previous_licenses']) ? json_decode($completion['previous_licenses'], true) : [];
+        
+        // 4. Fetch Attachments
+        $attBuilder = $db->table('license_application_attachments');
+        $attBuilder->where('application_id', $applicationId);
+        $attachments = $attBuilder->get()->getResultArray();
+
+        // 5. Fetch Interview Results
+        $interviewBuilder = $db->table('interview_assessments');
+        $interviewBuilder->where('application_id', $applicationId);
+        $interview = $interviewBuilder->get()->getRowArray();
+
+        // Assemble the response
+        $response = [
+            'personal_info' => [
+                'first_name' => $application['first_name'],
+                'middle_name' => $application['middle_name'],
+                'last_name' => $application['last_name'],
+                'email' => $application['email'],
+                'phone' => $application['phone_number'],
+                'address' => $application['postal_address'],
+                'nationality' => $application['nationality'],
+                'dob' => $application['date_of_birth'],
+                'region' => $application['region'],
+                'district' => $application['district'],
+                'ward' => $application['ward'],
+                'street' => $application['street'],
+                'postal_code' => $application['postal_code'],
+                'place_of_domicile' => $application['place_of_domicile']
+            ],
+            'application_info' => [
+                'id' => $application['app_id'],
+                'control_number' => $application['control_number'],
+                'license_number' => $application['license_number'] ?? '',
+                'status' => $application['app_status'],
+                'date' => $application['app_date'],
+                'licenses' => $items,
+                'type' => $application['application_type']
+            ],
+            'qualifications' => $qualifications,
+            'experiences' => $experiences,
+            'tools' => $tools,
+            'previous_licenses' => $previousLicenses,
+            'attachments' => $attachments,
+            'interview' => $interview
+        ];
+
+        return $this->respond($response);
     }
 }

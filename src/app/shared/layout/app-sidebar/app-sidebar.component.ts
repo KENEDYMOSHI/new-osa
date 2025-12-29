@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, QueryList, ViewChildren, ChangeDetectorRef } from '@angular/core';
 import { SidebarService } from '../../services/sidebar.service';
+import { LicenseService } from '../../../services/license.service';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { SafeHtmlPipe } from '../../pipe/safe-html.pipe';
 import { SidebarWidgetComponent } from './app-sidebar-widget.component';
@@ -86,7 +87,28 @@ export class AppSidebarComponent {
     },
   ];
   // Others nav items
-  othersItems: NavItem[] = [];
+  othersItems: NavItem[] = [
+    {
+      icon: `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15h6"></path><path d="M12 12v6"></path></svg>`,
+      name: "Certificates",
+      path: "/certificates"
+    },
+    {
+      icon: `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3zM3 9h18M9 21V9"></path></svg>`,
+      name: "OSA",
+      subItems: [
+        { name: "OSA Dashboard", path: "/osa-dashboard" },
+        { name: "Initial Application Approval", path: "/initial-application-approval" },
+        { name: "License Approval", path: "/license-approval" },
+        { name: "Exam Remark", path: "/exam-remark" },
+        { name: "License Report", path: "/license-report" },
+        { name: "License Bill Report", path: "/license-bill-report" },
+        { name: "Applicants Verification", path: "/applicants-verification" },
+        { name: "Search", path: "/search" },
+        { name: "License Setting", path: "/osa/settings" }
+      ]
+    }
+  ];
 
   openSubmenu: string | null | number = null;
   subMenuHeights: { [key: string]: number } = {};
@@ -100,6 +122,7 @@ export class AppSidebarComponent {
 
   constructor(
     public sidebarService: SidebarService,
+    private licenseService: LicenseService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {
@@ -138,6 +161,24 @@ export class AppSidebarComponent {
 
     // Initial load
     this.setActiveMenuFromRoute(this.router.url);
+
+    // Check Eligibility to hide/show License Application
+    this.licenseService.checkEligibility().subscribe(
+      (res: any) => {
+        if (!res.canApply) {
+          // Hide "License Application" item (path: /license-application)
+          this.navItems = this.navItems.filter(item => item.path !== '/license-application');
+        }
+      },
+      (err) => {
+        // Fallback: Default to hiding if error? Or keep visible? 
+        // User request mentions "inaccessible". Safer to hide if check fails or returns false.
+        // For resilience, let's just log. If default was visible, it stays visible.
+        // But if strict, maybe hide?
+        console.error('Eligibility check failed', err);
+        this.navItems = this.navItems.filter(item => item.path !== '/license-application');
+      }
+    );
   }
 
   ngOnDestroy() {

@@ -21,7 +21,7 @@ class PractitionerBusinessInfoModel extends Model
         'brela_number',
         'bus_region',
         'bus_district',
-        'bus_town',
+        'bus_ward',
         'postal_code',
         'bus_street'
     ];

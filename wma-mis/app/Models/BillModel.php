@@ -1096,103 +1096,65 @@ class BillModel extends Model
     }
     public function getPaymentCollection($params)
     {
-        // Separate 'Activity' from $params if it exists
-
-
-        $query = $this->billPayment
-            ->select('
-                bill_payment.BillId,
-                Activity,
-                Task,
-                PaymentStatus,
-              
-                PaidAmt as amount,
-                
-                CollectionCenter,
-               
-              
-                bill_payment.CreatedAt
-            ')
-            ->where($params)
-            ->join('wma_bill ', 'wma_bill.PayCntrNum = bill_payment.PayCtrNum', 'left');
-        // ->join('collectioncenter', 'collectioncenter.CenterNumber = wma_bill.CollectionCenter');
-
-        return $query->get()->getResult();
+        // Call Backend API
+        $apiUrl = 'http://localhost:8080/api/payment/collection';
+        $apiKey = 'osa_approval_api_key_12345'; // TODO: Move to .env
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $apiUrl);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['params' => $params]));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'X-API-KEY: ' . $apiKey,
+            'Content-Type: application/json'
+        ]);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($httpCode !== 200 || !$response) {
+            log_message('error', 'Failed to fetch Payment Collection from API. HTTP Code: ' . $httpCode);
+            return [];
+        }
+        
+        return json_decode($response);
     }
+
     public function allCollection($params)
     {
-        // Separate 'Activity' from $params if it exists
-
-
-        $query = $this->billTable
-            ->select('
-                wma_bill.BillId,
-             
-               
-                PaymentStatus,
-                PyrName,
-                PyrCellNum,
-              
-                BillAmt as amount,
-               
-                CollectionCenter,
-             
-             
-                wma_bill.CreatedAt
-            ')
-            ->where($params);
-
-
-
-
-        return $query->get()->getResult();
+         // This method historically queried 'wma_bill' which is now in Backend.
+         // Returns empty array to prevent connection errors if called.
+         return [];
     }
+    
     public function getReportData($params)
     {
-        // Separate 'Activity' from $params if it exists
-        $activityLike = null;
-        if (isset($params['Activity'])) {
-            $activityLike = $params['Activity'];
-            unset($params['Activity']);
+        // Call Backend API
+        $apiUrl = 'http://localhost:8080/api/payment/report-data';
+        $apiKey = 'osa_approval_api_key_12345'; // TODO: Move to .env
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $apiUrl);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['params' => $params]));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'X-API-KEY: ' . $apiKey,
+            'Content-Type: application/json'
+        ]);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($httpCode !== 200 || !$response) {
+            log_message('error', 'Failed to fetch Report Data from API. HTTP Code: ' . $httpCode);
+            return [];
         }
-
-        $query = $this->billTable
-            ->select('
-                wma_bill.BillId,
-                GfsCode as Activity,
-                BillItemRef,
-                bill_items.Task,
-                PaymentStatus,
-                PyrName,
-                PyrCellNum,
-                ItemName,
-                BillItemAmt as amount,
-                PaidAmount,
-                BillAmt as BilledAmount,
-                PayCntrNum,
-                BillGenBy,
-                BillExprDt,
-                CollectionCenter,
-                CenterName,
-                Ccy,
-                wma_bill.CreatedAt
-            ')
-            // ->where('PayCntrNum !=','')
-            ->where($params);
-
-        // Add 'Activity' condition to LIKE if it's provided
-        if ($activityLike !== null) {
-            $query->like('Activity', $activityLike);
-        }
-        // $query->limit(1000000);
-
-
-
-        $query->join('collectioncenter', 'collectioncenter.CenterNumber = wma_bill.CollectionCenter');
-        // $query->groupBy('PayCntrNum');
-        $query->join('bill_items', 'wma_bill.BillId = bill_items.BillId', 'left');
-
-        return $query->get()->getResult();
+        
+        return json_decode($response);
     }
 
     public function getBillReceivableData($params)

@@ -53,18 +53,7 @@ export class NotificationDropdownComponent implements OnInit {
     }
 
     this.closeDropdown();
-
-    // Navigate based on type
-    if (notification.type === 'document_returned') {
-      // Assuming route structure for editing documents
-      // We might need to adjust this depending on the route for document upload
-      // For now, let's assume it's /license/documents or similar, or redirect to profile
-      // Ideally we want to go deep link to the document upload for that application
-      // Let's try redirecting to the license wizard step if possible, or 'my-applications'
-      this.router.navigate(['/my-applications']); 
-    } else if (notification.type === 'application_returned') {
-      this.router.navigate(['/my-applications']);
-    }
+    this.router.navigate(['/notifications']);
   }
 
   formatDate(dateStr: string): string {

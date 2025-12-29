@@ -127,6 +127,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a href="<?= base_url() ?>viewCompleteApplication" class="nav-link">
+                                <i class="fal fa-eye nav-icon"></i>
+                                <p>View Complete Application</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="<?= base_url() ?>examRemark" class="nav-link">
                                 <i class="fal fa-file-edit nav-icon"></i>
                                 <p>Exam Remark</p>
@@ -144,16 +150,13 @@
                                 <p>License Bill Report</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="<?= base_url() ?>licenseSetting" class="nav-link">
+                                <i class="fal fa-cog nav-icon"></i>
+                                <p>License Setting</p>
+                            </a>
+                        </li>
                     </ul>
-                </li>
-                <li class="nav-item ">
-                    <a href="<?= base_url() ?>applicationVerification" class="nav-link ">
-                        <i class="fal fa-check nav-icon"></i>
-                        <p>
-                            Applicants Verification
-                        </p>
-                    </a>
-
                 </li>
 
                 <?php if ($user->inGroup('superadmin', 'admin', 'officer', 'manager')): ?>

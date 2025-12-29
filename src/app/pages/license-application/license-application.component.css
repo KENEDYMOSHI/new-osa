@@ -1,0 +1,44 @@
+/* Returned Document Styling */
+.returned-document {
+  border: 3px dashed #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.05) !important;
+  border-radius: 0.375rem !important;
+}
+
+.returned-document:hover {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  box-shadow: 0 0.125rem 0.5rem rgba(239, 68, 68, 0.2) !important;
+}
+
+/* Pulse Animation for Warning Icons */
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+.pulse-animation {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Returned Document Badge Styling */
+.returned-badge {
+  background-color: #dc2626 !important;
+  color: white !important;
+  font-weight: bold !important;
+  border: 2px solid #991b1b !important;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3) !important;
+}
+
+/* Rejection Reason Alert Styling */
+.rejection-alert {
+  background-color: #fee2e2 !important;
+  border-left: 4px solid #dc2626 !important;
+  color: #991b1b !important;
+  font-weight: 600 !important;
+}

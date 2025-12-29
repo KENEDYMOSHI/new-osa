@@ -128,6 +128,20 @@ export class ProfileComponent implements OnInit {
         company: this.companyInfo,
         social: this.socialLinks
       }));
+
+       // Populate License Data
+       if (data.licenses && Array.isArray(data.licenses)) {
+        this.licenseData = data.licenses.map((lic: any) => ({
+            type: lic.license_type || 'Unknown License',
+            number: lic.license_number || 'Pending',
+            issueDate: lic.valid_from ? new Date(lic.valid_from).toLocaleDateString() : 'N/A',
+            expiryDate: lic.valid_to ? new Date(lic.valid_to).toLocaleDateString() : 'N/A',
+            status: lic.status || 'Submitted' // Use item status
+        }));
+      } else {
+        this.licenseData = [];
+      }
+
     } catch (error) {
       console.error('Failed to fetch profile:', error);
     } finally {

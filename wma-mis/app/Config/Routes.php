@@ -16,9 +16,12 @@ $routes->get('test/tables', 'TableCheck::index');
 
 // $routes = Services::routes();
 
-/**
+// Sync API
+$routes->get('sync-data/(:any)', 'SyncController::syncApplicantData/$1');
+
+/*
  * --------------------------------------------------------------------
- * Route Definitions
+ * Additional Routing
  * --------------------------------------------------------------------
  */
 // service('auth')->routes($routes, ['login', 'register']);
@@ -136,6 +139,7 @@ $routes->get('verifyTin', 'DataDevController::verifyTin');
 //=================API ROUTES====================
 
 $routes->post('api/login', 'ApiAuthController::login', ['namespace' => 'App\Controllers\Api']);
+$routes->get('approval/login', 'ApprovalController::login');
 
 $routes->get('api/noAuth', 'ApiAuthController::noAuth', ['namespace' => 'App\Controllers\Api']);
 $routes->post('api/meters', 'MetersApiController::meters', ['namespace' => 'App\Controllers\Api']);
@@ -224,13 +228,41 @@ $routes->group('', ['filter' => 'AuthFilter'], function ($routes, $appRoutes = [
     $appRoutes['api/applications'] = 'OsaController::getApplicationsApi';
     $appRoutes['api/application/(:any)'] = 'OsaController::getApplicationDetailsApi/$1';
     $appRoutes['viewApplication/(:any)'] = 'OsaController::viewApplication/$1';
+    $appRoutes['viewCompletedApplication/(:any)'] = 'OsaController::viewCompletedApplication/$1';
+    $appRoutes['viewCompleteApplication'] = 'OsaController::completedApplications';
     $appRoutes['applicationVerification'] = 'OsaController::applicationVerification';
     $appRoutes['osaDashboard'] = 'OsaController::osaDashboard';
     $appRoutes['examRemark'] = 'OsaController::examRemark';
+    $appRoutes['saveExamRemark'] = 'OsaController::saveExamRemark';
+    $appRoutes['licenseReport'] = 'OsaController::licenseReport';
+    $appRoutes['osaApproveApplication'] = 'OsaController::approveApplication';
+    $appRoutes['osaRejectApplication'] = 'OsaController::rejectApplication';
     $appRoutes['paymentSimulator'] = 'Home::index';
     $appRoutes['sticker'] = 'StickerController::index';
     $appRoutes['searchSticker'] = 'StickerController::searchSticker';
     $appRoutes['printSticker/(:any)'] = 'StickerController::printSticker/$1';
+
+
+    // FREE LICENSE SETTING ROUTES
+    $appRoutes['licenseSetting'] = 'LicenseSettingController::index';
+    
+    // Application Fees
+    $appRoutes['licenseSetting/getFees'] = 'LicenseSettingController::getFees';
+    $appRoutes['licenseSetting/addFee'] = 'LicenseSettingController::addFee';
+    $appRoutes['licenseSetting/updateFee'] = 'LicenseSettingController::updateFee'; // For POST
+    $appRoutes['licenseSetting/updateFee/(:num)'] = 'LicenseSettingController::updateFee/$1'; // For URL segment
+    $appRoutes['licenseSetting/deleteFee/(:num)'] = 'LicenseSettingController::deleteFee/$1';
+    
+    // License Types
+    $appRoutes['licenseSetting/getLicenseTypes'] = 'LicenseSettingController::getLicenseTypes';
+    $appRoutes['licenseSetting/addLicenseType'] = 'LicenseSettingController::addLicenseType';
+    $appRoutes['licenseSetting/updateLicenseType/(:any)'] = 'LicenseSettingController::updateLicenseType/$1';
+    $appRoutes['licenseSetting/deleteLicenseType/(:any)'] = 'LicenseSettingController::deleteLicenseType/$1';
+    
+    $appRoutes['run-migration'] = 'LicenseSettingController::runMigration';
+
+    // Print Application
+    $appRoutes['print-application/(:any)'] = 'PrintApplicationController::printApplication/$1';
 
 
     //certificates routes

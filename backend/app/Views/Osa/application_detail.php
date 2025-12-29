@@ -209,9 +209,9 @@
                 </div>
             </div>
 
-            <!-- License Items -->
+            <!-- License Information -->
             <div class="info-card">
-                <h3><i class="fas fa-file-contract"></i> License Items</h3>
+                <h3><i class="fas fa-file-contract"></i> License Information</h3>
                 <div id="license-items-content"></div>
             </div>
 
@@ -379,14 +379,20 @@
 
         function renderLicenseItems(items) {
             if (!items || items.length === 0) {
-                document.getElementById('license-items-content').innerHTML = '<p class="text-muted">No license items found.</p>';
+                document.getElementById('license-items-content').innerHTML = '<p class="text-muted">No license information found.</p>';
                 return;
             }
 
             const html = items.map(item => `
                 <div class="license-item">
-                    <span class="font-weight-bold">${item.license_type || 'Unknown License'}</span>
-                    <span class="text-primary font-weight-bold">TZS ${formatCurrency(item.fee || 0)}</span>
+                    <div>
+                        <div class="text-muted small">License Type</div>
+                        <span class="font-weight-bold">${item.license_type || 'Unknown License'}</span>
+                    </div>
+                    <div>
+                         <div class="text-muted small text-right">Fee</div>
+                         <span class="text-primary font-weight-bold">TZS ${formatCurrency(item.fee || 0)}</span>
+                    </div>
                 </div>
             `).join('');
 

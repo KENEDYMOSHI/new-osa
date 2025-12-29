@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { AuthService } from '../../../../core/services/auth.service';
+import { LocationService, District, Ward, PostalCode } from '../../../../services/location.service';
 
 @Component({
   selector: 'app-practitioner-registration-form',
@@ -20,11 +21,26 @@ export class PractitionerRegistrationFormComponent implements OnInit {
   countries = ['Tanzania', 'Kenya', 'Uganda', 'Rwanda', 'Burundi', 'Other'];
   isTanzanian = true;
 
-  constructor(private fb: FormBuilder, private router: Router, private authService: AuthService) {}
+  // Location data
+  regions: string[] = [];
+  personalDistricts: District[] = [];
+  personalWards: Ward[] = [];
+  businessDistricts: District[] = [];
+  businessWards: Ward[] = [];
+  businessPostalCodes: PostalCode[] = [];
+
+  constructor(
+    private fb: FormBuilder, 
+    private router: Router, 
+    private authService: AuthService,
+    private locationService: LocationService
+  ) {}
 
   ngOnInit(): void {
     this.initForm();
     this.setupNationalityListener();
+    this.loadRegions();
+    this.setupLocationListeners();
   }
 
   // ... (keep existing methods)
@@ -42,7 +58,7 @@ export class PractitionerRegistrationFormComponent implements OnInit {
         dateOfBirth: ['', Validators.required],
         region: ['', Validators.required],
         district: ['', Validators.required],
-        town: ['', Validators.required],
+        ward: ['', Validators.required],
         street: ['', Validators.required],
         phoneNumber: ['', Validators.required],
       }),
@@ -55,8 +71,8 @@ export class PractitionerRegistrationFormComponent implements OnInit {
         brelaNumber: ['', Validators.required],
         region: ['', Validators.required],
         district: ['', Validators.required],
-        town: ['', Validators.required],
-        postalCode: ['', [Validators.required, Validators.pattern(/^[0-9]+$/)]],
+        ward: ['', Validators.required],
+        postalCode: ['', Validators.required],
         street: ['', Validators.required],
       }),
       // Step 3: Contact & Security
@@ -152,6 +168,124 @@ export class PractitionerRegistrationFormComponent implements OnInit {
       this.currentStep--;
       window.scrollTo(0, 0);
     }
+  }
+
+  loadRegions(): void {
+    this.locationService.getRegions().subscribe({
+      next: (regions) => {
+        this.regions = regions;
+      },
+      error: (err) => {
+        console.error('Failed to load regions:', err);
+      }
+    });
+  }
+
+  setupLocationListeners(): void {
+    // Personal Info Region Change
+    this.personalInfo.get('region')?.valueChanges.subscribe((region) => {
+      if (region) {
+        this.locationService.getDistricts(region).subscribe({
+          next: (districts) => {
+            this.personalDistricts = districts;
+            // Reset district and ward when region changes
+            this.personalInfo.get('district')?.setValue('');
+            this.personalWards = [];
+          },
+          error: (err) => {
+            console.error('Failed to load districts:', err);
+            this.personalDistricts = [];
+          }
+        });
+      } else {
+        this.personalDistricts = [];
+        this.personalWards = [];
+      }
+    });
+
+    // Personal Info District Change
+    this.personalInfo.get('district')?.valueChanges.subscribe((district) => {
+      if (district) {
+        this.locationService.getWards(district).subscribe({
+          next: (wards) => {
+            this.personalWards = wards;
+          },
+          error: (err) => {
+            console.error('Failed to load wards:', err);
+            this.personalWards = [];
+          }
+        });
+      } else {
+        this.personalWards = [];
+      }
+    });
+
+    // Business Info Region Change
+    this.businessInfo.get('region')?.valueChanges.subscribe((region) => {
+      if (region) {
+        this.locationService.getDistricts(region).subscribe({
+          next: (districts) => {
+            this.businessDistricts = districts;
+            // Reset district and ward when region changes
+            this.businessInfo.get('district')?.setValue('');
+            this.businessWards = [];
+          },
+          error: (err) => {
+            console.error('Failed to load districts:', err);
+            this.businessDistricts = [];
+          }
+        });
+      } else {
+        this.businessDistricts = [];
+        this.businessWards = [];
+      }
+    });
+
+    // Business Info District Change
+    this.businessInfo.get('district')?.valueChanges.subscribe((district) => {
+      if (district) {
+        this.locationService.getWards(district).subscribe({
+          next: (wards) => {
+            this.businessWards = wards;
+            // Reset ward and postal code when district changes
+            this.businessInfo.get('ward')?.setValue('');
+            this.businessPostalCodes = [];
+          },
+          error: (err) => {
+            console.error('Failed to load wards:', err);
+            this.businessWards = [];
+          }
+        });
+      } else {
+        this.businessWards = [];
+        this.businessPostalCodes = [];
+      }
+    });
+
+    // Business Info Ward Change - Load Postal Codes
+    this.businessInfo.get('ward')?.valueChanges.subscribe((ward) => {
+      if (ward) {
+        this.locationService.getPostalCodes(ward).subscribe({
+          next: (postalCodes) => {
+            this.businessPostalCodes = postalCodes;
+            // Auto-fill postal code if only one exists
+            if (postalCodes.length === 1) {
+              this.businessInfo.get('postalCode')?.setValue(postalCodes[0].postcode);
+            } else {
+              // Reset postal code if multiple options
+              this.businessInfo.get('postalCode')?.setValue('');
+            }
+          },
+          error: (err) => {
+            console.error('Failed to load postal codes:', err);
+            this.businessPostalCodes = [];
+          }
+        });
+      } else {
+        this.businessPostalCodes = [];
+        this.businessInfo.get('postalCode')?.setValue('');
+      }
+    });
   }
 
   async onSubmit(): Promise<void> {

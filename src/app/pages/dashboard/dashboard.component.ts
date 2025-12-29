@@ -1,104 +1,202 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { LicenseService } from '../../services/license.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './dashboard.component.html',
 })
-export class DashboardComponent {
-  // Mock data for summary cards
-  summaryCards = [
-    {
-      title: 'New Applications',
-      count: 1,
-      icon: 'file-plus', // Placeholder for icon name
-      color: 'bg-orange-500',
-      textColor: 'text-orange-500',
-      bgColor: 'bg-orange-50'
-    },
-    {
-      title: 'Applications In Progress',
-      count: 1,
-      icon: 'file-text',
-      color: 'bg-yellow-400',
-      textColor: 'text-yellow-400',
-      bgColor: 'bg-yellow-50'
-    },
-    {
-      title: 'Approved Applications',
-      count: 1,
-      icon: 'check-circle',
-      color: 'bg-green-500',
-      textColor: 'text-green-500',
-      bgColor: 'bg-green-50'
-    },
-    {
-      title: 'Completed Jobs',
-      count: 4,
-      icon: 'briefcase',
-      color: 'bg-blue-500',
-      textColor: 'text-blue-500',
-      bgColor: 'bg-blue-50'
-    },
-    {
-      title: 'New Jobs',
-      count: 1,
-      icon: 'users',
-      color: 'bg-purple-500',
-      textColor: 'text-purple-500',
-      bgColor: 'bg-purple-50'
-    }
-  ];
-
-  // Mock data for recent activities
-  recentActivities = [
-    {
-      companyName: 'ABC Corporation',
-      activity: 'Fuel tank calibration',
-      region: 'Dar es Salaam',
-      sealNumber: 'WMA-2025-001',
-      startingDate: 'May 20, 2025',
-      finishDate: 'May 22, 2025',
-      time: '08:00 AM'
-    },
-    {
-      companyName: 'XYZ Industries',
-      activity: 'Scale verification',
-      region: 'Arusha',
-      sealNumber: 'WMA-2025-002',
-      startingDate: 'May 15, 2025',
-      finishDate: 'May 16, 2025',
-      time: '10:30 AM'
-    },
-    {
-      companyName: 'Global Traders',
-      activity: 'Pump inspection',
-      region: 'Mwanza',
-      sealNumber: 'WMA-2025-003',
-      startingDate: 'May 10, 2025',
-      finishDate: 'May 12, 2025',
-      time: '09:15 AM'
-    }
-  ];
-
+export class DashboardComponent implements OnInit {
   userName: string = 'User';
+  canApply: boolean = false;
+  eligibilityReason: string = '';
 
-  constructor(private authService: AuthService) {}
+  // Statistics
+  stats = {
+    total: 0,
+    approved: 0,
+    pending: 0,
+    inProgress: 0
+  };
+
+  // Recent Applications
+  recentApplications: any[] = [];
+
+  // Notifications
+  notifications: any[] = [];
+
+  // Completion Rate
+  completionRate: number = 0;
+
+  constructor(
+    private authService: AuthService, 
+    private licenseService: LicenseService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-    // Subscribe to global user state
+    // Get user info
     this.authService.currentUser$.subscribe(data => {
-        if (data && data.user) {
-            this.userName = data.user.username;
-        } else if (data && data.personalInfo) {
-             this.userName = `${data.personalInfo.first_name} ${data.personalInfo.last_name}`;
-        }
+      if (data && data.user) {
+        this.userName = data.user.username;
+      } else if (data && data.personalInfo) {
+        this.userName = `${data.personalInfo.first_name} ${data.personalInfo.last_name}`;
+      }
     });
 
-    // Initial fetch if needed (AuthService might already have it)
     this.authService.getProfile().subscribe();
+    
+    // Check eligibility
+    this.checkLicenseEligibility();
+    
+    // Load dashboard data
+    this.loadDashboardData();
+  }
+
+  checkLicenseEligibility() {
+    this.licenseService.checkEligibility().subscribe(
+      (res: any) => {
+        this.canApply = res.canApply;
+        if (!this.canApply) {
+          this.eligibilityReason = res.reason;
+        }
+      },
+      (err) => {
+        console.error('Error checking eligibility', err);
+        this.canApply = false;
+      }
+    );
+  }
+
+  loadDashboardData() {
+    // Load applications to calculate stats
+    this.licenseService.getUserApplications().subscribe(
+      (response: any) => {
+        const applications = response.data || [];
+        
+        // Calculate statistics
+        this.stats.total = applications.length;
+        this.stats.approved = applications.filter((app: any) => 
+          app.status === 'Approved' || app.status === 'Approved_CEO'
+        ).length;
+        this.stats.pending = applications.filter((app: any) => 
+          app.status === 'Pending' || app.status === 'Pending_DTS' || app.status === 'Pending_CEO'
+        ).length;
+        this.stats.inProgress = applications.filter((app: any) => 
+          app.status !== 'Approved' && app.status !== 'Approved_CEO' && 
+          app.status !== 'Pending' && app.status !== 'Pending_DTS' && app.status !== 'Pending_CEO'
+        ).length;
+
+        // Get recent applications (last 5)
+        this.recentApplications = applications
+          .slice(0, 5)
+          .map((app: any) => ({
+            id: app.id,
+            licenseType: app.license_class || 'License Application',
+            controlNumber: app.control_number || `APP-${app.id}`,
+            date: this.formatDate(app.created_at),
+            status: this.getStatusLabel(app.status)
+          }));
+
+        // Calculate completion rate
+        if (this.stats.total > 0) {
+          this.completionRate = Math.round((this.stats.approved / this.stats.total) * 100);
+        }
+
+        // Generate notifications
+        this.generateNotifications(applications);
+      },
+      (error) => {
+        console.error('Error loading dashboard data', error);
+        // Set default values
+        this.recentApplications = [];
+        this.notifications = [];
+      }
+    );
+  }
+
+  generateNotifications(applications: any[]) {
+    this.notifications = [];
+
+    // Check for pending applications
+    const pending = applications.filter(app => 
+      app.status === 'Pending' || app.status === 'Pending_DTS' || app.status === 'Pending_CEO'
+    );
+    if (pending.length > 0) {
+      this.notifications.push({
+        type: 'info',
+        title: 'Applications Under Review',
+        message: `You have ${pending.length} application(s) currently under review.`,
+        time: 'Just now'
+      });
+    }
+
+    // Check for approved applications
+    const approved = applications.filter(app => 
+      app.status === 'Approved' || app.status === 'Approved_CEO'
+    );
+    if (approved.length > 0) {
+      this.notifications.push({
+        type: 'success',
+        title: 'Congratulations!',
+        message: `${approved.length} of your applications have been approved.`,
+        time: 'Today'
+      });
+    }
+
+    // Check for incomplete applications
+    const incomplete = applications.filter(app => 
+      app.status === 'Applicant_Submission' || app.status === 'Draft'
+    );
+    if (incomplete.length > 0) {
+      this.notifications.push({
+        type: 'warning',
+        title: 'Action Required',
+        message: `You have ${incomplete.length} incomplete application(s). Please complete them.`,
+        time: '2 hours ago'
+      });
+    }
+
+    // Add a reminder if eligible to apply
+    if (this.canApply && applications.length === 0) {
+      this.notifications.push({
+        type: 'reminder',
+        title: 'Get Started',
+        message: 'Start your first license application today!',
+        time: 'Today'
+      });
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      'Approved': 'Approved',
+      'Approved_CEO': 'Approved',
+      'Pending': 'Pending',
+      'Pending_DTS': 'Under Review',
+      'Pending_CEO': 'Under Review',
+      'Applicant_Submission': 'In Progress',
+      'Draft': 'In Progress'
+    };
+    return statusMap[status] || status;
+  }
+
+  formatDate(dateString: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    };
+    return date.toLocaleDateString('en-US', options);
+  }
+
+  viewApplication(id: number) {
+    this.router.navigate(['/my-applications']);
   }
 }

@@ -115,9 +115,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">Region <span class="text-red-500">*</span></label>
             <select formControlName="region" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
               <option value="">Select Region</option>
-              <option value="Dar es Salaam">Dar es Salaam</option>
-              <option value="Arusha">Arusha</option>
-              <option value="Mwanza">Mwanza</option>
+              <option *ngFor="let region of regions" [value]="region">{{ region }}</option>
             </select>
             <div *ngIf="personalInfo.get('region')?.invalid && personalInfo.get('region')?.touched" class="text-red-500 text-xs mt-1">Required</div>
           </div>
@@ -125,9 +123,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">District <span class="text-red-500">*</span></label>
             <select formControlName="district" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
               <option value="">Select District</option>
-              <option value="Ilala">Ilala</option>
-              <option value="Kinondoni">Kinondoni</option>
-              <option value="Temeke">Temeke</option>
+              <option *ngFor="let district of personalDistricts" [value]="district.name">{{ district.name }}</option>
             </select>
             <div *ngIf="personalInfo.get('district')?.invalid && personalInfo.get('district')?.touched" class="text-red-500 text-xs mt-1">Required</div>
           </div>
@@ -135,9 +131,12 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Town <span class="text-red-500">*</span></label>
-            <input type="text" formControlName="town" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
-            <div *ngIf="personalInfo.get('town')?.invalid && personalInfo.get('town')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Ward <span class="text-red-500">*</span></label>
+            <select formControlName="ward" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+              <option value="">Select Ward</option>
+              <option *ngFor="let ward of personalWards" [value]="ward.name">{{ ward.name }}</option>
+            </select>
+            <div *ngIf="personalInfo.get('ward')?.invalid && personalInfo.get('ward')?.touched" class="text-red-500 text-xs mt-1">Required</div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Street/Village <span class="text-red-500">*</span></label>
@@ -191,7 +190,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">Region <span class="text-red-500">*</span></label>
             <select formControlName="region" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
               <option value="">Select Region</option>
-              <option value="Dar es Salaam">Dar es Salaam</option>
+              <option *ngFor="let region of regions" [value]="region">{{ region }}</option>
             </select>
             <div *ngIf="businessInfo.get('region')?.invalid && businessInfo.get('region')?.touched" class="text-red-500 text-xs mt-1">Required</div>
           </div>
@@ -199,7 +198,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">District <span class="text-red-500">*</span></label>
             <select formControlName="district" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
               <option value="">Select District</option>
-              <option value="Ilala">Ilala</option>
+              <option *ngFor="let district of businessDistricts" [value]="district.name">{{ district.name }}</option>
             </select>
             <div *ngIf="businessInfo.get('district')?.invalid && businessInfo.get('district')?.touched" class="text-red-500 text-xs mt-1">Required</div>
           </div>
@@ -207,16 +206,31 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Town <span class="text-red-500">*</span></label>
-            <input type="text" formControlName="town" placeholder="Type here town" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
-            <div *ngIf="businessInfo.get('town')?.invalid && businessInfo.get('town')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Ward <span class="text-red-500">*</span></label>
+            <select formControlName="ward" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+              <option value="">Select Ward</option>
+              <option *ngFor="let ward of businessWards" [value]="ward.name">{{ ward.name }}</option>
+            </select>
+            <div *ngIf="businessInfo.get('ward')?.invalid && businessInfo.get('ward')?.touched" class="text-red-500 text-xs mt-1">Required</div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Postal Code <span class="text-red-500">*</span></label>
-            <input type="text" formControlName="postalCode" placeholder="Type here postal code" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+            <!-- Show as readonly text if only one postal code, otherwise show dropdown -->
+            <input 
+              *ngIf="businessPostalCodes.length === 1" 
+              type="text" 
+              formControlName="postalCode" 
+              readonly
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 outline-none cursor-not-allowed">
+            <select 
+              *ngIf="businessPostalCodes.length !== 1" 
+              formControlName="postalCode" 
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+              <option value="">Select Postal Code</option>
+              <option *ngFor="let pc of businessPostalCodes" [value]="pc.postcode">{{ pc.postcode }}</option>
+            </select>
             <div *ngIf="businessInfo.get('postalCode')?.invalid && businessInfo.get('postalCode')?.touched" class="text-red-500 text-xs mt-1">
               <span *ngIf="businessInfo.get('postalCode')?.errors?.['required']">Required</span>
-              <span *ngIf="businessInfo.get('postalCode')?.errors?.['pattern']">Postal code must be numeric</span>
             </div>
           </div>
           <div>
@@ -291,7 +305,7 @@
             <p><span class="font-medium text-gray-500">Date of Birth:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('dateOfBirth')?.value }}</span></p>
             <p><span class="font-medium text-gray-500">Region:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('region')?.value }}</span></p>
             <p><span class="font-medium text-gray-500">District:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('district')?.value }}</span></p>
-            <p><span class="font-medium text-gray-500">Town:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('town')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Ward:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('ward')?.value }}</span></p>
             <p><span class="font-medium text-gray-500">Street/Village:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('street')?.value }}</span></p>
 
           </div>
@@ -308,7 +322,7 @@
             <p><span class="font-medium text-gray-500">BRELA Number:</span> <span class="block md:inline text-gray-900">{{ businessInfo.get('brelaNumber')?.value }}</span></p>
             <p><span class="font-medium text-gray-500">Region:</span> <span class="block md:inline text-gray-900">{{ businessInfo.get('region')?.value }}</span></p>
             <p><span class="font-medium text-gray-500">District:</span> <span class="block md:inline text-gray-900">{{ businessInfo.get('district')?.value }}</span></p>
-            <p><span class="font-medium text-gray-500">Town:</span> <span class="block md:inline text-gray-900">{{ businessInfo.get('town')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Ward:</span> <span class="block md:inline text-gray-900">{{ businessInfo.get('ward')?.value }}</span></p>
             <p><span class="font-medium text-gray-500">Postal Code:</span> <span class="block md:inline text-gray-900">{{ businessInfo.get('postalCode')?.value }}</span></p>
             <p><span class="font-medium text-gray-500">Street/Village:</span> <span class="block md:inline text-gray-900">{{ businessInfo.get('street')?.value }}</span></p>
           </div>

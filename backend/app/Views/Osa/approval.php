@@ -170,6 +170,12 @@
             <li class="nav-item">
                 <a class="nav-link" id="ceo-tab" data-toggle="tab" href="#ceo" role="tab" aria-controls="ceo" aria-selected="false">CEO</a>
             </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Settings</a>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="/approval/settings">License Settings</a>
+                </div>
+            </li>
         </ul>
         <a href="/approval/logout" class="btn btn-outline-danger btn-sm float-right" style="margin-top: -3.5rem;">
             <i class="fas fa-sign-out-alt mr-1"></i> Logout

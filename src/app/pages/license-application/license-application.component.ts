@@ -20,6 +20,7 @@ export class LicenseApplicationComponent implements OnInit {
   personalInfo: any = {};
   companyInfo: any = {};
   applicationType: string = 'New'; // Default
+  applicationFees: any[] = [];
   
   // Dynamic Form Data
   previousLicenses: any[] = [];
@@ -62,55 +63,57 @@ export class LicenseApplicationComponent implements OnInit {
   
   // ... licenseTypes ...
 
-  // Modal State
-  isModalOpen = false;
-  previewUrl: SafeResourceUrl | null = null;
-  previewDocName: string = '';
 
-  licenseTypes: { id: string; name: string; fee: number; description: string; selected: boolean; submitted?: boolean }[] = [
-    { id: 'classA', name: 'Class A', fee: 100000, description: 'To install, overhaul, service or repair all types of weighing instruments throughout Mainland Tanzania.', selected: false },
-    { id: 'classB', name: 'Class B', fee: 75000, description: 'To install, overhaul, service or repair not more than six and not less than four types of weighing instruments throughout Mainland Tanzania.', selected: false },
-    { id: 'classC', name: 'Class C', fee: 50000, description: 'To install, overhaul, service or repair not more than three types of weighing instruments throughout Mainland Tanzania.', selected: false },
-    { id: 'classD', name: 'Class D', fee: 250000, description: 'To erect, install, overhaul, adjust, service or repair measuring of Liquid Measuring Pumps and Flow Meters throughout Mainland Tanzania.', selected: false },
-    { id: 'classE', name: 'Class E', fee: 300000, description: 'To manufacture the measuring instruments or systems throughout Mainland Tanzania.', selected: false },
-    { id: 'tankConst', name: 'Tank Construction', fee: 800000, description: 'To construct Tanks throughout Mainland Tanzania.', selected: false },
-    { id: 'fixedTankVer', name: 'Fixed Storage Tanks Verification', fee: 400000, description: 'Verification of fixed storage tanks.', selected: false },
-    { id: 'tankCal', name: 'Tank Calibration', fee: 400000, description: 'To calibrate underground storage tanks.', selected: false },
-    { id: 'gasCal', name: 'Gas Measuring instrument license', fee: 2500000, description: 'To calibrate gas flow meters.', selected: false },
-    { id: 'marineSurvey', name: 'Marine Measurement Survey', fee: 250000, description: 'Marine measurement survey services.', selected: false },
-  ];
+
+  licenseTypes: { id: string; name: string; fee: number; description: string; selected: boolean; submitted?: boolean; restrictionReason?: string; controlNumber?: string; paymentStatus?: string; billAmount?: number; applicationFee?: number; disabled?: boolean; }[] = [];
 
   totalAmount = 0;
   declarationAccepted = false;
   isSubmitting = false;
   applicationId: string | null = null;
 
-  baseDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string }[] = [
-    { id: 'tin', name: 'Tax Payer Identification Number (TIN)', date: '-', status: 'Not Uploaded' },
-    { id: 'businessLicense', name: 'Business License', date: '-', status: 'Not Uploaded' },
-    { id: 'taxClearance', name: 'Certificate Of Tax Clearance', date: '-', status: 'Not Uploaded' },
-    { id: 'brela', name: 'Certificate of Registration/Incorporation from BRELA', date: '-', status: 'Not Uploaded' },
-    { id: 'identity', name: 'Identity Card (National ID / Driver\'s License / Voter ID)', date: '-', status: 'Not Uploaded' }
+  // Interview Modal
+  showInterviewModal: boolean = false;
+  selectedInterview: any = null;
+
+  // Mock interview data for testing (remove this in production)
+  mockInterview = {
+    result: 'PASS',
+    date: new Date(),
+    panel: 'John Doe, Jane Smith, Robert Johnson',
+    theory: 85,
+    practical: 90,
+    total: 175,
+    comments: 'Excellent performance in both theory and practical assessments. Candidate demonstrated strong understanding of weights and measures principles.'
+  };
+
+
+  baseDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned' | 'Resubmitted'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string; viewed?: boolean }[] = [
+    { id: 'tin', name: 'Tax Payer Identification Number (TIN)', date: '-', status: 'Not Uploaded', viewed: false },
+    { id: 'businessLicense', name: 'Business License', date: '-', status: 'Not Uploaded', viewed: false },
+    { id: 'taxClearance', name: 'Certificate Of Tax Clearance', date: '-', status: 'Not Uploaded', viewed: false },
+    { id: 'brela', name: 'Certificate of Registration/Incorporation from BRELA', date: '-', status: 'Not Uploaded', viewed: false },
+    { id: 'identity', name: 'Identity Card (National ID / Driver\'s License / Voter ID)', date: '-', status: 'Not Uploaded', viewed: false }
   ];
 
-  renewalDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string }[] = [
-    { id: 'correctness', name: 'Certificate of Correctness', date: '-', status: 'Not Uploaded' },
-    { id: 'previousLicense', name: 'Previous License', date: '-', status: 'Not Uploaded' }
+  renewalDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned' | 'Resubmitted'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string; viewed?: boolean }[] = [
+    { id: 'correctness', name: 'Certificate of Correctness', date: '-', status: 'Not Uploaded', viewed: false },
+    { id: 'previousLicense', name: 'Previous License', date: '-', status: 'Not Uploaded', viewed: false }
   ];
 
-  qualificationDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string }[] = [
-    { id: 'psle', name: 'Primary School Leaving Certificate (PSLE)', date: '-', status: 'Not Uploaded' },
-    { id: 'csee', name: 'Certificate of Secondary Education Examination (CSEE)', date: '-', status: 'Not Uploaded' },
-    { id: 'acsee', name: 'Advanced Certificate of Secondary Education Examination (ACSEE)', date: '-', status: 'Not Uploaded' },
-    { id: 'veta', name: 'Basic Certificate - Vocational Education and Training Authority (VETA)', date: '-', status: 'Not Uploaded' },
-    { id: 'nta4', name: 'Basic Certificate (NTA Level 4)', date: '-', status: 'Not Uploaded' },
-    { id: 'nta5', name: 'Technician Certificate (NTA Level 5)', date: '-', status: 'Not Uploaded' },
-    { id: 'nta6', name: 'Ordinary Diploma (NTA Level 6)', date: '-', status: 'Not Uploaded' },
-    { id: 'specialized', name: 'Other Specialized Certificates', date: '-', status: 'Not Uploaded' },
-    { id: 'bachelor', name: 'Bachelor\'s Degree', date: '-', status: 'Not Uploaded' }
+  qualificationDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned' | 'Resubmitted'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string; viewed?: boolean }[] = [
+    { id: 'psle', name: 'Primary School Leaving Certificate (PSLE)', date: '-', status: 'Not Uploaded', viewed: false },
+    { id: 'csee', name: 'Certificate of Secondary Education Examination (CSEE)', date: '-', status: 'Not Uploaded', viewed: false },
+    { id: 'acsee', name: 'Advanced Certificate of Secondary Education Examination (ACSEE)', date: '-', status: 'Not Uploaded', viewed: false },
+    { id: 'veta', name: 'Basic Certificate - Vocational Education and Training Authority (VETA)', date: '-', status: 'Not Uploaded', viewed: false },
+    { id: 'nta4', name: 'Basic Certificate (NTA Level 4)', date: '-', status: 'Not Uploaded', viewed: false },
+    { id: 'nta5', name: 'Technician Certificate (NTA Level 5)', date: '-', status: 'Not Uploaded', viewed: false },
+    { id: 'nta6', name: 'Ordinary Diploma (NTA Level 6)', date: '-', status: 'Not Uploaded', viewed: false },
+    { id: 'specialized', name: 'Other Specialized Certificates', date: '-', status: 'Not Uploaded', viewed: false },
+    { id: 'bachelor', name: 'Bachelor\'s Degree', date: '-', status: 'Not Uploaded', viewed: false }
   ];
 
-  requiredDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string }[] = [];
+  requiredDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned' | 'Resubmitted'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string; viewed?: boolean }[] = [];
 
   selectedDoc: any = null;
 
@@ -124,8 +127,10 @@ export class LicenseApplicationComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.updateRequiredDocuments();
+    // this.updateRequiredDocuments(); // Moved to loadLicenseTypes to ensure types are loaded first
     this.loadProfileData();
+    this.loadLicenseTypes();
+    this.loadApplicationFees();
     // this.loadUserDocuments(); // Removed to avoid double call (called in updateRequiredDocuments)
   }
 
@@ -211,6 +216,40 @@ export class LicenseApplicationComponent implements OnInit {
     return countryMap[country.toLowerCase()] || '🏳️';
   }
 
+  loadLicenseTypes() {
+    this.licenseService.getLicenseTypes().subscribe({
+      next: (types: any[]) => {
+        this.licenseTypes = types.map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          fee: parseFloat(t.fee),
+          description: t.description,
+          selected: false,
+          submitted: false
+        }));
+        console.log('License types loaded from database:', this.licenseTypes);
+        this.updateRequiredDocuments(); // Now called after types are loaded
+      },
+      error: (err: any) => {
+        console.error('Failed to load license types:', err);
+        Swal.fire('Error', 'Failed to load license types. Please refresh the page.', 'error');
+      }
+    });
+  }
+
+  loadApplicationFees() {
+    this.licenseService.getApplicationFees().subscribe({
+      next: (fees: any[]) => {
+        this.applicationFees = fees;
+        console.log('Application fees loaded:', this.applicationFees);
+        this.calculateTotal(); // Recalculate once fees are loaded
+      },
+      error: (err: any) => {
+        console.error('Failed to load application fees:', err);
+      }
+    });
+  }
+
   loadUserDocuments() {
     console.log('Loading user documents...');
     this.licenseService.getUserDocuments().subscribe({
@@ -243,10 +282,16 @@ export class LicenseApplicationComponent implements OnInit {
 
         // 2. Handle Global Submitted/Approved Licenses (From history)
         if (response.submittedLicenseTypes && Array.isArray(response.submittedLicenseTypes)) {
-            const submittedNames = response.submittedLicenseTypes.map((s: any) => s.license_type);
             this.licenseTypes.forEach(license => {
-                if (submittedNames.includes(license.name)) {
+                const submitted = response.submittedLicenseTypes.find((s: any) => s.license_type === license.name);
+                if (submitted) {
                      (license as any).submitted = true;
+                     (license as any).restrictionReason = submitted.status;
+                     (license as any).controlNumber = submitted.control_number;
+                     (license as any).paymentStatus = submitted.payment_status;
+                     (license as any).billAmount = submitted.bill_amount;
+                     (license as any).applicationFee = submitted.application_fee;
+                     (license as any).disabled = true; // Disable if already submitted/approved
                      license.selected = false;
                 }
             });
@@ -268,6 +313,7 @@ export class LicenseApplicationComponent implements OnInit {
             reqDoc.submitted = (this.isApplicationSubmitted && doc.application_id === this.applicationId);
             if (doc.status === 'Returned') {
                 reqDoc.rejectionReason = doc.rejection_reason;
+                reqDoc.viewed = false; // Initialize as not viewed
             }
           }
 
@@ -283,6 +329,7 @@ export class LicenseApplicationComponent implements OnInit {
             qualDoc.submitted = (this.isApplicationSubmitted && doc.application_id === this.applicationId);
             if (doc.status === 'Returned') {
                 qualDoc.rejectionReason = doc.rejection_reason;
+                qualDoc.viewed = false; // Initialize as not viewed
             }
           }
         });
@@ -303,6 +350,24 @@ export class LicenseApplicationComponent implements OnInit {
     }
   }
 
+
+  viewDocument(doc: any) {
+    // Mark returned document as viewed
+    if (doc.status === 'Returned' && !doc.viewed) {
+      doc.viewed = true;
+    }
+    
+    if (doc.dbId) {
+      this.router.navigate(['/document-view', doc.dbId], { queryParams: { name: doc.name } });
+    } else {
+      Swal.fire({
+        title: 'View Document',
+        text: `Viewing ${doc.name} (Mock Action - Not Uploaded)`,
+        icon: 'info'
+      });
+    }
+  }
+
   onFileSelected(event: any, documentType: string) {
     const file: File = event.target.files[0];
     if (file) {
@@ -320,111 +385,165 @@ export class LicenseApplicationComponent implements OnInit {
         return;
       }
 
-      // Show loading
-      Swal.fire({
-        title: 'Uploading...',
-        text: 'Please wait while your document is being uploaded.',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
-      });
-
-      // Determine application ID to pass
-      const appId = this.isApplicationSubmitted ? (this.applicationId || undefined) : undefined;
-
-      this.licenseService.uploadDocument(file, documentType, appId).subscribe({
-        next: (response: any) => {
-          // Update the selected doc (or find it in the list if selectedDoc is null)
-          const docId = documentType;
-          this.selectedDoc.status = 'Uploaded';
-          this.selectedDoc.date = new Date(response.created_at || Date.now()).toLocaleDateString('en-GB');
-          this.selectedDoc.fileName = response.original_name;
-          this.selectedDoc.dbId = response.id;
-          
-          if (this.isApplicationSubmitted) {
-             this.selectedDoc.submitted = false;
+      // Get the document reference
+      const targetDoc = this.selectedDoc;
+      
+      // Check if this is a returned document that needs to be deleted first
+      if (targetDoc && targetDoc.status === 'Returned' && targetDoc.dbId) {
+        // Show loading
+        Swal.fire({
+          title: 'Processing...',
+          text: 'Removing old document and uploading new one...',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
           }
-          
-          Swal.fire({
-            icon: 'success',
-            title: 'Upload Successful',
-            text: `${this.selectedDoc.name} has been successfully uploaded.`,
-            timer: 2000,
-            showConfirmButton: false
-          });
-          
-          // Reset file input
-          event.target.value = '';
-          this.selectedDoc = null;
-        },
-        error: (err: any) => {
-          console.error('Upload failed', err);
-          let msg = 'There was an error uploading your document. Please try again.';
-          
-          if (err?.error?.messages) {
-            if (typeof err.error.messages === 'object') {
-              msg = err.error.messages.file || JSON.stringify(err.error.messages);
-            } else {
-              msg = err.error.messages;
+        });
+
+        // Delete the returned document first
+        this.licenseService.deleteDocument(targetDoc.dbId).subscribe({
+          next: () => {
+            console.log('Returned document deleted successfully');
+            // Reset document status
+            targetDoc.status = 'Not Uploaded';
+            targetDoc.date = '-';
+            targetDoc.fileName = null;
+            targetDoc.dbId = null;
+            targetDoc.rejectionReason = undefined;
+            targetDoc.viewed = false;
+            
+            // Now proceed with upload
+            this.proceedWithUpload(file, documentType, event, targetDoc);
+          },
+          error: (err: any) => {
+            console.error('Failed to delete returned document', err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Delete Failed',
+              text: 'Failed to remove the old document. Please try again.',
+            });
+            event.target.value = '';
+            this.selectedDoc = null;
+          }
+        });
+      } else {
+        // Normal upload (no returned document to delete)
+        Swal.fire({
+          title: 'Uploading...',
+          text: 'Please wait while your document is being uploaded.',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        
+        this.proceedWithUpload(file, documentType, event, targetDoc);
+      }
+    }
+  }
+
+  // Helper method to handle the actual upload process
+  private proceedWithUpload(file: File, documentType: string, event: any, targetDoc: any) {
+    // Determine application ID to pass
+    const appId = this.isApplicationSubmitted ? (this.applicationId || undefined) : undefined;
+
+    // Determine Category
+    let category = 'attachment'; // Default
+    // Check if it exists in qualificationDocuments list
+    const isQual = this.qualificationDocuments.some(d => d.id === documentType || d.name === documentType);
+    if (isQual) {
+        category = 'qualification';
+    }
+
+    this.licenseService.uploadDocument(file, documentType, appId, category).subscribe({
+      next: (response: any) => {
+        // Update the target doc
+        targetDoc.status = response.status || 'Uploaded';
+        targetDoc.date = new Date(response.created_at || Date.now()).toLocaleDateString('en-GB');
+        targetDoc.fileName = response.original_name;
+        targetDoc.dbId = response.id;
+        
+        if (this.isApplicationSubmitted && response.id) {
+           // Auto-submit the document since the application is already active
+           this.licenseService.submitDocument(response.id).subscribe({
+             next: (res: any) => {
+               targetDoc.submitted = true;
+               if (res && res.status) {
+                 targetDoc.status = res.status;
+               }
+               
+               Swal.fire({
+                 icon: 'success',
+                 title: 'Uploaded & Submitted',
+                 text: `${targetDoc.name} has been successfully uploaded and submitted.`,
+                 timer: 2000,
+                 showConfirmButton: false
+               });
+               
+               // Reset file input
+               event.target.value = '';
+               this.selectedDoc = null;
+             },
+             error: (subErr) => {
+               console.error('Auto-submit failed', subErr);
+               targetDoc.submitted = false;
+               
+               Swal.fire({
+                 icon: 'warning',
+                 title: 'Uploaded Only',
+                 text: `Document uploaded but failed to auto-submit. Please click the Submit button manually.`,
+                 confirmButtonText: 'OK'
+               });
+               
+               // Reset file input
+               event.target.value = '';
+               this.selectedDoc = null;
+             }
+           });
+        } else {
+           // Standard upload (Draft mode)
+            if (this.isApplicationSubmitted) {
+               targetDoc.submitted = false;
             }
-          } else if (err?.error?.message) {
-            msg = err.error.message;
-          } else if (err?.error?.error) {
-            msg = err.error.error;
+            
+            Swal.fire({
+              icon: 'success',
+              title: 'Upload Successful',
+              text: `${targetDoc.name} has been successfully uploaded.`,
+              timer: 2000,
+              showConfirmButton: false
+            });
+            
+            // Reset file input
+            event.target.value = '';
+            this.selectedDoc = null;
+        }
+      },
+      error: (err: any) => {
+        console.error('Upload failed', err);
+        let msg = 'There was an error uploading your document. Please try again.';
+        
+        if (err?.error?.messages) {
+          if (typeof err.error.messages === 'object') {
+            msg = err.error.messages.file || JSON.stringify(err.error.messages);
+          } else {
+            msg = err.error.messages;
           }
-
-          Swal.fire({
-            icon: 'error',
-            title: 'Upload Failed',
-            text: msg,
-          });
-          event.target.value = '';
-          this.selectedDoc = null;
+        } else if (err?.error?.message) {
+          msg = err.error.message;
+        } else if (err?.error?.error) {
+          msg = err.error.error;
         }
-      });
-    }
-  }
 
-  viewDocument(doc: any) {
-    if (doc.dbId) {
-      // Show loading while fetching
-      Swal.fire({
-        title: 'Loading Document...',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
-      });
-
-      this.licenseService.viewDocument(doc.dbId).subscribe({
-        next: (blob: Blob) => {
-           Swal.close();
-           const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-           const objectUrl = window.URL.createObjectURL(pdfBlob);
-           this.previewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl);
-           this.previewDocName = doc.name;
-           this.isModalOpen = true;
-        },
-        error: (err: any) => {
-          Swal.close();
-          console.error('View failed', err);
-          Swal.fire('Error', 'Failed to load document preview', 'error');
-        }
-      });
-    } else {
-      Swal.fire({
-        title: 'View Document',
-        text: `Viewing ${doc.name} (Mock Action - Not Uploaded)`,
-        icon: 'info'
-      });
-    }
-  }
-
-  closeModal() {
-    this.isModalOpen = false;
-    this.previewUrl = null;
-    this.previewDocName = '';
+        Swal.fire({
+          icon: 'error',
+          title: 'Upload Failed',
+          text: msg,
+        });
+        event.target.value = '';
+        this.selectedDoc = null;
+      }
+    });
   }
 
   deleteDocument(doc: any) {
@@ -472,7 +591,7 @@ export class LicenseApplicationComponent implements OnInit {
   citizenship: 'Citizen' | 'Non-Citizen' = 'Citizen';
 
   calculateTotal() {
-    const appFee = this.citizenship === 'Citizen' ? 50000 : 200000;
+    const appFee = this.applicationFee;
     this.totalAmount = this.selectedLicenses.length * appFee;
   }
 
@@ -481,16 +600,48 @@ export class LicenseApplicationComponent implements OnInit {
   }
 
   get applicationFee() {
+    if (this.applicationFees.length === 0) {
+        // Fallback if fees not loaded yet or failed
+        return this.citizenship === 'Citizen' ? 50000 : 200000;
+    }
+
+    // Map frontend types to DB types
+    const dbType = this.applicationType === 'New' ? 'New License' : 'Renew License';
+    
+    const feeRecord = this.applicationFees.find(f => 
+        f.application_type === dbType && 
+        f.nationality === this.citizenship
+    );
+
+    if (feeRecord) {
+        return parseFloat(feeRecord.amount);
+    }
+    
+    // Fallback if specifically not found
     return this.citizenship === 'Citizen' ? 50000 : 200000;
   }
 
   toggleLicense(license: any) {
-    if (license.submitted || this.isApplicationSubmitted) return;
+    // Only prevent toggling if THIS specific license has been submitted
+    if ((license as any).submitted) {
+        const reason = (license as any).restrictionReason || 'Already Applied';
+        Swal.fire('Restricted', `You cannot select this license: ${reason}`, 'warning');
+        return;
+    }
+    
     license.selected = !license.selected;
     this.calculateTotal();
   }
 
   submitDocument(doc: any) {
+    console.log('submitDocument called with doc:', doc);
+    console.log('Document dbId:', doc.dbId);
+    
+    if (!doc.dbId) {
+      Swal.fire('Error', 'Document ID is missing. Please upload the document first.', 'error');
+      return;
+    }
+    
     Swal.fire({
       title: 'Submit Document?',
       text: `Are you sure you want to submit ${doc.name}?`,
@@ -500,14 +651,17 @@ export class LicenseApplicationComponent implements OnInit {
       cancelButtonText: 'Cancel'
     }).then((result) => {
       if (result.isConfirmed) {
+        console.log('Calling licenseService.submitDocument with ID:', doc.dbId);
         this.licenseService.submitDocument(doc.dbId).subscribe({
-          next: () => {
+          next: (response) => {
+            console.log('Submit response:', response);
             doc.submitted = true; // Mark as submitted locally
+            doc.status = 'Uploaded'; // Update status
             Swal.fire('Submitted!', 'Document has been submitted successfully.', 'success');
           },
           error: (err) => {
             console.error('Submission failed', err);
-            Swal.fire('Error', 'Failed to submit document.', 'error');
+            Swal.fire('Error', err.error?.message || 'Failed to submit document.', 'error');
           }
         });
       }
@@ -591,5 +745,15 @@ export class LicenseApplicationComponent implements OnInit {
         Swal.fire('Error', errorMessage, 'error');
       }
     });
+  }
+
+  openInterviewModal(interview: any) {
+    this.selectedInterview = interview;
+    this.showInterviewModal = true;
+  }
+
+  closeInterviewModal() {
+    this.showInterviewModal = false;
+    this.selectedInterview = null;
   }
 }

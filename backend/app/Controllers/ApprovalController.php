@@ -86,8 +86,12 @@ class ApprovalController extends BaseController
             license_applications.status_stage_2,
             license_applications.status_stage_3,
             license_applications.status_stage_4,
-            osabill.payer_name as applicant_name, 
-            osabill.control_number
+            osabill.payer_name, 
+            osabill.control_number,
+            practitioner_personal_infos.first_name,
+            practitioner_personal_infos.last_name,
+            practitioner_personal_infos.region,
+            practitioner_business_infos.company_name
         ');
         
         // Join with Parent Application
@@ -95,6 +99,21 @@ class ApprovalController extends BaseController
         
         // Join with Bill Details
         $builder->join('osabill', 'osabill.bill_id = license_applications.id', 'left');
+        
+        // Join with Interview Assessments for Scores
+        // interview_assessments.application_id = license_applications.id
+        $builder->select('
+            interview_assessments.theory_score,
+            interview_assessments.practical_score,
+            interview_assessments.total_score,
+            interview_assessments.result as interview_result
+        ');
+        $builder->join('interview_assessments', 'interview_assessments.application_id = license_applications.id', 'left');
+
+        // Join Users and Personal/Business Info
+        $builder->join('users', 'users.id = license_applications.user_id', 'left');
+        $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid', 'left');
+        $builder->join('practitioner_business_infos', 'practitioner_business_infos.user_uuid = users.uuid', 'left');
         
         $builder->orderBy('license_applications.created_at', 'DESC');
         
@@ -110,8 +129,13 @@ class ApprovalController extends BaseController
             // Format dates
             $item['created_at_formatted'] = date('M d, Y', strtotime($item['created_at']));
             
-            // Fallback for name
-            if (empty($item['applicant_name'])) {
+            // Construct applicant_name
+            if (!empty($item['first_name']) || !empty($item['last_name'])) {
+                $item['applicant_name'] = trim(($item['first_name'] ?? '') . ' ' . ($item['last_name'] ?? ''));
+            } elseif (!empty($item['payer_name'])) {
+                 $item['applicant_name'] = $item['payer_name'];
+            } else {
+                 // Fallback to username
                  $userBuilder = $db->table('users');
                  $user = $userBuilder->where('id', $item['user_id'])->get()->getRow();
                  $item['applicant_name'] = $user ? ($user->username ?? 'Unknown User') : 'Unknown User';
@@ -140,7 +164,9 @@ class ApprovalController extends BaseController
         $appBuilder->select('
             license_applications.*,
             osabill.payer_name,
-            osabill.control_number
+            osabill.control_number,
+            osabill.payment_status,
+            osabill.amount as bill_amount
         ');
         $appBuilder->join('osabill', 'osabill.bill_id = license_applications.id', 'left');
         $appBuilder->where('license_applications.id', $id);
@@ -156,11 +182,16 @@ class ApprovalController extends BaseController
         $personalInfo = null;
         $user = null;
         if ($application->user_id) {
-            // Get user's UUID and email (email from account creation)
+            // Get user's UUID
             $userBuilder = $db->table('users');
-            $user = $userBuilder->select('uuid, email')->where('id', $application->user_id)->get()->getRow();
+            $user = $userBuilder->select('uuid, username')->where('id', $application->user_id)->get()->getRow();
             
             if ($user && isset($user->uuid)) {
+                 // Get Email from auth_identities
+                $identityBuilder = $db->table('auth_identities');
+                $identity = $identityBuilder->select('secret as email')->where('user_id', $application->user_id)->where('type', 'email_password')->get()->getRow();
+                $user->email = $identity ? $identity->email : '';
+
                 // Now get personal info using user_uuid
                 $personalBuilder = $db->table('practitioner_personal_infos');
                 $personalBuilder->where('user_uuid', $user->uuid);
@@ -168,75 +199,149 @@ class ApprovalController extends BaseController
             }
         }
         
-        // 3. Get company information (if exists in separate table, otherwise from license_applications)
-        // For now, we'll extract company info from license_applications
+        // 3. Get company information
         $companyInfo = [
-            'company_name' => $application->company_name ?? '',
-            'tin_number' => $application->tin_number ?? '',
-            'registration_number' => $application->registration_number ?? '',
-            'region' => $application->region ?? '',
-            'district' => $application->district ?? ''
+            'company_name' => '', 'tin_number' => '', 'registration_number' => '', 
+            'company_phone' => '', 'company_email' => '',
+            'region' => '', 'district' => '', 'ward' => '', 'postal_code' => '', 'street' => ''
         ];
+
+        if ($user && isset($user->uuid)) {
+            $businessBuilder = $db->table('practitioner_business_infos');
+            $business = $businessBuilder->where('user_uuid', $user->uuid)->get()->getRow();
+            
+            if ($business) {
+                $companyInfo = [
+                    'company_name' => $business->company_name ?? '',
+                    'tin_number' => $business->tin ?? '',
+                    'registration_number' => $business->brela_number ?? '',
+                    'company_phone' => $business->company_phone ?? '',
+                    'company_email' => $business->company_email ?? '',
+                    'region' => $business->bus_region ?? '',
+                    'district' => $business->bus_district ?? '',
+                    'ward' => $business->bus_ward ?? '',
+                    'postal_code' => $business->postal_code ?? '',
+                    'street' => $business->bus_street ?? ''
+                ];
+            }
+        }
         
         // 4. Get all attachments
         $attachmentBuilder = $db->table('license_application_attachments');
+        $attachmentBuilder->select('id, user_id, application_id, document_type, original_name as file_name, document_type as type, mime_type, status, created_at'); // Exclude file_content
         $attachmentBuilder->where('application_id', $id);
         $attachments = $attachmentBuilder->get()->getResult();
         
-        // Separate attachments by category
+        // Categorize attachments
         $requiredAttachments = [];
         $qualificationAttachments = [];
+        $qualTypes = ['csee', 'acsee', 'diploma', 'degree', 'bachelor', 'master', 'phd', 'cv', 'certificate', 'professional_certificate'];
+        
         foreach ($attachments as $attachment) {
-            if (isset($attachment->category) && $attachment->category === 'qualification') {
-                $qualificationAttachments[] = $attachment;
+            $docType = strtolower($attachment->document_type ?? '');
+            
+            // Heuristic to determine category
+            if (in_array($docType, $qualTypes) || strpos($docType, 'cert') !== false || strpos($docType, 'cv') !== false) {
+                 $attachment->category = 'qualification';
+                 $qualificationAttachments[] = $attachment;
             } else {
-                $requiredAttachments[] = $attachment;
+                 $attachment->category = 'required';
+                 $requiredAttachments[] = $attachment;
             }
         }
         
-        // 5. Get qualifications (if separate table exists)
+        // 5. Get qualifications (from separate table if exists, otherwise empty)
         $qualifications = [];
-        if ($db->tableExists('applicant_qualifications')) {
-            $qualBuilder = $db->table('applicant_qualifications');
-            // Try by application_id first
-            if ($db->fieldExists('application_id', 'applicant_qualifications')) {
-                $qualBuilder->where('application_id', $id);
-            } elseif ($db->fieldExists('user_id', 'applicant_qualifications') && isset($application->user_id)) {
-                $qualBuilder->where('user_id', $application->user_id);
-            }
-            $qualifications = $qualBuilder->get()->getResult();
-        }
+        // (Skipping separate table check for now as attachments cover docs)
         
         // 6. Get license items
         $itemBuilder = $db->table('license_application_items');
         $itemBuilder->where('application_id', $id);
         $licenseItems = $itemBuilder->get()->getResult();
         
+        // Map license items
+        foreach ($licenseItems as &$item) {
+            $item->license_name = $item->license_type;
+            $item->type = $item->license_type;
+            $item->amount = $item->fee;
+            $item->description = $item->license_type . ' (' . $item->application_type . ')';
+            
+            // Add Billing Info
+            $item->control_number = $application->control_number ?? '-';
+            $item->payment_status = $application->payment_status ?? 'Pending';
+            $item->application_fee = $application->bill_amount ?? 0;
+        }
+        
         // 7. Get approval history
+        // 7. Get approval history
+        $reviews = $db->table('application_reviews')
+                      ->where('application_id', $id)
+                      ->get()->getResultArray();
+        
+        $reviewsByStage = [];
+        foreach ($reviews as $r) {
+            $reviewsByStage[$r['stage']] = $r;
+        }
+
         $approvalHistory = [];
         // Build approval history from the stage columns
         for ($stage = 1; $stage <= 4; $stage++) {
+             $stageName = ['', 'Manager', 'Surveillance', 'DTS', 'CEO'][$stage];
             $approverField = "approver_stage_{$stage}";
             $statusField = "status_stage_{$stage}";
             
             if (isset($application->$approverField) && !empty($application->$approverField)) {
-                $stageName = ['', 'Manager', 'Surveillance', 'DTS', 'CEO'][$stage];
+                $review = $reviewsByStage[$stageName] ?? null;
                 $approvalHistory[] = [
                     'stage' => $stageName,
                     'approver' => $application->$approverField,
                     'status' => $application->$statusField ?? 'Pending',
-                    'date' => $application->updated_at ?? $application->created_at
+                    'date' => $application->updated_at ?? $application->created_at,
+                    'comment' => $review ? $review['comments'] : ''
                 ];
             }
         }
         
-        // 8. Build comprehensive response
+        // 8. Get Completion Data (Tools, Qualifications, etc. from License Completions)
+        $completions = $db->table('license_completions')->where('application_id', $id)->get()->getRow();
+        
+        $toolsList = [];
+        $qualificationsList = [];
+        $experienceList = [];
+        $previousLicensesList = [];
+
+        if ($completions) {
+            // Helper to decode JSON safely
+            $decodeHelper = function($data) {
+                if (empty($data)) return [];
+                
+                // If it's already an array/object from specific driver behavior
+                if (is_array($data) || is_object($data)) return (array)$data;
+                
+                $decoded = json_decode($data);
+                
+                // Handle double encoding if necessary
+                if (is_string($decoded)) {
+                     $decoded = json_decode($decoded);
+                }
+                
+                return json_last_error() === JSON_ERROR_NONE ? ($decoded ?? []) : [];
+            };
+
+            $toolsList = $decodeHelper($completions->tools);
+            $qualificationsList = $decodeHelper($completions->qualifications);
+            $experienceList = $decodeHelper($completions->experiences);
+            $previousLicensesList = $decodeHelper($completions->previous_licenses);
+        }
+
+        // 9. Build comprehensive response
         $response = [
             'application_info' => [
                 'id' => $application->id,
                 'application_type' => $application->application_type ?? 'New',
                 'status' => $application->status ?? 'Submitted',
                 'control_number' => $application->control_number ?? '',
+                'license_number' => $application->license_number ?? '',
                 'created_at' => $application->created_at,
                 'updated_at' => $application->updated_at
             ],
@@ -253,7 +358,7 @@ class ApprovalController extends BaseController
                 'email' => mb_convert_encoding(isset($user->email) ? $user->email : '', 'UTF-8', 'UTF-8'),
                 'region' => mb_convert_encoding($personalInfo->region ?? '', 'UTF-8', 'UTF-8'),
                 'district' => mb_convert_encoding($personalInfo->district ?? '', 'UTF-8', 'UTF-8'),
-                'ward' => mb_convert_encoding($personalInfo->town ?? '', 'UTF-8', 'UTF-8'),
+                'ward' => mb_convert_encoding($personalInfo->ward ?? '', 'UTF-8', 'UTF-8'),
                 'street' => mb_convert_encoding($personalInfo->street ?? '', 'UTF-8', 'UTF-8'),
                 'postal_address' => ''
             ] : null,
@@ -262,7 +367,11 @@ class ApprovalController extends BaseController
             'qualification_documents' => $qualificationAttachments,
             'qualifications' => $qualifications,
             'license_items' => $licenseItems,
-            'approval_history' => $approvalHistory
+            'approval_history' => $approvalHistory,
+            'tools_list' => $toolsList,
+            'qualifications_list' => $qualificationsList,
+            'experience_list' => $experienceList,
+            'previous_licenses_list' => $previousLicensesList
         ];
         
         // Clean all UTF-8 encoding issues before returning JSON
@@ -310,41 +419,82 @@ class ApprovalController extends BaseController
         }
         
         $json = $this->request->getJSON();
-        $itemId = $json->appId ?? null;
+        $passedId = $json->appId ?? $json->application_id ?? null;
         $action = $json->action ?? 'Approve'; // Approve, Reject, Pending
+        $comment = $json->comment ?? '';
         
-        if (!$itemId) {
-            return $this->fail('Missing Item ID');
+        if (!$passedId) {
+            return $this->fail('Missing Application ID');
         }
         
+        $db = \Config\Database::connect();
+        
+        // 1. Resolve Parent Application ID
+        $parentAppId = $passedId;
         $itemModel = new \App\Models\LicenseApplicationItemModel();
-        $item = $itemModel->find($itemId);
+        $item = $itemModel->find($passedId);
         
-        if (!$item) {
-            return $this->failNotFound('License Item not found');
+        if ($item) {
+            $parentAppId = $item->application_id;
+        } else {
+            // Check if it is already the parent ID
+            $check = $db->table('license_applications')->select('id')->where('id', $passedId)->get()->getRow();
+            if (!$check) {
+                 return $this->failNotFound('Application not found');
+            }
         }
         
-        $currentStage = $item->approval_stage ?? 'Manager';
+        // 1.5 Check for Returned Documents
+        $hasReturnedDocs = $db->table('license_application_attachments')
+                              ->where('application_id', $parentAppId)
+                              ->where('status', 'Returned')
+                              ->countAllResults() > 0;
+        
+        if ($hasReturnedDocs) {
+            return $this->fail('Cannot proceed: Application has documents that need correction (Returned status).');
+        }
+
+        // 2. Get Current Status from Parent
+        $appBuilder = $db->table('license_applications');
+        $app = $appBuilder->where('id', $parentAppId)->get()->getRow();
+        
+        // Fallback to item stage if parent stage is missing
+        $currentStage = $app->approval_stage ?? ($item->approval_stage ?? 'Manager'); 
+        
+        // 2.5 Surveillance Exam Rule: If Failed, block Approve
+        if ($currentStage === 'Surveillance' && $action === 'Approve') {
+             $assessment = $db->table('interview_assessments')
+                              ->where('application_id', $parentAppId)
+                              ->get()->getRow();
+             
+             if ($assessment && (strtoupper($assessment->result) === 'FAIL')) {
+                 return $this->fail('Cannot approve: Applicant has FAILED the exam. Only Rejection is allowed.');
+             }
+        }
+        
         $nextStage = $currentStage;
-        $newStatus = $item->status; 
+        $newStatus = $app->status; 
         
         if ($action === 'Reject') {
             $newStatus = 'Rejected';
-            // Stage stays same or moves to a "Rejected" bin? Let's keep stage but mark status.
         } elseif ($action === 'Pending') {
-             $newStatus = 'Submitted'; // Reset to default?
-             // Maybe reset stage? Or just status? 
-             // "Pending" usually means "Not yet acted on". 
              $newStatus = 'Pending';
         } else {
-            // Default: Approve / Next
+            // Approve / Next
             switch ($currentStage) {
                 case 'Manager':
                     $nextStage = 'Surveillance';
                     $newStatus = 'Approved_Manager';
                     break;
                 case 'Surveillance':
-                    $nextStage = 'DTS';
+                    // Surveillance Approval -> Unlocks Applicant License Module
+                    // We DO NOT move to DTS yet. We move to 'Applicant_Submission' or stay at Surveillance but status 'Approved_Surveillance'?
+                    // User Request: "ndipo kwenye My Applications zitaongezwa hatua za DTS na CEO"
+                    // Meaning the approval STOPS here for the officer side until applicant acts.
+                    // Let's set nextStage to 'Applicant' or keep 'Surveillance' but status 'Approved_Surveillance'.
+                    // Actually, if we set status 'Approved_Surveillance', the applicant portal can detect this and show the module.
+                    
+                    $nextStage = 'Surveillance'; // Stay until applicant submits
                     $newStatus = 'Approved_Surveillance';
                     break;
                 case 'DTS':
@@ -362,7 +512,7 @@ class ApprovalController extends BaseController
             }
         }
         
-        $data = [
+        $updateData = [
             'approval_stage' => $nextStage,
             'status' => $newStatus
         ];
@@ -377,20 +527,131 @@ class ApprovalController extends BaseController
         }
 
         if ($numericStage > 0) {
-            // Get current logged-in user's name (assuming session has user data)
-            // For this example, we'll use a placeholder or 'Admin'
             $approverName = session()->get('username') ?? 'Admin'; 
+            $updateData["approver_stage_{$numericStage}"] = $approverName;
             
-            // Save Approver Name for the current stage
-            $data["approver_stage_{$numericStage}"] = $approverName;
-            
-            // Save Status Decision for this stage
             $statusDecision = ($action === 'Pending') ? 'Pending' : (($action === 'Reject') ? 'Rejected' : 'Approved');
-            $data["status_stage_{$numericStage}"] = $statusDecision;
+            $updateData["status_stage_{$numericStage}"] = $statusDecision;
+            
+             // 4. Insert Review Comment
+            if (!empty($comment) || $statusDecision !== 'Pending') {
+                $reviewData = [
+                    'id' => $this->guidv4(),
+                    'application_id' => $parentAppId,
+                    'application_type' => 'License',
+                    'stage' => $currentStage,
+                    'status' => $statusDecision,
+                    'comments' => $comment,
+                    'created_at' => date('Y-m-d H:i:s')
+                ];
+                $db->table('application_reviews')->insert($reviewData);
+            }
         }
         
-        $itemModel->update($itemId, $data);
+        $appBuilder->where('id', $parentAppId)->update($updateData);
+        
+        // Update Item as well if it exists
+        if ($item) {
+             $itemModel->update($item->id, $updateData);
+        }
         
         return $this->respond(['message' => 'Status updated successfully', 'stage' => $nextStage, 'status' => $newStatus]);
+    }
+
+    public function updateExamScores()
+    {
+        $requestKey = $this->request->getHeaderLine('X-API-KEY');
+        
+        if ($requestKey !== $this->apiKey) {
+            return $this->failUnauthorized('Invalid API Key');
+        }
+        
+        $json = $this->request->getJSON();
+        $applicationId = $json->application_id ?? null; // This is likely the LicenseApplicationItem ID from frontend
+        $theoryScore = $json->theory_score ?? null;
+        $practicalScore = $json->practical_score ?? null;
+
+        if (!$applicationId) {
+            return $this->fail('Missing Application ID');
+        }
+
+        $db = \Config\Database::connect();
+        
+        // We need to determine if $applicationId is the Item ID or Main App ID.
+        // Frontend uses what getApplications returned.
+        // getApplications returned "license_application_items.*" and "license_applications.id as application_id".
+        // HOWEVER, wma-mis code uses $app->id. 
+        // If wma-mis $app came from getApplications, and that function selects "license_application_items.*" AFTER "license_applications.id as application_id", 
+        // the "id" field in the result row would be from license_application_items (because items.* overwrites common columns unless excluded).
+        // Let's assume $applicationId is the `license_application_items.id`.
+        
+        // The `interview_assessments` table likely links to `application_id` (main application) or `item_id`.
+        // Let's check `interview_assessments` table definition or assume it links to the parent `license_applications`.
+        
+        // Step 1: Resolve Item ID to Parent Application ID (if needed) or finding the link.
+        $itemModel = new \App\Models\LicenseApplicationItemModel();
+        $item = $itemModel->find($applicationId);
+        
+        if ($item) {
+            $parentAppId = $item->application_id;
+            // The itemId is indeed $applicationId
+        } else {
+             // Maybe it WAS the parent app Id? Let's check license_applications
+             $appBuilder = $db->table('license_applications');
+             $app = $appBuilder->where('id', $applicationId)->get()->getRow();
+             if ($app) {
+                 $parentAppId = $app->id;
+                 // It matches a parent app.
+             } else {
+                 return $this->failNotFound('Application not found');
+             }
+        }
+
+        // Now update/insert into interview_assessments
+        $assessmentBuilder = $db->table('interview_assessments');
+        $exists = $assessmentBuilder->where('application_id', $parentAppId)->get()->getRow();
+        
+        $totalScore = floatval($theoryScore) + floatval($practicalScore);
+        $result = $totalScore >= 50 ? 'PASS' : 'FAIL'; // Enum is uppercase
+
+        $data = [
+            'theory_score' => $theoryScore,
+            'practical_score' => $practicalScore,
+            'total_score' => $totalScore,
+            'result' => $result,
+            'comments' => 'Score updated via Exam Remark',
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        if ($exists) {
+            $assessmentBuilder->where('id', $exists->id);
+            $updated = $assessmentBuilder->update($data);
+        } else {
+            // New entry - Generate UUID and set created_at
+            $data['id'] = $this->guidv4();
+            $data['application_id'] = $parentAppId;
+            $data['created_at'] = date('Y-m-d H:i:s');
+            
+            $updated = $assessmentBuilder->insert($data);
+        }
+
+        if ($updated) {
+            // Also update the license_application_items status if passed?
+            // Optional, but good for consistency.
+            return $this->respond(['message' => 'Exam scores updated successfully']);
+        } else {
+            return $this->fail('Failed to update exam scores');
+        }
+    }
+
+    /**
+     * Generate a UUID v4
+     */
+    private function guidv4($data = null) {
+        $data = $data ?? random_bytes(16);
+        assert(strlen($data) == 16);
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 }

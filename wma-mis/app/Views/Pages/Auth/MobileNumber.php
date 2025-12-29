@@ -185,6 +185,9 @@
                             <div class="option__item">
                                 <button style="background: #DB611E;" type="submit" class="button">Submit</button>
                             </div>
+                            <div class="option__item text-center mt-3">
+                                <a href="<?= base_url('dashboard') ?>" class="text-muted" style="text-decoration: underline;">Skip for Now</a>
+                            </div>
 
                         </div>
 

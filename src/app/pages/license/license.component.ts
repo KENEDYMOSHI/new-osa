@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { firstValueFrom } from 'rxjs';
@@ -73,13 +73,7 @@ export class LicenseComponent {
   
   newPreviousLicenseNumber: string = '';
 
-  licenseTypes = [
-    'Class A - Verification',
-    'Class B - Repair',
-    'Class C - Manufacturing',
-    'Class D - Import/Export'
-  ];
-
+  licenseTypes: any[] = [];
   availableLicenseTypes: any[] = [];
   selectedLicenseTypes: any[] = [];
   newSelectedLicenseType: any = null;
@@ -229,102 +223,98 @@ export class LicenseComponent {
       });
     }
   }
-
+// ... existing code ...
   constructor(
     private authService: AuthService, 
     private router: Router, 
+    private route: ActivatedRoute,
     private http: HttpClient, 
     private licenseService: LicenseService,
     private sanitizer: DomSanitizer
   ) {}
 
-  async ngOnInit() {
-    try {
-      const data = await firstValueFrom(this.authService.getProfile());
-      console.log('Profile Data for License:', data);
-
-      if (data.user) {
-        this.particulars.email = data.user.email;
-        // Fallback name if personal info is missing
-        this.particulars.fullName = data.user.username;
-      }
-
-      if (data.personalInfo) {
-        // Map all fields for the preview card
-        this.particulars.nida = data.personalInfo.identity_number || 'N/A';
-        this.particulars.firstName = data.personalInfo.first_name || 'N/A';
-        this.particulars.middleName = data.personalInfo.second_name || 'N/A';
-        this.particulars.lastName = data.personalInfo.last_name || 'N/A';
-        this.particulars.gender = data.personalInfo.gender || 'N/A';
-        this.particulars.dob = data.personalInfo.dob || 'N/A';
-        this.particulars.phone = data.personalInfo.phone || 'N/A';
-        this.particulars.region = data.personalInfo.region || 'N/A';
-        this.particulars.district = data.personalInfo.district || 'N/A';
-        this.particulars.street = data.personalInfo.street || 'N/A';
-        this.particulars.nationality = data.personalInfo.nationality || 'Tanzania'; // Default or fetch
-
-        const firstName = data.personalInfo.first_name || '';
-        const secondName = data.personalInfo.second_name || '';
-        const lastName = data.personalInfo.last_name || '';
-        
-        const fullName = `${firstName} ${secondName} ${lastName}`.replace(/\s+/g, ' ').trim();
-        
-        this.particulars.fullName = fullName || this.particulars.fullName;
-        
-        // Update Welcome Card Title
-        if (fullName) {
-          this.welcomeCard.title = `Welcome, ${fullName}`;
-        }
-        
-        // Construct address for legacy use if needed
-        const parts = [
-          data.personalInfo.street,
-          data.personalInfo.town,
-          data.personalInfo.district,
-          data.personalInfo.region
-        ].filter(part => part);
-        this.particulars.address = parts.join(', ');
-      }
-
-      if (data.businessInfo) {
-        this.particulars.businessName = data.businessInfo.company_name || 'N/A';
-        this.particulars.tin = data.businessInfo.tin || 'N/A';
-        this.particulars.brelaNumber = data.businessInfo.brela_number || 'N/A';
-        this.particulars.companyEmail = data.businessInfo.company_email || 'N/A';
-        this.particulars.companyPhone = data.businessInfo.company_phone || 'N/A';
-        this.particulars.postalCode = data.businessInfo.postal_code || 'N/A';
-        this.particulars.busRegion = data.businessInfo.bus_region || 'N/A';
-        this.particulars.busDistrict = data.businessInfo.bus_district || 'N/A';
-        this.particulars.busTown = data.businessInfo.bus_town || 'N/A';
-        this.particulars.busStreet = data.businessInfo.bus_street || 'N/A';
-      }
-
-    } catch (error) {
-      console.error('Failed to fetch profile for license:', error);
-    }
-    
+  ngOnInit() {
     this.loadUserDocuments();
   }
-
+// ... existing code ...
   loadUserDocuments() {
+    // First, load user profile data to populate particulars
+    this.authService.getProfile().subscribe({
+      next: (response: any) => {
+        const personal = response.personalInfo || {};
+        const business = response.businessInfo || {};
+        
+        // Populate personal information
+        this.particulars.firstName = personal.first_name || '';
+        this.particulars.middleName = personal.second_name || '';
+        this.particulars.lastName = personal.last_name || '';
+        this.particulars.fullName = `${personal.first_name || ''} ${personal.second_name || ''} ${personal.last_name || ''}`.trim();
+        this.particulars.email = response.user?.email || '';
+        this.particulars.phone = personal.phone || '';
+        this.particulars.nida = personal.identity_number || personal.passport_number || '';
+        this.particulars.gender = personal.gender || '';
+        this.particulars.dob = personal.dob || '';
+        this.particulars.nationality = personal.nationality || '';
+        this.particulars.region = personal.region || '';
+        this.particulars.district = personal.district || '';
+        this.particulars.street = personal.street || '';
+        
+        // Populate business information
+        this.particulars.businessName = business.company_name || '';
+        this.particulars.tin = business.tin || '';
+        this.particulars.brelaNumber = business.brela_number || '';
+        this.particulars.companyEmail = business.company_email || '';
+        this.particulars.companyPhone = business.company_phone || '';
+        this.particulars.postalCode = business.postal_code || '';
+        this.particulars.busRegion = business.bus_region || '';
+        this.particulars.busDistrict = business.bus_district || '';
+        this.particulars.busTown = business.bus_town || '';
+        this.particulars.busStreet = business.bus_street || '';
+      },
+      error: (err: any) => {
+        console.error('Failed to load profile', err);
+      }
+    });
+
     this.licenseService.getUserDocuments().subscribe({
       next: (response: any) => {
         const docs = response.documents || [];
         
         // Check Application Status
         const status = response.applicationStatus;
-        // Consider Submitted, Approved, Pending, etc. as "Submitted" state where edits are disabled
         this.isApplicationSubmitted = status && status !== 'Draft' && status !== 'Returned'; 
 
-        // Populate available license types from backend (already filtered)
-        if (response.availableLicenseTypes && Array.isArray(response.availableLicenseTypes)) {
-          this.availableLicenseTypes = response.availableLicenseTypes;
-        } else {
-           // Fallback if backend doesn't send it (e.g. error), simplify or empty
-           this.availableLicenseTypes = this.licenseTypes.map(t => ({ name: t, type: 'New', date: null }));
-        }
+        // Fetch Eligible Applications (Passed Exam + Approved Surveillance)
+        this.licenseService.getEligibleApplications().subscribe({
+             next: (apps) => {
+                 this.availableLicenseTypes = apps;
+                 this.licenseTypes = apps; // Keep ref
+
+                 // Auto-select the first one by default if available
+                 if (this.availableLicenseTypes.length > 0) {
+                     this.newSelectedLicenseType = this.availableLicenseTypes[0];
+                 }
+                 
+                 // Check for query param to auto-select
+                 this.route.queryParams.subscribe(params => {
+                     const targetAppId = params['appId'];
+                     if (targetAppId) {
+                         const target = this.availableLicenseTypes.find(app => app.id === targetAppId);
+                         if (target) {
+                             this.newSelectedLicenseType = target;
+                             this.addLicenseType(); // Auto-add
+                         }
+                     }
+                 });
+             },
+             error: (err) => {
+                 console.error('Failed to load eligible applications', err);
+                 this.availableLicenseTypes = [];
+             }
+        });
 
         docs.forEach((doc: any) => {
+// ... existing code ...
           // Check required documents
           const reqDoc = this.requiredDocuments.find(d => d.id === doc.document_type || d.name === doc.document_type);
           if (reqDoc) {
@@ -592,7 +582,7 @@ export class LicenseComponent {
       declaration: this.declaration,
       particulars: this.particulars,
       previousLicenses: this.previousLicenseNumbers,
-      licenseTypes: this.selectedLicenseTypes, // Sending string array
+      licenseTypes: this.selectedLicenseTypes, // Sending array of objects with id, name, fee
       qualifications: this.qualificationsList,
       experiences: this.experiencesList,
       tools: this.tools
@@ -600,7 +590,7 @@ export class LicenseComponent {
     
     console.log('Submitting Application:', applicationData);
     
-    this.http.post('http://localhost:8080/api/license/submit', applicationData).subscribe({
+    this.licenseService.submitApplication(applicationData).subscribe({
       next: (response: any) => {
         console.log('Submission successful', response);
         alert('Application Submitted Successfully!');

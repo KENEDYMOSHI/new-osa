@@ -130,6 +130,31 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/license/license.component').then(m => m.LicenseComponent),
         title: 'License Application | WMA Online Services Portal'
       },
+      {
+        path: 'license-application',
+        loadComponent: () => import('./pages/license/license.component').then(m => m.LicenseComponent),
+        title: 'License Application | WMA Online Services Portal'
+      },
+      {
+        path: 'notifications',
+        loadComponent: () => import('./pages/notifications/notifications.component').then(m => m.NotificationsComponent),
+        title: 'Notifications | WMA Online Services Portal'
+      },
+      {
+        path: 'osa/settings',
+        loadComponent: () => import('./pages/osa/license-settings/license-settings.component').then(m => m.LicenseSettingsComponent),
+        title: 'License Settings | WMA Online Services Portal'
+      },
+      {
+        path: 'licenseSetting',
+        redirectTo: 'osa/settings',
+        pathMatch: 'full'
+      },
+      {
+        path: 'document-view/:id',
+        loadComponent: () => import('./pages/license-application/document-viewer/document-viewer.component').then(m => m.DocumentViewerComponent),
+        title: 'View Document | WMA Portal'
+      },
     ]
   },
   {

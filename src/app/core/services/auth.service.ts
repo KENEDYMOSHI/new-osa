@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { API_CONFIG } from '../config/api.config';
@@ -12,7 +13,7 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<any>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private router: Router) { }
 
   register(data: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, data).pipe(
@@ -74,6 +75,7 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem('token');
     this.currentUserSubject.next(null);
+    this.router.navigate(['/signin']);
   }
 
   public getHeaders(): HttpHeaders {

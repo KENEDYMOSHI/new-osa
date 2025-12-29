@@ -12,9 +12,28 @@ $routes->post('approval/login', 'ApprovalController::processLogin');
 $routes->get('approval/logout', 'ApprovalController::logout');
 $routes->get('viewApplication/(:segment)', 'ApprovalController::viewApplication/$1');
 $routes->group('api/approval', function($routes) {
-    $routes->get('applications', 'ApprovalController::getApplications');
+    // Dashboard Stats API
+    $routes->group('dashboard', function($routes) {
+        $routes->post('vtv', 'Api\DashboardController::vtv');
+        $routes->post('sbl', 'Api\DashboardController::sbl');
+        $routes->post('water-meters', 'Api\DashboardController::waterMeters');
+        $routes->post('ppg', 'Api\DashboardController::ppg');
+        $routes->post('others', 'Api\DashboardController::others');
+        $routes->get('osa-stats', 'Api\DashboardController::getOsaStats');
+    });
+
+    // Approval Module API
+    $routes->get('applications', 'ApprovalController::getApplications'); 
     $routes->get('application/(:segment)', 'ApprovalController::getApplicationDetails/$1');
+    $routes->get('license-types', 'ApprovalController::getLicenseTypes');
     $routes->post('update-status', 'ApprovalController::updateApplicationStatus');
+    $routes->post('update-exam-scores', 'ApprovalController::updateExamScores');
+    
+    // Payment API
+    $routes->group('payment', function($routes) {
+        $routes->post('collection', 'Api\PaymentController::getPaymentCollection');
+        $routes->post('report-data', 'Api\PaymentController::getReportData');
+    });
 });
 
 service('auth')->routes($routes);
@@ -30,20 +49,36 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->post('license/upload', 'LicenseController::upload');
     $routes->get('license/documents', 'LicenseController::getUserDocuments');
     $routes->get('license/document/(:segment)/view', 'LicenseController::view/$1');
+    $routes->post('document/(:segment)/submit', 'LicenseController::submitDocument/$1');
     $routes->delete('license/document/(:segment)', 'LicenseController::deleteDocument/$1');
     $routes->get('license/bill/(:segment)', 'LicenseController::getBill/$1');
     $routes->get('license/user-bills', 'LicenseController::getUserBills');
     $routes->get('license/user-applications', 'LicenseController::getUserApplications');
+    $routes->get('license/eligibility', 'LicenseController::checkEligibility');
+    $routes->get('license/eligible-applications', 'LicenseController::getEligibleApplications');
+    $routes->get('license/types', 'LicenseController::getLicenseTypes');
     $routes->get('admin/applications', 'AdminController::getApplications');
     $routes->get('admin/applicants', 'AdminController::getApplicants');
     $routes->get('admin/application/(:segment)', 'AdminController::getApplicationDetails/$1');
     $routes->get('admin/document/(:segment)/view', 'AdminController::viewDocument/$1');
     $routes->post('admin/application/(:segment)/approve', 'AdminController::approveApplication/$1');
     $routes->post('admin/document/return', 'AdminController::returnDocument');
+    $routes->post('admin/document/(:segment)/accept', 'AdminController::acceptDocument/$1');
 
     // Notifications
     $routes->get('notifications', 'NotificationController::getUserNotifications');
     $routes->post('notifications/(:segment)/read', 'NotificationController::markAsRead/$1');
+
+    // Application Review
+    $routes->get('approved-applications', 'ApplicationReviewController::getApprovedApplications');
+    $routes->get('application-details/(:segment)', 'ApplicationReviewController::getApplicationDetails/$1');
+    $routes->get('available-license-types', 'ApplicationReviewController::getAvailableLicenseTypes');
+
+    // Locations (Region, District, Ward, Postal Code)
+    $routes->get('locations/regions', 'LocationController::getRegions');
+    $routes->get('locations/districts/(:segment)', 'LocationController::getDistricts/$1');
+    $routes->get('locations/wards/(:segment)', 'LocationController::getWards/$1');
+    $routes->get('locations/postalcodes/(:segment)', 'LocationController::getPostalCodes/$1');
 
     $routes->options('auth/register', static function () {
         return response()->setStatusCode(200);
@@ -69,6 +104,12 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->resource('license-applications', ['controller' => 'LicenseApplicationController']);
     $routes->post('license-applications/(:segment)/submit', 'LicenseApplicationController::submit/$1');
     $routes->post('license-applications/(:segment)/approve', 'LicenseApplicationController::approve/$1');
+
+    // License Fee and Payment Management
+    $routes->post('license/generate-fee/(:segment)', 'LicenseController::generateLicenseFee/$1');
+    $routes->get('license/payment-status/(:segment)', 'LicenseController::checkPaymentStatus/$1');
+    $routes->get('license/view/(:segment)', 'LicenseController::viewLicense/$1');
+    $routes->get('license/details/(:segment)', 'LicenseController::getApplicationDetails/$1');
 
     $routes->options('(:any)', static function () {
         return response()->setStatusCode(200);

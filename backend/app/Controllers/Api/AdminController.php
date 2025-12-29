@@ -72,7 +72,7 @@ class AdminController extends ResourceController
 
         // 2. Attachments (exclude file_content to avoid JSON encoding issues with binary data)
         $attachmentBuilder = $db->table('license_application_attachments');
-        $attachmentBuilder->select('id, user_id, application_id, document_type, file_path, original_name, mime_type, status, rejection_reason, created_at, updated_at');
+        $attachmentBuilder->select('id, user_id, application_id, document_type, category, file_path, original_name, mime_type, status, rejection_reason, created_at, updated_at');
         $attachmentBuilder->where('application_id', $id);
         $attachments = $attachmentBuilder->get()->getResultArray();
 
@@ -194,9 +194,12 @@ class AdminController extends ResourceController
 
     public function returnDocument()
     {
-        $user = $this->getUserFromToken();
-        if (!$user) {
-            return $this->failUnauthorized('Invalid or expired token. Please login again.');
+        // Skip authentication in development mode
+        if (ENVIRONMENT !== 'development') {
+            $user = $this->getUserFromToken();
+            if (!$user) {
+                return $this->failUnauthorized('Invalid or expired token. Please login again.');
+            }
         }
 
         $json = $this->request->getJSON();
@@ -208,7 +211,7 @@ class AdminController extends ResourceController
         }
 
         try {
-            log_message('error', 'Return Document ID: ' . $documentId . ' Reason: ' . $rejectionReason);
+            log_message('info', 'Return Document ID: ' . $documentId . ' Reason: ' . $rejectionReason);
 
             $db = \Config\Database::connect();
             $builder = $db->table('license_application_attachments');
@@ -262,6 +265,40 @@ class AdminController extends ResourceController
             return $this->fail('Server Error: ' . $e->getMessage());
         }
 
-        return $this->respond(['message' => 'Document returned successfully']);
+        return $this->respond(['message' => 'Document returned successfully', 'status' => 'success']);
+    }
+
+    public function acceptDocument($id)
+    {
+        // Skip authentication in development mode
+        if (ENVIRONMENT !== 'development') {
+            $user = $this->getUserFromToken();
+            if (!$user) {
+                return $this->failUnauthorized('Invalid or expired token. Please login again.');
+            }
+        }
+
+        $db = \Config\Database::connect();
+        $builder = $db->table('license_application_attachments');
+        
+        $doc = $builder->where('id', $id)->get()->getRow();
+        
+        if (!$doc) {
+            return $this->failNotFound('Document not found');
+        }
+
+        // Update status to Submitted
+        $data = [
+            'status' => 'Submitted',
+            'rejection_reason' => null,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        $builder->where('id', $id);
+        if (!$builder->update($data)) {
+            return $this->fail('Failed to update document status');
+        }
+
+        return $this->respond(['message' => 'Document accepted successfully', 'status' => 'success']);
     }
 }

@@ -220,9 +220,16 @@ class LicenseModel extends Model
             // Map approval statuses
             $app->region_manager_status = $this->mapApprovalStatus($item, 1);
             $app->surveillance_status = $this->mapApprovalStatus($item, 2);
+            $app->dts_status = $this->mapApprovalStatus($item, 3);
+            $app->ceo_status = $this->mapApprovalStatus($item, 4);
             
             $app->applied_date = $item->created_at ?? date('Y-m-d H:i:s');
             $app->control_number = $item->control_number ?? '';
+
+            // Map exam scores
+            $app->theory_score = $item->theory_score ?? null;
+            $app->practical_score = $item->practical_score ?? null;
+            $app->total_score = $item->total_score ?? null;
             
             $applications[] = $app;
         }
@@ -267,6 +274,29 @@ class LicenseModel extends Model
                     $appDate = strtotime($app->applied_date);
                     if ($appDate < $startDate || $appDate > $endDate) {
                         return false;
+                    }
+                }
+            }
+
+            // Filter by status (Strict 4-stage approval for 'Approved'/'Completed')
+            if (!empty($filters['status'])) {
+                if ($filters['status'] === 'Approved' || $filters['status'] === 'Completed') {
+                    // MUST be approved by ALL 4 stages
+                    if ($app->region_manager_status !== 'Approved' || 
+                        $app->surveillance_status !== 'Approved' || 
+                        $app->dts_status !== 'Approved' || 
+                        $app->ceo_status !== 'Approved') {
+                        return false;
+                    }
+                } elseif ($filters['status'] === 'Pending') {
+                    // Any stage pending
+                     if ($app->region_manager_status === 'Pending' || 
+                        $app->surveillance_status === 'Pending' || 
+                        $app->dts_status === 'Pending' || 
+                        $app->ceo_status === 'Pending') {
+                        // It is pending somewhere
+                    } else {
+                        return false; // Not pending (either fully approved or rejected)
                     }
                 }
             }
@@ -330,6 +360,7 @@ class LicenseModel extends Model
             $app->application_type = $apiData->application_info->application_type ?? 'New';
             $app->status = $apiData->application_info->status ?? 'Submitted';
             $app->control_number = $apiData->application_info->control_number ?? '';
+            $app->license_number = $apiData->application_info->license_number ?? '';
             $app->applied_date = $apiData->application_info->created_at ?? date('Y-m-d');
         }
         
@@ -356,17 +387,66 @@ class LicenseModel extends Model
             $app->company_name = $apiData->company_info->company_name ?? '';
             $app->tin_number = $apiData->company_info->tin_number ?? '';
             $app->registration_number = $apiData->company_info->registration_number ?? '';
+            $app->company_phone = $apiData->company_info->company_phone ?? '';
+            $app->company_email = $apiData->company_info->company_email ?? '';
             $app->business_region = $apiData->company_info->region ?? '';
             $app->business_district = $apiData->company_info->district ?? '';
+            $app->business_ward = $apiData->company_info->ward ?? '';
+            $app->postal_code = $apiData->company_info->postal_code ?? '';
+            $app->business_street = $apiData->company_info->street ?? '';
         }
         
         // Attachments (combine required and qualification)
         $app->attachments = [];
+        
+        // Document code to name mapping
+        $docMap = [
+            'tin' => 'Tax Payer Identification Number (TIN)',
+            'businessLicense' => 'Business License',
+            'bl' => 'Business License', // Fallback
+            'taxClearance' => 'Certificate Of Tax Clearance',
+            'tax_clearance' => 'Certificate Of Tax Clearance', // Fallback
+            'brela' => 'Certificate of Registration/Incorporation from BRELA',
+            'cert_inc' => 'Certificate of Registration/Incorporation from BRELA', // Fallback
+            'identity' => 'Identity Card (National ID / Driver\'s License / Voter ID)',
+            'id_card' => 'Identity Card (National ID / Driver\'s License / Voter ID)', // Fallback
+            
+            // Qualifications
+            'psle' => 'Primary School Leaving Certificate (PSLE)',
+            'csee' => 'Certificate of Secondary Education Examination (CSEE)',
+            'acsee' => 'Advanced Certificate of Secondary Education Examination (ACSEE)',
+            'veta' => 'Basic Certificate - Vocational Education and Training Authority (VETA)',
+            'nta4' => 'Basic Certificate (NTA Level 4)',
+            'nta5' => 'Technician Certificate (NTA Level 5)',
+            'nta6' => 'Ordinary Diploma (NTA Level 6)',
+            'specialized' => 'Other Specialized Certificates',
+            'bachelor' => 'Bachelor\'s Degree',
+            
+            // Legacy/Other
+            'lease' => 'Lease Agreement/Title Deed',
+            'osha' => 'OSHA Certificate',
+            'inspection' => 'Site Inspection Report',
+            'tech_staff_cv' => 'Technical Staff CV',
+            'tech_staff_cert' => 'Technical Staff Certificates',
+            'equip_list' => 'List of Equipment',
+            'workshop_layout' => 'Workshop Layout'
+        ];
+
         if (isset($apiData->required_attachments)) {
-            $app->attachments = array_merge($app->attachments, $apiData->required_attachments);
+            foreach($apiData->required_attachments as $att) {
+                if(isset($att->document_type) && isset($docMap[$att->document_type])) {
+                    $att->document_type = $docMap[$att->document_type];
+                }
+                $app->attachments[] = $att;
+            }
         }
         if (isset($apiData->qualification_documents)) {
-            $app->attachments = array_merge($app->attachments, $apiData->qualification_documents);
+             foreach($apiData->qualification_documents as $att) {
+                if(isset($att->document_type) && isset($docMap[$att->document_type])) {
+                    $att->document_type = $docMap[$att->document_type];
+                }
+                $app->attachments[] = $att;
+            }
         }
         
         // Qualifications
@@ -377,18 +457,184 @@ class LicenseModel extends Model
         
         // Approval History
         $app->approvals = $apiData->approval_history ?? [];
+        $app->approval_logs = $apiData->approval_history ?? [];
         
-        // Get approval statuses from the list data (fallback)
-        $applications = $this->getFilteredApplications([]);
-        foreach ($applications as $listApp) {
-            if ((isset($listApp->id) && $listApp->id == $id) || 
-                (isset($listApp->application_id) && $listApp->application_id == $id)) {
-                $app->region_manager_status = $listApp->region_manager_status ?? 'Pending';
-                $app->surveillance_status = $listApp->surveillance_status ?? 'Pending';
-                break;
+        // Completion Data (Tools, Qualifications, etc) - From API Response
+        $app->tools_list = $apiData->tools_list ?? [];
+        $app->qualifications_list = $apiData->qualifications_list ?? [];
+        $app->experience_list = $apiData->experience_list ?? [];
+        $app->previous_licenses_list = $apiData->previous_licenses_list ?? [];
+        
+        // Map status for view compatibility
+        $app->application_status = $app->status;
+
+        // Parse approval statuses from history
+        // Parse approval statuses from history
+        $app->region_manager_status = 'Pending';
+        $app->surveillance_status = 'Pending';
+        $app->dts_status = 'Pending';
+        $app->ceo_status = 'Pending';
+
+        if (!empty($app->approvals)) {
+            foreach ($app->approvals as $approval) {
+                if (($approval->stage ?? '') === 'Manager') {
+                    $app->region_manager_status = $approval->status ?? 'Pending';
+                }
+                if (($approval->stage ?? '') === 'Surveillance') {
+                    $app->surveillance_status = $approval->status ?? 'Pending';
+                }
+                if (($approval->stage ?? '') === 'DTS') {
+                    $app->dts_status = $approval->status ?? 'Pending';
+                }
+                if (($approval->stage ?? '') === 'CEO') {
+                    $app->ceo_status = $approval->status ?? 'Pending';
+                }
             }
         }
         
         return $app;
+    }
+    public function getLicenseTypesFromApi()
+    {
+        $apiUrl = 'http://localhost:8080/api/approval/license-types';
+        $apiKey = 'osa_approval_api_key_12345'; // TODO: Move to .env
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $apiUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'X-API-KEY: ' . $apiKey,
+            'Content-Type: application/json'
+        ]);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($httpCode !== 200 || !$response) {
+             log_message('error', 'Failed to fetch License Types from OSA API');
+             return [];
+        }
+        
+        return json_decode($response);
+    }
+
+    public function updateExamScores($id, $scores)
+    {
+        $apiUrl = 'http://localhost:8080/api/approval/update-exam-scores';
+        $apiKey = 'osa_approval_api_key_12345'; // TODO: Move to .env
+        
+        $data = [
+            'application_id' => $id,
+            'theory_score' => $scores['theory_score'],
+            'practical_score' => $scores['practical_score']
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $apiUrl);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'X-API-KEY: ' . $apiKey,
+            'Content-Type: application/json'
+        ]);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($httpCode === 200) {
+            return true;
+        } else {
+            log_message('error', 'Failed to update exam scores via API. HTTP Code: ' . $httpCode);
+            return false;
+        }
+    }
+
+    public function updateApplicationStatus($id, $status, $stage, $comment = '')
+    {
+        $apiUrl = 'http://localhost:8080/api/approval/update-status';
+        $apiKey = 'osa_approval_api_key_12345'; // TODO: Move to .env
+        
+        $action = ($status === 'Approved') ? 'Approve' : (($status === 'Rejected') ? 'Reject' : 'Pending');
+        
+        $data = [
+            'appId' => $id,
+            'action' => $action,
+            'stage' => $stage, // Legacy, kept for reference
+            'comment' => $comment,
+            'approver_id' => auth()->user()->id ?? 0 // Pass current user ID
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $apiUrl);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'X-API-KEY: ' . $apiKey,
+            'Content-Type: application/json'
+        ]);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($httpCode === 200) {
+            return true;
+        } else {
+            log_message('error', 'Failed to update application status via API. HTTP Code: ' . $httpCode . ' Response: ' . $response);
+            return false;
+        }
+    }
+
+    /**
+     * Get OSA Dashboard Statistics from API
+     */
+    public function getDashboardStats()
+    {
+        $apiUrl = 'http://localhost:8080/api/approval/dashboard/osa-stats';
+        $apiKey = 'osa_approval_api_key_12345'; // TODO: Move to .env
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $apiUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'X-API-KEY: ' . $apiKey,
+            'Content-Type: application/json'
+        ]);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($httpCode === 200 && $response) {
+            $data = json_decode($response, true);
+            if ($data) {
+                return $data;
+            }
+        }
+        
+        // Return default/empty stats if API fails
+        log_message('error', 'Failed to fetch OSA dashboard stats from API. HTTP Code: ' . $httpCode);
+        return [
+            'total_applications' => 0,
+            'approved_applications' => 0,
+            'pending_applications' => 0,
+            'rejected_applications' => 0,
+            'active_licenses' => 0,
+            'expired_licenses' => 0,
+            'license_stats' => [],
+            'regions' => [],
+            'financials' => [
+                'total_amount' => 0,
+                'application_fee' => 0,
+                'license_fee' => 0,
+                'paid_fee' => 0,
+                'pending_fee' => 0
+            ],
+            'monthly_data' => []
+        ];
     }
 }

@@ -51,6 +51,31 @@ class Database extends Config
         ],
     ];
 
+    /**
+     * WMA-MIS Database Connection
+     */
+    public array $wma = [
+        'DSN'          => '',
+        'hostname'     => '127.0.0.1',
+        'username'     => 'maalim',
+        'password'     => 'maalim',
+        'database'     => 'vessel_discharge',
+        'DBDriver'     => 'MySQLi',
+        'DBPrefix'     => '',
+        'pConnect'     => false,
+        'DBDebug'      => true,
+        'charset'      => 'utf8mb4',
+        'DBCollat'     => 'utf8mb4_general_ci',
+        'swapPre'      => '',
+        'encrypt'      => false,
+        'compress'     => false,
+        'strictOn'     => false,
+        'failover'     => [],
+        'port'         => 8889, // MAMP port as seen in other config
+        'socket'       => '/Applications/MAMP/tmp/mysql/mysql.sock', // Socket as seen in other config
+        'numberNative' => false,
+    ];
+
     //    /**
     //     * Sample database connection for SQLite3.
     //     *

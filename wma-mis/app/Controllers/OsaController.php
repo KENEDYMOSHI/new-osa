@@ -117,6 +117,26 @@ public function viewApplication($id)
   return view('Pages/Osa/ApplicationDetail',$data);
 }
 
+public function viewCompletedApplication($id)
+{
+  // Fetch application details from API
+  $application = $this->licenseModel->getApplicationById($id);
+  
+  if (!$application) {
+    return redirect()->to('completedApplications')->with('error', 'Application not found');
+  }
+
+  $data['page']=[
+    'title' => 'Application Profile',
+    'heading' => 'Application Profile',
+  ];
+
+  $data['user']= $this->user;
+  $data['application'] = $application;
+
+  return view('Pages/Osa/applicationCV',$data);
+}
+
 public function osaDashboard()
 {
   $data['page']=[
@@ -124,35 +144,9 @@ public function osaDashboard()
     'heading' => 'OSA Dashboard',
   ];
   $data['user']= $this->user;
-  // Mock data for dashboard
-  $data['dashboard_stats'] = [
-      'total_applications' => 450,
-      'approved_applications' => 120,
-      'pending_applications' => 30,
-      'rejected_applications' => 50,
-      'active_licenses' => 110,
-      'expired_licenses' => 10,
-      'regions' => [
-          ['name' => 'Dar es Salaam', 'count' => 150, 'percent' => 80, 'color' => 'primary'],
-          ['name' => 'Arusha', 'count' => 80, 'percent' => 60, 'color' => 'danger'],
-          ['name' => 'Mwanza', 'count' => 60, 'percent' => 50, 'color' => 'success'],
-          ['name' => 'Dodoma', 'count' => 40, 'percent' => 40, 'color' => 'warning'],
-      ],
-      'financials' => [
-          'total_amount' => 50000000,
-          'application_fee' => 5000000,
-          'license_fee' => 40000000,
-          'pending_fee' => 2000000,
-          'paid_fee' => 48000000,
-      ],
-      'license_stats' => [
-          ['name' => 'Class A License', 'count' => 45, 'percent' => 30, 'color' => 'info'],
-          ['name' => 'Class B License', 'count' => 35, 'percent' => 25, 'color' => 'primary'],
-          ['name' => 'Class C License', 'count' => 25, 'percent' => 20, 'color' => 'success'],
-          ['name' => 'Class D License', 'count' => 15, 'percent' => 15, 'color' => 'warning'],
-          ['name' => 'Class E License', 'count' => 10, 'percent' => 10, 'color' => 'danger'],
-      ]
-  ];
+  
+  // Fetch real data from backend API
+  $data['dashboard_stats'] = $this->licenseModel->getDashboardStats();
 
   return view('Pages/Osa/OsaDashboard',$data);
 }
@@ -173,20 +167,206 @@ public function applicationVerification()
 
   return view('Pages/Osa/ApplicationVerification',$data);
 }
+
+public function completedApplications()
+{
+    $filters = [
+        'name' => $this->request->getVar('name'),
+        'region' => $this->request->getVar('region'),
+        'license_type' => $this->request->getVar('license_type'),
+        'year' => $this->request->getVar('year'),
+        'dateRange' => $this->request->getVar('dateRange'),
+        'status' => 'Approved' // Enforce completed status
+    ];
+
+    $applications = $this->licenseModel->getFilteredApplications($filters);
+
+    $data['page'] = [
+        'title' => 'Completed Applications',
+        'heading' => 'Completed Applications'
+    ];
+    $data['user'] = $this->user;
+    $data['applications'] = $applications;
+    $data['filters'] = $filters;
+    
+    return view('Pages/Osa/completedApplications', $data);
+}
 public function examRemark()
 {
- 
-  $data['page']=[
-    'title' => 'Exam Remark',
-    'heading' => 'Exam Remark',
-  ];
+    $filters = [
+        'name' => $this->request->getVar('name'),
+        'region' => $this->request->getVar('region'),
+        'license_type' => $this->request->getVar('license_type'),
+        'year' => $this->request->getVar('year'),
+        'dateRange' => $this->request->getVar('dateRange')
+    ];
+
+    $applications = $this->licenseModel->getFilteredApplications($filters);
+
+    $data['page']=[
+        'title' => 'Exam Remark',
+        'heading' => 'Exam Remark',
+    ];
+
+    $data['user']= $this->user;
+    $data['applications'] = $applications;
+    $data['filters'] = $filters;
 
 
+    return view('Pages/Osa/ExamRemark',$data);
+}
 
+public function licenseReport()
+{
+    $db = \Config\Database::connect();
+    
+    // Get filters from request
+    $filters = [
+        'name' => $this->request->getVar('name'),
+        'region' => $this->request->getVar('region'),
+        'license_type' => $this->request->getVar('license_type'),
+        'year' => $this->request->getVar('year'),
+        'dateRange' => $this->request->getVar('dateRange'),
+        'company_name' => $this->request->getVar('company_name')
+    ];
 
-  $data['user']= $this->user;
+    // Build query for licenses
+    $builder = $db->table('licenses');
+    $builder->select('licenses.*, 
+                      practitioner_personal_infos.first_name,
+                      practitioner_personal_infos.last_name,
+                      practitioner_personal_infos.phone,
+                      practitioner_business_infos.company_name as business_name');
+    
+    // Join with users to get UUID
+    $builder->join('users', 'users.uuid = licenses.applicant_id', 'left');
+    
+    // Join with personal info
+    $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = licenses.applicant_id', 'left');
+    
+    // Join with business info
+    $builder->join('practitioner_business_infos', 'practitioner_business_infos.user_uuid = licenses.applicant_id', 'left');
+    
+    // Apply filters
+    if (!empty($filters['name'])) {
+        $builder->groupStart();
+        $builder->like('practitioner_personal_infos.first_name', $filters['name']);
+        $builder->orLike('practitioner_personal_infos.last_name', $filters['name']);
+        $builder->orLike('licenses.applicant_name', $filters['name']);
+        $builder->groupEnd();
+    }
+    
+    if (!empty($filters['region'])) {
+        $builder->where('licenses.region', $filters['region']);
+    }
+    
+    if (!empty($filters['license_type'])) {
+        $builder->where('licenses.license_type', $filters['license_type']);
+    }
+    
+    if (!empty($filters['company_name'])) {
+        $builder->like('licenses.company_name', $filters['company_name']);
+    }
+    
+    if (!empty($filters['year'])) {
+        $builder->where('YEAR(licenses.created_at)', $filters['year']);
+    }
+    
+    if (!empty($filters['dateRange'])) {
+        $dates = explode(' - ', $filters['dateRange']);
+        if (count($dates) == 2) {
+            $builder->where('licenses.created_at >=', $dates[0]);
+            $builder->where('licenses.created_at <=', $dates[1] . ' 23:59:59');
+        }
+    }
+    
+    $builder->orderBy('licenses.created_at', 'DESC');
+    $licenses = $builder->get()->getResult();
 
-  return view('Pages/Osa/ExamRemark',$data);
+    $data['page'] = [
+        'title' => 'License Report',
+        'heading' => 'Issued Licenses Report',
+    ];
+
+    $data['user'] = $this->user;
+    $data['licenses'] = $licenses;
+    $data['filters'] = $filters;
+
+    return view('Pages/Osa/LicenseReport', $data);
+}
+
+public function saveExamRemark()
+{
+    $application_id = $this->request->getVar('application_id');
+    $theory_score = $this->request->getVar('theory_score');
+    $practical_score = $this->request->getVar('practical_score');
+    
+    $updated = $this->licenseModel->updateExamScores($application_id, [
+        'theory_score' => $theory_score,
+        'practical_score' => $practical_score
+    ]);
+
+    if ($updated) {
+        return redirect()->to('examRemark')->with('success', 'Exam scores updated successfully');
+    } else {
+        return redirect()->to('examRemark')->with('error', 'Failed to update exam scores');
+    }
+}
+
+public function approveApplication()
+{
+    $applicationId = $this->request->getVar('application_id');
+    $comment = $this->request->getVar('comment') ?? '';
+    
+    // Determine stage based on user group
+    $stage = 0;
+    if ($this->user->inGroup('manager')) {
+        $stage = 1;
+    } elseif ($this->user->inGroup('surveillance')) {
+        $stage = 2;
+    } elseif ($this->user->inGroup('dts')) { // Technical Director
+        $stage = 3;
+    } elseif ($this->user->inGroup('ceo')) { // CEO
+        $stage = 4;
+    } else {
+        return redirect()->back()->with('error', 'Unauthorized access');
+    }
+
+    $updated = $this->licenseModel->updateApplicationStatus($applicationId, 'Approved', $stage, $comment);
+
+    if ($updated) {
+        return redirect()->back()->with('success', 'Application approved successfully');
+    } else {
+        return redirect()->back()->with('error', 'Failed to approve application');
+    }
+}
+
+public function rejectApplication()
+{
+    $applicationId = $this->request->getVar('application_id');
+    $comment = $this->request->getVar('comment') ?? '';
+
+    // Determine stage based on user group
+    $stage = 0;
+    if ($this->user->inGroup('manager')) {
+        $stage = 1;
+    } elseif ($this->user->inGroup('surveillance')) {
+        $stage = 2;
+    } elseif ($this->user->inGroup('dts')) { // Technical Director
+        $stage = 3;
+    } elseif ($this->user->inGroup('ceo')) { // CEO
+        $stage = 4;
+    } else {
+        return redirect()->back()->with('error', 'Unauthorized access');
+    }
+
+    $updated = $this->licenseModel->updateApplicationStatus($applicationId, 'Rejected', $stage, $comment);
+
+    if ($updated) {
+        return redirect()->back()->with('success', 'Application rejected successfully');
+    } else {
+        return redirect()->back()->with('error', 'Failed to reject application');
+    }
 }
 
 
