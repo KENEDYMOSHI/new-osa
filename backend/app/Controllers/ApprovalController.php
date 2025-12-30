@@ -159,17 +159,7 @@ class ApprovalController extends BaseController
 
         $db = \Config\Database::connect();
         
-        // 1. Resolve Application ID (Handle Item ID vs App ID)
-        // Check if the passed ID is actually an Item ID
-        $itemBuilder = $db->table('license_application_items');
-        $item = $itemBuilder->where('id', $id)->get()->getRow();
-        
-        $applicationId = $id; // Default to assuming it's an App ID
-        if ($item) {
-             $applicationId = $item->application_id;
-        }
-
-        // 2. Get main application data using the resolved ID
+        // 1. Get main application data
         $appBuilder = $db->table('license_applications');
         $appBuilder->select('
             license_applications.*,
@@ -179,7 +169,7 @@ class ApprovalController extends BaseController
             osabill.amount as bill_amount
         ');
         $appBuilder->join('osabill', 'osabill.bill_id = license_applications.id', 'left');
-        $appBuilder->where('license_applications.id', $applicationId);
+        $appBuilder->where('license_applications.id', $id);
         $application = $appBuilder->get()->getRow();
         
         if (!$application) {
@@ -239,7 +229,7 @@ class ApprovalController extends BaseController
         // 4. Get all attachments with category
         $attachmentBuilder = $db->table('license_application_attachments');
         $attachmentBuilder->select('id, user_id, application_id, document_type, original_name as file_name, document_type as type, mime_type, status, category, created_at'); // Include category
-        $attachmentBuilder->where('application_id', $applicationId);
+        $attachmentBuilder->where('application_id', $id);
         $attachments = $attachmentBuilder->get()->getResult();
         
         // Categorize attachments based on database category field
@@ -263,7 +253,7 @@ class ApprovalController extends BaseController
         
         // 6. Get license items
         $itemBuilder = $db->table('license_application_items');
-        $itemBuilder->where('application_id', $applicationId);
+        $itemBuilder->where('application_id', $id);
         $licenseItems = $itemBuilder->get()->getResult();
         
         // Map license items
@@ -280,8 +270,9 @@ class ApprovalController extends BaseController
         }
         
         // 7. Get approval history
+        // 7. Get approval history
         $reviews = $db->table('application_reviews')
-                      ->where('application_id', $applicationId)
+                      ->where('application_id', $id)
                       ->get()->getResultArray();
         
         $reviewsByStage = [];
@@ -309,7 +300,7 @@ class ApprovalController extends BaseController
         }
         
         // 8. Get Completion Data (Tools, Qualifications, etc. from License Completions)
-        $completions = $db->table('license_completions')->where('application_id', $applicationId)->get()->getRow();
+        $completions = $db->table('license_completions')->where('application_id', $id)->get()->getRow();
         
         $toolsList = [];
         $qualificationsList = [];

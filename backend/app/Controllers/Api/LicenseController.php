@@ -8,6 +8,8 @@ use App\Models\LicenseApplicationModel;
 use App\Models\LicenseApplicationItemModel;
 use App\Models\LicenseApplicationAttachmentModel;
 use App\Models\LicenseCompletionModel;
+use App\Models\ApplicationTypeFeeModel;
+use App\Models\InitialApplicationModel;
 use CodeIgniter\Shield\Models\UserModel;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
@@ -506,6 +508,12 @@ class LicenseController extends ResourceController
         $db = \Config\Database::connect();
         $db->transStart();
 
+        // Generate a Batch ID for this submission session to link independent licenses
+        $batchId = $this->generateUuid();
+        if (!method_exists($this, 'generateUuid')) {
+             $batchId = md5(uniqid(rand(), true));
+        }
+
         try {
             $createdApplications = [];
             $generatedBills = [];
@@ -516,6 +524,21 @@ class LicenseController extends ResourceController
             // Initialize models for completion and application updates
             $completionModel = new LicenseCompletionModel();
             $appModel = new LicenseApplicationModel();
+            $initAppModel = new InitialApplicationModel();
+
+            // Create Initial Application Record (Parent)
+            $initAppData = [
+                'id' => $batchId,
+                'user_id' => $userId,
+                'application_type' => $applicationType ?? 'New',
+                'status' => 'Submitted',
+                'workflow_stage' => 'Manager' // Default stage
+            ];
+            
+            // Check if we already have this batch (unlikely with UUID but safe)
+            if (!$initAppModel->find($batchId)) {
+                $initAppModel->insert($initAppData);
+            }
 
             $lastBillData = null;
 
@@ -559,14 +582,33 @@ class LicenseController extends ResourceController
                 }
                 
                 $isCitizen = (stripos($nationality, 'Tanzania') !== false);
-                $appFee = $isCitizen ? 50000 : 100000; // Application Fee logic
+                
+                // Determine Fee Amount based on Citizenship and Application Type
+                $feeModel = new ApplicationTypeFeeModel();
+                $feeCategory = $isCitizen ? 'Citizen' : 'Non-Citizen';
+                $defaultFee = $isCitizen ? 50000 : 200000;
+                
+                // Fetch configured fee (Use 'New' as default application type if not specified or specific type not found)
+                // Note: application_type in DB might match $applicationType variable (New, Renewal, etc.)
+                $feeRecord = $feeModel->where('application_type', $applicationType)
+                                      ->where('nationality', $feeCategory)
+                                      ->first();
+                
+                // If not found for specific type, try generic 'New' as fallback if current is not 'New'
+                if (!$feeRecord && $applicationType !== 'New') {
+                     $feeRecord = $feeModel->where('application_type', 'New')
+                                      ->where('nationality', $feeCategory)
+                                      ->first();
+                }
+
+                $appFee = $feeRecord ? (float)$feeRecord['amount'] : $defaultFee;
+
 
                 if (!$isEligible) {
                     // NEW APPLICATION (Phase 1)
                      log_message('error', '[LicenseSubmission] New Application for: ' . $licenseName . ' (Fee: ' . $appFee . ')');
                      
                      $newAppId = $this->generateUuid(); // Use built-in generateUuid if available or md5/uniqid
-                     // If generateUuid is not available in Controller, use md5(uniqid())
                      if (!method_exists($this, 'generateUuid')) {
                         $newAppId = md5(uniqid(rand(), true));
                      } else {
@@ -575,6 +617,7 @@ class LicenseController extends ResourceController
 
                      $appData = [
                         'id' => $newAppId,
+                        'initial_application_id' => $batchId, // Link independent licenses via Batch ID
                         'user_id' => $userId,
                         'status' => 'Pending',
                         'approval_stage' => 'Manager', // Start flow
@@ -595,6 +638,26 @@ class LicenseController extends ResourceController
                         'updated_at' => date('Y-m-d H:i:s')
                      ];
                      $db->table('license_application_items')->insert($itemData);
+
+                     // Copy Attachments (Phase 1)
+                     if (!empty($draftAttachments)) {
+                        foreach ($draftAttachments as $draft) {
+                            $attId = md5(uniqid(rand(), true));
+                            $attData = [
+                               'id' => $attId,
+                               'user_id' => $userId,
+                               'application_id' => $newAppId,
+                               'document_type' => $draft->document_type,
+                               'category' => $draft->category, // Preserve category
+                               'file_path' => $draft->file_path,
+                               'original_name' => $draft->original_name,
+                               'mime_type' => $draft->mime_type,
+                               'file_content' => $draft->file_content, // Make sure to copy BLOB
+                               'status'    => 'Uploaded'
+                            ];
+                            $attachmentModel->insert($attData);
+                        }
+                    }
                      
                      // Use NEW ID for Bill and reference
                      $appId = $newAppId;
@@ -639,7 +702,7 @@ class LicenseController extends ResourceController
                         'approval_stage' => 'DTS' 
                     ]);
                     
-                    // Copy Attachments
+                    // Copy Attachments (Phase 2)
                     if (!empty($draftAttachments)) {
                         foreach ($draftAttachments as $draft) {
                             $attId = md5(uniqid(rand(), true));
@@ -648,9 +711,11 @@ class LicenseController extends ResourceController
                                'user_id' => $userId,
                                'application_id' => $appId,
                                'document_type' => $draft->document_type,
+                               'category' => $draft->category,
                                'file_path' => $draft->file_path,
                                'original_name' => $draft->original_name,
                                'mime_type' => $draft->mime_type,
+                               'file_content' => $draft->file_content, // Ensure content is copied
                                'status'    => 'Uploaded'
                             ];
                             $attachmentModel->insert($attData);
@@ -702,6 +767,15 @@ class LicenseController extends ResourceController
                     'amount' => $fee,
                     'billId' => $billId
                 ];
+            }
+
+            // Delete Draft Attachments after successful usage
+            if (!empty($draftAttachments)) {
+                 foreach ($draftAttachments as $draft) {
+                     // Delete the database record. 
+                     // Since we copied the file_content/path to new records, this drafts are no longer needed.
+                     $attachmentModel->delete($draft->id);
+                 }
             }
 
             if (empty($createdApplications)) {
@@ -885,11 +959,21 @@ class LicenseController extends ResourceController
         foreach ($applications as $app) {
             // Get license items for this application
             $itemBuilder = $db->table('license_application_items');
+            $itemBuilder->select('license_application_items.*, license_types.fee as type_fee');
+            $itemBuilder->join('license_types', 'license_types.name = license_application_items.license_type', 'left');
             $itemBuilder->where('application_id', $app['id']);
             $items = $itemBuilder->get()->getResultArray();
             
             $licenseTypes = array_column($items, 'license_type');
             $licenseClass = !empty($licenseTypes) ? implode(', ', $licenseTypes) : 'N/A';
+
+            // Calculate Fees from Items
+            $totalLicenseFee = 0;
+            $totalAppFee = 0;
+            foreach ($items as $item) {
+                $totalLicenseFee += (float)($item['type_fee'] ?? 0);
+                $totalAppFee += (float)($item['fee'] ?? 0); 
+            }
             
             // Determine progress and steps based on status and approval_stage
             $stageMap = [
@@ -988,11 +1072,9 @@ class LicenseController extends ResourceController
             $nationality = $app['nationality'] ?? 'Tanzanian';
             $isTanzanian = strcasecmp($nationality, 'Tanzanian') === 0;
             
-            // Use total_amount from license_applications table as the Application Fee
-            $applicationFee = $app['total_amount'];
-            
-            // Fallback for License Fee to bill_amount only, as total_amount is now Application Fee
-            $licenseFee = $app['bill_amount'] ?? 0;
+            // Use calculated values from items
+            $applicationFee = $totalAppFee;
+            $licenseFee = $totalLicenseFee;
 
             // Format text
             $applicationFeeText = number_format($applicationFee, 2);
