@@ -676,7 +676,7 @@
                 <div class="space-y-1 max-h-40 overflow-y-auto custom-scrollbar pr-1">
                     <label *ngFor="let inst of license.availableInstruments" 
                            class="flex items-start space-x-2 p-1.5 rounded transition-colors select-none group"
-                           [ngClass]="{'cursor-pointer hover:bg-white': !license.submitted && (!isMaxReached(license) || license.userSelectedInstruments?.includes(inst)), 'opacity-50 cursor-not-allowed': !license.submitted && isMaxReached(license) && !license.userSelectedInstruments?.includes(inst)}">
+                           [ngClass]="{'cursor-pointer hover:bg-white': !license.submitted && (!isMaxReached(license) || license.userSelectedInstruments?.includes(inst)), 'opacity-50 cursor-not-allowed': !license.submitted && isMaxReached(license) && !license.userSelectedInstruments?.includes(inst), 'hidden': !license.submitted && isMaxReached(license) && !license.userSelectedInstruments?.includes(inst)}">
                         <input type="checkbox" 
                                [checked]="license.userSelectedInstruments?.includes(inst)"
                                (change)="toggleInstrument(license, inst, $event)"
