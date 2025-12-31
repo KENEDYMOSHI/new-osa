@@ -152,21 +152,64 @@ class DocumentService
             $category = in_array(strtolower($documentType), $qualificationTypes) ? 'qualification' : 'attachment';
         }
 
-        // 6. Save to DB with MANDATORY application_id and preserved category
-        $data = [
-            'id' => (string) \CodeIgniter\Uuid::uuid4(),
-            'user_id' => $userId,
-            'application_id' => $appId, // CRITICAL: This must NEVER be null
-            'document_type' => $documentType,
-            'category' => $category, // PRESERVED from existing or auto-determined
-            'file_path' => 'uploads/licenses/' . $newName,
-            'original_name' => $file->getClientName(),
-            'mime_type' => $file->getClientMimeType(),
-            'status' => 'Draft', // Always Draft initially until saved/submitted
-        ];
-        
-        $this->attachmentModel->insert($data);
-        return $data;
+        // 6. Save to DB
+        // UPDATE if exists to preserve ID (Fixes 404 in WMA-MIS when viewing re-uploaded docs)
+        if ($existingDoc) {
+             $data = [
+                'user_id' => $userId, // Ensure user ownership stays correct
+                // application_id - cannot change
+                // document_type - matches check
+                // category - preserved above
+                'file_path' => 'uploads/licenses/' . $newName,
+                'original_name' => $file->getClientName(),
+                'mime_type' => $file->getClientMimeType(),
+                'status' => 'Submitted', // Change status to Submitted (or 'Resubmitted'?) User usually expects 'Resubmitted' or just cleared 'Returned'.
+                                         // If we set 'Submitted', it clears 'Returned'.
+                                         // Let's use 'Draft' or 'Submitted' depending on flow. Logic below says 'Draft'.
+                                         // Let's stick to 'Draft' so they can review before submitting app, OR 'Resubmitted' if it was returned.
+                                         // If it was 'Returned', updating it should probably make it 'Resubmitted' or 'Draft'?
+                                         // Based on current logic `status => 'Draft'`, let's stick to 'Draft' or 'Resubmitted' if we want to signal change.
+                                         // However, existing logic lines 165 says 'Draft'. Let's keep 'Draft' or 'Resubmitted' if previous was Returned.
+             ];
+             
+             // If previous status was Returned, auto-switch to Resubmitted?
+             // Or keep Draft until they hit "Submit" button?
+             // Frontend usually requires explicit submit button? 
+             // The frontend flow for re-upload for "Returned" items usually auto-submits or asks for submit?
+             // Current insert logic sets 'Draft'. Let's keep it 'Draft' for consistency, or 'Resubmitted' if improving.
+             // Let's allow 'Resubmitted' if it was 'Returned' to save a step, OR sticking to 'Draft'.
+             // SAFEST: Update everything.
+             
+             $data['status'] = 'Resubmitted'; // Auto-resubmit for returned docs so Admin sees the change
+             $data['rejection_reason'] = null; // Clear rejection reason
+             
+             // If it wasn't returned (e.g. Draft overwrite), keep Draft
+             if ($existingDoc->status === 'Draft') {
+                 $data['status'] = 'Draft';
+             }
+
+             $this->attachmentModel->update($existingDoc->id, $data);
+             
+             // Return existing doc with updated data
+             $existingDoc = (array)$existingDoc; // convert to array if object
+             return array_merge($existingDoc, $data);
+        } else {
+            // INSERT NEW
+            $data = [
+                'id' => (string) \CodeIgniter\Uuid::uuid4(),
+                'user_id' => $userId,
+                'application_id' => $appId,
+                'document_type' => $documentType,
+                'category' => $category,
+                'file_path' => 'uploads/licenses/' . $newName,
+                'original_name' => $file->getClientName(),
+                'mime_type' => $file->getClientMimeType(),
+                'status' => 'Draft',
+            ];
+            
+            $this->attachmentModel->insert($data);
+            return $data;
+        }
     }
 
     public function deleteDocument($appId, $docId)

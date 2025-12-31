@@ -409,57 +409,19 @@ export class LicenseApplicationComponent implements OnInit {
         return;
       }
       
-      // Check if this is a returned document that needs to be deleted first
-      if (targetDoc && targetDoc.status === 'Returned' && targetDoc.dbId) {
-        // Show loading
-        Swal.fire({
-          title: 'Processing...',
-          text: 'Removing old document and uploading new one...',
-          allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
-        });
-
-        // Delete the returned document first
-        this.licenseService.deleteDocument(targetDoc.dbId).subscribe({
-          next: () => {
-            console.log('Returned document deleted successfully');
-            // Reset document status
-            targetDoc.status = 'Not Uploaded';
-            targetDoc.date = '-';
-            targetDoc.fileName = null;
-            targetDoc.dbId = null;
-            targetDoc.rejectionReason = undefined;
-            targetDoc.viewed = false;
-            
-            // Now proceed with upload
-            this.proceedWithUpload(file, documentType, event, targetDoc);
-          },
-          error: (err: any) => {
-            console.error('Failed to delete returned document', err);
-            Swal.fire({
-              icon: 'error',
-              title: 'Delete Failed',
-              text: 'Failed to remove the old document. Please try again.',
-            });
-            event.target.value = '';
-            this.selectedDoc = null;
-          }
-        });
-      } else {
-        // Normal upload (no returned document to delete)
-        Swal.fire({
-          title: 'Uploading...',
-          text: 'Please wait while your document is being uploaded.',
-          allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
-        });
-        
-        this.proceedWithUpload(file, documentType, event, targetDoc);
-      }
+      // DIRECT UPDATE Logic: Do not delete old document.
+      // The backend DocumentService will handle updating the existing record to preserve the ID.
+      
+      Swal.fire({
+        title: 'Uploading...',
+        text: 'Please wait while your document is being uploaded.',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      
+      this.proceedWithUpload(file, documentType, event, targetDoc);
     }
   }
 
