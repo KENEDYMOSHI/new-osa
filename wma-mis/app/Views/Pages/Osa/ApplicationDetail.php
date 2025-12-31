@@ -697,6 +697,22 @@
                                                                 <div>
                                                                     <span class="font-weight-bold text-dark d-block"><?= $item->license_name ?? $item->type ?? $item->name ?? 'License' ?></span>
                                                                     <small class="text-muted">License Class</small>
+                                                                    <?php if (!empty($item->selected_instruments)): ?>
+                                                                        <div class="mt-1" style="font-size: 0.8rem; line-height: 1.3;">
+                                                                            <span class="text-success font-weight-bold" style="font-size: 0.75rem;">Selected Instruments:</span>
+                                                                            <br>
+                                                                            <span class="text-dark">
+                                                                                <?php 
+                                                                                    // Handle potential double encoding or direct array
+                                                                                    $rawInsts = $item->selected_instruments;
+                                                                                    $insts = is_string($rawInsts) ? json_decode($rawInsts) : $rawInsts;
+                                                                                    if (is_string($insts)) $insts = json_decode($insts); // Double decode check
+                                                                                    
+                                                                                    echo !empty($insts) && is_array($insts) ? implode(', ', $insts) : 'None';
+                                                                                ?>
+                                                                            </span>
+                                                                        </div>
+                                                                    <?php endif; ?>
                                                                 </div>
                                                             </div>
                                                         </td>
