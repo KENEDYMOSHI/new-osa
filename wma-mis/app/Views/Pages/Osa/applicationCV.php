@@ -317,7 +317,22 @@
                         <?php $i = 1; foreach ($application->license_items as $item): ?>
                         <tr>
                             <td><?= $i++ ?></td>
-                            <td><?= $item->type ?? 'N/A' ?></td>
+                            <td>
+                                <?= $item->type ?? 'N/A' ?>
+                                <?php if (!empty($item->selected_instruments)): ?>
+                                    <div style="font-size: 11px; margin-top: 4px; color: #666; line-height: 1.3;">
+                                        <div style="font-weight: 600; color: #2c5f2d; margin-bottom: 2px;">Selected Instruments:</div>
+                                        <?php 
+                                            // Handle potential double encoding or direct array
+                                            $rawInsts = $item->selected_instruments;
+                                            $insts = is_string($rawInsts) ? json_decode($rawInsts) : $rawInsts;
+                                            if (is_string($insts)) $insts = json_decode($insts); // Double decode check
+                                            
+                                            echo !empty($insts) && is_array($insts) ? implode(', ', $insts) : 'None';
+                                        ?>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
                             <td>TZS <?= number_format($item->application_fee ?? 0, 2) ?></td>
                             <td><?= $item->control_number ?? 'Pending' ?></td>
                             <td>TZS <?= number_format($item->fee ?? 0, 2) ?></td>

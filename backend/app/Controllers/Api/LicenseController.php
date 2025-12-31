@@ -650,11 +650,14 @@ class LicenseController extends ResourceController
                      $db->table('license_applications')->insert($appData);
                      
                      // Insert Item
+                     $selectedInstruments = $item['selectedInstruments'] ?? [];
+                     
                      $itemData = [
                         'id' => md5(uniqid(rand(), true)),
                         'application_id' => $newAppId,
                         'license_type' => $licenseName,
-                        'fee' => $appFee, // Correct column name is 'fee'
+                        'fee' => $appFee, 
+                        'selected_instruments' => !empty($selectedInstruments) ? json_encode($selectedInstruments) : null,
                         'created_at' => date('Y-m-d H:i:s'),
                         'updated_at' => date('Y-m-d H:i:s')
                      ];
