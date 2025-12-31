@@ -78,4 +78,4 @@ sentensi itakayo kua ina ji generati kutokana na selection ni Select a minimum o
 design License Fee na action icon zikae vizuri punguza font kidogo kwenye License Fee zikae sawa kwemye line moja
 
 kwenye applicant portal kwenye module ya initial application kwenye card ya License Type Selection
-Select the license class types you would like to apply for. design kila card iwe ina uwezo wakuonesha SELECTED INSTRUMENTS na kue na check box ambayo itafuata condtion zilizoko kwenye criteria weka design ambayo haito aribu iliko na kila kitu kifanye kazi kama kilivyo kuwepo ✅ Implimented
+Select the license class types you would like to apply for. design kila card iwe ina uwezo wakuonesha SELECTED INSTRUMENTS na kue na check box ambayo itafuata condtion zilizoko kwenye criteria weka design ambayo haito aribu iliko na kila kitu kifanye kazi kama kilivyo kuwepo ✅ Implimenteddes
