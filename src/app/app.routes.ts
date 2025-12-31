@@ -141,6 +141,11 @@ export const routes: Routes = [
         title: 'Notifications | WMA Online Services Portal'
       },
       {
+        path: 'support-help',
+        loadComponent: () => import('./pages/support-help/support-help.component').then(m => m.SupportHelpComponent),
+        title: 'Help & Support | WMA Online Services Portal'
+      },
+      {
         path: 'osa/settings',
         loadComponent: () => import('./pages/osa/license-settings/license-settings.component').then(m => m.LicenseSettingsComponent),
         title: 'License Settings | WMA Online Services Portal'

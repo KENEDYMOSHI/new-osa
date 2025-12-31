@@ -37,3 +37,24 @@ In the WMA-MIS system, the Attachments Uploaded section shall display all docume
 For Required Attachments and Qualification Documents, the system shall dynamically determine and display the required documents based on the document category linked to the specific license being applied for. The system must retrieve and validate these document requirements by referencing the license_application_attachments table, ensuring that only documents relevant to the selected license category are shown, requested, and evaluated. This approach guarantees that applicants upload the correct documents per license type, while maintaining data integrity, proper document separation, and accurate approval decisions for each individual license application fix very carefully
 
 Kwenye mfumo wa applicant module ya notification badilisha design weka design hii ionekane hivi kama ilivyo kwenye picha 
+ Kwenye module ya License Setting kwenye WMA-MIS engeza tabs moja ya support/help ambayo itakua na field yakuingiza hizi input Wakala wa Vipimo (WMA)
+Vipimo House, Chief Chemist Street
+S.L.P. 2014, Dodoma – Tanzania
+
+📞 Simu:
++255 (26) 22610700
+
+📧 Barua Pepe (Maswali ya Jumla):
+info@wma.go.tz
+
+📧 Barua Pepe (Msaada wa Kiufundi):
+ictsupport@wma.go.tz
+
+🌐 Tovuti:
+www.wma.go.tz. 
+
+tengeneza  sehemu  hii na table yake yakusave data hizi tengeneza kwenye osa_app usibadili usiharibu chochote fanya kwa umakini 
+
+Kwenye mfumo wa applicantusivuruge chochote   kwenye module ya notification wakati wa Message Preview  kwenye kila anavyo priview itokee chini kile kisehem taarifa message inayokua preview na applicant za support/help kitokee muundo wa anuani itavuta kwenye table ya osa_support_details 
+
+impliment kwenye applicant portal kwenye module ya support-help chukua kwenye database kwenye table ya osa_support_details nakuonyesha hapo 

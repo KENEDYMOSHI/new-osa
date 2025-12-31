@@ -1,6 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { NotificationService, Notification } from '../../services/notification.service';
+
+interface SupportDetails {
+  address: string;
+  phone_label_1?: string;
+  phone_number_1?: string;
+  phone_label_2?: string;
+  phone_number_2?: string;
+  phone_label_3?: string;
+  phone_number_3?: string;
+  email_general?: string;
+  email_tech?: string;
+  website?: string;
+}
 
 interface Message {
   id: string;
@@ -30,11 +44,16 @@ export class NotificationsComponent implements OnInit {
   filteredMessages: Message[] = [];
   selectedMessage: Message | null = null;
   activeFilter: 'all' | 'unread' | 'read' | 'starred' = 'all';
+  supportDetails: SupportDetails | null = null;
   
-  constructor(private notificationService: NotificationService) {}
+  constructor(
+    private notificationService: NotificationService,
+    private http: HttpClient
+  ) {}
 
   ngOnInit(): void {
     this.loadNotifications();
+    this.loadSupportDetails();
   }
 
   loadNotifications(): void {
@@ -150,5 +169,17 @@ export class NotificationsComponent implements OnInit {
 
   get starredCount(): number {
     return this.messages.filter(m => m.isStarred).length;
+  }
+
+  loadSupportDetails(): void {
+    this.http.get<SupportDetails>('http://localhost:8081/licenseSetting/getSupportDetails')
+      .subscribe({
+        next: (details) => {
+          this.supportDetails = details;
+        },
+        error: (error) => {
+          console.error('Error loading support details:', error);
+        }
+      });
   }
 }

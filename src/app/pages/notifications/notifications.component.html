@@ -130,6 +130,57 @@
         <div class="message-text">
           <div class="message-text" [innerHTML]="selectedMessage.content"></div>
         </div>
+        
+        <!-- Support/Help Information -->
+        <div class="support-info" *ngIf="supportDetails">
+          <div class="support-divider"></div>
+          <div class="support-content">
+            <h4 class="support-title">Need Help?</h4>
+            <div class="support-details">
+              <!-- Organization Address -->
+              <div class="support-section" *ngIf="supportDetails.address">
+                <p class="support-org">Weights and Measures Agency</p>
+                <p class="support-address">{{ supportDetails.address }}</p>
+              </div>
+              
+              <!-- Phone Numbers -->
+              <div class="support-section" *ngIf="supportDetails.phone_number_1 || supportDetails.phone_number_2 || supportDetails.phone_number_3">
+                <div class="support-item" *ngIf="supportDetails.phone_number_1">
+                  <span class="support-label">{{ supportDetails.phone_label_1 || 'Tel' }}:</span>
+                  <span class="support-value">{{ supportDetails.phone_number_1 }}</span>
+                </div>
+                <div class="support-item" *ngIf="supportDetails.phone_number_2">
+                  <span class="support-label">{{ supportDetails.phone_label_2 || 'Tel' }}:</span>
+                  <span class="support-value">{{ supportDetails.phone_number_2 }}</span>
+                </div>
+                <div class="support-item" *ngIf="supportDetails.phone_number_3">
+                  <span class="support-label">{{ supportDetails.phone_label_3 || 'Tel' }}:</span>
+                  <span class="support-value">{{ supportDetails.phone_number_3 }}</span>
+                </div>
+              </div>
+              
+              <!-- Email Addresses -->
+              <div class="support-section" *ngIf="supportDetails.email_general || supportDetails.email_tech">
+                <div class="support-item" *ngIf="supportDetails.email_general">
+                  <span class="support-label">Email:</span>
+                  <a [href]="'mailto:' + supportDetails.email_general" class="support-link">{{ supportDetails.email_general }}</a>
+                </div>
+                <div class="support-item" *ngIf="supportDetails.email_tech">
+                  <span class="support-label">Technical Support:</span>
+                  <a [href]="'mailto:' + supportDetails.email_tech" class="support-link">{{ supportDetails.email_tech }}</a>
+                </div>
+              </div>
+              
+              <!-- Website -->
+              <div class="support-section" *ngIf="supportDetails.website">
+                <div class="support-item">
+                  <span class="support-label">Website:</span>
+                  <a [href]="'https://' + supportDetails.website" target="_blank" class="support-link">{{ supportDetails.website }}</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

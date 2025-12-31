@@ -487,3 +487,89 @@
     height: 50vh;
   }
 }
+
+/* Support/Help Information */
+.support-info {
+  margin-top: 40px;
+  padding-top: 30px;
+}
+
+.support-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, #e5e7eb 0%, #e5e7eb 50%, transparent 100%);
+  margin-bottom: 24px;
+}
+
+.support-content {
+  background: #f9fafb;
+  border-left: 3px solid #3b82f6;
+  padding: 20px 24px;
+  border-radius: 8px;
+}
+
+.support-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #3b82f6;
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.support-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.support-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.support-org {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.support-address {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.support-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.support-label {
+  font-weight: 600;
+  color: #374151;
+  min-width: 140px;
+}
+
+.support-value {
+  color: #6b7280;
+}
+
+.support-link {
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.support-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}

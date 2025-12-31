@@ -4,16 +4,19 @@ namespace App\Controllers;
 
 use App\Models\ApplicationTypeFeeModel;
 use App\Models\LicenseTypeModel;
+use App\Models\OsaSupportModel;
 
 class LicenseSettingController extends BaseController
 {
     protected $feeModel;
     protected $licenseTypeModel;
+    protected $supportModel;
 
     public function __construct()
     {
         $this->feeModel = new ApplicationTypeFeeModel();
         $this->licenseTypeModel = new LicenseTypeModel();
+        $this->supportModel = new OsaSupportModel();
     }
 
     public function index()
@@ -213,5 +216,48 @@ class LicenseSettingController extends BaseController
     {
         // Keep existing migration logic for emergency use
         echo "Please use command line for migrations.";
+    }
+
+    // ==================== SUPPORT SETTINGS ====================
+
+    public function getSupportDetails()
+    {
+        try {
+            $details = $this->supportModel->first();
+            return $this->response->setJSON($details ?: []);
+        } catch (\Exception $e) {
+            return $this->response->setJSON([]);
+        }
+    }
+
+    public function saveSupportDetails()
+    {
+        try {
+            $data = $this->request->getJSON(true);
+            
+            if (empty($data)) {
+                return $this->response->setStatusCode(400)->setJSON(['status' => 'error', 'message' => 'No data provided']);
+            }
+
+            // Always update the first row as it's a single config table
+            $existing = $this->supportModel->first();
+            
+            if ($existing) {
+                $this->supportModel->update($existing['id'], $data);
+            } else {
+                $this->supportModel->insert($data);
+            }
+
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Support details saved successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 }

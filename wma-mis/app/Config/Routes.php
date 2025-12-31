@@ -259,6 +259,10 @@ $routes->group('', ['filter' => 'AuthFilter'], function ($routes, $appRoutes = [
     $appRoutes['licenseSetting/updateLicenseType/(:any)'] = 'LicenseSettingController::updateLicenseType/$1';
     $appRoutes['licenseSetting/deleteLicenseType/(:any)'] = 'LicenseSettingController::deleteLicenseType/$1';
     
+    // Support/Help Settings
+    $appRoutes['licenseSetting/getSupportDetails'] = 'LicenseSettingController::getSupportDetails';
+    $appRoutes['licenseSetting/saveSupportDetails'] = 'LicenseSettingController::saveSupportDetails';
+
     $appRoutes['run-migration'] = 'LicenseSettingController::runMigration';
 
     // Print Application

@@ -35,6 +35,11 @@
                                 <i class="fal fa-file-certificate mr-2"></i>License Application Fee Configuration
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="support-help-tab" data-toggle="pill" href="#support-help" role="tab" aria-controls="support-help" aria-selected="false">
+                                <i class="fal fa-headset mr-2"></i>Support/Help
+                            </a>
+                        </li>
                     </ul>
                 </div>
                 <div class="card-body">
@@ -167,6 +172,184 @@
                                                 <i class="fas fa-info-circle mr-1"></i>
                                                 Manage license types and their associated fees
                                             </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Support/Help Tab -->
+                        <div class="tab-pane fade" id="support-help" role="tabpanel" aria-labelledby="support-help-tab">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <!-- Display View -->
+                                    <div class="card shadow-sm" id="supportDisplayCard" style="border-radius: 10px; border: none;">
+                                        <div class="card-header bg-white border-bottom" style="border-radius: 10px 10px 0 0;">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h4 class="mb-0" style="color: #2c3e50; font-weight: 600; font-size: 18px;">
+                                                    <i class="fas fa-headset text-primary mr-2"></i>
+                                                    Support & Help Contact Information
+                                                </h4>
+                                                <button type="button" class="btn btn-outline-primary" id="editSupportBtn" style="border-radius: 5px; padding: 6px 16px;">
+                                                    <i class="fas fa-edit mr-1"></i> Edit
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover mb-0" style="border-collapse: separate; border-spacing: 0;">
+                                                    <tbody>
+                                                        <tr style="border-bottom: 1px solid #f0f0f0;">
+                                                            <td style="padding: 20px; width: 30%; vertical-align: middle; background-color: #f8f9fa;">
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="icon-circle mr-3" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: #e3f2fd;">
+                                                                        <i class="fas fa-building text-primary"></i>
+                                                                    </div>
+                                                                    <span style="font-weight: 600; color: #495057;">Organization Details</span>
+                                                                </div>
+                                                            </td>
+                                                            <td style="padding: 20px; vertical-align: middle;">
+                                                                <p id="display_address" style="color: #2c3e50; margin: 0; line-height: 1.6; white-space: pre-line;">-</p>
+                                                            </td>
+                                                        </tr>
+                                                        <tr style="border-bottom: 1px solid #f0f0f0;">
+                                                            <td style="padding: 20px; width: 30%; vertical-align: middle; background-color: #f8f9fa;">
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="icon-circle mr-3" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: #e8f5e9;">
+                                                                        <i class="fas fa-phone text-success"></i>
+                                                                    </div>
+                                                                    <span style="font-weight: 600; color: #495057;">Phone Number(s)</span>
+                                                                </div>
+                                                            </td>
+                                                            <td style="padding: 20px; vertical-align: middle;">
+                                                                <p id="display_phone" style="color: #2c3e50; margin: 0; font-weight: 500; white-space: pre-line;">-</p>
+                                                            </td>
+                                                        </tr>
+                                                        <tr style="border-bottom: 1px solid #f0f0f0;">
+                                                            <td style="padding: 20px; width: 30%; vertical-align: middle; background-color: #f8f9fa;">
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="icon-circle mr-3" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: #e1f5fe;">
+                                                                        <i class="fas fa-envelope text-info"></i>
+                                                                    </div>
+                                                                    <span style="font-weight: 600; color: #495057;">Email (General Inquiries)</span>
+                                                                </div>
+                                                            </td>
+                                                            <td style="padding: 20px; vertical-align: middle;">
+                                                                <p id="display_email_general" style="color: #2c3e50; margin: 0;">-</p>
+                                                            </td>
+                                                        </tr>
+                                                        <tr style="border-bottom: 1px solid #f0f0f0;">
+                                                            <td style="padding: 20px; width: 30%; vertical-align: middle; background-color: #f8f9fa;">
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="icon-circle mr-3" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: #fff3e0;">
+                                                                        <i class="fas fa-tools text-warning"></i>
+                                                                    </div>
+                                                                    <span style="font-weight: 600; color: #495057;">Email (Technical Support)</span>
+                                                                </div>
+                                                            </td>
+                                                            <td style="padding: 20px; vertical-align: middle;">
+                                                                <p id="display_email_tech" style="color: #2c3e50; margin: 0;">-</p>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="padding: 20px; width: 30%; vertical-align: middle; background-color: #f8f9fa;">
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="icon-circle mr-3" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: #e3f2fd;">
+                                                                        <i class="fas fa-globe text-primary"></i>
+                                                                    </div>
+                                                                    <span style="font-weight: 600; color: #495057;">Website</span>
+                                                                </div>
+                                                            </td>
+                                                            <td style="padding: 20px; vertical-align: middle;">
+                                                                <p id="display_website" style="color: #2c3e50; margin: 0;">-</p>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-light border-top-0" style="border-radius: 0 0 10px 10px;">
+                                            <small class="text-muted">
+                                                <i class="fas fa-info-circle mr-1"></i>
+                                                WMA contact information for public inquiries and support
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Edit Form (Hidden by default) -->
+                                    <div class="card shadow-sm" id="supportEditCard" style="border-radius: 10px; border: none; display: none;">
+                                        <div class="card-header bg-white border-bottom" style="border-radius: 10px 10px 0 0;">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h4 class="mb-0" style="color: #2c3e50; font-weight: 600; font-size: 18px;">
+                                                    <i class="fas fa-edit text-primary mr-2"></i>
+                                                    Edit Support & Help Configuration
+                                                </h4>
+                                                <button type="button" class="btn btn-outline-secondary" id="cancelEditBtn" style="border-radius: 5px; padding: 6px 16px;">
+                                                    <i class="fas fa-times mr-1"></i> Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card-body" style="padding: 30px;">
+                                            <form id="supportHelpForm">
+                                                <!-- Hidden field to store phone data -->
+                                                <input type="hidden" id="osa_phone_data" value="">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="osa_address" style="font-weight: 500; color: #2c3e50;">
+                                                                <i class="fas fa-building text-primary mr-1"></i>
+                                                                Organization Details (Address)
+                                                            </label>
+                                                            <textarea class="form-control" id="osa_address" name="address" rows="5" placeholder="Enter organization address..." style="border-radius: 8px; padding: 15px;"></textarea>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                <label style="font-weight: 500; color: #2c3e50; margin-bottom: 0;">
+                                                                    <i class="fas fa-phone text-success mr-1"></i>
+                                                                    Phone Number(s)
+                                                                </label>
+                                                                <button type="button" class="btn btn-sm btn-success" id="addPhoneBtn" style="border-radius: 5px;">
+                                                                    <i class="fas fa-plus mr-1"></i> Add Number
+                                                                </button>
+                                                            </div>
+                                                            <div id="phoneNumbersContainer">
+                                                                <!-- Phone number fields will be added here dynamically -->
+                                                            </div>
+                                                            <small class="text-muted">Click "Add Number" to add more phone numbers</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="osa_email_general" style="font-weight: 500; color: #2c3e50;">
+                                                                <i class="fas fa-envelope text-info mr-1"></i>
+                                                                Email (General Inquiries)
+                                                            </label>
+                                                            <input type="email" class="form-control" id="osa_email_general" name="email_general" placeholder="e.g. info@wma.go.tz" style="border-radius: 8px; padding: 10px;">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="osa_email_tech" style="font-weight: 500; color: #2c3e50;">
+                                                                <i class="fas fa-tools text-warning mr-1"></i>
+                                                                Email (Technical Support)
+                                                            </label>
+                                                            <input type="email" class="form-control" id="osa_email_tech" name="email_tech" placeholder="e.g. ictsupport@wma.go.tz" style="border-radius: 8px; padding: 10px;">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="osa_website" style="font-weight: 500; color: #2c3e50;">
+                                                                <i class="fas fa-globe text-primary mr-1"></i>
+                                                                Website
+                                                            </label>
+                                                            <input type="text" class="form-control" id="osa_website" name="website" placeholder="e.g. www.wma.go.tz" style="border-radius: 8px; padding: 10px;">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <div class="col-12 text-right">
+                                                        <button type="submit" class="btn btn-primary" style="border-radius: 20px; padding: 8px 25px;">
+                                                            <i class="fas fa-save mr-1"></i> Save Changes
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -1041,6 +1224,231 @@ $(document).ready(function() {
     if ($('#license-application').hasClass('active')) {
         loadLicenseTypes();
     }
+
+
+    // ==================== SUPPORT & HELP SETTINGS ====================
+    const SUPPORT_DETAILS_API_URL = '<?= base_url('licenseSetting/getSupportDetails') ?>';
+
+    // Load support details
+    function loadSupportDetails() {
+        $.ajax({
+            url: SUPPORT_DETAILS_API_URL,
+            method: 'GET',
+            dataType: 'json',
+            success: function(details) {
+                if (details && Object.keys(details).length > 0) {
+                    // Populate display fields
+                    $('#display_address').text(details.address || '-');
+                    
+                    // Format phone numbers with labels from separate columns
+                    let phoneDisplay = '';
+                    let phoneCount = 0;
+                    
+                    for (let i = 1; i <= 3; i++) {
+                        const label = details[`phone_label_${i}`];
+                        const number = details[`phone_number_${i}`];
+                        
+                        if (number && number.trim()) {
+                            if (phoneCount > 0) phoneDisplay += '\n';
+                            phoneDisplay += `${label || 'Phone'}: ${number}`;
+                            phoneCount++;
+                        }
+                    }
+                    
+                    $('#display_phone').text(phoneDisplay || '-');
+                    $('#display_email_general').text(details.email_general || '-');
+                    $('#display_email_tech').text(details.email_tech || '-');
+                    $('#display_website').text(details.website || '-');
+                    
+                    // Store phone data for editing
+                    $('#osa_phone_data').val(JSON.stringify({
+                        phone_label_1: details.phone_label_1 || '',
+                        phone_number_1: details.phone_number_1 || '',
+                        phone_label_2: details.phone_label_2 || '',
+                        phone_number_2: details.phone_number_2 || '',
+                        phone_label_3: details.phone_label_3 || '',
+                        phone_number_3: details.phone_number_3 || ''
+                    }));
+                    
+                    // Populate form fields (for editing)
+                    $('#osa_address').val(details.address || '');
+                    $('#osa_email_general').val(details.email_general || '');
+                    $('#osa_email_tech').val(details.email_tech || '');
+                    $('#osa_website').val(details.website || '');
+                } else {
+                    // No data - show placeholders
+                    $('#display_address').text('-');
+                    $('#display_phone').text('-');
+                    $('#display_email_general').text('-');
+                    $('#display_email_tech').text('-');
+                    $('#display_website').text('-');
+                }
+            },
+            error: function(xhr) {
+                console.error('Failed to load support details', xhr);
+            }
+        });
+    }
+
+    // Toggle between display and edit modes
+    $('#editSupportBtn').on('click', function() {
+        $('#supportDisplayCard').hide();
+        $('#supportEditCard').show();
+    });
+
+    $('#cancelEditBtn').on('click', function() {
+        $('#supportEditCard').hide();
+        $('#supportDisplayCard').show();
+    });
+
+    // Load settings when tab is shown
+    $('a[href="#support-help"]').on('shown.bs.tab', function() {
+        loadSupportDetails();
+    });
+
+    // Initial load if tab is active (though likely not active by default)
+    if ($('#support-help').hasClass('active')) {
+        loadSupportDetails();
+    }
+
+    // Phone number management
+    let phoneFieldCounter = 0;
+
+    function addPhoneField(label = '', number = '') {
+        phoneFieldCounter++;
+        const fieldHtml = `
+            <div class="phone-field-group mb-3" data-phone-id="${phoneFieldCounter}" style="border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; background-color: #f8f9fa;">
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <label style="font-size: 12px; color: #6c757d; font-weight: 600;">Label/Title</label>
+                        <input type="text" class="form-control phone-label" placeholder="e.g. Office, Mobile, Fax" value="${label}" style="border-radius: 6px; padding: 8px; font-size: 14px;">
+                    </div>
+                    <div class="col-md-7 mb-2">
+                        <label style="font-size: 12px; color: #6c757d; font-weight: 600;">Phone Number</label>
+                        <input type="text" class="form-control phone-number" placeholder="e.g. +255 (26) 22610700" value="${number}" style="border-radius: 6px; padding: 8px; font-size: 14px;">
+                    </div>
+                    <div class="col-md-1 mb-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger btn-sm remove-phone-btn w-100" data-phone-id="${phoneFieldCounter}" style="border-radius: 6px; padding: 8px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        $('#phoneNumbersContainer').append(fieldHtml);
+    }
+
+    // Add phone number button click
+    $('#addPhoneBtn').on('click', function() {
+        addPhoneField();
+    });
+
+    // Remove phone number button click (delegated event)
+    $(document).on('click', '.remove-phone-btn', function() {
+        const phoneId = $(this).data('phone-id');
+        $(`.phone-field-group[data-phone-id="${phoneId}"]`).remove();
+    });
+
+    // Initialize with at least one phone field when edit mode is opened
+    $('#editSupportBtn').on('click', function() {
+        // Clear existing fields
+        $('#phoneNumbersContainer').empty();
+        phoneFieldCounter = 0;
+        
+        // Add phone fields based on loaded data
+        const phoneDataStr = $('#osa_phone_data').val();
+        if (phoneDataStr && phoneDataStr.trim()) {
+            try {
+                const phoneData = JSON.parse(phoneDataStr);
+                
+                // Load from separate columns format
+                for (let i = 1; i <= 3; i++) {
+                    const label = phoneData[`phone_label_${i}`];
+                    const number = phoneData[`phone_number_${i}`];
+                    
+                    if (number && number.trim()) {
+                        addPhoneField(label || '', number);
+                    }
+                }
+            } catch (e) {
+                console.error('Error parsing phone data:', e);
+            }
+        }
+        
+        // Always ensure at least one field exists
+        if ($('.phone-field-group').length === 0) {
+            addPhoneField();
+        }
+    });
+
+
+    // Handle Support Form Submission
+    $('#supportHelpForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const $submitBtn = $(this).find('button[type="submit"]');
+        const originalBtnText = $submitBtn.html();
+        $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Saving...');
+        
+        // Convert form to JSON object
+        // Collect all phone numbers with labels from dynamic fields
+        const formData = {
+            address: $('#osa_address').val(),
+            email_general: $('#osa_email_general').val(),
+            email_tech: $('#osa_email_tech').val(),
+            website: $('#osa_website').val()
+        };
+        
+        // Add phone data to separate columns (max 3)
+        $('.phone-field-group').each(function(index) {
+            if (index < 3) { // Only save first 3 phone numbers
+                const fieldNum = index + 1;
+                const label = $(this).find('.phone-label').val().trim();
+                const number = $(this).find('.phone-number').val().trim();
+                
+                formData[`phone_label_${fieldNum}`] = label || null;
+                formData[`phone_number_${fieldNum}`] = number || null;
+            }
+        });
+
+        $.ajax({
+            url: '<?= base_url('licenseSetting/saveSupportDetails') ?>',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            dataType: 'json',
+            success: function(response) {
+                $submitBtn.prop('disabled', false).html(originalBtnText);
+                
+                swal({
+                    title: 'Success!',
+                    text: 'Support details updated successfully',
+                    icon: 'success',
+                    timer: 2000,
+                    buttons: false
+                });
+
+                // Reload data and switch to display mode
+                loadSupportDetails();
+                $('#supportEditCard').hide();
+                $('#supportDisplayCard').show();
+            },
+            error: function(xhr) {
+                $submitBtn.prop('disabled', false).html(originalBtnText);
+                
+                let errorMessage = 'Failed to save details. Please try again.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                
+                swal({
+                    title: 'Error!',
+                    text: errorMessage,
+                    icon: 'error'
+                });
+            }
+        });
+    });
 });
 </script>
 <?= $this->endSection(); ?>

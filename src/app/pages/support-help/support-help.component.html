@@ -1,0 +1,128 @@
+<div class="min-h-screen bg-gray-50/50 p-4 md:p-6 lg:p-8">
+  <div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header Section -->
+    <div class="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100/50 backdrop-blur-xl">
+      <div class="flex items-center gap-4 mb-2">
+        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Help & Support</h1>
+          <p class="text-gray-500 mt-1">Get in touch with our team for assistance</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="bg-white rounded-2xl p-12 shadow-sm border border-gray-100 flex justify-center items-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="bg-red-50 rounded-2xl p-6 text-red-600 border border-red-100 flex items-center gap-3">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+      </svg>
+      {{ error }}
+    </div>
+
+    <!-- Content State -->
+    <div *ngIf="!loading && !error && supportDetails" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      
+      <!-- Contact Information Card -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
+        <div class="p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-400">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+            </svg>
+            Contact Numbers
+          </h2>
+          
+          <div class="space-y-4">
+            <div *ngIf="supportDetails.phone_number_1" class="flex flex-col p-4 bg-gray-50 rounded-xl hover:bg-blue-50/50 transition-colors group">
+              <span class="text-sm font-medium text-gray-500 mb-1 group-hover:text-blue-600 transition-colors">{{ supportDetails.phone_label_1 || 'Support Line 1' }}</span>
+              <a [href]="'tel:' + supportDetails.phone_number_1" class="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                {{ supportDetails.phone_number_1 }}
+              </a>
+            </div>
+
+            <div *ngIf="supportDetails.phone_number_2" class="flex flex-col p-4 bg-gray-50 rounded-xl hover:bg-blue-50/50 transition-colors group">
+              <span class="text-sm font-medium text-gray-500 mb-1 group-hover:text-blue-600 transition-colors">{{ supportDetails.phone_label_2 || 'Support Line 2' }}</span>
+              <a [href]="'tel:' + supportDetails.phone_number_2" class="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                {{ supportDetails.phone_number_2 }}
+              </a>
+            </div>
+
+            <div *ngIf="supportDetails.phone_number_3" class="flex flex-col p-4 bg-gray-50 rounded-xl hover:bg-blue-50/50 transition-colors group">
+              <span class="text-sm font-medium text-gray-500 mb-1 group-hover:text-blue-600 transition-colors">{{ supportDetails.phone_label_3 || 'Support Line 3' }}</span>
+              <a [href]="'tel:' + supportDetails.phone_number_3" class="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                {{ supportDetails.phone_number_3 }}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Digital Contact & Location -->
+      <div class="space-y-6">
+        <!-- Digital Contact -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-300">
+          <h2 class="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-400">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+            </svg>
+            Email Support
+          </h2>
+          
+          <div class="space-y-4">
+            <div *ngIf="supportDetails.email_general" class="flex items-start gap-3">
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-500">General Inquiries</p>
+                <a [href]="'mailto:' + supportDetails.email_general" class="text-gray-900 hover:text-blue-600 font-medium break-all">
+                  {{ supportDetails.email_general }}
+                </a>
+              </div>
+            </div>
+
+            <div *ngIf="supportDetails.email_tech" class="flex items-start gap-3">
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-500">Technical Support</p>
+                <a [href]="'mailto:' + supportDetails.email_tech" class="text-gray-900 hover:text-blue-600 font-medium break-all">
+                  {{ supportDetails.email_tech }}
+                </a>
+              </div>
+            </div>
+
+             <div *ngIf="supportDetails.website" class="pt-4 mt-2 border-t border-gray-100">
+              <p class="text-sm font-medium text-gray-500 mb-1">Visit Website</p>
+              <a [href]="supportDetails.website" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium">
+                {{ supportDetails.website }}
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Location -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-300">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-400">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+            </svg>
+            Office Address
+          </h2>
+          <div class="text-gray-600 leading-relaxed whitespace-pre-line">
+            {{ supportDetails.address }}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

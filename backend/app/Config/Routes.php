@@ -113,6 +113,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->get('license/payment-status/(:segment)', 'LicenseController::checkPaymentStatus/$1');
     $routes->get('license/view/(:segment)', 'LicenseController::viewLicense/$1');
     $routes->get('license/details/(:segment)', 'LicenseController::getApplicationDetails/$1');
+    $routes->get('support-details', 'OsaSupportController::getDetails');
 
     $routes->options('(:any)', static function () {
         return response()->setStatusCode(200);
