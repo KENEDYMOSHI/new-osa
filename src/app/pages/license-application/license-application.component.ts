@@ -253,8 +253,17 @@ export class LicenseApplicationComponent implements OnInit {
           let parsedCriteria: { min?: number, max?: number } = {};
           if (t.criteria) {
              try {
-                parsedCriteria = (typeof t.criteria === 'object') ? t.criteria : JSON.parse(t.criteria);
+                // Handle double-encoded JSON or direct object
+                const rawCriteria = (typeof t.criteria === 'string') ? JSON.parse(t.criteria) : t.criteria;
+                parsedCriteria = (typeof rawCriteria === 'string') ? JSON.parse(rawCriteria) : rawCriteria;
+                
+                // Ensure numbers
+                if (parsedCriteria.min) parsedCriteria.min = Number(parsedCriteria.min);
+                if (parsedCriteria.max) parsedCriteria.max = Number(parsedCriteria.max);
+                
+                console.log(`Parsed criteria for ${t.name}:`, parsedCriteria);
              } catch (e) {
+                console.warn(`Failed to parse criteria for ${t.name}:`, t.criteria, e);
                 parsedCriteria = {};
              }
           }
