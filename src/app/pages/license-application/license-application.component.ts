@@ -65,7 +65,23 @@ export class LicenseApplicationComponent implements OnInit {
 
 
 
-  licenseTypes: { id: string; name: string; fee: number; description: string; selected: boolean; submitted?: boolean; restrictionReason?: string; controlNumber?: string; paymentStatus?: string; billAmount?: number; applicationFee?: number; disabled?: boolean; }[] = [];
+  licenseTypes: { 
+    id: string; 
+    name: string; 
+    fee: number; 
+    description: string; 
+    selected: boolean; 
+    submitted?: boolean; 
+    restrictionReason?: string; 
+    controlNumber?: string; 
+    paymentStatus?: string; 
+    billAmount?: number; 
+    applicationFee?: number; 
+    disabled?: boolean;
+    availableInstruments?: string[]; 
+    criteria?: { min?: number, max?: number };
+    userSelectedInstruments?: string[];
+  }[] = [];
 
   totalAmount = 0;
   declarationAccepted = false;
@@ -219,22 +235,107 @@ export class LicenseApplicationComponent implements OnInit {
   loadLicenseTypes() {
     this.licenseService.getLicenseTypes().subscribe({
       next: (types: any[]) => {
-        this.licenseTypes = types.map((t: any) => ({
-          id: t.id,
-          name: t.name,
-          fee: parseFloat(t.fee),
-          description: t.description,
-          selected: false,
-          submitted: false
-        }));
-        console.log('License types loaded from database:', this.licenseTypes);
-        this.updateRequiredDocuments(); // Now called after types are loaded
+        this.licenseTypes = types.map((t: any) => {
+          let parsedInstruments: string[] = [];
+          if (t.selected_instruments) {
+            try {
+              if (Array.isArray(t.selected_instruments)) {
+                parsedInstruments = t.selected_instruments;
+              } else {
+                 const parsed = JSON.parse(t.selected_instruments);
+                 if (Array.isArray(parsed)) parsedInstruments = parsed;
+              }
+            } catch (e) {
+               parsedInstruments = [];
+            }
+          }
+
+          let parsedCriteria: { min?: number, max?: number } = {};
+          if (t.criteria) {
+             try {
+                parsedCriteria = (typeof t.criteria === 'object') ? t.criteria : JSON.parse(t.criteria);
+             } catch (e) {
+                parsedCriteria = {};
+             }
+          }
+
+          return {
+            id: t.id,
+            name: t.name,
+            fee: parseFloat(t.fee),
+            description: t.description,
+            selected: false,
+            submitted: false,
+            // New fields
+            availableInstruments: parsedInstruments,
+            criteria: parsedCriteria,
+            userSelectedInstruments: [] as string[]
+          };
+        });
+        console.log('License types loaded:', this.licenseTypes);
+        this.updateRequiredDocuments(); 
       },
       error: (err: any) => {
         console.error('Failed to load license types:', err);
         Swal.fire('Error', 'Failed to load license types. Please refresh the page.', 'error');
       }
     });
+  }
+
+  // Toggle instrument selection
+  toggleInstrument(license: any, instrument: string, event: Event) {
+    event.stopPropagation(); // Prevent toggling the license card itself when clicking checkbox
+    
+    // Initialize array if undefined
+    if (!license.userSelectedInstruments) {
+        license.userSelectedInstruments = [];
+    }
+
+    const index = license.userSelectedInstruments.indexOf(instrument);
+    
+    // Check max criteria before adding
+    if (index === -1) {
+        // Adding
+        if (license.criteria && license.criteria.max && license.userSelectedInstruments.length >= license.criteria.max) {
+             event.preventDefault(); // Prevent check
+             // Revert checkbox visual state if needed, though preventDefault usually handles click
+             Swal.fire('Limit Reached', `You can select a maximum of ${license.criteria.max} instruments for this license.`, 'warning');
+             return;
+        }
+        license.userSelectedInstruments.push(instrument);
+    } else {
+        // Removing
+        license.userSelectedInstruments.splice(index, 1);
+    }
+
+    // Auto-select license if instruments involved? 
+    // Or just validate later. Let's keep license selection manual or ensure it's selected.
+    if (!license.selected && license.userSelectedInstruments.length > 0) {
+        license.selected = true;
+        this.calculateTotal();
+    }
+  }
+  
+  // Helper to check criteria status for UI feedback
+  getCriteriaStatus(license: any): { valid: boolean, message: string } {
+      if (!license.availableInstruments || license.availableInstruments.length === 0) {
+          return { valid: true, message: '' };
+      }
+      
+      const count = license.userSelectedInstruments ? license.userSelectedInstruments.length : 0;
+      const min = license.criteria?.min || 0;
+      const max = license.criteria?.max;
+
+      if (min > 0 && count < min) {
+          return { valid: false, message: `Select at least ${min} instrument(s)` };
+      }
+      
+      // Max is handled on toggle, but good to check
+      if (max && count > max) {
+          return { valid: false, message: `Max ${max} instruments allowed` };
+      }
+
+      return { valid: true, message: 'Criteria met' };
   }
 
   loadApplicationFees() {
@@ -732,6 +833,21 @@ export class LicenseApplicationComponent implements OnInit {
       return;
     }
 
+    // Validate Criteria for Selected Licenses
+    for (const license of selectedLicenses) {
+        if (license.availableInstruments && license.availableInstruments.length > 0) {
+            const status = this.getCriteriaStatus(license);
+            if (!status.valid) {
+                 Swal.fire({
+                    icon: 'error',
+                    title: 'Incomplete Selection',
+                    text: `For ${license.name}: ${status.message}`
+                 });
+                 return;
+            }
+        }
+    }
+
     // Validate Required Documents
     const missingDocs = this.requiredDocuments.filter(doc => doc.status !== 'Uploaded');
     if (missingDocs.length > 0) {
@@ -754,11 +870,17 @@ export class LicenseApplicationComponent implements OnInit {
         }
     });
 
+    // Prepare license data with selected instruments
+    const licensesToSubmit = selectedLicenses.map(l => ({
+        ...l,
+        selected_instruments: l.userSelectedInstruments // Explicitly mapping for backend clarity
+    }));
+
     const applicationData = {
       applicationType: this.applicationType,
       totalAmount: this.totalAmount,
       declaration: this.declarationAccepted,
-      licenseTypes: JSON.stringify(selectedLicenses),
+      licenseTypes: JSON.stringify(licensesToSubmit),
       previousLicenses: this.previousLicenses,
       qualifications: this.qualifications,
       experiences: this.experiences,

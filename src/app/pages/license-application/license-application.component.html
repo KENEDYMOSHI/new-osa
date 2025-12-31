@@ -661,7 +661,38 @@
 
             </div>
             <p class="text-sm text-gray-600 mb-3 min-h-[40px]">{{ license.description }}</p>
-            <div class="font-bold text-[#F59E0B]">TZS {{ license.fee | number }}</div>
+            
+            <!-- Instruments Selection -->
+            <div *ngIf="license.availableInstruments && license.availableInstruments.length > 0" class="mb-3" (click)="$event.stopPropagation()">
+                <div class="text-xs font-bold text-gray-500 mb-1 uppercase tracking-wide border-b pb-1">Selected Instruments</div>
+                 
+                <!-- Criteria Hint -->
+                <div *ngIf="license.criteria && (license.criteria.min || license.criteria.max)" class="text-[11px] text-blue-600 mb-2 font-medium">
+                     <span *ngIf="license.criteria.min">Min: {{license.criteria.min}}</span>
+                     <span *ngIf="license.criteria.max" class="ml-1">Max: {{license.criteria.max}}</span>
+                </div>
+
+                <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                    <label *ngFor="let inst of license.availableInstruments" class="flex items-start space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors select-none">
+                        <input type="checkbox" 
+                               [checked]="license.userSelectedInstruments?.includes(inst)"
+                               (change)="toggleInstrument(license, inst, $event)"
+                               [disabled]="license.submitted"
+                               class="mt-0.5 h-4 w-4 text-[#e79a3f] border-gray-300 rounded focus:ring-[#e79a3f]">
+                        <span class="text-sm text-gray-700 leading-tight">{{ inst }}</span>
+                    </label>
+                </div>
+                
+                 <!-- Validation Feedback -->
+                 <div *ngIf="license.selected && !getCriteriaStatus(license).valid" class="mt-2 text-xs text-red-600 font-bold flex items-center animate-pulse">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                       <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                     </svg>
+                     {{ getCriteriaStatus(license).message }}
+                 </div>
+            </div>
+
+            <div class="font-bold text-[#F59E0B] mt-2 border-t pt-2">TZS {{ license.fee | number }}</div>
           </div>
         </div>
 
