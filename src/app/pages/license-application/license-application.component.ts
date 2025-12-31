@@ -282,24 +282,26 @@ export class LicenseApplicationComponent implements OnInit {
     });
   }
 
+  // Check if max instruments reached
+  isMaxReached(license: any): boolean {
+    if (!license.criteria || !license.criteria.max) return false;
+    return (license.userSelectedInstruments?.length || 0) >= license.criteria.max;
+  }
+
   // Toggle instrument selection
   toggleInstrument(license: any, instrument: string, event: Event) {
-    event.stopPropagation(); // Prevent toggling the license card itself when clicking checkbox
+    event.stopPropagation(); 
     
-    // Initialize array if undefined
     if (!license.userSelectedInstruments) {
         license.userSelectedInstruments = [];
     }
 
     const index = license.userSelectedInstruments.indexOf(instrument);
     
-    // Check max criteria before adding
     if (index === -1) {
         // Adding
-        if (license.criteria && license.criteria.max && license.userSelectedInstruments.length >= license.criteria.max) {
-             event.preventDefault(); // Prevent check
-             // Revert checkbox visual state if needed, though preventDefault usually handles click
-             Swal.fire('Limit Reached', `You can select a maximum of ${license.criteria.max} instruments for this license.`, 'warning');
+        if (this.isMaxReached(license)) {
+             event.preventDefault();
              return;
         }
         license.userSelectedInstruments.push(instrument);
@@ -308,11 +310,18 @@ export class LicenseApplicationComponent implements OnInit {
         license.userSelectedInstruments.splice(index, 1);
     }
 
-    // Auto-select license if instruments involved? 
-    // Or just validate later. Let's keep license selection manual or ensure it's selected.
-    if (!license.selected && license.userSelectedInstruments.length > 0) {
-        license.selected = true;
-        this.calculateTotal();
+    // Smart Auto-Selection Logic
+    if (license.userSelectedInstruments.length > 0) {
+        // If instruments are selected, ensure the license is selected
+        if (!license.selected) {
+            license.selected = true;
+            this.calculateTotal();
+        }
+    } else {
+        // If no instruments selected, maybe unselect license? 
+        // User might want the license selected but hasn't picked instruments yet (though validation blocks submit).
+        // Let's leave it selected or handle as user prefers. 
+        // For now, let's NOT auto-deselect to avoid confusion, but validation will enforce selection.
     }
   }
   
