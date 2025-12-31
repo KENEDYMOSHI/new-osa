@@ -14,7 +14,7 @@ class LicenseTypeModel extends Model
     protected $useSoftDeletes   = true;
     protected $protectFields    = true;
     protected $allowedFields    = [
-        'id', 'name', 'description', 'fee', 'currency', 'created_at', 'updated_at', 'deleted_at'
+        'id', 'name', 'description', 'fee', 'currency', 'selected_instruments', 'criteria', 'created_at', 'updated_at', 'deleted_at'
     ];
 
     // Dates

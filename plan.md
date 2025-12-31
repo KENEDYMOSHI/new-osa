@@ -58,3 +58,17 @@ tengeneza  sehemu  hii na table yake yakusave data hizi tengeneza kwenye osa_app
 Kwenye mfumo wa applicantusivuruge chochote   kwenye module ya notification wakati wa Message Preview  kwenye kila anavyo priview itokee chini kile kisehem taarifa message inayokua preview na applicant za support/help kitokee muundo wa anuani itavuta kwenye table ya osa_support_details 
 
 impliment kwenye applicant portal kwenye module ya support-help chukua kwenye database kwenye table ya osa_support_details nakuonyesha hapo 
+
+Kwenye mfumo wa wma-mis module ya lisence setting kwenye tab ya  License Type Configuration engeza column ya SELECTED INSTRUMENTS na criterial na sehemu ya kuadd engeza hizi option mbili
+
+Kwenye select instrumrnt zinakua in list way hata kwenye sehemu yake yakuziweka 
+
+kwenye criteria ni seheme yakuSelect a minimum number  measuring instruments ambazo zitakua kwenye selected instruments design zinaweza kua mfano kuna minimam na maximum design
+
+sentensi itakayo kua ina ji generati kutokana na selection ni Select a minimum of two measuring instruments kwa istrument zenye instrumen number kamili au Select a minimum of two and a maximum of three instruments yenye nstrument zenye minimam na maximam implement 
+
+design  License Fee na action icon zikae vizuri punguza font kidogo kwenye  License Fee	zikae sawa kwemye line moja 
+
+kwenye applicant portal kwenye module ya initial application kwenye card ya License Type Selection
+Select the license class types you would like to apply for. design kila card iwe ina uwezo wakuonesha SELECTED INSTRUMENTS na kue na check box ambayo itafuata condtion zilizoko kwenye criteria weka design ambayo haito aribu iliko na kila kitu kifanye kazi kama kilivyo kuwepo 
+

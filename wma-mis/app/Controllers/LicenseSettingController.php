@@ -141,6 +141,8 @@ class LicenseSettingController extends BaseController
                 'name' => $this->request->getPost('name') ?: $this->request->getJsonVar('name'),
                 'description' => $this->request->getPost('description') ?: $this->request->getJsonVar('description'),
                 'fee' => $this->request->getPost('fee') ?: $this->request->getJsonVar('fee'),
+                'selected_instruments' => $this->request->getPost('selected_instruments') ?: $this->request->getJsonVar('selected_instruments'),
+                'criteria' => $this->request->getPost('criteria') ?: $this->request->getJsonVar('criteria'),
             ];
 
             if ($this->licenseTypeModel->insert($data)) {
@@ -177,6 +179,8 @@ class LicenseSettingController extends BaseController
                 'name' => $this->request->getPost('name'),
                 'description' => $this->request->getPost('description'),
                 'fee' => $this->request->getPost('fee'),
+                'selected_instruments' => $this->request->getPost('selected_instruments'),
+                'criteria' => $this->request->getPost('criteria'),
             ];
 
             if ($this->licenseTypeModel->update($id, $data)) {

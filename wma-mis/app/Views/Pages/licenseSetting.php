@@ -151,6 +151,12 @@
                                                                 <i class="fas fa-file-alt mr-1"></i> Description
                                                             </th>
                                                             <th class="border-0 text-muted" style="padding: 15px; font-weight: 600;">
+                                                                <i class="fas fa-tools mr-1"></i> Instruments
+                                                            </th>
+                                                            <th class="border-0 text-muted" style="padding: 15px; font-weight: 600;">
+                                                                <i class="fas fa-tasks mr-1"></i> Criteria
+                                                            </th>
+                                                            <th class="border-0 text-muted" style="padding: 15px; font-weight: 600;">
                                                                 <i class="fas fa-money-bill-wave mr-1"></i> License Fee
                                                             </th>
                                                             <th class="border-0 text-muted text-center" style="padding: 15px; font-weight: 600;">Actions</th>
@@ -518,6 +524,43 @@
                         </label>
                         <textarea class="form-control" id="license_description" name="description" rows="3" placeholder="Enter license type description..." style="border-radius: 8px; padding: 10px;"></textarea>
                     </div>
+                    <div class="form-group">
+                        <label for="add_instrument_input" style="font-weight: 500; color: #2c3e50;">
+                            <i class="fas fa-tools text-secondary mr-1"></i>
+                            Selected Instruments
+                        </label>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" id="add_instrument_input" placeholder="Type instrument name (e.g. Weighbridge)">
+                            <div class="input-group-append">
+                                <button class="btn btn-info" type="button" id="btn_add_instrument">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                        <div id="add_instruments_container" class="d-flex flex-wrap p-2" style="background: #f8f9fa; border-radius: 5px; min-height: 50px;">
+                            <!-- Instruments will appear here -->
+                            <small class="text-muted w-100 text-center mt-1">No instruments added yet.</small>
+                        </div>
+                        <input type="hidden" id="license_selected_instruments" name="selected_instruments">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 500; color: #2c3e50;">
+                            <i class="fas fa-tasks text-secondary mr-1"></i>
+                            Criteria (Instrument Quantities)
+                        </label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="license_min_instruments" style="font-size: 13px; color: #666;">Minimum Required</label>
+                                <input type="number" class="form-control" id="license_min_instruments" min="0" placeholder="e.g. 1" style="border-radius: 8px; padding: 10px;">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="license_max_instruments" style="font-size: 13px; color: #666;">Maximum Allowed</label>
+                                <input type="number" class="form-control" id="license_max_instruments" min="0" placeholder="e.g. 5" style="border-radius: 8px; padding: 10px;">
+                            </div>
+                        </div>
+                        <p id="add_criteria_preview" class="text-muted mt-2 mb-0" style="font-size: 13px; font-style: italic; display: none;"></p>
+                        <input type="hidden" id="license_criteria" name="criteria">
+                    </div>
                     <div class="form-group mb-0">
                         <label for="license_fee" style="font-weight: 500; color: #2c3e50;">
                             <i class="fas fa-money-bill-wave text-warning mr-1"></i>
@@ -573,6 +616,43 @@
                             Description
                         </label>
                         <textarea class="form-control" id="edit_license_description" name="description" rows="3" placeholder="Enter license type description..." style="border-radius: 8px; padding: 10px;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_instrument_input" style="font-weight: 500; color: #2c3e50;">
+                            <i class="fas fa-tools text-secondary mr-1"></i>
+                            Selected Instruments
+                        </label>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" id="edit_instrument_input" placeholder="Type instrument name">
+                            <div class="input-group-append">
+                                <button class="btn btn-info" type="button" id="btn_edit_add_instrument">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                        <div id="edit_instruments_container" class="d-flex flex-wrap p-2" style="background: #f8f9fa; border-radius: 5px; min-height: 50px;">
+                            <!-- Instruments will appear here -->
+                            <small class="text-muted w-100 text-center mt-1">No instruments added yet.</small>
+                        </div>
+                        <input type="hidden" id="edit_license_selected_instruments" name="selected_instruments">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 500; color: #2c3e50;">
+                            <i class="fas fa-tasks text-secondary mr-1"></i>
+                            Criteria (Instrument Quantities)
+                        </label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="edit_license_min_instruments" style="font-size: 13px; color: #666;">Minimum Required</label>
+                                <input type="number" class="form-control" id="edit_license_min_instruments" min="0" placeholder="e.g. 1" style="border-radius: 8px; padding: 10px;">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit_license_max_instruments" style="font-size: 13px; color: #666;">Maximum Allowed</label>
+                                <input type="number" class="form-control" id="edit_license_max_instruments" min="0" placeholder="e.g. 5" style="border-radius: 8px; padding: 10px;">
+                            </div>
+                        </div>
+                        <p id="edit_criteria_preview" class="text-muted mt-2 mb-0" style="font-size: 13px; font-style: italic; display: none;"></p>
+                        <input type="hidden" id="edit_license_criteria" name="criteria">
                     </div>
                     <div class="form-group mb-0">
                         <label for="edit_license_fee" style="font-weight: 500; color: #2c3e50;">
@@ -1003,6 +1083,38 @@ $(document).ready(function() {
         let html = '';
         licenseTypes.forEach((type, index) => {
             const description = type.description || 'No description';
+            let instruments = '-';
+            
+            // Parse instruments JSON
+            try {
+                if (type.selected_instruments) {
+                    const parsed = JSON.parse(type.selected_instruments);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        instruments = '<ul style="padding-left: 20px; margin-bottom: 0;">' + 
+                                     parsed.map(i => `<li>${i}</li>`).join('') + 
+                                     '</ul>';
+                    } else if (typeof type.selected_instruments === 'string') {
+                         // Fallback if it's just a string but not JSON
+                        instruments = type.selected_instruments;
+                    }
+                }
+            } catch (e) {
+                instruments = type.selected_instruments || '-';
+            }
+
+            let criteria = '-';
+            try {
+                if (type.criteria) {
+                    const parsedCriteria = JSON.parse(type.criteria);
+                    criteria = generateCriteriaSentence(parsedCriteria.min, parsedCriteria.max);
+                }
+            } catch (e) {
+                criteria = type.criteria || '-';
+            }
+            
+            // Escape single quotes for data attributes
+            const safeInstruments = (type.selected_instruments || '').replace(/'/g, "&apos;");
+            const safeCriteria = (type.criteria || '').replace(/'/g, "&apos;");
             
             html += `
                 <tr style="border-bottom: 1px solid #f0f0f0;">
@@ -1017,18 +1129,34 @@ $(document).ready(function() {
                             <span style="font-weight: 500; color: #2c3e50;">${type.name}</span>
                         </div>
                     </td>
-                    <td style="padding: 15px; vertical-align: middle; max-width: 400px;">
-                        <div style="line-height: 1.6; color: #555; font-size: 14px;">
+                    <td style="padding: 15px; vertical-align: middle; max-width: 300px;">
+                        <div style="line-height: 1.6; color: #555; font-size: 14px; white-space: normal;">
                             ${description}
                         </div>
                     </td>
-                    <td style="padding: 15px; vertical-align: middle;">
-                        <span style="font-weight: 600; color: #27ae60; font-size: 15px;">
+                    <td style="padding: 15px; vertical-align: middle; max-width: 250px;">
+                        <div style="line-height: 1.6; color: #555; font-size: 14px;">
+                            ${instruments}
+                        </div>
+                    </td>
+                    <td style="padding: 15px; vertical-align: middle; max-width: 250px;">
+                        <div style="line-height: 1.6; color: #555; font-size: 14px; white-space: normal;">
+                            ${criteria}
+                        </div>
+                    </td>
+                    <td style="padding: 15px; vertical-align: middle; white-space: nowrap;">
+                        <span style="font-weight: 600; color: #27ae60; font-size: 13px;">
                             TZS ${parseFloat(type.fee).toLocaleString()}
                         </span>
                     </td>
-                    <td style="padding: 15px; vertical-align: middle;" class="text-center">
-                        <button class="btn btn-sm btn-outline-primary mr-1 edit-license-type-btn" style="border-radius: 5px;" title="Edit" data-id="${type.id}" data-name="${type.name}" data-description="${type.description || ''}" data-fee="${type.fee}">
+                    <td style="padding: 15px; vertical-align: middle; white-space: nowrap;" class="text-center">
+                        <button class="btn btn-sm btn-outline-primary mr-1 edit-license-type-btn" style="border-radius: 5px;" title="Edit" 
+                            data-id="${type.id}" 
+                            data-name="${type.name}" 
+                            data-description="${type.description || ''}" 
+                            data-fee="${type.fee}"
+                            data-selected-instruments='${safeInstruments}'
+                            data-criteria='${safeCriteria}'>
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="btn btn-sm btn-outline-danger delete-license-type-btn" style="border-radius: 5px;" title="Delete" data-id="${type.id}" data-name="${type.name}">
@@ -1046,9 +1174,16 @@ $(document).ready(function() {
     $('#addLicenseTypeForm').on('submit', function(e) {
         e.preventDefault();
         
+        const criteriaData = {
+            min: $('#license_min_instruments').val(),
+            max: $('#license_max_instruments').val()
+        };
+        
         const formData = {
             name: $('#license_type_name').val(),
             description: $('#license_description').val(),
+            selected_instruments: $('#license_selected_instruments').val(),
+            criteria: JSON.stringify(criteriaData),
             fee: parseFloat($('#license_fee').val())
         };
         
@@ -1097,10 +1232,46 @@ $(document).ready(function() {
         const name = $(this).data('name');
         const description = $(this).data('description');
         const fee = $(this).data('fee');
+        const selectedInstruments = $(this).data('selected-instruments'); 
+        const criteria = $(this).data('criteria');
         
         $('#edit_license_type_id').val(id);
         $('#edit_license_type_name').val(name);
         $('#edit_license_description').val(description);
+        
+        // Instruments
+        let parsedInstruments = [];
+        if (typeof selectedInstruments === 'object') {
+            parsedInstruments = selectedInstruments;
+        } else if (typeof selectedInstruments === 'string') {
+            try {
+                parsedInstruments = JSON.parse(selectedInstruments);
+            } catch(e) {
+                parsedInstruments = [];
+            }
+        }
+        renderInstrumentList('edit_instruments_container', 'edit_license_selected_instruments', parsedInstruments);
+        
+        // Criteria (Min/Max)
+        let minQuery = '';
+        let maxQuery = '';
+        if (criteria) {
+             try {
+                // If criteria is object (via data attribute parsing) or string
+                const criteriaObj = (typeof criteria === 'object') ? criteria : JSON.parse(criteria);
+                minQuery = criteriaObj.min || '';
+                maxQuery = criteriaObj.max || '';
+            } catch (e) {
+                // Fallback if criteria is plain text
+                console.log('Criteria is not JSON', criteria);
+            }
+        }
+        $('#edit_license_min_instruments').val(minQuery);
+        $('#edit_license_max_instruments').val(maxQuery);
+        
+        // Trigger preview update
+        $('#edit_license_min_instruments').trigger('input');
+
         $('#edit_license_fee').val(fee);
         
         $('#editLicenseTypeModal').modal('show');
@@ -1111,9 +1282,16 @@ $(document).ready(function() {
         e.preventDefault();
         
         const id = $('#edit_license_type_id').val();
+         const criteriaData = {
+            min: $('#edit_license_min_instruments').val(),
+            max: $('#edit_license_max_instruments').val()
+        };
+
         const formData = {
             name: $('#edit_license_type_name').val(),
             description: $('#edit_license_description').val(),
+            selected_instruments: $('#edit_license_selected_instruments').val(),
+            criteria: JSON.stringify(criteriaData),
             fee: parseFloat($('#edit_license_fee').val())
         };
         
@@ -1382,6 +1560,65 @@ $(document).ready(function() {
     });
 
 
+    // ==================== CRITERIA SENTENCE GENERATOR ====================
+    function numberToWords(n) {
+        const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 
+                      'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+        
+        const num = parseInt(n);
+        if (isNaN(num)) return n;
+        if (num >= 0 && num <= 20) return words[num];
+        return num; // Fallback for numbers > 20
+    }
+
+    function generateCriteriaSentence(min, max) {
+        if (!min && !max) return '-';
+        
+        const minVal = parseInt(min);
+        const maxVal = parseInt(max);
+        
+        if (minVal && (!maxVal || minVal === maxVal)) {
+            // "Select a minimum of two measuring instruments"
+            return `Select a minimum of ${numberToWords(minVal)} measuring instruments`;
+        } else if (minVal && maxVal && minVal !== maxVal) {
+            // "Select a minimum of two and a maximum of three instruments"
+            return `Select a minimum of ${numberToWords(minVal)} and a maximum of ${numberToWords(maxVal)} instruments`;
+        } else if (!minVal && maxVal) {
+            // Edge case: Only max?
+            return `Select a maximum of ${numberToWords(maxVal)} instruments`;
+        }
+        
+        return '-';
+    }
+
+    // Live Preview Event Listeners (Add Modal)
+    $('#license_min_instruments, #license_max_instruments').on('input', function() {
+        const min = $('#license_min_instruments').val();
+        const max = $('#license_max_instruments').val();
+        const sentence = generateCriteriaSentence(min, max);
+        
+        const previewEl = $('#add_criteria_preview');
+        if (sentence !== '-') {
+            previewEl.text(sentence).show();
+        } else {
+            previewEl.hide();
+        }
+    });
+
+    // Live Preview Event Listeners (Edit Modal)
+    $('#edit_license_min_instruments, #edit_license_max_instruments').on('input', function() {
+        const min = $('#edit_license_min_instruments').val();
+        const max = $('#edit_license_max_instruments').val();
+        const sentence = generateCriteriaSentence(min, max);
+        
+        const previewEl = $('#edit_criteria_preview');
+        if (sentence !== '-') {
+            previewEl.text(sentence).show();
+        } else {
+            previewEl.hide();
+        }
+    });
+
     // Handle Support Form Submission
     $('#supportHelpForm').on('submit', function(e) {
         e.preventDefault();
@@ -1448,6 +1685,113 @@ $(document).ready(function() {
                 });
             }
         });
+    });
+    // ==================== DYNAMIC INSTRUMENT LIST ====================
+    
+    // Function to render the instrument list
+    function renderInstrumentList(containerId, hiddenInputId, instruments) {
+        const container = $(`#${containerId}`);
+        container.empty();
+        
+        if (!instruments || instruments.length === 0) {
+            container.html('<small class="text-muted w-100 text-center mt-1">No instruments added yet.</small>');
+            $(`#${hiddenInputId}`).val('');
+            return;
+        }
+        
+        // Update hidden input with JSON string
+        $(`#${hiddenInputId}`).val(JSON.stringify(instruments));
+        
+        // Render items
+        instruments.forEach((instrument, index) => {
+            container.append(`
+                <span class="badge badge-info mr-2 mb-2 p-2" style="font-size: 14px; position: relative; padding-right: 30px !important;">
+                    ${instrument}
+                    <span class="instrument-remove-btn" data-index="${index}" data-container="${containerId}" data-input="${hiddenInputId}" 
+                          style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; opacity: 0.7;">
+                        <i class="fas fa-times"></i>
+                    </span>
+                </span>
+            `);
+        });
+    }
+
+    // Add Instrument Helper
+    function handleAddInstrument(inputId, containerId, hiddenInputId) {
+        const input = $(`#${inputId}`);
+        const value = input.val().trim();
+        
+        if (!value) return;
+        
+        let currentData = $(`#${hiddenInputId}`).val();
+        let instruments = [];
+        
+        try {
+            instruments = currentData ? JSON.parse(currentData) : [];
+        } catch (e) {
+            // Fallback for comma separated legacy data?
+            instruments = currentData.split(',').map(s => s.trim()).filter(s => s);
+        }
+        
+        if (!Array.isArray(instruments)) instruments = [];
+        
+        // Avoid duplicates?
+        if (!instruments.includes(value)) {
+            instruments.push(value);
+            renderInstrumentList(containerId, hiddenInputId, instruments);
+            input.val('').focus();
+        } else {
+            swal('Info', 'This instrument is already in the list.', 'info');
+        }
+    }
+    
+    // Event Listeners for Add Buttons
+    $('#btn_add_instrument').on('click', function() {
+        handleAddInstrument('add_instrument_input', 'add_instruments_container', 'license_selected_instruments');
+    });
+    
+    $('#add_instrument_input').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault(); // Prevent form submit
+            handleAddInstrument('add_instrument_input', 'add_instruments_container', 'license_selected_instruments');
+        }
+    });
+
+    $('#btn_edit_add_instrument').on('click', function() {
+        handleAddInstrument('edit_instrument_input', 'edit_instruments_container', 'edit_license_selected_instruments');
+    });
+
+    $('#edit_instrument_input').on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            handleAddInstrument('edit_instrument_input', 'edit_instruments_container', 'edit_license_selected_instruments');
+        }
+    });
+
+    // Remove Instrument (Delegated)
+    $(document).on('click', '.instrument-remove-btn', function() {
+        const index = $(this).data('index');
+        const containerId = $(this).data('container');
+        const hiddenInputId = $(this).data('input');
+        
+        let currentData = $(`#${hiddenInputId}`).val();
+        let instruments = [];
+        try {
+            instruments = currentData ? JSON.parse(currentData) : [];
+        } catch (e) {
+            instruments = [];
+        }
+        
+        if (index > -1 && index < instruments.length) {
+            instruments.splice(index, 1);
+            renderInstrumentList(containerId, hiddenInputId, instruments);
+        }
+    });
+    
+    // Reset Add Form
+    $('#addLicenseTypeModal').on('show.bs.modal', function () {
+        $('#add_instrument_input').val('');
+        renderInstrumentList('add_instruments_container', 'license_selected_instruments', []);
     });
 });
 </script>
