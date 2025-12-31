@@ -310,19 +310,14 @@ export class LicenseApplicationComponent implements OnInit {
         license.userSelectedInstruments.splice(index, 1);
     }
 
-    // Smart Auto-Selection Logic
-    if (license.userSelectedInstruments.length > 0) {
-        // If instruments are selected, ensure the license is selected
-        if (!license.selected) {
-            license.selected = true;
-            this.calculateTotal();
-        }
-    } else {
-        // If no instruments selected, maybe unselect license? 
-        // User might want the license selected but hasn't picked instruments yet (though validation blocks submit).
-        // Let's leave it selected or handle as user prefers. 
-        // For now, let's NOT auto-deselect to avoid confusion, but validation will enforce selection.
-    }
+    // Smart Auto-Selection/Deselection Logic based on Criteria Validity
+    const status = this.getCriteriaStatus(license);
+    
+    // Logic: If selection is VALID (Min requirements met), Select the license.
+    // If invalid (e.g. dropped below Min), Deselect the license.
+    license.selected = status.valid;
+    
+    this.calculateTotal();
   }
   
   // Helper to check criteria status for UI feedback
