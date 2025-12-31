@@ -141,7 +141,22 @@
                             <b>Application Type</b> <a class="float-right"><?= $application->application_type ?? 'New' ?></a>
                         </li>
                         <li class="list-group-item">
-                            <b>Control #</b> <a class="float-right"><?= $application->control_number ?? 'N/A' ?></a>
+                            <b>App Fee CN</b> <a class="float-right"><?= $application->control_number ?? 'N/A' ?></a>
+                        </li>
+                        <li class="list-group-item">
+                            <b>License Fee CN</b> 
+                            <a class="float-right">
+                                <?php 
+                                    $licCn = 'Not Generated';
+                                    if (!empty($application->license_items) && is_array($application->license_items)) {
+                                        // key 0 usually holds the main license item if singular
+                                        if (!empty($application->license_items[0]->control_number)) {
+                                            $licCn = $application->license_items[0]->control_number;
+                                        }
+                                    }
+                                    echo $licCn;
+                                ?>
+                            </a>
                         </li>
                         <li class="list-group-item">
                             <b>Status</b> 

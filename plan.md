@@ -26,3 +26,14 @@ Kwenye ku subumitt application kuna aina mbili za applicant citizen and non citi
 
 Kwenye module ya my applications inayoonesha License Approval Journey kwenye sehemu ya control number , License,Date,License Fee:App. Fee: sasa kwenye lisence fee utaweka fee ya leseni itakayo patikana  na kwenye table ya license_types na column ya fee hii uantokea kutokana na aina ya leseni ulio chagua na  app fee utaweka fee ya application  
  
+ Kwenye initial application approval kwenye mfumo wa WMA-MIS kwenye sehemu ya applicant details kwenye card ya kwenza yenye applicant name ,license name Citizenship Status ,Application Type, Control na status utafanya marekebisho kwenye sehemu ya control number ambako control number iwe inaonekana ya application fee na chini ongeza ionekane ya lisence fee na hii itatokea baada ya applicant kugenarete mwisho kabisa akishakua approved na watu wote 
+
+Kwenye App fee CN itatokea badae na sio kurudia ya application mbili kuna malipo mawili yanafanyika kuna application fee na lisence fee so kwenye aplication fee after all approval applicant atarequest kweny applicant portal control number ndio itakuja kutokea hapo  
+
+kwenye tabs ya attachments uploaded kila document inavyokua apploaded au reuploaded iwe ina onekana katika category yake means kama ni attachments ionekane kwenye required attachments na kama ni qualification ionekane kwenye qualificatios document fix that condition mfumo uwe una filter documents kutokana na category ya document 
+
+In the WMA-MIS system, the Attachments Uploaded section shall display all documents uploaded by the applicant during the application process. It is noted that an applicant may submit more than one license application, and while Personal Information, Company Information, and common Attachments Uploaded may be shared across applications, each license application shall be treated independently in terms of License Details and Approval Workflow. Each submitted application must therefore have its own license record and its own approval process, without affecting other license applications submitted by the same applicant.
+
+For Required Attachments and Qualification Documents, the system shall dynamically determine and display the required documents based on the document category linked to the specific license being applied for. The system must retrieve and validate these document requirements by referencing the license_application_attachments table, ensuring that only documents relevant to the selected license category are shown, requested, and evaluated. This approach guarantees that applicants upload the correct documents per license type, while maintaining data integrity, proper document separation, and accurate approval decisions for each individual license application fix very carefully
+
+Kwenye mfumo wa applicant module ya notification badilisha design weka design hii ionekane hivi kama ilivyo kwenye picha 

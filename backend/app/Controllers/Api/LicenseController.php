@@ -100,8 +100,9 @@ class LicenseController extends ResourceController
                                            ->first();
             
             if ($existingDoc) {
-                // PRESERVE category from existing document
-                if (!$category && !empty($existingDoc->category)) {
+                // ROBUST PRESERVATION of Category
+                // If incoming category is empty, null, or string 'null'/'undefined', try to keep existing
+                if ((!$category || $category === 'null' || $category === 'undefined') && !empty($existingDoc->category)) {
                     $category = $existingDoc->category;
                 }
                 
@@ -123,8 +124,8 @@ class LicenseController extends ResourceController
                                            ->first();
     
             if ($existingDoc) {
-                // PRESERVE category from existing document
-                if (!$category && !empty($existingDoc->category)) {
+                // ROBUST PRESERVATION of Category
+                if ((!$category || $category === 'null' || $category === 'undefined') && !empty($existingDoc->category)) {
                     $category = $existingDoc->category;
                 }
                 
@@ -498,11 +499,19 @@ class LicenseController extends ResourceController
         $tools            = $data['tools'] ?? [];
         $declaration      = $data['declaration'] ?? false;
 
-        // Fetch draft attachments ONCE before the loop
+        // Fetch attachments to process (Explicit list or Fallback to drafts)
         $attachmentModel = new LicenseApplicationAttachmentModel();
-        $draftAttachments = $attachmentModel->where('user_id', $userId)
-                                            ->where('application_id', null)
-                                            ->findAll();
+        $attachmentsToProcess = [];
+        
+        if (!empty($data['attachments']) && is_array($data['attachments'])) {
+             // Fetch specifically requested attachments (Drafts + Shared Existing Docs)
+             $attachmentsToProcess = $attachmentModel->whereIn('id', $data['attachments'])->findAll();
+        } else {
+             // Legacy/Fallback: Fetch only drafts
+             $attachmentsToProcess = $attachmentModel->where('user_id', $userId)
+                                                     ->where('application_id', null)
+                                                     ->findAll();
+        }
 
         // Start Transaction
         $db = \Config\Database::connect();
@@ -640,8 +649,8 @@ class LicenseController extends ResourceController
                      $db->table('license_application_items')->insert($itemData);
 
                      // Copy Attachments (Phase 1)
-                     if (!empty($draftAttachments)) {
-                        foreach ($draftAttachments as $draft) {
+                     if (!empty($attachmentsToProcess)) {
+                        foreach ($attachmentsToProcess as $draft) {
                             $attId = md5(uniqid(rand(), true));
                             $attData = [
                                'id' => $attId,
@@ -703,8 +712,8 @@ class LicenseController extends ResourceController
                     ]);
                     
                     // Copy Attachments (Phase 2)
-                    if (!empty($draftAttachments)) {
-                        foreach ($draftAttachments as $draft) {
+                    if (!empty($attachmentsToProcess)) {
+                        foreach ($attachmentsToProcess as $draft) {
                             $attId = md5(uniqid(rand(), true));
                             $attData = [
                                'id' => $attId,
@@ -770,11 +779,13 @@ class LicenseController extends ResourceController
             }
 
             // Delete Draft Attachments after successful usage
-            if (!empty($draftAttachments)) {
-                 foreach ($draftAttachments as $draft) {
-                     // Delete the database record. 
-                     // Since we copied the file_content/path to new records, this drafts are no longer needed.
-                     $attachmentModel->delete($draft->id);
+            if (!empty($attachmentsToProcess)) {
+                 foreach ($attachmentsToProcess as $draft) {
+                     // Delete the database record ONLY if it was a draft.
+                     // Existing shared documents must be preserved.
+                     if ($draft->application_id === null) {
+                        $attachmentModel->delete($draft->id);
+                     }
                  }
             }
 

@@ -1,0 +1,489 @@
+.notifications-container {
+  display: flex;
+  height: calc(100vh - 120px);
+  background: #fff;
+  gap: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 20px;
+}
+
+/* Inbox Section */
+.inbox-section {
+  width: 380px;
+  background: white;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+}
+
+.inbox-header {
+  padding: 24px;
+  /* border-bottom: 1px solid #e5e7eb; */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inbox-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.new-badge {
+  background: #fffbeb;
+  color: #d97706;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Filter Tabs */
+.filter-tabs {
+  display: flex;
+  padding: 0 24px 16px;
+  gap: 8px;
+  /* border-bottom: 1px solid #e5e7eb; */
+  background: white;
+}
+
+.filter-tab {
+  padding: 6px 16px;
+  border: none;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.filter-tab:hover {
+  color: #111827;
+  background: #e5e7eb;
+}
+
+.filter-tab.active {
+  color: #111827;
+  background: #fbbf24;
+}
+
+/* Message List */
+.message-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background-color: #f9fafb;
+}
+
+.message-item {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid #f3f4f6;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  background: white;
+}
+
+.message-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  border-color: #e5e7eb;
+}
+
+/* .message-item:hover {
+  background: #f9fafb;
+} */
+
+.message-item.selected {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.message-item.unread {
+  background: #f0f9ff;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid #3b82f6;
+}
+
+.message-item.unread .sender-name,
+.message-item.unread .message-subject {
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.message-item.unread:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.message-item.unread.selected {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.message-avatar {
+  flex-shrink: 0;
+}
+
+.avatar-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #1f2937;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.avatar-circle.unread {
+  background: #3b82f6;
+  color: white;
+}
+
+.message-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.sender-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #d1d5db;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.star-btn:hover {
+  color: #fbbf24;
+}
+
+.star-btn.starred {
+  color: #fbbf24;
+  fill: #fbbf24;
+}
+
+.star-btn.starred svg {
+  fill: currentColor;
+}
+
+.message-date {
+  font-size: 12px;
+  color: #9ca3af;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.message-subject {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message-preview {
+  font-size: 13px;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+}
+
+/* Pagination */
+.pagination {
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  gap: 16px;
+}
+
+.page-info {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.page-btn {
+  padding: 6px 16px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* Preview Section */
+.preview-section {
+  flex: 1;
+  background: white;
+  overflow-y: auto;
+  padding: 20px 40px;
+}
+
+.preview-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-header {
+  padding: 10px 0 30px;
+  /* border-bottom: 1px solid #e5e7eb; */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.preview-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.preview-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #9ca3af;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+/* Sender Info */
+.sender-info {
+  /* padding: 24px 0; */
+  /* border-bottom: 1px solid #e5e7eb; */
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 30px;
+}
+
+.sender-avatar-large {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #fbbf24;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.sender-details {
+  flex: 1;
+}
+
+.sender-name-large {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* .sender-meta {
+  margin-bottom: 8px;
+} */
+
+.source-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  color: #9ca3af;
+  background: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.contact-info {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.contact-item {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.contact-bullet {
+    width: 3px;
+    height: 3px;
+    background: #d1d5db;
+    border-radius: 50%;
+}
+
+.message-time {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.time-text {
+  font-size: 13px;
+  color: #111827;
+  font-weight: 600;
+}
+
+/* Message Body */
+.message-body {
+  padding: 10px 0;
+  flex: 1;
+}
+
+.message-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 24px 0;
+  line-height: 1.3;
+}
+
+.message-text {
+  font-size: 16px;
+  line-height: 1.7;
+  color: #4b5563;
+}
+
+/* Empty States */
+.empty-state {
+  padding: 48px 20px;
+  text-align: center;
+}
+
+.empty-state p {
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.empty-preview {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #d1d5db;
+}
+
+.empty-preview p {
+  margin-top: 16px;
+  color: #9ca3af;
+  font-size: 15px;
+}
+
+/* Scrollbar Styling */
+.message-list::-webkit-scrollbar,
+.preview-section::-webkit-scrollbar {
+  width: 6px;
+}
+
+.message-list::-webkit-scrollbar-track,
+.preview-section::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.message-list::-webkit-scrollbar-thumb,
+.preview-section::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 3px;
+}
+
+.message-list::-webkit-scrollbar-thumb:hover,
+.preview-section::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .notifications-container {
+    flex-direction: column;
+    height: auto;
+    margin: 10px;
+  }
+
+  .inbox-section {
+    width: 100%;
+    max-height: 50vh;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .preview-section {
+    border-left: none;
+    border-top: 1px solid #e5e7eb;
+    height: 50vh;
+  }
+}

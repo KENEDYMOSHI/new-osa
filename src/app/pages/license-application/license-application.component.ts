@@ -468,20 +468,16 @@ export class LicenseApplicationComponent implements OnInit {
     // Determine application ID to pass
     const appId = this.isApplicationSubmitted ? (this.applicationId || undefined) : undefined;
 
-    // Determine Category - PRESERVE from existing document if available
+    // Determine Category - Strict Logic: Prioritize list membership over DB value to fix corruption
     let category = 'attachment'; // Default
     
-    // First check if this document already has a category (from database)
-    // This happens when re-uploading a returned or existing document
-    if (targetDoc && targetDoc.category) {
+    const isQual = this.qualificationDocuments.some(d => d.id === documentType || d.name === documentType);
+    if (isQual) {
+      category = 'qualification';
+    } else if (targetDoc && targetDoc.category && targetDoc.category !== 'null') {
+      // Fallback to existing category only if not explicitly identified as generic attachment
+      // and not in qualification list
       category = targetDoc.category;
-    } else {
-      // For new documents, determine category based on document type
-      // Check if it exists in qualificationDocuments list
-      const isQual = this.qualificationDocuments.some(d => d.id === documentType || d.name === documentType);
-      if (isQual) {
-        category = 'qualification';
-      }
     }
 
     this.licenseService.uploadDocument(file, documentType, appId, category).subscribe({
@@ -638,6 +634,8 @@ export class LicenseApplicationComponent implements OnInit {
     const isQual = this.qualificationDocuments.some(d => d.id === doc.id || d.name === doc.name);
     if (isQual) {
       category = 'qualification';
+    } else if (doc.category && doc.category !== 'null') {
+      category = doc.category;
     }
 
     this.licenseService.uploadDocument(doc.pendingFile, doc.id, appId, category).subscribe({
@@ -786,6 +784,14 @@ export class LicenseApplicationComponent implements OnInit {
 
     this.isSubmitting = true;
 
+    // Collect all valid attachment IDs (Uploaded status)
+    const attachmentIds: string[] = [];
+    [...this.requiredDocuments, ...this.qualificationDocuments].forEach(doc => {
+        if (doc.status === 'Uploaded' && doc.dbId) {
+            attachmentIds.push(doc.dbId);
+        }
+    });
+
     const applicationData = {
       applicationType: this.applicationType,
       totalAmount: this.totalAmount,
@@ -794,7 +800,8 @@ export class LicenseApplicationComponent implements OnInit {
       previousLicenses: this.previousLicenses,
       qualifications: this.qualifications,
       experiences: this.experiences,
-      tools: this.tools
+      tools: this.tools,
+      attachments: attachmentIds // Send explicitly included attachments
     };
 
     Swal.fire({
