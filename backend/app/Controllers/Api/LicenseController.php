@@ -307,9 +307,21 @@ class LicenseController extends ResourceController
                     'application_fee' => $latestItem ? $latestItem->application_fee : null
                  ];
             } else {
+                 // Check if it is an older license (Renewal candidates)
+                 $historicalExists = $db->table('license_application_items')
+                    ->select('license_application_items.id')
+                    ->join('license_applications', 'license_applications.id = license_application_items.application_id')
+                    ->where('license_applications.user_id', $user->id)
+                    ->where('license_application_items.license_type', $type)
+                    ->whereIn('license_applications.status', ['Approved_CEO', 'License_Generated']) 
+                    ->where('license_applications.updated_at <', $oneYearAgo) // Older than 1 year
+                    ->countAllResults();
+
+                 $typeName = ($historicalExists > 0) ? 'Renewal' : 'New';
+
                  $availableLicenseTypes[] = [
                     'name' => $type,
-                    'type' => 'New',
+                    'type' => $typeName, 
                     'date' => null
                  ];
             }

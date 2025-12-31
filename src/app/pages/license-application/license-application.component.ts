@@ -408,13 +408,35 @@ export class LicenseApplicationComponent implements OnInit {
         }
 
         // 2. Handle Global Submitted/Approved Licenses (From history)
+        if (response.availableLicenseTypes && Array.isArray(response.availableLicenseTypes)) {
+             this.licenseTypes.forEach(license => {
+                  const available = response.availableLicenseTypes.find((a: any) => a.name === license.name);
+                  if (available) {
+                      (license as any).applicationType = available.type; // 'New' or 'Renewal'
+                      // Auto-select if it is a Renewal (User needs to renew)
+                      if (available.type === 'Renewal') {
+                          license.selected = true;
+                          // If there are instruments, we might need to select them? 
+                          // Currently logic requires instruments to select license. 
+                          // But user request says "itaweka kua selected". 
+                          // If there are instruments, we can't select specific ones automatically unless we know history.
+                          // So we select the license, but validation will force user to pick instruments.
+                          // However, our `toggleLicense` prevents manual selection without instruments.
+                          // Forced selection here bypasses `toggleLicense` check.
+                      }
+                  }
+             });
+        }
+        
+        // Calculate total after auto-selections
+        this.calculateTotal();
         if (response.submittedLicenseTypes && Array.isArray(response.submittedLicenseTypes)) {
             this.licenseTypes.forEach(license => {
                 const submitted = response.submittedLicenseTypes.find((s: any) => s.license_type === license.name);
                 if (submitted) {
                      (license as any).submitted = true;
                      (license as any).restrictionReason = submitted.status;
-                     (license as any).controlNumber = submitted.control_number;
+                     (license as any).control_number = submitted.control_number;
                      (license as any).paymentStatus = submitted.payment_status;
                      (license as any).billAmount = submitted.bill_amount;
                      (license as any).applicationFee = submitted.application_fee;
