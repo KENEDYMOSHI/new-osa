@@ -313,11 +313,14 @@ export class LicenseApplicationComponent implements OnInit {
     // Smart Auto-Selection/Deselection Logic based on Criteria Validity
     const status = this.getCriteriaStatus(license);
     
-    // Logic: If selection is VALID (Min requirements met), Select the license.
-    // If invalid (e.g. dropped below Min), Deselect the license.
-    license.selected = status.valid;
+    // Logic: If selection is VALID (Min requirements met) AND count > 0, Select the license.
+    // Otherwise, Deselect.
+    const shouldSelect = status.valid && (license.userSelectedInstruments.length > 0);
     
-    this.calculateTotal();
+    if (license.selected !== shouldSelect) {
+        license.selected = shouldSelect;
+        this.calculateTotal();
+    }
   }
   
   // Helper to check criteria status for UI feedback
@@ -775,6 +778,14 @@ export class LicenseApplicationComponent implements OnInit {
   }
 
   toggleLicense(license: any) {
+    // Prevent manual toggle if instruments are available (Auto-selection logic driven by instruments)
+    if (license.availableInstruments && license.availableInstruments.length > 0) {
+        if (!license.selected) {
+             Swal.fire('Select Instruments', 'Please select the required instruments to apply for this license.', 'info');
+        }
+        return;
+    }
+
     // Only prevent toggling if THIS specific license has been submitted
     if ((license as any).submitted) {
         const reason = (license as any).restrictionReason || 'Already Applied';
@@ -788,6 +799,7 @@ export class LicenseApplicationComponent implements OnInit {
 
   submitDocument(doc: any) {
     console.log('submitDocument called with doc:', doc);
+     // ... existing code ...
     console.log('Document dbId:', doc.dbId);
     
     if (!doc.dbId) {
