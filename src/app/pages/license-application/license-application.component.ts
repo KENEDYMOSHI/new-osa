@@ -83,6 +83,8 @@ export class LicenseApplicationComponent implements OnInit {
     userSelectedInstruments?: string[];
     // Restriction properties
     isRestricted?: boolean;
+    restrictionType?: 'approved_1yr' | 'pending';
+    status?: string;
     alreadyApplied?: boolean;
     daysRemaining?: number;
     availableDate?: string;
