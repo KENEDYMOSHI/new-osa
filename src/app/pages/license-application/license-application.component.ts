@@ -81,6 +81,12 @@ export class LicenseApplicationComponent implements OnInit {
     availableInstruments?: string[]; 
     criteria?: { min?: number, max?: number };
     userSelectedInstruments?: string[];
+    // Restriction properties
+    isRestricted?: boolean;
+    alreadyApplied?: boolean;
+    daysRemaining?: number;
+    availableDate?: string;
+    ceoApprovedAt?: string;
   }[] = [];
 
   // Approved licenses with restriction info
