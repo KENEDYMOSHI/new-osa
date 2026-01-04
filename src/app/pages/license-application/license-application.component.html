@@ -642,16 +642,23 @@
       <div class="p-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div *ngFor="let license of licenseTypes" 
-               [class]="'border rounded-lg p-4 transition-all ' + (license.selected ? 'border-[#F59E0B] bg-orange-50 ring-1 ring-[#F59E0B]' : (license.submitted ? 'border-green-200 bg-green-50' : 'border-gray-200')) + (!license.submitted ? ' cursor-pointer hover:border-orange-200' : '')"
+               [class]="'border rounded-lg p-4 transition-all ' + 
+                        (license.isRestricted ? 'border-red-300 bg-red-50 opacity-75 cursor-not-allowed' : 
+                         license.selected ? 'border-[#F59E0B] bg-orange-50 ring-1 ring-[#F59E0B]' : 
+                         license.submitted ? 'border-green-200 bg-green-50' : 
+                         'border-gray-200') + 
+                        (!license.submitted && !license.isRestricted ? ' cursor-pointer hover:border-orange-200' : '')"
                (click)="toggleLicense(license)">
             <div class="flex items-start justify-between mb-2">
               <h4 class="font-bold text-gray-800">{{ license.name }}</h4>
               
-              <ng-container *ngIf="!license.submitted">
+              <!-- Checkbox for selectable licenses -->
+              <ng-container *ngIf="!license.submitted && !license.isRestricted">
                 <input type="checkbox" [checked]="license.selected" class="h-5 w-5 text-[#F59E0B] rounded border-gray-300 focus:ring-[#F59E0B] pointer-events-none">
               </ng-container>
               
-              <ng-container *ngIf="license.submitted">
+              <!-- Checkmark for submitted licenses -->
+              <ng-container *ngIf="license.submitted && !license.isRestricted">
                 <div class="bg-green-100 text-green-600 rounded-full p-1">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -659,11 +666,44 @@
                 </div>
               </ng-container>
 
+              <!-- Lock icon for restricted licenses -->
+              <ng-container *ngIf="license.isRestricted">
+                <div class="bg-red-100 text-red-600 rounded-full p-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                  </svg>
+                </div>
+              </ng-container>
+
             </div>
             <p class="text-sm text-gray-600 mb-3 min-h-[40px]">{{ license.description }}</p>
             
+            <!-- Restriction Notice -->
+            <div *ngIf="license.isRestricted" class="mb-3 p-2 bg-red-100 border border-red-200 rounded-lg">
+              <div class="flex items-start gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <div class="text-xs">
+                  <p class="font-bold text-red-700 mb-1">Already Applied</p>
+                  <p class="text-red-600">Available after {{ formatDate(license.availableDate) }}</p>
+                  <p class="text-red-600 font-medium mt-1">{{ license.daysRemaining }} days remaining</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Submitted Notice -->
+            <div *ngIf="license.submitted && !license.isRestricted" class="mb-3 p-2 bg-green-100 border border-green-200 rounded-lg">
+              <div class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-green-600">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p class="text-xs font-bold text-green-700">Application Submitted</p>
+              </div>
+            </div>
+            
             <!-- Instruments Selection -->
-            <div *ngIf="license.availableInstruments && license.availableInstruments.length > 0" class="mb-3 mt-3 bg-gray-50 rounded-lg p-3 border border-gray-100" (click)="$event.stopPropagation()">
+            <div *ngIf="license.availableInstruments && license.availableInstruments.length > 0 && !license.isRestricted" class="mb-3 mt-3 bg-gray-50 rounded-lg p-3 border border-gray-100" (click)="$event.stopPropagation()">
                 <div class="flex justify-between items-center border-b border-gray-200 pb-2 mb-2">
                     <span class="text-xs font-bold text-gray-700 uppercase tracking-wider">Select Instruments</span>
                     <span *ngIf="license.criteria && (license.criteria.min || license.criteria.max)" class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-medium">

@@ -83,6 +83,10 @@ export class LicenseApplicationComponent implements OnInit {
     userSelectedInstruments?: string[];
   }[] = [];
 
+  // Approved licenses with restriction info
+  approvedLicenses: any[] = [];
+  restrictedLicenseTypes: Set<string> = new Set();
+
   totalAmount = 0;
   declarationAccepted = false;
   isSubmitting = false;
@@ -147,6 +151,7 @@ export class LicenseApplicationComponent implements OnInit {
     this.loadProfileData();
     this.loadLicenseTypes();
     this.loadApplicationFees();
+    this.loadApprovedLicenses(); // NEW: Load approved licenses
     // this.loadUserDocuments(); // Removed to avoid double call (called in updateRequiredDocuments)
   }
 
@@ -825,17 +830,71 @@ export class LicenseApplicationComponent implements OnInit {
              Swal.fire('Select Instruments', 'Please select the required instruments to apply for this license.', 'info');
         }
         return;
-    }
-
-    // Only prevent toggling if THIS specific license has been submitted
-    if ((license as any).submitted) {
-        const reason = (license as any).restrictionReason || 'Already Applied';
-        Swal.fire('Restricted', `You cannot select this license: ${reason}`, 'warning');
-        return;
+    // Prevent selection if restricted
+    if ((license as any).isRestricted) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'License Restricted',
+        html: `You cannot re-apply for <strong>${license.name}</strong> until <strong>${this.formatDate((license as any).availableDate)}</strong>.<br><br>` +
+              `This license was approved on ${this.formatDate((license as any).ceoApprovedAt)}. ` +
+              `You must wait 1 full year before re-applying.<br><br>` +
+              `<strong>${(license as any).daysRemaining} days remaining</strong>`,
+        confirmButtonColor: '#F59E0B'
+      });
+      return;
     }
     
+    // Prevent selection if already submitted (but not restricted)
+    if (license.submitted) {
+      return;
+    }
+    
+    // Existing toggle logic
     license.selected = !license.selected;
     this.calculateTotal();
+  }
+
+  loadApprovedLicenses() {
+    this.licenseService.getApprovedLicenses().subscribe({
+      next: (licenses: any[]) => {
+        this.approvedLicenses = licenses;
+        
+        // Build set of restricted license types
+        this.restrictedLicenseTypes.clear();
+        licenses.forEach(license => {
+          if (license.is_restricted) {
+            this.restrictedLicenseTypes.add(license.license_type);
+          }
+        });
+        
+        // Update license types with restriction info
+        this.updateLicenseRestrictions();
+      },
+      error: (err: any) => {
+        console.error('Error loading approved licenses:', err);
+      }
+    });
+  }
+
+  updateLicenseRestrictions() {
+    this.licenseTypes.forEach(license => {
+      const approvedLicense = this.approvedLicenses.find(
+        al => al.license_type === license.name
+      );
+      
+      if (approvedLicense) {
+        (license as any).alreadyApplied = true;
+        (license as any).isRestricted = approvedLicense.is_restricted;
+        (license as any).daysRemaining = approvedLicense.days_remaining;
+        (license as any).availableDate = approvedLicense.available_date;
+        (license as any).ceoApprovedAt = approvedLicense.ceo_approved_at;
+      }
+    });
+  }
+
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 
   submitDocument(doc: any) {

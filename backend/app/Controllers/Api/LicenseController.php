@@ -1649,4 +1649,49 @@ class LicenseController extends ResourceController
 
         return $this->respond($response);
     }
+
+    /**
+     * Get user's approved licenses with CEO approval dates and restriction status
+     * GET /api/license/approved-licenses
+     */
+    public function getApprovedLicenses()
+    {
+        $user = $this->getUserFromToken();
+        if (!$user) {
+            return $this->failUnauthorized();
+        }
+
+        $db = \Config\Database::connect();
+        
+        // Fetch all CEO-approved licenses for this user
+        $builder = $db->table('license_applications');
+        $builder->select('license_applications.id, license_applications.updated_at as ceo_approved_at, license_application_items.license_type');
+        $builder->join('license_application_items', 'license_application_items.application_id = license_applications.id');
+        $builder->where('license_applications.user_id', $user->id);
+        $builder->whereIn('license_applications.status', ['Approved_CEO', 'License_Generated', 'Approved']);
+        
+        $approvedLicenses = $builder->get()->getResultArray();
+        
+        // Calculate restriction status for each license
+        $result = [];
+        foreach ($approvedLicenses as $license) {
+            $approvalDate = new \DateTime($license['ceo_approved_at']);
+            $now = new \DateTime();
+            $oneYearLater = clone $approvalDate;
+            $oneYearLater->modify('+1 year');
+            
+            $isRestricted = $now < $oneYearLater;
+            $daysRemaining = $isRestricted ? $now->diff($oneYearLater)->days : 0;
+            
+            $result[] = [
+                'license_type' => $license['license_type'],
+                'ceo_approved_at' => $license['ceo_approved_at'],
+                'is_restricted' => $isRestricted,
+                'days_remaining' => $daysRemaining,
+                'available_date' => $oneYearLater->format('Y-m-d')
+            ];
+        }
+        
+        return $this->respond($result);
+    }
 }

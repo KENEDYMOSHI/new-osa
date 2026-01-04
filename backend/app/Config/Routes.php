@@ -60,6 +60,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->get('license/eligibility', 'LicenseController::checkEligibility');
     $routes->get('license/eligible-applications', 'LicenseController::getEligibleApplications');
     $routes->get('license/types', 'LicenseController::getLicenseTypes');
+    $routes->get('license/approved-licenses', 'LicenseController::getApprovedLicenses');
     $routes->get('admin/applications', 'AdminController::getApplications');
     $routes->get('admin/applicants', 'AdminController::getApplicants');
     $routes->get('admin/application/(:segment)', 'AdminController::getApplicationDetails/$1');

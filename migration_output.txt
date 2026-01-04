@@ -1,0 +1,13 @@
+Migration failed: Can't create table `vessel_discharge`.`license_applications` (errno: 150 "Foreign key constraint is incorrectly formed")<br>Trace: #0 /Users/keny/Downloads/free-angular-tailwind-dashboard-main/wma-mis/vendor/codeigniter4/framework/system/Database/Forge.php(570): CodeIgniter\Database\BaseConnection->query('CREATE TABLE `l...')
+#1 /Users/keny/Downloads/free-angular-tailwind-dashboard-main/wma-mis/app/Database/Migrations/2025-12-08-100100_CreateLicenseApplicationsTable.php(60): CodeIgniter\Database\Forge->createTable('license_applica...')
+#2 /Users/keny/Downloads/free-angular-tailwind-dashboard-main/wma-mis/vendor/codeigniter4/framework/system/Database/MigrationRunner.php(876): App\Database\Migrations\CreateLicenseApplicationsTable->up()
+#3 /Users/keny/Downloads/free-angular-tailwind-dashboard-main/wma-mis/vendor/codeigniter4/framework/system/Database/MigrationRunner.php(182): CodeIgniter\Database\MigrationRunner->migrate('up', Object(stdClass))
+#4 /Users/keny/Downloads/free-angular-tailwind-dashboard-main/wma-mis/app/Controllers/LicenseSettingController.php(220): CodeIgniter\Database\MigrationRunner->latest()
+#5 /Users/keny/Downloads/free-angular-tailwind-dashboard-main/wma-mis/vendor/codeigniter4/framework/system/CodeIgniter.php(933): App\Controllers\LicenseSettingController->runMigration()
+#6 /Users/keny/Downloads/free-angular-tailwind-dashboard-main/wma-mis/vendor/codeigniter4/framework/system/CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\LicenseSettingController))
+#7 /Users/keny/Downloads/free-angular-tailwind-dashboard-main/wma-mis/vendor/codeigniter4/framework/system/CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 /Users/keny/Downloads/free-angular-tailwind-dashboard-main/wma-mis/vendor/codeigniter4/framework/system/Boot.php(334): CodeIgniter\CodeIgniter->run()
+#9 /Users/keny/Downloads/free-angular-tailwind-dashboard-main/wma-mis/vendor/codeigniter4/framework/system/Boot.php(67): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 /Users/keny/Downloads/free-angular-tailwind-dashboard-main/wma-mis/public/index.php(56): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 /Users/keny/Downloads/free-angular-tailwind-dashboard-main/wma-mis/vendor/codeigniter4/framework/system/rewrite.php(44): require_once('/Users/keny/Dow...')
+#12 {main}

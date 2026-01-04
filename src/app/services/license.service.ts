@@ -129,6 +129,10 @@ export class LicenseService {
     return this.http.get(`${this.apiUrl}/details/${applicationId}`, { headers: this.getHeaders() });
   }
 
+  getApprovedLicenses(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/approved-licenses`, { headers: this.getHeaders() });
+  }
+
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
     return new HttpHeaders({
