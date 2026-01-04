@@ -329,6 +329,19 @@ public function approveApplication()
         $stage = 3;
     } elseif ($this->user->inGroup('ceo')) { // CEO
         $stage = 4;
+    } elseif ($this->user->inGroup('admin', 'superadmin')) {
+        $app = $this->licenseModel->getApplicationById($applicationId);
+        if ($app) {
+            if (($app->region_manager_status ?? 'Pending') === 'Pending') {
+                $stage = 1;
+            } elseif (($app->surveillance_status ?? 'Pending') === 'Pending') {
+                $stage = 2;
+            } elseif (($app->dts_status ?? 'Pending') === 'Pending') {
+                $stage = 3;
+            } elseif (($app->ceo_status ?? 'Pending') === 'Pending') {
+                $stage = 4;
+            }
+        }
     } else {
         return redirect()->back()->with('error', 'Unauthorized access');
     }
@@ -357,6 +370,19 @@ public function rejectApplication()
         $stage = 3;
     } elseif ($this->user->inGroup('ceo')) { // CEO
         $stage = 4;
+    } elseif ($this->user->inGroup('admin', 'superadmin')) {
+        $app = $this->licenseModel->getApplicationById($applicationId);
+        if ($app) {
+            if (($app->region_manager_status ?? 'Pending') === 'Pending') {
+                $stage = 1;
+            } elseif (($app->surveillance_status ?? 'Pending') === 'Pending') {
+                $stage = 2;
+            } elseif (($app->dts_status ?? 'Pending') === 'Pending') {
+                $stage = 3;
+            } elseif (($app->ceo_status ?? 'Pending') === 'Pending') {
+                $stage = 4;
+            }
+        }
     } else {
         return redirect()->back()->with('error', 'Unauthorized access');
     }

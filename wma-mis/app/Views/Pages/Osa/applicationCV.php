@@ -320,16 +320,21 @@
                             <td>
                                 <?= $item->type ?? 'N/A' ?>
                                 <?php if (!empty($item->selected_instruments)): ?>
-                                    <div style="font-size: 11px; margin-top: 4px; color: #666; line-height: 1.3;">
-                                        <div style="font-weight: 600; color: #2c5f2d; margin-bottom: 2px;">Selected Instruments:</div>
-                                        <?php 
-                                            // Handle potential double encoding or direct array
-                                            $rawInsts = $item->selected_instruments;
-                                            $insts = is_string($rawInsts) ? json_decode($rawInsts) : $rawInsts;
-                                            if (is_string($insts)) $insts = json_decode($insts); // Double decode check
-                                            
-                                            echo !empty($insts) && is_array($insts) ? implode(', ', $insts) : 'None';
-                                        ?>
+                                    <div style="margin-top: 5px;">
+                                        <div style="font-size: 11px; font-weight: 600; color: #666; margin-bottom: 3px;">Selected Instruments:</div>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                                            <?php 
+                                                $rawInsts = $item->selected_instruments;
+                                                $insts = is_string($rawInsts) ? json_decode($rawInsts) : $rawInsts;
+                                                if (is_string($insts)) $insts = json_decode($insts);
+                                                
+                                                if (!empty($insts) && is_array($insts)) {
+                                                    foreach ($insts as $inst) {
+                                                        echo '<span style="display: inline-block; font-size: 10px; color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; padding: 2px 6px; border-radius: 4px; margin-right: 3px; margin-bottom: 3px;">' . esc($inst) . '</span>';
+                                                    }
+                                                }
+                                            ?>
+                                        </div>
                                     </div>
                                 <?php endif; ?>
                             </td>

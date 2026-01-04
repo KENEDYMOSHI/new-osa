@@ -456,7 +456,10 @@ class ApprovalController extends BaseController
         $app = $appBuilder->where('id', $parentAppId)->get()->getRow();
         
         // Fallback to item stage if parent stage is missing
-        $currentStage = $app->approval_stage ?? ($item->approval_stage ?? 'Manager'); 
+        $currentStage = $app->approval_stage;
+        if (empty($currentStage)) {
+             $currentStage = ($item && isset($item->approval_stage)) ? $item->approval_stage : 'Manager';
+        }
         
         // 2.5 Surveillance Exam Rule: If Failed, block Approve
         if ($currentStage === 'Surveillance' && $action === 'Approve') {
@@ -547,10 +550,8 @@ class ApprovalController extends BaseController
         
         $appBuilder->where('id', $parentAppId)->update($updateData);
         
-        // Update Item as well if it exists
-        if ($item) {
-             $itemModel->update($item->id, $updateData);
-        }
+        // Update ALL Items belonging to this parent application to keep them in sync
+        $itemModel->where('application_id', $parentAppId)->set($updateData)->update();
         
         return $this->respond(['message' => 'Status updated successfully', 'stage' => $nextStage, 'status' => $newStatus]);
     }

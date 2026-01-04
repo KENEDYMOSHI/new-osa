@@ -698,19 +698,21 @@
                                                                     <span class="font-weight-bold text-dark d-block"><?= $item->license_name ?? $item->type ?? $item->name ?? 'License' ?></span>
                                                                     <small class="text-muted">License Class</small>
                                                                     <?php if (!empty($item->selected_instruments)): ?>
-                                                                        <div class="mt-1" style="font-size: 0.8rem; line-height: 1.3;">
-                                                                            <span class="text-success font-weight-bold" style="font-size: 0.75rem;">Selected Instruments:</span>
-                                                                            <br>
-                                                                            <span class="text-dark">
+                                                                        <div class="mt-2">
+                                                                            <span class="d-block text-muted small font-weight-bold mb-1">Selected Instruments:</span>
+                                                                            <div class="d-flex flex-wrap" style="gap: 5px;">
                                                                                 <?php 
-                                                                                    // Handle potential double encoding or direct array
                                                                                     $rawInsts = $item->selected_instruments;
                                                                                     $insts = is_string($rawInsts) ? json_decode($rawInsts) : $rawInsts;
-                                                                                    if (is_string($insts)) $insts = json_decode($insts); // Double decode check
+                                                                                    if (is_string($insts)) $insts = json_decode($insts);
                                                                                     
-                                                                                    echo !empty($insts) && is_array($insts) ? implode(', ', $insts) : 'None';
+                                                                                    if (!empty($insts) && is_array($insts)) {
+                                                                                        foreach ($insts as $inst) {
+                                                                                            echo '<span class="badge badge-light-success border border-success px-2 py-1 mr-1" style="font-size: 0.75rem;">' . esc($inst) . '</span>';
+                                                                                        }
+                                                                                    }
                                                                                 ?>
-                                                                            </span>
+                                                                            </div>
                                                                         </div>
                                                                     <?php endif; ?>
                                                                 </div>
@@ -1108,7 +1110,7 @@
                                     
                                     <div class="ct-content <?= ($rmStatus == 'Pending') ? 'pending' : '' ?>">
                                         <?php if ($rmStatus == 'Pending'): ?>
-                                            <?php if ($user->inGroup('manager')): ?>
+                                            <?php if ($user->inGroup('manager', 'admin', 'superadmin')): ?>
                                                 <!-- Action Form for Manager -->
                                                  <div class="action-box">
                                                     <h6 class="font-weight-bold text-primary mb-3">Action Required</h6>
@@ -1163,7 +1165,7 @@
                                          <?php if ($rmStatus == 'Pending' || $rmStatus == 'Rejected'): ?>
                                             Waiting for previous stage...
                                          <?php elseif ($svStatus == 'Pending'): ?>
-                                             <?php if ($user->inGroup('surveillance')): ?>
+                                             <?php if ($user->inGroup('surveillance', 'admin', 'superadmin')): ?>
                                                  <!-- Action Form for Surveillance -->
                                                   <div class="action-box">
                                                     <h6 class="font-weight-bold text-primary mb-3">Action Required</h6>
@@ -1248,7 +1250,7 @@
                                         </div>
                                         <div class="ct-content <?= ($dtsStatus == 'Pending') ? 'pending' : '' ?>">
                                             <?php if ($dtsStatus == 'Pending'): ?>
-                                                <?php if ($user->inGroup('dts')): ?>
+                                                <?php if ($user->inGroup('dts', 'admin', 'superadmin')): ?>
                                                      <div class="action-box">
                                                         <h6 class="font-weight-bold text-primary mb-3">Action Required</h6>
                                                         <p class="mb-3">Applicant submission received. Please endorse.</p>
@@ -1301,7 +1303,7 @@
                                             <?php if ($dtsStatus == 'Rejected'): ?>
                                                 Process terminated at Technical Director stage.
                                             <?php elseif ($ceoStatus == 'Pending'): ?>
-                                                <?php if ($user->inGroup('ceo')): ?>
+                                                <?php if ($user->inGroup('ceo', 'admin', 'superadmin')): ?>
                                                      <div class="action-box">
                                                         <h6 class="font-weight-bold text-primary mb-3">Action Required</h6>
                                                         <p class="mb-3">Technical Director endorsed. Final approval required.</p>
