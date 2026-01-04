@@ -1042,6 +1042,10 @@ export class LicenseApplicationComponent implements OnInit {
     });
   }
 
+  navigateToProfile() {
+    this.router.navigate(['/profile']);
+  }
+
   openInterviewModal(interview: any) {
     this.selectedInterview = interview;
     this.showInterviewModal = true;
