@@ -1048,10 +1048,6 @@ export class LicenseApplicationComponent implements OnInit {
     });
   }
 
-  navigateToProfile() {
-    this.router.navigate(['/profile']);
-  }
-
   openInterviewModal(interview: any) {
     this.selectedInterview = interview;
     this.showInterviewModal = true;
@@ -1060,96 +1056,5 @@ export class LicenseApplicationComponent implements OnInit {
   closeInterviewModal() {
     this.showInterviewModal = false;
     this.selectedInterview = null;
-  }
-
-  submitApplication() {
-    if (!this.declarationAccepted) {
-      Swal.fire('Error', 'You must accept the declaration.', 'error');
-      return;
-    }
-
-    const selectedLicenses = this.licenseTypes.filter(l => l.selected);
-    if (selectedLicenses.length === 0) {
-      Swal.fire('Error', 'Please select at least one license type.', 'error');
-      return;
-    }
-
-    // Validate instruments for licenses that require them
-    for (const license of selectedLicenses) {
-      if (license.availableInstruments && license.availableInstruments.length > 0) {
-        const status = this.getCriteriaStatus(license);
-        if (!status.valid) {
-          Swal.fire('Error', `${license.name}: ${status.message}`, 'error');
-          return;
-        }
-      }
-    }
-
-    // Check if all required documents are uploaded
-    const missingDocs = this.requiredDocuments.filter(d => d.status === 'Not Uploaded');
-    if (missingDocs.length > 0) {
-      Swal.fire('Error', 'Please upload all required documents before submitting.', 'error');
-      return;
-    }
-
-    // Check if all qualification documents are uploaded
-    const missingQualDocs = this.qualificationDocuments.filter(d => d.status === 'Not Uploaded');
-    if (missingQualDocs.length > 0) {
-      Swal.fire('Error', 'Please upload all qualification documents before submitting.', 'error');
-      return;
-    }
-
-    this.isSubmitting = true;
-
-    const applicationData = {
-      personalInfo: this.personalInfo,
-      companyInfo: this.companyInfo,
-      applicationType: this.applicationType,
-      selectedLicenses: selectedLicenses.map(l => ({
-        id: l.id,
-        name: l.name,
-        fee: l.fee,
-        selectedInstruments: l.userSelectedInstruments || []
-      })),
-      previousLicenses: this.previousLicenses,
-      qualifications: this.qualifications,
-      experiences: this.experiences,
-      tools: this.tools,
-      declarationAccepted: this.declarationAccepted
-    };
-
-    Swal.fire({
-      title: 'Submitting Application...',
-      text: 'Please wait',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
-
-    this.licenseService.submitApplication(applicationData).subscribe({
-      next: (response: any) => {
-        this.isSubmitting = false;
-        Swal.close();
-        
-        if (response.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Application Submitted!',
-                text: 'Your license application has been submitted successfully.',
-                confirmButtonText: 'OK'
-            }).then(() => {
-                this.router.navigate(['/dashboard']);
-            });
-        }
-      },
-      error: (err: any) => {
-        console.error('Submission error:', err);
-        this.isSubmitting = false;
-        Swal.close();
-        const errorMessage = err.error?.messages?.error || err.error?.message || err.message || 'Failed to submit application. Please try again.';
-        Swal.fire('Error', errorMessage, 'error');
-      }
-    });
   }
 }
