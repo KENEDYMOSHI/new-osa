@@ -113,8 +113,10 @@ class LicenseController extends ResourceController
                     $currentApp = $app; 
                 }
 
-                // Delete the existing document to replace it
-                $attachmentModel->delete($existingDoc->id);
+                // Delete ALL documents of this type for this user across all applications
+                $attachmentModel->where('user_id', $user->id)
+                               ->where('document_type', $docType)
+                               ->delete();
             }
         } else {
             // Draft mode: Check if a document of this type already exists for the user (unattached)
@@ -1599,9 +1601,10 @@ class LicenseController extends ResourceController
         $tools = isset($completion['tools']) ? json_decode($completion['tools'], true) : [];
         $previousLicenses = isset($completion['previous_licenses']) ? json_decode($completion['previous_licenses'], true) : [];
         
-        // 4. Fetch Attachments
+        // 4. Fetch Attachments (shared across all applications for this user)
         $attBuilder = $db->table('license_application_attachments');
-        $attBuilder->where('application_id', $applicationId);
+        $attBuilder->where('user_id', $application['user_id']);
+        $attBuilder->orderBy('created_at', 'DESC');
         $attachments = $attBuilder->get()->getResultArray();
 
         // 5. Fetch Interview Results

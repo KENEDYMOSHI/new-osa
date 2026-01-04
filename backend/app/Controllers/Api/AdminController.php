@@ -214,7 +214,14 @@ class AdminController extends ResourceController
             log_message('info', 'Return Document ID: ' . $documentId . ' Reason: ' . $rejectionReason);
 
             $db = \Config\Database::connect();
-            $builder = $db->table('license_application_attachments');
+            
+            // First, fetch the document to get user_id and document_type
+            $doc = $db->table('license_application_attachments')->where('id', $documentId)->get()->getRow();
+            
+            if (!$doc) {
+                log_message('error', 'Document not found: ' . $documentId);
+                return $this->failNotFound('Document not found');
+            }
             
             $data = [
                 'status' => 'Returned',
@@ -222,19 +229,20 @@ class AdminController extends ResourceController
                 'updated_at' => date('Y-m-d H:i:s')
             ];
 
-            $builder->where('id', $documentId);
+            // Update ALL documents of the same type for this user across all applications
+            $builder = $db->table('license_application_attachments');
+            $builder->where('user_id', $doc->user_id);
+            $builder->where('document_type', $doc->document_type);
+            
             if (!$builder->update($data)) {
                 log_message('error', 'Update failed: ' . json_encode($db->error()));
                 return $this->fail('Failed to update document status in database');
             }
-
-            // Fetch the document to get the user_id
-            $doc = $db->table('license_application_attachments')->where('id', $documentId)->get()->getRow();
             
-            if (!$doc) {
-                log_message('error', 'Document not found after update: ' . $documentId);
-                return $this->failNotFound('Document not found');
-            }
+            // Log how many documents were updated
+            $affectedRows = $db->affectedRows();
+            log_message('info', "Updated {$affectedRows} '{$doc->document_type}' document(s) for user {$doc->user_id} to 'Returned'");
+
 
             if (!isset($doc->user_id) || !$doc->user_id) {
                 log_message('error', 'User ID missing for document: ' . $documentId);
