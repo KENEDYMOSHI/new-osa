@@ -836,6 +836,7 @@ export class LicenseApplicationComponent implements OnInit {
              Swal.fire('Select Instruments', 'Please select the required instruments to apply for this license.', 'info');
         }
         return;
+    }
     // Prevent selection if restricted
     if ((license as any).isRestricted) {
       Swal.fire({
