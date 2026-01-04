@@ -1663,33 +1663,69 @@ class LicenseController extends ResourceController
 
         $db = \Config\Database::connect();
         
-        // Fetch all CEO-approved licenses for this user
+        // Fetch all submitted or approved licenses for this user
         $builder = $db->table('license_applications');
-        $builder->select('license_applications.id, license_applications.updated_at as ceo_approved_at, license_application_items.license_type');
+        $builder->select('license_applications.id, license_applications.updated_at, license_applications.status, license_application_items.license_type');
         $builder->join('license_application_items', 'license_application_items.application_id = license_applications.id');
         $builder->where('license_applications.user_id', $user->id);
-        $builder->whereIn('license_applications.status', ['Approved_CEO', 'License_Generated', 'Approved']);
         
-        $approvedLicenses = $builder->get()->getResultArray();
+        // Include ALL statuses that should restrict re-application:
+        // 1. Pending/In Progress
+        // 2. Approved
+        $restrictedStatuses = [
+            'Applicant_Submission', 
+            'Pending_DTS', 
+            'Pending_CEO', 
+            'Payment_Pending', 
+            'Approved_CEO', 
+            'License_Generated', 
+            'Approved'
+        ];
         
-        // Calculate restriction status for each license
+        $builder->whereIn('license_applications.status', $restrictedStatuses);
+        
+        $applications = $builder->get()->getResultArray();
+        
         $result = [];
-        foreach ($approvedLicenses as $license) {
-            $approvalDate = new \DateTime($license['ceo_approved_at']);
-            $now = new \DateTime();
-            $oneYearLater = clone $approvalDate;
-            $oneYearLater->modify('+1 year');
+        foreach ($applications as $app) {
+            $isApproved = in_array($app['status'], ['Approved_CEO', 'License_Generated', 'Approved']);
+            $isPending = !$isApproved;
             
-            $isRestricted = $now < $oneYearLater;
-            $daysRemaining = $isRestricted ? $now->diff($oneYearLater)->days : 0;
+            $isRestricted = false;
+            $daysRemaining = 0;
+            $availableDate = null;
+            $restrictionType = null; // 'approved_1yr' or 'pending'
+
+            if ($isApproved) {
+                // 1-Year Restriction Logic for Approved Licenses
+                $approvalDate = new \DateTime($app['updated_at']);
+                $now = new \DateTime();
+                $oneYearLater = clone $approvalDate;
+                $oneYearLater->modify('+1 year');
+                
+                if ($now < $oneYearLater) {
+                    $isRestricted = true;
+                    $daysRemaining = $now->diff($oneYearLater)->days;
+                    $availableDate = $oneYearLater->format('Y-m-d');
+                    $restrictionType = 'approved_1yr';
+                }
+            } else {
+                // Pending Logic - Always restricted while in progress
+                $isRestricted = true;
+                $restrictionType = 'pending';
+            }
             
-            $result[] = [
-                'license_type' => $license['license_type'],
-                'ceo_approved_at' => $license['ceo_approved_at'],
-                'is_restricted' => $isRestricted,
-                'days_remaining' => $daysRemaining,
-                'available_date' => $oneYearLater->format('Y-m-d')
-            ];
+            if ($isRestricted) {
+                $result[] = [
+                    'license_type' => $app['license_type'],
+                    'status' => $app['status'],
+                    'restriction_type' => $restrictionType, // 'approved_1yr' or 'pending'
+                    'ceo_approved_at' => $isApproved ? $app['updated_at'] : null,
+                    'is_restricted' => true,
+                    'days_remaining' => $daysRemaining,
+                    'available_date' => $availableDate
+                ];
+            }
         }
         
         return $this->respond($result);
