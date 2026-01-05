@@ -1282,8 +1282,58 @@ class LicenseController extends ResourceController
             return $this->failUnauthorized();
         }
 
+        $db = \Config\Database::connect();
+        
+        // 1. Get all initial applications for this user that are 'Approved_Surveillance'
+        $initialApps = $db->table('initial_applications')
+                          ->where('user_id', $user->id)
+                          ->where('status', 'Approved_Surveillance')
+                          ->get()->getResultArray();
+        
+        if (empty($initialApps)) {
+            return $this->respond([]);
+        }
+
+        $allEligibleLicenseNames = [];
+        
+        foreach ($initialApps as $app) {
+            // Check if this specific initial application is eligible
+            $isRenewal = (strcasecmp($app['application_type'], 'Renewal') === 0);
+            $isEligible = false;
+
+            if ($isRenewal) {
+                // Renewals skip interview check
+                $isEligible = true;
+            } else {
+                // New apps MUST have interview PASS
+                $interview = $db->table('interview_assessments')
+                                ->where('application_id', $app['id'])
+                                ->get()->getRow();
+                
+                if ($interview && strtoupper($interview->result) === 'PASS') {
+                    $isEligible = true;
+                }
+            }
+
+            if ($isEligible) {
+                // Get the license types linked to this approved initial application
+                $items = $db->table('license_application_items')
+                            ->where('application_id', $app['id'])
+                            ->get()->getResultArray();
+                
+                foreach ($items as $item) {
+                    $allEligibleLicenseNames[] = $item['license_type'];
+                }
+            }
+        }
+
+        if (empty($allEligibleLicenseNames)) {
+            return $this->respond([]);
+        }
+
+        // 2. Return ONLY the license types that are in the eligible list
         $model = model('App\Models\LicenseTypeModel');
-        $types = $model->findAll();
+        $types = $model->whereIn('name', array_unique($allEligibleLicenseNames))->findAll();
         
         return $this->respond($types);
     }

@@ -98,7 +98,17 @@ export class LicenseApplicationComponent implements OnInit {
   totalAmount = 0;
   declarationAccepted = false;
   isSubmitting = false;
+
+  // Eligibility and Interview Status
+  interviewPassed: boolean = false;
+  isEligibleForLicense: boolean = false;
+  eligibilityMessage: string = '';
   applicationId: string | null = null;
+  citizenship: 'Citizen' | 'Non-Citizen' = 'Citizen';
+
+  // Bill and Payment
+  billData: any = null;
+  showBillModal: boolean = false;
 
   // Interview Modal
   showInterviewModal: boolean = false;
@@ -250,35 +260,27 @@ export class LicenseApplicationComponent implements OnInit {
       next: (types: any[]) => {
         this.licenseTypes = types.map((t: any) => {
           let parsedInstruments: string[] = [];
-          if (t.selected_instruments) {
+          if (t.available_instruments) {
             try {
-              if (Array.isArray(t.selected_instruments)) {
-                parsedInstruments = t.selected_instruments;
-              } else {
-                 const parsed = JSON.parse(t.selected_instruments);
-                 if (Array.isArray(parsed)) parsedInstruments = parsed;
-              }
+              // Handle double-encoded JSON or direct object
+              const raw = (typeof t.available_instruments === 'string') ? JSON.parse(t.available_instruments) : t.available_instruments;
+              parsedInstruments = (typeof raw === 'string') ? JSON.parse(raw) : raw;
+              if (!Array.isArray(parsedInstruments)) parsedInstruments = [];
             } catch (e) {
-               parsedInstruments = [];
+              parsedInstruments = [];
             }
           }
 
           let parsedCriteria: { min?: number, max?: number } = {};
           if (t.criteria) {
-             try {
-                // Handle double-encoded JSON or direct object
-                const rawCriteria = (typeof t.criteria === 'string') ? JSON.parse(t.criteria) : t.criteria;
-                parsedCriteria = (typeof rawCriteria === 'string') ? JSON.parse(rawCriteria) : rawCriteria;
-                
-                // Ensure numbers
-                if (parsedCriteria.min) parsedCriteria.min = Number(parsedCriteria.min);
-                if (parsedCriteria.max) parsedCriteria.max = Number(parsedCriteria.max);
-                
-                console.log(`Parsed criteria for ${t.name}:`, parsedCriteria);
-             } catch (e) {
-                console.warn(`Failed to parse criteria for ${t.name}:`, t.criteria, e);
-                parsedCriteria = {};
-             }
+            try {
+              const rawCriteria = (typeof t.criteria === 'string') ? JSON.parse(t.criteria) : t.criteria;
+              parsedCriteria = (typeof rawCriteria === 'string') ? JSON.parse(rawCriteria) : rawCriteria;
+              if (parsedCriteria.min) parsedCriteria.min = Number(parsedCriteria.min);
+              if (parsedCriteria.max) parsedCriteria.max = Number(parsedCriteria.max);
+            } catch (e) {
+              parsedCriteria = {};
+            }
           }
 
           return {
@@ -288,24 +290,27 @@ export class LicenseApplicationComponent implements OnInit {
             description: t.description,
             selected: false,
             submitted: false,
-            // New fields
             availableInstruments: parsedInstruments,
             criteria: parsedCriteria,
             userSelectedInstruments: [] as string[]
           };
         });
 
-        // Sort alphabetically by name
-        this.licenseTypes.sort((a, b) => {
-            const nameA = a.name.toUpperCase();
-            const nameB = b.name.toUpperCase();
-            if (nameA < nameB) return -1;
-            if (nameA > nameB) return 1;
-            return 0;
+        // Check for Interview PASS status to show banner
+        this.licenseService.checkEligibility().subscribe(res => {
+          if (res && res.canApply) {
+            this.isEligibleForLicense = true;
+            if (res.applicationType === 'New') {
+              this.interviewPassed = true;
+            }
+          }
         });
 
-        console.log('License types loaded:', this.licenseTypes);
-        this.updateRequiredDocuments(); 
+        // Sort alphabetically by name
+        this.licenseTypes.sort((a, b) => a.name.localeCompare(b.name));
+
+        this.updateRequiredDocuments();
+        this.updateLicenseRestrictions();
       },
       error: (err: any) => {
         console.error('Failed to load license types:', err);
@@ -795,10 +800,7 @@ export class LicenseApplicationComponent implements OnInit {
     });
   }
 
-  billData: any = null;
-  showBillModal: boolean = false;
 
-  citizenship: 'Citizen' | 'Non-Citizen' = 'Citizen';
 
   calculateTotal() {
     const appFee = this.applicationFee;
