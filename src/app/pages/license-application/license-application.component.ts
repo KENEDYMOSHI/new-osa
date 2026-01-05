@@ -260,10 +260,11 @@ export class LicenseApplicationComponent implements OnInit {
       next: (types: any[]) => {
         this.licenseTypes = types.map((t: any) => {
           let parsedInstruments: string[] = [];
-          if (t.available_instruments) {
+          const rawInstruments = t.available_instruments || t.instruments || t.selected_instruments;
+          if (rawInstruments) {
             try {
               // Handle double-encoded JSON or direct object
-              const raw = (typeof t.available_instruments === 'string') ? JSON.parse(t.available_instruments) : t.available_instruments;
+              const raw = (typeof rawInstruments === 'string') ? JSON.parse(rawInstruments) : rawInstruments;
               parsedInstruments = (typeof raw === 'string') ? JSON.parse(raw) : raw;
               if (!Array.isArray(parsedInstruments)) parsedInstruments = [];
             } catch (e) {
@@ -459,6 +460,7 @@ export class LicenseApplicationComponent implements OnInit {
                      (license as any).billAmount = submitted.bill_amount;
                      (license as any).applicationFee = submitted.application_fee;
                      (license as any).disabled = true; // Disable if already submitted/approved
+                     (license as any).restrictionType = (submitted.status === 'Restricted (1 Year)') ? 'approved_1yr' : 'pending';
                      license.selected = false;
                 }
             });
@@ -896,6 +898,7 @@ export class LicenseApplicationComponent implements OnInit {
       if (approvedLicense) {
         (license as any).alreadyApplied = true;
         (license as any).isRestricted = approvedLicense.is_restricted;
+        (license as any).restrictionType = approvedLicense.restriction_type;
         (license as any).daysRemaining = approvedLicense.days_remaining;
         (license as any).availableDate = approvedLicense.available_date;
         (license as any).ceoApprovedAt = approvedLicense.ceo_approved_at;

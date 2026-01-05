@@ -91,4 +91,4 @@ The applicant portal system should be enhanced to restrict applicants from re-se
 
 Kwenye hidden module inayoitwa license application kwenye side menu ilioko kwenye applicant portal rename na itwe complite license application usibadili kwingine zaid ya hapo 
 
-kwenye 
+In the Complete License Application module, under the License Details tab, the Select License Types (Type Of License Being Applied For) dropdown should display and allow selection of only approved licenses. For a New License Application, a license should appear in the dropdown only if it has been approved by the Manager, approved by Surveillance, and the applicant has passed the interview/assessment. For a Renew License Application, a license should appear in the dropdown only if it has been approved by the Manager and approved by Surveillance, without requiring a PASS condition. The system must filter the license list based on the application type (New or Renew) to ensure that applicants can select only valid and fully approved licenses.

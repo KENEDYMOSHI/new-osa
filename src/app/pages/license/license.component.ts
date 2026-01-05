@@ -284,11 +284,27 @@ export class LicenseComponent {
         const status = response.applicationStatus;
         this.isApplicationSubmitted = status && status !== 'Draft' && status !== 'Returned'; 
 
-        // Fetch Eligible Applications (Passed Exam + Approved Surveillance)
+        // Fetch Eligible Applications (Filtered by specific approval conditions)
         this.licenseService.getEligibleApplications().subscribe({
              next: (apps) => {
-                 this.availableLicenseTypes = apps;
-                 this.licenseTypes = apps; // Keep ref
+                 this.availableLicenseTypes = apps.filter((app: any) => {
+                    const appType = String(app.type || '').toLowerCase();
+                    const isManagerApproved = String(app.manager_approval || '').toLowerCase() === 'approved';
+                    const isSurveillanceApproved = String(app.surveillance_approval || '').toLowerCase() === 'approved';
+                    const isTypeNew = appType === 'new';
+                    const isTypeRenew = appType === 'renew' || appType === 'renewal';
+                    const interviewPassed = String(app.interview_status || '').toLowerCase() === 'pass';
+
+                    if (isTypeNew) {
+                        return isManagerApproved && isSurveillanceApproved && interviewPassed;
+                    } else if (isTypeRenew) {
+                        return isManagerApproved && isSurveillanceApproved;
+                    }
+                    
+                    return false; 
+                 });
+
+                 this.licenseTypes = [...this.availableLicenseTypes]; // Keep ref of filtered items
 
                  // Auto-select the first one by default if available
                  if (this.availableLicenseTypes.length > 0) {

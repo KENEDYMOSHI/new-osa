@@ -267,11 +267,17 @@ class LicenseController extends ResourceController
                 ->whereIn('license_applications.status', [
                     'Submitted', 
                     'Pending', 
-                    'Approved_Stage_1', 
-                    'Approved_Stage_2', 
-                    'Approved_Stage_3',
+                    'Approved_Manager',
+                    'Approved_Surveillance',
+                    'Applicant_Submission',
+                    'DTS',
+                    'Approved_DTS',
+                    'Recommend_DTS',
+                    'Approved_CEO',
+                    'License_Generated',
+                    'Approved',
                     'Returned',
-                    'Draft' // Should we block drafts? Usually yes, continue that draft.
+                    'Draft'
                 ])
                 ->countAllResults();
 
@@ -302,7 +308,7 @@ class LicenseController extends ResourceController
 
                  $submittedLicenseTypes[] = [
                     'license_type' => $type,
-                    'status' => ($approvedExists > 0) ? 'Restricted (1 Year)' : 'In Progress',
+                    'status' => $latestItem ? $latestItem->app_status : (($approvedExists > 0) ? 'Restricted (1 Year)' : 'In Progress'),
                     'control_number' => $latestItem ? $latestItem->control_number : null,
                     'payment_status' => $latestItem ? $latestItem->payment_status : null,
                     'bill_amount' => $latestItem ? $latestItem->bill_amount : null,
@@ -1277,64 +1283,8 @@ class LicenseController extends ResourceController
 
     public function getLicenseTypes()
     {
-        $user = $this->getUserFromToken();
-        if (!$user) {
-            return $this->failUnauthorized();
-        }
-
-        $db = \Config\Database::connect();
-        
-        // 1. Get all initial applications for this user that are 'Approved_Surveillance'
-        $initialApps = $db->table('initial_applications')
-                          ->where('user_id', $user->id)
-                          ->where('status', 'Approved_Surveillance')
-                          ->get()->getResultArray();
-        
-        if (empty($initialApps)) {
-            return $this->respond([]);
-        }
-
-        $allEligibleLicenseNames = [];
-        
-        foreach ($initialApps as $app) {
-            // Check if this specific initial application is eligible
-            $isRenewal = (strcasecmp($app['application_type'], 'Renewal') === 0);
-            $isEligible = false;
-
-            if ($isRenewal) {
-                // Renewals skip interview check
-                $isEligible = true;
-            } else {
-                // New apps MUST have interview PASS
-                $interview = $db->table('interview_assessments')
-                                ->where('application_id', $app['id'])
-                                ->get()->getRow();
-                
-                if ($interview && strtoupper($interview->result) === 'PASS') {
-                    $isEligible = true;
-                }
-            }
-
-            if ($isEligible) {
-                // Get the license types linked to this approved initial application
-                $items = $db->table('license_application_items')
-                            ->where('application_id', $app['id'])
-                            ->get()->getResultArray();
-                
-                foreach ($items as $item) {
-                    $allEligibleLicenseNames[] = $item['license_type'];
-                }
-            }
-        }
-
-        if (empty($allEligibleLicenseNames)) {
-            return $this->respond([]);
-        }
-
-        // 2. Return ONLY the license types that are in the eligible list
         $model = model('App\Models\LicenseTypeModel');
-        $types = $model->whereIn('name', array_unique($allEligibleLicenseNames))->findAll();
-        
+        $types = $model->findAll();
         return $this->respond($types);
     }
     public function checkEligibility()
@@ -1370,7 +1320,7 @@ class LicenseController extends ResourceController
         $db = \Config\Database::connect();
         
         $builder = $db->table('license_applications');
-        $builder->select('license_applications.id, license_applications.status, license_applications.application_type, license_application_items.license_type as name, license_application_items.fee'); 
+        $builder->select('license_applications.id, license_applications.status, license_applications.application_type, license_application_items.license_type as name, license_application_items.fee, license_application_items.selected_instruments'); 
         
         // 1. Join Application Items (for name/fee)
         $builder->join('license_application_items', 'license_application_items.application_id = license_applications.id');
@@ -1383,10 +1333,6 @@ class LicenseController extends ResourceController
 
         // 4. Join Exam Results (Left join because Renewals don't need it, but we filter later)
         $builder->join('interview_assessments', 'interview_assessments.application_id = license_applications.id', 'left');
-        
-        // 5. Only show applications that are ready for completion (exist in license_completions)
-        $builder->join('license_completions', 'license_completions.application_id = license_applications.id', 'left');
-        $builder->where('license_completions.id IS NOT NULL'); // Only show applications that are approved and ready
         
         $builder->where('license_applications.user_id', $user->id);
         
@@ -1411,6 +1357,9 @@ class LicenseController extends ResourceController
                 $builder->where('interview_assessments.result', 'PASS');
             $builder->groupEnd();
         $builder->groupEnd();
+
+        // 7. Grouping to avoid duplicates from joins
+        $builder->groupBy('license_applications.id, license_application_items.license_type, license_application_items.fee, license_application_items.selected_instruments');
         
         $query = $builder->get();
         $applications = $query->getResult();
@@ -1418,11 +1367,25 @@ class LicenseController extends ResourceController
         // Map to format expected by frontend (name, type, etc.)
         $eligible = [];
         foreach ($applications as $app) {
+             $instruments = [];
+             if (!empty($app->selected_instruments)) {
+                 try {
+                     $instruments = json_decode($app->selected_instruments, true);
+                     if (!is_array($instruments)) $instruments = [];
+                 } catch (\Exception $e) {
+                     $instruments = [];
+                 }
+             }
+
              $eligible[] = [
                  'id' => $app->id, // The application ID
                  'name' => $app->name, // License Type Name (e.g., Class A)
                  'fee' => $app->fee,
                  'type' => $app->application_type ?? 'New', // Defaulting to New
+                 'manager_approval' => 'Approved', // Guaranteed by Join
+                 'surveillance_approval' => 'Approved', // Guaranteed by Join
+                 'interview_status' => (strcasecmp($app->application_type ?? '', 'Renewal') === 0) ? 'N/A' : 'PASS', // Guaranteed by filter for New
+                 'selected_instruments' => $instruments,
                  'date' => null
              ];
         }
@@ -1723,16 +1686,22 @@ class LicenseController extends ResourceController
         // 1. Pending/In Progress
         // 2. Approved
         $restrictedStatuses = [
+            'Submitted',
+            'Pending',
+            'Approved_Manager',
+            'Approved_Surveillance',
             'Applicant_Submission', 
-            'Pending_DTS', 
-            'Pending_CEO', 
-            'Payment_Pending', 
+            'DTS', 
+            'Approved_DTS', 
+            'Recommend_DTS',
             'Approved_CEO', 
             'License_Generated', 
-            'Approved'
+            'Approved',
+            'Returned'
         ];
         
         $builder->whereIn('license_applications.status', $restrictedStatuses);
+        $builder->orderBy('license_applications.updated_at', 'DESC');
         
         $applications = $builder->get()->getResultArray();
         
@@ -1765,7 +1734,7 @@ class LicenseController extends ResourceController
                 $restrictionType = 'pending';
             }
             
-            if ($isRestricted) {
+            if ($isRestricted && $isApproved) {
                 $result[] = [
                     'license_type' => $app['license_type'],
                     'status' => $app['status'],
@@ -1774,6 +1743,15 @@ class LicenseController extends ResourceController
                     'is_restricted' => true,
                     'days_remaining' => $daysRemaining,
                     'available_date' => $availableDate
+                ];
+            } else if (!$isApproved) {
+                // Return for "Applied" status check but NOT restricted (Red)
+                // This helps frontend know it's in progress but show it as Green
+                $result[] = [
+                    'license_type' => $app['license_type'],
+                    'status' => $app['status'],
+                    'is_restricted' => false,
+                    'restriction_type' => 'pending'
                 ];
             }
         }

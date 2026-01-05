@@ -165,7 +165,15 @@
                   <span class="font-bold text-gray-500 min-w-[24px]">{{ i + 1 }}.</span>
                   <div class="flex-1">
                     <p class="text-sm font-medium text-gray-800">{{ item.name }}</p>
-                    <div class="flex gap-3 text-xs text-gray-500 mt-0.5">
+                    <div *ngIf="item.selected_instruments && item.selected_instruments.length > 0" class="mt-1 flex flex-wrap gap-1">
+                      <span *ngFor="let inst of item.selected_instruments" class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-2 h-2">
+                          <circle cx="10" cy="10" r="10" />
+                        </svg>
+                        {{ inst }}
+                      </span>
+                    </div>
+                    <div class="flex gap-3 text-xs text-gray-500 mt-1">
                       <span class="bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded border border-orange-100">{{ item.type }}</span>
                       <span class="flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">

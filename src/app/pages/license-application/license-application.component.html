@@ -726,7 +726,9 @@
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-green-600">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p class="text-xs font-bold text-green-700">Application Submitted</p>
+                <p class="text-xs font-bold text-green-700 capitalize">
+                  {{ (license.restrictionReason || 'Submitted').replace('_', ' ') }}
+                </p>
               </div>
             </div>
             
@@ -777,9 +779,19 @@
       </div>
       <div class="p-0">
         <div class="px-6 py-4 space-y-3">
-          <div *ngFor="let license of selectedLicenses" class="flex justify-between items-center text-sm text-gray-700 border-b border-gray-50 pb-2 last:border-0 last:pb-0">
-            <span>{{ license.name }}:</span>
-            <span class="font-medium">{{ applicationFee | number }} TZS</span>
+          <div *ngFor="let license of selectedLicenses" class="text-sm text-gray-700 border-b border-gray-50 pb-3 last:border-0 last:pb-0">
+            <div class="flex justify-between items-center">
+              <span class="font-medium">{{ license.name }}:</span>
+              <span class="font-bold text-gray-800">{{ applicationFee | number }} TZS</span>
+            </div>
+            <div *ngIf="license.userSelectedInstruments && license.userSelectedInstruments.length > 0" class="mt-2 flex flex-wrap gap-1">
+              <span *ngFor="let inst of license.userSelectedInstruments" class="text-[10px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded border border-orange-100 flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-2 h-2">
+                  <circle cx="10" cy="10" r="10" />
+                </svg>
+                {{ inst }}
+              </span>
+            </div>
           </div>
         </div>
         
