@@ -1372,17 +1372,9 @@ class LicenseController extends ResourceController
         $builder->where('license_applications.user_id', $user->id);
         
         // Exclude applications that have already been submitted or processed further
-        $builder->whereNotIn('license_applications.status', [
-            'Applicant_Submission', 
-            'DTS', 
-            'Approved_DTS', 
-            'Recommend_DTS', 
-            'CEO', 
-            'Approved_CEO', 
-            'License_Generated',
-            'Rejected',
-            'Closed'
-        ]);
+        // STRICT FILTER: Only allow applications that are explicitly at the 'Approved_Surveillance' stage
+        // This is the ONLY stage where an applicant can "complete" the form (add qualifications, tools, etc.)
+        $builder->where('license_applications.status', 'Approved_Surveillance');
         
         // 6. Strict Logic for New vs Renewal
         // If Renewal: Just the approvals above are enough (implied by the joins).
