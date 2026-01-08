@@ -12,6 +12,17 @@ class LicenseGenerator
             return false;
         }
 
+        // Check if license image already exists to avoid regeneration (and expensive API calls)
+        $title = $data->licenseNumber . '.jpg';
+        $savePath = 'certificates/' . $title;
+        $absoluteSavePath = FCPATH . $savePath;
+        $imgPath = base_url($savePath);
+
+        // If file exists, return it immediately
+        if (file_exists($absoluteSavePath)) {
+            return $imgPath;
+        }
+
 
 
     
@@ -300,21 +311,9 @@ class LicenseGenerator
         // Adjusted X/Y for bottom right alignment
         $canvas->place($qrCodeImage, 'right', 129, 650);
 
-        $title = $data->licenseNumber . '.jpg';
-        $savePath = 'certificates/' . $title;
-        // $savePath = WRITEPATH . $title;
-        // $savePath = 'stickers/' . $title;
-        
-        // Ensure absolute path for saving
-        $absoluteSavePath = FCPATH . $savePath;
-        
+        // Save using the paths defined at start
         $canvas->toJpeg()->save($absoluteSavePath);
 
-        $imgPath = base_url($savePath);
-
         return $imgPath;
-        // echo <<<HTML
-        //     <img src="$imgPath" width='700'>         
-        // HTML;
     }
 }
