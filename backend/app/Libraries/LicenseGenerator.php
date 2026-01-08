@@ -277,11 +277,27 @@ class LicenseGenerator
 
 
         // $qrCode = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($qrCodeData);
-        // Placeholder QR Code (Black Box) as fallback or until library is installed
-        $qrCodeImage = $imageManager->create(150, 150, '#000000');
-        $qrCodeImage->resize(230, 230);
+        // Use external API to generate QR Code
+        $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=230x230&data=' . urlencode($qrCodeData);
+        
+        try {
+            // Fetch image from URL
+            $qrContent = file_get_contents($qrUrl);
+            if ($qrContent !== false) {
+                 $qrCodeImage = $imageManager->read($qrContent);
+                 // Resize is handled by API size parameter, but ensure it fits if needed
+                 $qrCodeImage->resize(230, 230);
+            } else {
+                 throw new \Exception("Failed to fetch QR code");
+            }
+        } catch (\Exception $e) {
+            // Fallback to placeholder if offline or API fails
+            log_message('error', 'QR Code Generation Failed: ' . $e->getMessage());
+            $qrCodeImage = $imageManager->create(230, 230, '#000000');
+        }
 
-        // // Insert the QR code at the bottom right corner
+        // Insert the QR code at the bottom right corner
+        // Adjusted X/Y for bottom right alignment
         $canvas->place($qrCodeImage, 'right', 129, 650);
 
         $title = $data->licenseNumber . '.jpg';

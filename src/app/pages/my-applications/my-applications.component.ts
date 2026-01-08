@@ -4,10 +4,12 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LicenseService } from '../../services/license.service';
 
+import { AppModalComponent } from '../../components/app-modal/app-modal.component';
+
 @Component({
   selector: 'app-my-applications',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, AppModalComponent],
   templateUrl: './my-applications.component.html',
 })
 export class MyApplicationsComponent implements OnInit {
@@ -203,27 +205,20 @@ export class MyApplicationsComponent implements OnInit {
   }
 
   viewLicense(application: any) {
-    console.log('viewLicense called for app:', application);
     if (!application.original_id) {
-        console.error('Missing original_id for application');
         alert('Error: Application ID missing');
         return;
     }
 
     this.licenseService.viewLicense(application.original_id).subscribe({
       next: (response) => {
-        console.log('viewLicense response:', response);
         if (response.license_url) {
-          console.log('Opening license modal with URL:', response.license_url);
           // Open license in modal
           this.licenseModalUrl = response.license_url;
           this.licenseModalNumber = response.license_number || application.licenseControlNumber || 'Received License';
           this.showLicenseModal = true;
-          console.log('showLicenseModal set to true');
         } else {
-          console.warn('No license_url in response');
           alert('License is ready for viewing but no URL returned.');
-          // You can implement actual license viewing logic here
         }
       },
       error: (err) => {

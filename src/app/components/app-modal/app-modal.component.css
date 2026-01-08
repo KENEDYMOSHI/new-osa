@@ -1,0 +1,145 @@
+/* --- Base Styles --- */
+:host {
+  display: block;
+}
+
+/* --- Modal Backdrop --- */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(5px); /* Smooth Blur */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  
+  /* Hidden State handled by *ngIf in parent, but we keep transitions here for internal state if needed or just rely on animation libs. 
+       However, Angular *ngIf removes from DOM. 
+       To support proper entry/exit animations without external libs, we might use Angular Animations.
+       For now, we'll keep it simple and assume the parent handles visibility or we use a class binding.
+    */
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Active State */
+.modal-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* --- Modal Content Container --- */
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  padding: 0;
+  overflow: hidden;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+
+  /* Entry Animation: Slide down and Scale */
+  transform: translateY(-30px) scale(0.95);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-backdrop.active .modal-content {
+  transform: translateY(0) scale(1);
+}
+
+/* --- Sizing Classes --- */
+.modal-content.sm {
+  width: 320px;
+}
+.modal-content.md {
+  width: 500px;
+}
+.modal-content.lg {
+  width: 800px;
+}
+.modal-content.xl {
+  width: 90%;
+  max-width: 1200px;
+}
+
+/* --- Modal Internal Layout --- */
+.modal-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: bold;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.modal-body {
+  padding: 0;
+  line-height: 1.6;
+  color: #4b5563;
+  overflow: hidden; /* Changed from auto to hidden to rely on image sizing */
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-footer {
+  padding: 1.25rem;
+  background: #f9fafb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* --- Buttons --- */
+.btn-close-x {
+  /* position: absolute;
+    top: 15px;
+    right: 15px; */
+  background: #f3f4f6;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: background 0.2s;
+  margin-left: 1rem;
+}
+.btn-close-x:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+/* --- Static Shake Effect --- */
+@keyframes modal-shake {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.02);
+  }
+  50% {
+    transform: scale(0.99);
+  }
+  75% {
+    transform: scale(1.01);
+  }
+}
+.shake-anim {
+  animation: modal-shake 0.25s ease-in-out;
+}
