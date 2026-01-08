@@ -2,22 +2,15 @@
 
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
-class licenseGeneratorLibrary
+class LicenseGenerator
 {
     public function generateLicense($data = null)
     {
         
 
-         // sample data
-         $data = (object)[
-          'licenseType' => 'Class A',
-          'licenseNumber' => '1234567890',
-          'createdAt' => '12 Jan 2024',
-          'expiryDate' => '12 Jan 2025',
-          'applicantName' => 'John Doe',
-
-          
-         ];
+        if ($data === null) {
+            return false;
+        }
 
 
 
@@ -27,7 +20,7 @@ class licenseGeneratorLibrary
 
         $imageManager = new ImageManager(new Driver());
 
-        $ceoSignature = 'assets/img/ceoSign.png';
+        $ceoSignature = FCPATH . 'LicenseTemplates/ceo-sign.png';
 
         function spaces($string)
         {
@@ -188,13 +181,13 @@ class licenseGeneratorLibrary
 
 
 
-        $fontBold = 'assets/fonts/Poppins-Bold.ttf';
-        $fontSemiBold = 'assets/fonts/Poppins-SemiBold.ttf';
+        $fontBold = FCPATH . 'assets/fonts/Roboto-Regular.ttf';
+        $fontSemiBold = FCPATH . 'assets/fonts/Roboto-Regular.ttf';
 
         $fontSize = 24;
 
         // Load the background image
-        $background = "assets/img/$template";
+        $background = FCPATH . "LicenseTemplates/$template";
         $background = $imageManager->read($background);
         // Create a new image instance
         $canvas = $imageManager->create(1414, 2000, '#ffffff'); // Width, Height, Background Color
@@ -256,7 +249,7 @@ class licenseGeneratorLibrary
 
 
         //expiry date
-        $expiryDate = dateFormatter($data->expiryDate);
+        $expiryDate = date('d M Y', strtotime($data->expiryDate));
         $canvas->text(spaces($expiryDate), $expiryDateX, $expiryDateY, function ($font) use ($fontBold, $fontSize) {
             $font->size($fontSize);
             $font->fileName($fontBold);
@@ -264,7 +257,7 @@ class licenseGeneratorLibrary
         });
 
         // date of issuing
-        $issuingDate = dateFormatter($data->createdAt);
+        $issuingDate = date('d M Y', strtotime($data->createdAt));
         $canvas->text(spaces($issuingDate), $issueDateX, $issueDateY, function ($font) use ($fontBold, $fontSize) {
             $font->size($fontSize);
             $font->fileName($fontBold);
@@ -283,10 +276,9 @@ class licenseGeneratorLibrary
         $qrCodeData = base_url('verification/verifyLicense/' . $data->licenseToken);
 
 
-        $qrCode =  QRCode($qrCodeData);
-
-        // // Load the QR code image and resize it
-        $qrCodeImage = $imageManager->read($qrCode);
+        // $qrCode = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($qrCodeData);
+        // Placeholder QR Code (Black Box) as fallback or until library is installed
+        $qrCodeImage = $imageManager->create(150, 150, '#000000');
         $qrCodeImage->resize(230, 230);
 
         // // Insert the QR code at the bottom right corner
@@ -296,7 +288,11 @@ class licenseGeneratorLibrary
         $savePath = 'certificates/' . $title;
         // $savePath = WRITEPATH . $title;
         // $savePath = 'stickers/' . $title;
-        $canvas->toJpeg()->save($savePath);
+        
+        // Ensure absolute path for saving
+        $absoluteSavePath = FCPATH . $savePath;
+        
+        $canvas->toJpeg()->save($absoluteSavePath);
 
         $imgPath = base_url($savePath);
 

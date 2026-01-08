@@ -1,0 +1,237 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Smooth Modal</title>
+    <style>
+        /* --- Base Styles --- */
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            color: #1f2937;
+        }
+
+        .controls {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 { margin-top: 0; font-size: 1.5rem; }
+
+        select, label {
+            margin: 10px;
+            font-size: 1rem;
+        }
+
+        /* --- Modal Backdrop --- */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px); /* Smooth Blur */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            
+            /* Hidden State */
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Active State */
+        .modal-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* --- Modal Content Container --- */
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 0;
+            overflow: hidden;
+
+            /* Entry Animation: Slide down and Scale */
+            transform: translateY(-30px) scale(0.95);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-backdrop.active .modal-content {
+            transform: translateY(0) scale(1);
+        }
+
+        /* --- Sizing Classes --- */
+        .modal-content.sm { width: 320px; }
+        .modal-content.md { width: 500px; }
+        .modal-content.lg { width: 800px; }
+        .modal-content.xl { width: 90%; max-width: 1200px; }
+
+        /* --- Modal Internal Layout --- */
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            line-height: 1.6;
+            color: #4b5563;
+        }
+
+        .modal-footer {
+            padding: 1.25rem;
+            background: #f9fafb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* --- Buttons --- */
+        .btn-trigger {
+            background-color: #D97707;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-trigger:hover { background-color: #b45309; }
+
+        .btn-close-x {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #f3f4f6;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            transition: background 0.2s;
+        }
+        .btn-close-x:hover { background: #e5e7eb; color: #111827; }
+
+        /* --- Static Shake Effect --- */
+        @keyframes modal-shake {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.02); }
+            50% { transform: scale(0.99); }
+            75% { transform: scale(1.01); }
+        }
+        .shake-anim {
+            animation: modal-shake 0.25s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <h1>Modal Showcase</h1>
+        
+        <label for="sizeSelect">Size:</label>
+        <select id="sizeSelect">
+            <option value="sm">Small (sm)</option>
+            <option value="md" selected>Medium (md)</option>
+            <option value="lg">Large (lg)</option>
+            <option value="xl">Extra Large (xl)</option>
+        </select>
+
+        <br>
+
+        <label>
+            <input type="checkbox" id="staticToggle"> Static Backdrop
+        </label>
+
+        <br><br>
+
+        <button class="btn-trigger" onclick="openModal()">Open Modal</button>
+    </div>
+
+    <div class="modal-backdrop" id="modalBackdrop">
+        <div class="modal-content" id="modalContent">
+            <button class="btn-close-x" onclick="closeModal()">&times;</button>
+            
+            <div class="modal-header">
+                Modal Title
+            </div>
+            
+            <div class="modal-body">
+                <p>This modal features a smooth transition using cubic-bezier curves for a high-end feel.</p>
+                <p>The backdrop uses <b>backdrop-filter: blur</b> to create depth. You can toggle the "Static" mode in the controls behind this window.</p>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn-trigger" style="background: transparent; color: #6b7280; border: 1px solid #d1d5db;" onclick="closeModal()">Cancel</button>
+                <button class="btn-trigger" onclick="closeModal()">Confirm Action</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const backdrop = document.getElementById('modalBackdrop');
+        const content = document.getElementById('modalContent');
+        const sizeSelect = document.getElementById('sizeSelect');
+        const staticToggle = document.getElementById('staticToggle');
+
+        function openModal() {
+            // Apply selected size class
+            content.className = 'modal-content ' + sizeSelect.value;
+            // Show modal
+            backdrop.classList.add('active');
+        }
+
+        function closeModal() {
+            backdrop.classList.remove('active');
+        }
+
+        // Handle Backdrop Clicks
+        backdrop.addEventListener('mousedown', (e) => {
+            // If the user clicked specifically on the backdrop (not the content)
+            if (e.target === backdrop) {
+                if (staticToggle.checked) {
+                    // Trigger shake animation
+                    content.classList.remove('shake-anim');
+                    void content.offsetWidth; // Force reflow to restart animation
+                    content.classList.add('shake-anim');
+                } else {
+                    closeModal();
+                }
+            }
+        });
+
+        // Close on Escape Key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && backdrop.classList.contains('active')) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

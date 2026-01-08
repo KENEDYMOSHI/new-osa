@@ -25,6 +25,17 @@ export class MyApplicationsComponent implements OnInit {
   showFeeModal: boolean = false;
   feeModalData: any = null;
 
+  // License View Modal
+  showLicenseModal: boolean = false;
+  licenseModalUrl: string | null = null;
+  licenseModalNumber: string | null = null;
+
+  closeLicenseModal() {
+    this.showLicenseModal = false;
+    this.licenseModalUrl = null;
+    this.licenseModalNumber = null;
+  }
+
   constructor(private licenseService: LicenseService) { }
 
   ngOnInit(): void {
@@ -120,24 +131,38 @@ export class MyApplicationsComponent implements OnInit {
     window.print();
   }
 
+  // Track which application is currently generating a fee
+  generatingFeeFor: string | null = null;
+
   // License Fee and Payment Workflow
   generateFee(application: any) {
-    if (confirm('Generate control number for license fee for this application?')) {
-      this.licenseService.generateLicenseFee(application.original_id).subscribe({
-        next: (response) => {
-          // Show modal with bill details
-          this.feeModalData = response.bill;
-          this.showFeeModal = true;
-          
-          // Refresh applications to update button state
-          this.fetchApplications();
-        },
-        error: (err) => {
-          console.error('Failed to generate fee', err);
-          alert(err.error?.message || 'Failed to generate license fee. Please try again.');
-        }
-      });
-    }
+    // Prevent double clicks
+    if (this.generatingFeeFor) return;
+
+    this.generatingFeeFor = application.id; // Start loading
+
+    this.licenseService.generateLicenseFee(application.original_id).subscribe({
+      next: (response) => {
+        console.log('Fee Generation Response:', response);
+        // Show modal with bill details AND customer info
+        this.feeModalData = {
+          ...response.bill,
+          customer_name: application.applicant_name || 'N/A', 
+          application_type: application.application_type || 'License Application'
+        };
+        this.showFeeModal = true;
+        
+        this.generatingFeeFor = null; // Stop loading
+        
+        // Refresh applications to update button state
+        this.fetchApplications();
+      },
+      error: (err) => {
+        console.error('Failed to generate fee', err);
+        this.generatingFeeFor = null;
+        alert(err.error?.message || 'Failed to generate license fee. Please try again.');
+      }
+    });
   }
 
   closeFeeModal() {
@@ -178,13 +203,26 @@ export class MyApplicationsComponent implements OnInit {
   }
 
   viewLicense(application: any) {
+    console.log('viewLicense called for app:', application);
+    if (!application.original_id) {
+        console.error('Missing original_id for application');
+        alert('Error: Application ID missing');
+        return;
+    }
+
     this.licenseService.viewLicense(application.original_id).subscribe({
       next: (response) => {
+        console.log('viewLicense response:', response);
         if (response.license_url) {
-          // Open license in new window or download
-          window.open(response.license_url, '_blank');
+          console.log('Opening license modal with URL:', response.license_url);
+          // Open license in modal
+          this.licenseModalUrl = response.license_url;
+          this.licenseModalNumber = response.license_number || application.licenseControlNumber || 'Received License';
+          this.showLicenseModal = true;
+          console.log('showLicenseModal set to true');
         } else {
-          alert('License is ready for viewing');
+          console.warn('No license_url in response');
+          alert('License is ready for viewing but no URL returned.');
           // You can implement actual license viewing logic here
         }
       },
@@ -198,7 +236,7 @@ export class MyApplicationsComponent implements OnInit {
             this.viewBill(application);
           }
         } else {
-          alert('Failed to view license');
+          alert('Failed to view license: ' + (err.error?.message || err.message || 'Unknown error'));
         }
       }
     });
