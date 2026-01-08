@@ -86,12 +86,10 @@ class LicenseModel extends Model
             return false;
         }
 
-        // Verify all stages are approved
-        if ($application->status_stage_1 !== 'Approved' ||
-            $application->status_stage_2 !== 'Approved' ||
-            $application->status_stage_3 !== 'Approved' ||
-            $application->status_stage_4 !== 'Approved') {
-            log_message('error', 'License creation failed: Application not fully approved - ' . $applicationId);
+        // Verify application is fully approved
+        // We check strict 'Approved' status or 'Approved_CEO' which signifies final stage
+        if ($application->status !== 'Approved' && $application->status !== 'Approved_CEO') {
+            log_message('error', 'License creation failed: Application not fully approved - ' . $applicationId . ' Status: ' . $application->status);
             return false;
         }
 
@@ -121,7 +119,12 @@ class LicenseModel extends Model
         }
 
         // Generate license number
-        $licenseNumber = $this->generateLicenseNumber();
+        // Use the existing license number if it was already generated in the application table
+        if (!empty($application->license_number)) {
+            $licenseNumber = $application->license_number;
+        } else {
+            $licenseNumber = $this->generateLicenseNumber();
+        }
 
         // Set payment date (use provided date or current date)
         $paymentDate = $paymentDate ?? date('Y-m-d');
@@ -132,11 +135,7 @@ class LicenseModel extends Model
         // Prepare license data
         helper('text');
         $licenseData = [
-            'id' => strtolower(substr(md5(uniqid(rand(), true)), 0, 8) . '-' . 
-                    substr(md5(uniqid(rand(), true)), 0, 4) . '-' . 
-                    substr(md5(uniqid(rand(), true)), 0, 4) . '-' . 
-                    substr(md5(uniqid(rand(), true)), 0, 4) . '-' . 
-                    substr(md5(uniqid(rand(), true)), 0, 12)),
+            'id' => $this->generateUuid(), // Use a clean UUID generator if available, or helper
             'application_id' => $applicationId,
             'bill_id' => null, // Can be updated later if needed
             'region' => $applicant->region ?? null,
@@ -217,5 +216,20 @@ class LicenseModel extends Model
         }
         
         return strtotime($license['expiry_date']) < strtotime(date('Y-m-d'));
+    }
+
+    /**
+     * Generate UUID v4
+     */
+    private function generateUuid()
+    {
+        return sprintf(
+            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0x0fff) | 0x4000,
+            mt_rand(0, 0x3fff) | 0x8000,
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+        );
     }
 }

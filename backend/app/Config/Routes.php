@@ -70,6 +70,10 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->post('admin/document/return', 'AdminController::returnDocument');
     $routes->post('admin/document/(:segment)/accept', 'AdminController::acceptDocument/$1');
 
+    // Temporary Backfill Route
+    $routes->get('admin/backfill-license-numbers', 'AdminController::backfillLicenseNumbers');
+
+
     // Notifications
     $routes->get('notifications', 'NotificationController::getUserNotifications');
     $routes->post('notifications/(:segment)/read', 'NotificationController::markAsRead/$1');

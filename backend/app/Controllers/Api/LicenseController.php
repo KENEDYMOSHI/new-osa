@@ -1181,18 +1181,20 @@ class LicenseController extends ResourceController
                 'progress' => $progress,
                 'steps' => $steps,
                 'interview' => [
-                    'result' => $interviewResult ?? 'Pending',
-                    'scores' => $app['interview_scores'],
-                    'theory' => $app['theory_score'],
-                    'practical' => $app['practical_score'],
-                    'total' => $app['total_score'],
-                    'comments' => $app['interview_comments'],
+                    'result' => $interviewResult,
+                    'total' => $app['total_score'] ?? 0,
+                    'theory' => $app['theory_score'] ?? 0,
+                    'practical' => $app['practical_score'] ?? 0,
+                    'comment' => $app['interview_comments'] ?? '',
                     'date' => $app['interview_date'],
                     'panel' => $app['panel_names']
                 ],
                 'canFillLicenseApp' => $canFillLicenseApp,
                 'bill_status' => $billStatus, // For license fee workflow
-                'control_number' => $controlNumber
+                'control_number' => $controlNumber,
+                // Explicitly return license specific bill details for "Request Control Number" logic
+                'licenseControlNumber' => $app['license_control_number'] ?? null,
+                'licensePaymentStatus' => $app['license_payment_status'] ?? null
             ];
         }
 
@@ -1486,13 +1488,16 @@ class LicenseController extends ResourceController
         $totalAmount = $licenseFee + $applicationFee;
 
         // Create bill record using the same control number as the license
+        // Ensure we explicitly set bill_type = 2 (License Fee) and map application_id to 'bill_id'
         $billData = [
             'id' => $this->generateUuid(),
-            'application_id' => $applicationId,
+            'bill_id' => $applicationId, // Map application_id to bill_id column
             'control_number' => $controlNumber, // Same as license control number
+            'amount' => $totalAmount, // Map total to amount if model expects it, but keeping specific fields too if table has them
             'license_fee' => $licenseFee,
             'application_fee' => $applicationFee,
             'total_amount' => $totalAmount,
+            'bill_type' => 2, // 2 = License Fee
             'payment_status' => 'Pending',
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),

@@ -182,14 +182,94 @@ class AdminController extends ResourceController
         if ($currentStage >= 4) {
             $data['status'] = 'Approved';
             $data['current_stage'] = 4; // Cap at 4
-            $message = 'Application fully approved';
+            $message = 'Application fully approved and License Generated';
             // For stage 4, we also save the approver (CEO)
             $data["approver_stage_4"] = $approverName;
-        }
+            
+            // Update application status first
+            $model->update($id, $data);
 
-        $model->update($id, $data);
+            // Create License using the LicenseModel (Single Source of Truth)
+            // This will handle license number generation and insertion into 'licenses' table
+            $licenseModel = new \App\Models\LicenseModel();
+            $license = $licenseModel->createLicense($id);
+
+            if (!$license) {
+                // Log warning but don't fail the request significantly
+                log_message('error', 'Failed to auto-create license record for application: ' . $id);
+                $message .= ' (Warning: License record creation failed)';
+            }
+        } else {
+             // For non-final stages, just update the application
+             $model->update($id, $data);
+        }
         
         return $this->respond(['message' => $message, 'next_stage' => $nextStage]);
+    }
+
+    /**
+     * Temporary endpoint to backfill license records for existing approved applications
+     * GET /api/admin/backfill-license-numbers
+     */
+    public function backfillLicenseNumbers()
+    {
+        // Skip authentication check for this maintenance task or ensure admin
+        if (ENVIRONMENT !== 'development') {
+             $user = $this->getUserFromToken();
+             if (!$user) return $this->failUnauthorized();
+        }
+
+        $db = \Config\Database::connect();
+        $builder = $db->table('license_applications');
+        $licenseModel = new \App\Models\LicenseModel();
+        
+        // Find approved applications
+        // We want to ensure all approved applications have a corresponding record in the licenses table
+        $query = $builder->groupStart()
+                            ->where('status', 'Approved')
+                            ->orWhere('status', 'Approved_CEO')
+                         ->groupEnd()
+                         ->orderBy('created_at', 'ASC')
+                         ->get();
+
+        $apps = $query->getResultArray();
+        $count = 0;
+        $updates = [];
+
+        foreach ($apps as $app) {
+            // Check if license already exists via model check (it does duplicate check internally)
+            // But we can also check here to report status
+            $existing = $licenseModel->where('application_id', $app['id'])->first();
+            
+            if (!$existing) {
+                $license = $licenseModel->createLicense($app['id']);
+                if ($license) {
+                     $updates[] = [
+                        'id' => $app['id'],
+                        'license_number' => $license['license_number'],
+                        'status' => 'Created'
+                    ];
+                    $count++;
+                    usleep(50000); // Small pause
+                } else {
+                     $updates[] = [
+                        'id' => $app['id'],
+                        'status' => 'Failed'
+                    ];
+                }
+            } else {
+                 $updates[] = [
+                    'id' => $app['id'],
+                    'license_number' => $existing['license_number'],
+                    'status' => 'Skipped (Exists)'
+                ];
+            }
+        }
+
+        return $this->respond([
+            'message' => "Processed " . count($apps) . " applications. Created {$count} new license records.",
+            'details' => $updates
+        ]);
     }
 
     public function returnDocument()
