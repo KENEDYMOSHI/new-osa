@@ -577,9 +577,24 @@ class LicenseController extends ResourceController
                 
                 $appId = $item['id'];
                 $licenseName = $item['name'] ?? 'License';
-                // Fee is the License Fee (not application fee)
-                $fee = $item['fee'] ?? 100000; 
                 
+                
+                // Fetch actual License Fee from license_types table (Strict Database Lookup)
+                $licenseTypeData = $db->table('license_types')->where('name', $licenseName)->get()->getRow();
+                
+                if (!$licenseTypeData) {
+                    log_message('error', '[LicenseSubmission] License Type not found in DB: ' . $licenseName);
+                    // Fallback or Error? Proceeding with item fee but logging error.
+                    $fee = isset($item['fee']) ? (float)$item['fee'] : 100000;
+                } else {
+                    $fee = (float)$licenseTypeData->fee;
+                } 
+                
+                // If it is a completion, try to reuse the existing initial_application_id
+                $existingApp = $db->table('license_applications')->select('initial_application_id')->where('id', $appId)->get()->getRow();
+                if ($existingApp && !empty($existingApp->initial_application_id)) {
+                    $batchId = $existingApp->initial_application_id;
+                }                
                 // Check Eligibility
                 $checkBuilder = $db->table('license_applications');
                 $checkBuilder->join('application_reviews as manager_review', "manager_review.application_id = license_applications.id AND manager_review.stage = 'Manager' AND manager_review.status = 'Approved'");
@@ -757,48 +772,49 @@ class LicenseController extends ResourceController
                     // $fee already set from $item['fee']
                 }
                 
-                // 4. Generate Bill (Common)
-                 $billId = md5(uniqid(rand(), true));
-                 $cn = '99' . rand(1000000000, 9999999999);
-                 
-                 // Map numeric bill type for backward compatibility if needed? 
-                 // osabill column might be INT or String.
-                 // backend logs show 'bill_type' => 1 or 2 often usage.
-                 // 1 = Application Fee, 2 = License Fee.
-                 $billTypeInt = ($billType === 'Application Fee') ? 1 : 2;
+ 
+ 
+                    // 4. Generate Bill (ONLY FOR NEW APPLICATIONS)
+                    if (!$isEligible) {
+                        $billId = md5(uniqid(rand(), true));
+                        $cn = '99' . rand(1000000000, 9999999999);
+                        
+                        // Map numeric bill type for backward compatibility
+                        $billTypeInt = ($billType === 'Application Fee') ? 1 : 2;
 
-                 $billData = [
-                    'id' => $billId,
-                    'bill_id' => $appId, // Link bill to application
-                    'control_number' => $cn,
-                    'amount' => $fee,
-                    'bill_type' => $billTypeInt, 
-                    'payer_name' => $user->username,
-                    'payer_phone' => 'N/A',
-                    'bill_description' => $billType . ' - ' . $licenseName,
-                    'bill_expiry_date' => date('Y-m-d', strtotime('+30 days')),
-                    'collection_center' => 'Headquarters',
-                    'user_id' => $userId,
-                    'payment_status' => 'Pending',
-                    'items' => json_encode([['name' => $licenseName, 'amount' => $fee]]),
-                    'created_at' => date('Y-m-d H:i:s'),
-                    'updated_at' => date('Y-m-d H:i:s')
-                 ];
-                 $db->table('osabill')->insert($billData);
-                 
+                        $billData = [
+                            'id' => $billId,
+                            'bill_id' => $appId, // Link bill to application
+                            'control_number' => $cn,
+                            'amount' => $fee,
+                            'bill_type' => $billTypeInt, 
+                            'payer_name' => $user->username,
+                            'payer_phone' => 'N/A',
+                            'bill_description' => $licenseName . ' - ' . $billType,
+                            'bill_expiry_date' => date('Y-m-d', strtotime('+30 days')),
+                            'collection_center' => 'Headquarters',
+                            'user_id' => $userId,
+                            'payment_status' => 'Pending',
+                            'items' => json_encode([['name' => $licenseName, 'amount' => $fee]]),
+                            'created_at' => date('Y-m-d H:i:s'),
+                            'updated_at' => date('Y-m-d H:i:s')
+                        ];
+                        $db->table('osabill')->insert($billData);
+                        
+                        $generatedBills[] = [
+                            'license' => $licenseName,
+                            'controlNumber' => $cn,
+                            'amount' => $fee
+                        ];
+                        
+                        $lastBillData = (object)[
+                            'controlNumber' => $cn,
+                            'amount' => $fee,
+                            'billId' => $billId
+                        ];
+                    }
+
                 $createdApplications[] = $appId;
-                
-                 $generatedBills[] = [
-                    'license' => $licenseName,
-                    'controlNumber' => $cn,
-                    'amount' => $fee,
-                    'billId' => $billId
-                ];
-                $lastBillData = (object)[
-                    'controlNumber' => $cn,
-                    'amount' => $fee,
-                    'billId' => $billId
-                ];
             }
 
             // Delete Draft Attachments after successful usage
@@ -832,7 +848,7 @@ class LicenseController extends ResourceController
                 'bills' => $generatedBills
             ];
 
-            if (count($createdApplications) === 1) {
+            if (count($createdApplications) === 1 && isset($lastBillData)) {
                 // Return the last (and only) bill data for the modal
                 $responseData['id'] = $createdApplications[0];
                 $responseData['billData'] = $lastBillData;
@@ -969,13 +985,30 @@ class LicenseController extends ResourceController
 
         $db = \Config\Database::connect();
         $builder = $db->table('license_applications');
-        $builder->select('license_applications.*, license_bill.amount as bill_amount, license_bill.control_number, license_applications.status, practitioner_personal_infos.nationality, interview_assessments.result as interview_result, interview_assessments.scores as interview_scores, interview_assessments.comments as interview_comments, interview_assessments.interview_date, interview_assessments.panel_names, interview_assessments.theory_score, interview_assessments.practical_score, interview_assessments.total_score, app_fee_bill.amount as application_fee_amount');
+        $builder->select('
+            license_applications.*, 
+            license_bill.amount as license_fee_amount, 
+            license_bill.control_number as license_control_number, 
+            license_bill.payment_status as license_payment_status,
+            app_fee_bill.amount as application_fee_amount, 
+            app_fee_bill.control_number as application_control_number,
+            app_fee_bill.payment_status as application_payment_status,
+            practitioner_personal_infos.nationality, 
+            interview_assessments.result as interview_result, 
+            interview_assessments.total_score,
+            interview_assessments.comments as interview_comments, 
+            interview_assessments.interview_date, 
+            interview_assessments.panel_names, 
+            interview_assessments.scores as interview_scores, 
+            interview_assessments.theory_score, 
+            interview_assessments.practical_score
+        ');
         
-        // Join for License Fee
-        $builder->join('osabill as license_bill', 'license_bill.bill_id = license_applications.id', 'left');
+        // Join for License Fee (bill_type = 2)
+        $builder->join('osabill as license_bill', 'license_bill.bill_id = license_applications.id AND license_bill.bill_type = 2', 'left');
         
-        // Join for Application Fee (from Initial Application)
-        $builder->join('osabill as app_fee_bill', 'app_fee_bill.bill_id = license_applications.initial_application_id', 'left');
+        // Join for Application Fee (bill_type = 1) - Linked via initial_application_id or direct id if it was a standalone
+        $builder->join('osabill as app_fee_bill', '(app_fee_bill.bill_id = license_applications.id OR app_fee_bill.bill_id = license_applications.initial_application_id) AND app_fee_bill.bill_type = 1', 'left');
         
         // Join to get nationality
         $builder->join('users', 'users.id = license_applications.user_id', 'left');
@@ -1119,17 +1152,19 @@ class LicenseController extends ResourceController
             }
 
             // Check bill status for license fee workflow
-            $billModel = new \App\Models\LicenseBillModel();
-            $bill = $billModel->getBillByApplicationId($app['id']);
-            $billStatus = $bill ? $bill['payment_status'] : null;
-            
-            // Safely get control number - check bill first, then application, then generate placeholder
-            if ($bill && isset($bill['control_number'])) {
-                $controlNumber = $bill['control_number'];
-            } elseif (isset($app['control_number']) && !empty($app['control_number'])) {
+            // Safely get control number - check license fee first (Phase 2), then application fee, then application table
+            if (!empty($app['license_control_number'])) {
+                $controlNumber = $app['license_control_number'];
+                $billStatus = $app['license_payment_status'];
+            } elseif (!empty($app['application_control_number'])) {
+                $controlNumber = $app['application_control_number'];
+                $billStatus = $app['application_payment_status'];
+            } elseif (!empty($app['control_number'])) {
                 $controlNumber = $app['control_number'];
+                $billStatus = null; // Status from app table itself if it exists, otherwise null
             } else {
                 $controlNumber = null;
+                $billStatus = null;
             }
 
             $data[] = [
@@ -1342,9 +1377,11 @@ class LicenseController extends ResourceController
             'DTS', 
             'Approved_DTS', 
             'Recommend_DTS', 
+            'CEO', 
             'Approved_CEO', 
             'License_Generated',
-            'Rejected'
+            'Rejected',
+            'Closed'
         ]);
         
         // 6. Strict Logic for New vs Renewal
@@ -1757,5 +1794,26 @@ class LicenseController extends ResourceController
         }
         
         return $this->respond($result);
+    }
+
+    /**
+     * Get all documents for a specific application
+     * GET /api/license/application/{applicationId}/documents
+     */
+    public function getApplicationDocuments($applicationId)
+    {
+        $user = $this->getUserFromToken();
+        if (!$user) {
+            return $this->failUnauthorized();
+        }
+
+        $attachmentModel = new LicenseApplicationAttachmentModel();
+        
+        // Fetch all documents for this application
+        $documents = $attachmentModel->where('application_id', $applicationId)
+                                     ->where('user_id', $user->id)
+                                     ->findAll();
+
+        return $this->respond($documents);
     }
 }

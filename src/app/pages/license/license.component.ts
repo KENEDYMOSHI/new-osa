@@ -69,25 +69,181 @@ export class LicenseComponent {
 
   // Particulars Lists
   previousLicenseNumbers: string[] = [];
-  // selectedLicenseTypes and newSelectedLicenseType moved below to change type to any[]
   
   newPreviousLicenseNumber: string = '';
 
   licenseTypes: any[] = [];
   availableLicenseTypes: any[] = [];
-  selectedLicenseTypes: any[] = [];
-  newSelectedLicenseType: any = null;
+  
+  // Single Selection Logic
+  // Single Selection Logic
+  selectedLicenseType: any = null;
+  tempSelectedLicenseType: any = null; // For the dropdown selection
+  
+  // Replace Modal Logic
+  showReplaceModal: boolean = false;
+  licenseToReplace: any = null;
 
-  toggleLicenseType(type: string) {
-    const index = this.selectedLicenseTypes.indexOf(type);
-    if (index === -1) {
-      this.selectedLicenseTypes.push(type);
+  addLicenseType() {
+    if (!this.tempSelectedLicenseType) return;
+
+    if (this.selectedLicenseType) {
+      // If a license is already selected, prompt to replace
+      this.licenseToReplace = this.tempSelectedLicenseType;
+      this.showReplaceModal = true;
     } else {
-      this.selectedLicenseTypes.splice(index, 1);
+      // Otherwise, just select it
+      this.selectedLicenseType = this.tempSelectedLicenseType;
+      this.tempSelectedLicenseType = null;
+      // Load documents for this application
+      this.loadApplicationDocuments();
     }
   }
 
-  // Qualifications Logic
+  loadApplicationDocuments() {
+    if (!this.selectedLicenseType || !this.selectedLicenseType.id) return;
+    
+    // Reset to initial clean state (removes previous dynamic additions)
+    this.initializeDocuments();
+
+    // Fetch ALL user documents (Drafts + Attached) to ensure we see everything
+    // This fixes the issue where documents uploaded (as drafts) or attached to other phases weren't showing
+    this.licenseService.getUserDocuments().subscribe({
+      next: (response: any) => {
+        const documents = response.documents || [];
+        console.log('Fetched documents:', documents); // Debug log
+        
+        // Update requiredDocuments and qualificationDocuments with uploaded files
+        documents.forEach((doc: any) => {
+          const docType = doc.document_type;
+          const category = (doc.category || '').toLowerCase();
+
+          // 1. Try to find in Required Docs (Match by ID or Name)
+          let reqDoc = this.requiredDocuments.find(d => d.id === docType || d.name.toLowerCase() === docType.toLowerCase());
+          
+          if (reqDoc) {
+              this.updateDocStatus(reqDoc, doc);
+              return;
+          } 
+          
+          // 2. Try to find in Qualification Docs (Match by ID or Name)
+          let qualDoc = this.qualificationDocuments.find(d => d.id === docType || d.name.toLowerCase() === docType.toLowerCase());
+              
+          if (qualDoc) {
+              this.updateDocStatus(qualDoc, doc);
+              return;
+          }
+
+          // 3. No match found in predefined lists - Add dynamically
+          // This ensures ALL database documents are shown
+          const newDocEntry = {
+              id: docType,
+              name: this.formatDocName(docType), // Helper to make it readable
+              date: new Date(doc.created_at || Date.now()).toLocaleDateString('en-GB'),
+              status: 'Uploaded',
+              fileName: doc.original_name,
+              dbId: doc.id
+          };
+          
+          if (category === 'qualification') {
+              this.qualificationDocuments.push(newDocEntry);
+          } else {
+              // Default to required/attachment if unknown category
+              this.requiredDocuments.push(newDocEntry);
+          }
+        });
+      },
+      error: (err: any) => {
+        console.error('Failed to load application documents', err);
+      }
+    });
+  }
+
+  // Helper to reset and initialize document lists
+  initializeDocuments() {
+    this.requiredDocuments = [
+      { id: 'tin', name: 'Tax Payer Identification Number (TIN)', date: '-', status: 'Not Uploaded' },
+      { id: 'businessLicense', name: 'Business License', date: '-', status: 'Not Uploaded' },
+      { id: 'taxClearance', name: 'Certificate Of Tax Clearance', date: '-', status: 'Not Uploaded' },
+      { id: 'brela', name: 'Certificate of Registration/Incorporation from BRELA', date: '-', status: 'Not Uploaded' },
+      { id: 'identity', name: 'Identity Card (National ID / Driver\'s License / Voter ID)', date: '-', status: 'Not Uploaded' }
+    ];
+
+    this.qualificationDocuments = [
+      { id: 'psle', name: 'Primary School Leaving Certificate (PSLE)', date: '-', status: 'Not Uploaded' },
+      { id: 'csee', name: 'Certificate of Secondary Education Examination (CSEE)', date: '-', status: 'Not Uploaded' },
+      { id: 'acsee', name: 'Advanced Certificate of Secondary Education Examination (ACSEE)', date: '-', status: 'Not Uploaded' },
+      { id: 'veta', name: 'Basic Certificate - Vocational Education and Training Authority (VETA)', date: '-', status: 'Not Uploaded' },
+      { id: 'nta4', name: 'Basic Certificate (NTA Level 4)', date: '-', status: 'Not Uploaded' },
+      { id: 'nta5', name: 'Technician Certificate (NTA Level 5)', date: '-', status: 'Not Uploaded' },
+      { id: 'nta6', name: 'Ordinary Diploma (NTA Level 6)', date: '-', status: 'Not Uploaded' },
+      { id: 'specialized', name: 'Other Specialized Certificates', date: '-', status: 'Not Uploaded' },
+      { id: 'bachelor', name: 'Bachelor\'s Degree', date: '-', status: 'Not Uploaded' }
+    ];
+  }
+
+  formatDocName(type: string): string {
+      // Basic formatter: 'business_license' -> 'Business License'
+      if (!type) return 'Unknown Document';
+      return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  updateDocStatus(targetDoc: any, sourceDoc: any) {
+      targetDoc.status = 'Uploaded';
+      targetDoc.fileName = sourceDoc.original_name;
+      targetDoc.dbId = sourceDoc.id;
+      targetDoc.date = new Date(sourceDoc.created_at || Date.now()).toLocaleDateString('en-GB');
+  }
+
+
+
+  downloadDocument(doc: any) {
+    if (doc.dbId) {
+       this.licenseService.viewDocument(doc.dbId).subscribe({
+        next: (blob: Blob) => {
+           const url = window.URL.createObjectURL(blob);
+           const a = document.createElement('a');
+           a.href = url;
+           a.download = doc.fileName || doc.name + '.pdf';
+           document.body.appendChild(a);
+           a.click();
+           document.body.removeChild(a);
+           window.URL.revokeObjectURL(url);
+        },
+        error: (err) => console.error('Download failed', err)
+       });
+    }
+  }
+
+  hasUploadedRequiredDocs(): boolean {
+      return this.requiredDocuments.some(doc => doc.status === 'Uploaded');
+  }
+
+  hasUploadedQualificationDocs(): boolean {
+      return this.qualificationDocuments.some(doc => doc.status === 'Uploaded');
+  }
+
+  confirmReplace() {
+    this.selectedLicenseType = this.licenseToReplace;
+    this.licenseToReplace = null;
+    this.showReplaceModal = false;
+    this.tempSelectedLicenseType = null; // Reset dropdown
+    this.previousLicenseNumbers = [];
+    // Load documents for the new selection
+    this.loadApplicationDocuments();
+  }
+
+  cancelReplace() {
+    this.licenseToReplace = null;
+    this.showReplaceModal = false;
+    // Do not reset tempSelectedLicenseType so user sees what they selected
+  }
+
+  removeLicenseType() {
+    this.selectedLicenseType = null;
+    this.previousLicenseNumbers = [];
+  }
+
   // Qualifications Logic
   qualificationsList: string[] = [];
   experiencesList: string[] = [];
@@ -173,8 +329,17 @@ export class LicenseComponent {
 
       // For initial application wizard, application ID might not be set yet or is null for drafts
       const docType = this.selectedDoc.id || this.selectedDoc.name;
+      
+      // Use selectedLicenseType.id if available (this IS the application ID in this context)
+      const applicationId = this.selectedLicenseType ? this.selectedLicenseType.id : undefined;
+      
+      // Determine category based on which list the selected doc belongs to
+      let category = 'attachment';
+      if (this.qualificationDocuments.includes(this.selectedDoc)) {
+          category = 'qualification';
+      }
 
-      this.licenseService.uploadDocument(file, docType, undefined).subscribe({
+      this.licenseService.uploadDocument(file, docType, applicationId, category).subscribe({
         next: (response: any) => {
           // Update the selected doc status in the relevant list
           if (this.selectedDoc) {
@@ -223,7 +388,7 @@ export class LicenseComponent {
       });
     }
   }
-// ... existing code ...
+
   constructor(
     private authService: AuthService, 
     private router: Router, 
@@ -236,7 +401,7 @@ export class LicenseComponent {
   ngOnInit() {
     this.loadUserDocuments();
   }
-// ... existing code ...
+
   loadUserDocuments() {
     // First, load user profile data to populate particulars
     this.authService.getProfile().subscribe({
@@ -276,83 +441,41 @@ export class LicenseComponent {
       }
     });
 
-    this.licenseService.getUserDocuments().subscribe({
-      next: (response: any) => {
-        const docs = response.documents || [];
-        
-        // Check Application Status
-        const status = response.applicationStatus;
-        this.isApplicationSubmitted = status && status !== 'Draft' && status !== 'Returned'; 
+    this.getEligibleApplications();
+  }
 
-        // Fetch Eligible Applications (Filtered by specific approval conditions)
-        this.licenseService.getEligibleApplications().subscribe({
-             next: (apps) => {
-                 this.availableLicenseTypes = apps.filter((app: any) => {
-                    const appType = String(app.type || '').toLowerCase();
-                    const isManagerApproved = String(app.manager_approval || '').toLowerCase() === 'approved';
-                    const isSurveillanceApproved = String(app.surveillance_approval || '').toLowerCase() === 'approved';
-                    const isTypeNew = appType === 'new';
-                    const isTypeRenew = appType === 'renew' || appType === 'renewal';
-                    const interviewPassed = String(app.interview_status || '').toLowerCase() === 'pass';
+  getEligibleApplications() {
+    this.licenseService.getEligibleApplications().subscribe({
+        next: (apps) => {
+            this.availableLicenseTypes = apps.filter((app: any) => {
+              const appType = String(app.type || '').toLowerCase();
+              const isManagerApproved = String(app.manager_approval || '').toLowerCase() === 'approved';
+              const isSurveillanceApproved = String(app.surveillance_approval || '').toLowerCase() === 'approved';
+              const isTypeNew = appType === 'new';
+              const isTypeRenew = appType === 'renew' || appType === 'renewal';
+              const interviewPassed = String(app.interview_status || '').toLowerCase() === 'pass';
 
-                    if (isTypeNew) {
-                        return isManagerApproved && isSurveillanceApproved && interviewPassed;
-                    } else if (isTypeRenew) {
-                        return isManagerApproved && isSurveillanceApproved;
-                    }
-                    
-                    return false; 
-                 });
+              if (isTypeNew) {
+                  return isManagerApproved && isSurveillanceApproved && interviewPassed;
+              } else if (isTypeRenew) {
+                  return isManagerApproved && isSurveillanceApproved;
+              }
+              
+              return false; 
+            });
 
-                 this.licenseTypes = [...this.availableLicenseTypes]; // Keep ref of filtered items
-
-                 // Auto-select the first one by default if available
-                 if (this.availableLicenseTypes.length > 0) {
-                     this.newSelectedLicenseType = this.availableLicenseTypes[0];
-                 }
-                 
-                 // Check for query param to auto-select
-                 this.route.queryParams.subscribe(params => {
-                     const targetAppId = params['appId'];
-                     if (targetAppId) {
-                         const target = this.availableLicenseTypes.find(app => app.id === targetAppId);
-                         if (target) {
-                             this.newSelectedLicenseType = target;
-                             this.addLicenseType(); // Auto-add
-                         }
-                     }
-                 });
-             },
-             error: (err) => {
-                 console.error('Failed to load eligible applications', err);
-                 this.availableLicenseTypes = [];
-             }
-        });
-
-        docs.forEach((doc: any) => {
-// ... existing code ...
-          // Check required documents
-          const reqDoc = this.requiredDocuments.find(d => d.id === doc.document_type || d.name === doc.document_type);
-          if (reqDoc) {
-            reqDoc.status = 'Uploaded';
-            reqDoc.date = new Date(doc.created_at || Date.now()).toLocaleDateString('en-GB');
-            reqDoc.fileName = doc.original_name;
-            reqDoc.dbId = doc.id;
-          }
-
-          // Check qualification documents
-          const qualDoc = this.qualificationDocuments.find(d => d.id === doc.document_type || d.name === doc.document_type);
-          if (qualDoc) {
-            qualDoc.status = 'Uploaded';
-            qualDoc.date = new Date(doc.created_at || Date.now()).toLocaleDateString('en-GB');
-            qualDoc.fileName = doc.original_name;
-            qualDoc.dbId = doc.id;
-          }
-        });
-      },
-      error: (err: any) => {
-        console.error('Failed to load documents', err);
-      }
+            this.licenseTypes = [...this.availableLicenseTypes]; 
+            this.selectedLicenseType = null;
+            
+            // If no apps remain, handle redirection or message
+            if (this.availableLicenseTypes.length === 0) {
+               // Optional: Auto redirect if this was a refresh after submission
+            }
+        },
+        error: (err) => {
+            console.error('Failed to load eligible applications', err);
+            this.availableLicenseTypes = [];
+        }
     });
   }
 
@@ -434,8 +557,8 @@ export class LicenseComponent {
     // Validation before moving forward
     if (step > this.currentStep) {
       if (this.currentStep === 1) {
-        if (this.selectedLicenseTypes.length === 0) {
-          alert('Please select at least one license type.');
+        if (!this.selectedLicenseType) {
+          alert('Please select a license type.');
           return;
         }
       } else if (this.currentStep === 2) {
@@ -455,11 +578,13 @@ export class LicenseComponent {
 
   // Step 1: Particulars
   get showPreviousLicenseSection(): boolean {
-    // Show if any selected license is of type 'Renew' or 'Renewal'
-    return this.selectedLicenseTypes.some(item => item.type && String(item.type).toLowerCase().includes('renew'));
+    if (!this.selectedLicenseType) return false;
+    const type = String(this.selectedLicenseType.type || '').toLowerCase();
+    return type.includes('renew');
   }
 
   addPreviousLicenseNumber() {
+    if (this.previousLicenseNumbers.length >= 1) return;
     if (this.newPreviousLicenseNumber.trim()) {
       this.previousLicenseNumbers.push(this.newPreviousLicenseNumber.trim());
       this.newPreviousLicenseNumber = '';
@@ -470,73 +595,13 @@ export class LicenseComponent {
     this.previousLicenseNumbers.splice(index, 1);
   }
 
-  // Modal State
-  showReplaceModal: boolean = false;
-  pendingLicenseType: any = null;
-
-  addLicenseType() {
-    if (this.newSelectedLicenseType) {
-      // Check if a license is already selected
-      if (this.selectedLicenseTypes.length > 0) {
-        // Show custom modal instead of window.confirm
-        this.pendingLicenseType = this.newSelectedLicenseType;
-        this.showReplaceModal = true;
-        return;
-      }
-
-      // Add the new license
-      this.selectedLicenseTypes.push(this.newSelectedLicenseType);
-      
-      // Remove from available list
-      this.availableLicenseTypes = this.availableLicenseTypes.filter(type => type !== this.newSelectedLicenseType);
-      
-      this.newSelectedLicenseType = null;
-    }
-  }
-
-  confirmReplace() {
-    if (this.pendingLicenseType) {
-      // Return the currently selected license to the available list
-      const currentLicense = this.selectedLicenseTypes[0];
-      this.availableLicenseTypes.push(currentLicense);
-      this.selectedLicenseTypes = []; // Clear current selection
-
-      // Add the pending license
-      this.selectedLicenseTypes.push(this.pendingLicenseType);
-
-      // Remove pending from available list
-      this.availableLicenseTypes = this.availableLicenseTypes.filter(type => type !== this.pendingLicenseType);
-
-      // Reset state
-      this.showReplaceModal = false;
-      this.pendingLicenseType = null;
-      this.newSelectedLicenseType = null;
-    }
-  }
-
-  cancelReplace() {
-    this.showReplaceModal = false;
-    this.pendingLicenseType = null;
-    this.newSelectedLicenseType = null;
-  }
-
-  removeLicenseType(index: number) {
-    const removedType = this.selectedLicenseTypes[index];
-    this.selectedLicenseTypes.splice(index, 1);
-    
-    // Add back to available list and sort
-    this.availableLicenseTypes.push(removedType);
-    this.availableLicenseTypes.sort(); 
-  }
-
   saveParticulars() {
     console.log('Particulars saved:', this.particulars);
     console.log('Previous Licenses:', this.previousLicenseNumbers);
-    console.log('Selected Types:', this.selectedLicenseTypes);
+    console.log('Selected Type:', this.selectedLicenseType);
     this.goToStep(2);
   }
 
-  // Step 2: Qualifications
   // Step 2: Qualifications
   addQualification() {
     if (this.newQualification.trim()) {
@@ -566,8 +631,6 @@ export class LicenseComponent {
     this.goToStep(3);
   }
 
-
-
   // Step 3: Tools
   addTool() {
     if (this.newTool.trim()) {
@@ -582,23 +645,24 @@ export class LicenseComponent {
 
   saveTools() {
     console.log('Tools saved:', this.tools);
-    // No longer going to step 4, but maybe we want to validate or just stay here until they click submit
-    // Actually, saveTools was the "Next" button action. 
-    // Since we are merging the submit action into this step, we might not need saveTools as a separate "Next" action anymore.
-    // But if the user clicks "Save & Continue" (which we will rename/remove), it should probably just do nothing or be removed.
-    // However, for now, let's just log it. The actual submission will be handled by submitApplication.
   }
 
   // Step 4: Submit
-  // Step 4: Submit
-  submitApplication() {
+   submitApplication() {
+    if (!this.selectedLicenseType) {
+        alert('No license selected.');
+        return;
+    }
+
     const applicationData = {
-      applicationType: 'New', // Defaulting to New for now
-      totalAmount: 100000, // Default amount, should be calculated based on license types
+      applicationType: this.selectedLicenseType.type || 'New',
+      // Send as array even if single, to keep backend compatibility or update backend if preferred. 
+      // Backend expects array of licenses.
+      licenseTypes: [this.selectedLicenseType], 
+      totalAmount: parseFloat(this.selectedLicenseType.fee) || 0,
       declaration: this.declaration,
       particulars: this.particulars,
       previousLicenses: this.previousLicenseNumbers,
-      licenseTypes: this.selectedLicenseTypes, // Sending array of objects with id, name, fee
       qualifications: this.qualificationsList,
       experiences: this.experiencesList,
       tools: this.tools
@@ -609,12 +673,35 @@ export class LicenseComponent {
     this.licenseService.submitApplication(applicationData).subscribe({
       next: (response: any) => {
         console.log('Submission successful', response);
-        alert('Application Submitted Successfully!');
-        this.router.navigate(['/dashboard']); // Redirect to dashboard
+        
+        Swal.fire({
+            title: 'Application Completed',
+            text: 'Your license application has been successfully completed.',
+            icon: 'success',
+            confirmButtonText: 'OK'
+        }).then(() => {
+            // After alert close
+            this.currentStep = 1;
+            this.selectedLicenseType = null;
+            this.tools = [];
+            this.qualificationsList = [];
+            this.experiencesList = [];
+            
+            // Reload list to see if any remain
+            this.getEligibleApplications();
+            
+            // Little delay to allow getEligibleApplications to fetch
+            setTimeout(() => {
+                if (this.availableLicenseTypes.length === 0) {
+                     this.router.navigate(['/dashboard']);
+                }
+            }, 1000);
+        });
       },
       error: (error) => {
         console.error('Submission failed', error);
         alert('Failed to submit application. Please try again.');
+        this.isApplicationSubmitted = false;
       }
     });
   }

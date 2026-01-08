@@ -1,11 +1,17 @@
-import { CommonModule } from '@angular/common';
-import { Component, ElementRef, QueryList, ViewChildren, ChangeDetectorRef } from '@angular/core';
-import { SidebarService } from '../../services/sidebar.service';
-import { LicenseService } from '../../../services/license.service';
-import { NavigationEnd, Router, RouterModule } from '@angular/router';
-import { SafeHtmlPipe } from '../../pipe/safe-html.pipe';
-import { SidebarWidgetComponent } from './app-sidebar-widget.component';
-import { combineLatest, Subscription } from 'rxjs';
+import { CommonModule } from "@angular/common";
+import {
+  Component,
+  ElementRef,
+  QueryList,
+  ViewChildren,
+  ChangeDetectorRef,
+} from "@angular/core";
+import { SidebarService } from "../../services/sidebar.service";
+import { LicenseService } from "../../../services/license.service";
+import { NavigationEnd, Router, RouterModule } from "@angular/router";
+import { SafeHtmlPipe } from "../../pipe/safe-html.pipe";
+import { SidebarWidgetComponent } from "./app-sidebar-widget.component";
+import { combineLatest, Subscription } from "rxjs";
 
 type NavItem = {
   name: string;
@@ -16,17 +22,11 @@ type NavItem = {
 };
 
 @Component({
-  selector: 'app-sidebar',
-  imports: [
-    CommonModule,
-    RouterModule,
-    SafeHtmlPipe,
-    SidebarWidgetComponent
-  ],
-  templateUrl: './app-sidebar.component.html',
+  selector: "app-sidebar",
+  imports: [CommonModule, RouterModule, SafeHtmlPipe, SidebarWidgetComponent],
+  templateUrl: "./app-sidebar.component.html",
 })
 export class AppSidebarComponent {
-
   // Main nav items
   navItems: NavItem[] = [
     {
@@ -41,7 +41,7 @@ export class AppSidebarComponent {
     },
     {
       icon: `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
-      name: "complite license application",
+      name: "Complete License Application",
       path: "/license-application",
     },
     {
@@ -91,28 +91,31 @@ export class AppSidebarComponent {
     {
       icon: `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15h6"></path><path d="M12 12v6"></path></svg>`,
       name: "Certificates",
-      path: "/certificates"
+      path: "/certificates",
     },
     {
       icon: `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3zM3 9h18M9 21V9"></path></svg>`,
       name: "OSA",
       subItems: [
         { name: "OSA Dashboard", path: "/osa-dashboard" },
-        { name: "Initial Application Approval", path: "/initial-application-approval" },
+        {
+          name: "Initial Application Approval",
+          path: "/initial-application-approval",
+        },
         { name: "License Approval", path: "/license-approval" },
         { name: "Exam Remark", path: "/exam-remark" },
         { name: "License Report", path: "/license-report" },
         { name: "License Bill Report", path: "/license-bill-report" },
         { name: "Applicants Verification", path: "/applicants-verification" },
         { name: "Search", path: "/search" },
-        { name: "License Setting", path: "/osa/settings" }
-      ]
-    }
+        { name: "License Setting", path: "/osa/settings" },
+      ],
+    },
   ];
 
   openSubmenu: string | null | number = null;
   subMenuHeights: { [key: string]: number } = {};
-  @ViewChildren('subMenu') subMenuRefs!: QueryList<ElementRef>;
+  @ViewChildren("subMenu") subMenuRefs!: QueryList<ElementRef>;
 
   readonly isExpanded$;
   readonly isMobileOpen$;
@@ -134,7 +137,7 @@ export class AppSidebarComponent {
   ngOnInit() {
     // Subscribe to router events
     this.subscription.add(
-      this.router.events.subscribe(event => {
+      this.router.events.subscribe((event) => {
         if (event instanceof NavigationEnd) {
           this.setActiveMenuFromRoute(this.router.url);
         }
@@ -143,20 +146,22 @@ export class AppSidebarComponent {
 
     // Subscribe to combined observables to close submenus when all are false
     this.subscription.add(
-      combineLatest([this.isExpanded$, this.isMobileOpen$, this.isHovered$]).subscribe(
-        ([isExpanded, isMobileOpen, isHovered]) => {
-          if (!isExpanded && !isMobileOpen && !isHovered) {
-            // this.openSubmenu = null;
-            // this.savedSubMenuHeights = { ...this.subMenuHeights };
-            // this.subMenuHeights = {};
-            this.cdr.detectChanges();
-          } else {
-            // Restore saved heights when reopening
-            // this.subMenuHeights = { ...this.savedSubMenuHeights };
-            // this.cdr.detectChanges();
-          }
+      combineLatest([
+        this.isExpanded$,
+        this.isMobileOpen$,
+        this.isHovered$,
+      ]).subscribe(([isExpanded, isMobileOpen, isHovered]) => {
+        if (!isExpanded && !isMobileOpen && !isHovered) {
+          // this.openSubmenu = null;
+          // this.savedSubMenuHeights = { ...this.subMenuHeights };
+          // this.subMenuHeights = {};
+          this.cdr.detectChanges();
+        } else {
+          // Restore saved heights when reopening
+          // this.subMenuHeights = { ...this.savedSubMenuHeights };
+          // this.cdr.detectChanges();
         }
-      )
+      })
     );
 
     // Initial load
@@ -167,16 +172,20 @@ export class AppSidebarComponent {
       (res: any) => {
         if (!res.canApply) {
           // Hide "License Application" item (path: /license-application)
-          this.navItems = this.navItems.filter(item => item.path !== '/license-application');
+          this.navItems = this.navItems.filter(
+            (item) => item.path !== "/license-application"
+          );
         }
       },
       (err) => {
-        // Fallback: Default to hiding if error? Or keep visible? 
+        // Fallback: Default to hiding if error? Or keep visible?
         // User request mentions "inaccessible". Safer to hide if check fails or returns false.
         // For resilience, let's just log. If default was visible, it stays visible.
         // But if strict, maybe hide?
-        console.error('Eligibility check failed', err);
-        this.navItems = this.navItems.filter(item => item.path !== '/license-application');
+        console.error("Eligibility check failed", err);
+        this.navItems = this.navItems.filter(
+          (item) => item.path !== "/license-application"
+        );
       }
     );
   }
@@ -210,23 +219,25 @@ export class AppSidebarComponent {
   }
 
   onSidebarMouseEnter() {
-    this.isExpanded$.subscribe(expanded => {
-      if (!expanded) {
-        this.sidebarService.setHovered(true);
-      }
-    }).unsubscribe();
+    this.isExpanded$
+      .subscribe((expanded) => {
+        if (!expanded) {
+          this.sidebarService.setHovered(true);
+        }
+      })
+      .unsubscribe();
   }
 
   private setActiveMenuFromRoute(currentUrl: string) {
     const menuGroups = [
-      { items: this.navItems, prefix: 'main' },
-      { items: this.othersItems, prefix: 'others' },
+      { items: this.navItems, prefix: "main" },
+      { items: this.othersItems, prefix: "others" },
     ];
 
-    menuGroups.forEach(group => {
+    menuGroups.forEach((group) => {
       group.items.forEach((nav, i) => {
         if (nav.subItems) {
-          nav.subItems.forEach(subItem => {
+          nav.subItems.forEach((subItem) => {
             if (currentUrl === subItem.path) {
               const key = `${group.prefix}-${i}`;
               this.openSubmenu = key;
@@ -246,13 +257,13 @@ export class AppSidebarComponent {
   }
 
   onSubmenuClick() {
-    console.log('click submenu');
-    this.isMobileOpen$.subscribe(isMobile => {
-      if (isMobile) {
-        this.sidebarService.setMobileOpen(false);
-      }
-    }).unsubscribe();
-  }  
-
-  
+    console.log("click submenu");
+    this.isMobileOpen$
+      .subscribe((isMobile) => {
+        if (isMobile) {
+          this.sidebarService.setMobileOpen(false);
+        }
+      })
+      .unsubscribe();
+  }
 }

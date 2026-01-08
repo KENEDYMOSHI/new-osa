@@ -86,28 +86,28 @@ class ApprovalController extends BaseController
             license_applications.status_stage_2,
             license_applications.status_stage_3,
             license_applications.status_stage_4,
-            osabill.payer_name, 
-            osabill.control_number,
+            COALESCE(license_bill.control_number, app_fee_bill.control_number) as control_number,
+            COALESCE(license_bill.payer_name, app_fee_bill.payer_name) as payer_name,
             practitioner_personal_infos.first_name,
             practitioner_personal_infos.last_name,
             practitioner_personal_infos.region,
-            practitioner_business_infos.company_name
-        ');
-        
-        // Join with Parent Application
-        $builder->join('license_applications', 'license_applications.id = license_application_items.application_id');
-        
-        // Join with Bill Details
-        $builder->join('osabill', 'osabill.bill_id = license_applications.id', 'left');
-        
-        // Join with Interview Assessments for Scores
-        // interview_assessments.application_id = license_applications.id
-        $builder->select('
+            practitioner_business_infos.company_name,
             interview_assessments.theory_score,
             interview_assessments.practical_score,
             interview_assessments.total_score,
             interview_assessments.result as interview_result
         ');
+        
+        // Join with Parent Application
+        $builder->join('license_applications', 'license_applications.id = license_application_items.application_id');
+        
+        // Join specifically for License Fee (bill_type = 2)
+        $builder->join('osabill as license_bill', 'license_bill.bill_id = license_applications.id AND license_bill.bill_type = 2', 'left');
+        
+        // Join specifically for Application Fee (bill_type = 1)
+        $builder->join('osabill as app_fee_bill', 'app_fee_bill.bill_id = license_applications.id AND app_fee_bill.bill_type = 1', 'left');
+        
+        // Join with Interview Assessments for Scores
         $builder->join('interview_assessments', 'interview_assessments.application_id = license_applications.id', 'left');
 
         // Join Users and Personal/Business Info

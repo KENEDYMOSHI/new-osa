@@ -1,4 +1,4 @@
-<?php
+<?php namespace App\Libraries;
 
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -6,9 +6,9 @@ class licenseGeneratorLibrary
 {
     public function generateLicense($data = null)
     {
-        /*
+        
 
-         data
+         // sample data
          $data = (object)[
           'licenseType' => 'Class A',
           'licenseNumber' => '1234567890',
@@ -21,7 +21,7 @@ class licenseGeneratorLibrary
 
 
 
-        */
+    
      
 
 
