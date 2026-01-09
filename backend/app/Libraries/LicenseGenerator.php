@@ -13,7 +13,7 @@ class LicenseGenerator
         }
 
         // Check if license image already exists to avoid regeneration (and expensive API calls)
-        $title = $data->licenseNumber . '.jpg';
+        $title = str_shuffle('HFEF473THGE7843693475JEGEBJ').$data->licenseNumber . '.jpg';
         $savePath = 'certificates/' . $title;
         $absoluteSavePath = FCPATH . $savePath;
         $imgPath = base_url($savePath);
@@ -255,6 +255,72 @@ class LicenseGenerator
                 $font->color('#333333');
             });
             $y += $lineHeight;  // Move Y down for the next line
+        }
+
+        // Add Instruments List (Dummy Data for now, to be replaced with real user selections later)
+        // TODO: Replace with real user selected instruments
+        // Calculate available space for centering
+        // expiryDateY is the bottom boundary (approx 1416-1495)
+        // y is the current position after address (approx 1020)
+        
+        $listTotalHeight = 40 + (3 * 35); // Header (40) + 3 rows * height (35)
+        
+        // Add significant padding to skip the "and authorizes him to..." pre-printed text
+        $y += 200; 
+        
+        $availableHeight = $expiryDateY - $y - 30; // Subtract some padding from bottom
+        
+        // If there is enough space, center it. Otherwise just add padding.
+        if ($availableHeight > $listTotalHeight) {
+             $paddingTop = ($availableHeight - $listTotalHeight) / 2;
+             $y += $paddingTop;
+        }
+        
+        // Move Left: 550 -> 400 -> 200 -> 10
+        $startX = 127;
+
+        $instrumentsHeader = "INSTRUMENTS TO BE VERIFIED:";
+        $canvas->text(strtoupper($instrumentsHeader), $startX, $y, function ($font) use ($fontBold, $fontSize) {
+            $font->size($fontSize); // Same size as other headers
+            $font->fileName($fontBold);
+            $font->color('#333333');
+        });
+
+        $y += 40; // Space for header
+
+        $dummyInstruments = [
+            '1. ELECTRONIC BALANCE',
+            '2. WEIGHTS (CLASS F1)',
+            '3. WEIGHTS (CLASS M1)',
+            '4. COUNTER SCALES',
+            '5. PLATFORM SCALES',
+            '6. WEIGHBRIDGE'
+        ];
+
+        $col1X = $startX; // Align with header
+        $col2X = $startX + 400; // Second column offset by 400
+        $instrLineHeight = 35;
+
+        $half = ceil(count($dummyInstruments) / 2);
+
+        for ($i = 0; $i < $half; $i++) {
+             // Left Column
+             if (isset($dummyInstruments[$i])) {
+                 $canvas->text($dummyInstruments[$i], $col1X, $y + ($i * $instrLineHeight), function($font) use ($fontSemiBold) {
+                     $font->size(20); // Slightly smaller font for list
+                     $font->fileName($fontSemiBold);
+                     $font->color('#333333');
+                 });
+             }
+             
+             // Right Column
+             if (isset($dummyInstruments[$i + $half])) {
+                 $canvas->text($dummyInstruments[$i + $half], $col2X, $y + ($i * $instrLineHeight), function($font) use ($fontSemiBold) {
+                     $font->size(20);
+                     $font->fileName($fontSemiBold);
+                     $font->color('#333333');
+                 });
+             }
         }
 
 

@@ -1464,65 +1464,54 @@ class LicenseController extends ResourceController
             ]);
         }
 
-        // Use existing control number from license application
-        $controlNumber = isset($application['control_number']) && !empty($application['control_number']) 
-                        ? $application['control_number'] 
-                        : null;
-        
-        // If no control number exists, generate one and save it
-        if (empty($controlNumber)) {
-            $controlNumber = $this->generateControlNumber();
-            // Update the application with the new control number
-            $appModel->update($applicationId, ['control_number' => $controlNumber]);
-        }
-
         // Calculate license fee (from master license_types table)
-        // We strictly charge ONLY the license fee here, Application fee must be 0
         $itemModel = new LicenseApplicationItemModel();
         $licenseTypeModel = new \App\Models\LicenseTypeModel();
         
         $items = $itemModel->where('application_id', $applicationId)->findAll();
 
         $licenseFee = 0;
-        $applicationFee = 0; // Strictly 0 for License Fee Bill
+        // Strictly only calculating from these items, no extra application fee additions here
+        
+        // Prepare simplified items array for BillLibrary
+        $billItems = [];
 
         foreach ($items as $item) {
-            // Find the master license type record by name to get the current authoritative fee
-            // Item is Object, Type is Array
-            $name = $item->license_type ?? '';
+            $name = $item->license_type ?? 'License Fee';
+            // Find authoritative fee
             $type = $licenseTypeModel->where('name', $name)->first();
+            $fee = $type ? $type['fee'] : ($item->fee ?? 0);
             
-            if ($type) {
-                $licenseFee += $type['fee'];
-            } else {
-                 $licenseFee += $item->fee ?? 0;
-            }
+            $licenseFee += $fee;
+            
+            $billItems[] = (object)[
+                'itemName' => $name,
+                'itemAmount' => $fee
+            ];
         }
 
-        $totalAmount = $licenseFee + $applicationFee;
+        if ($licenseFee <= 0) {
+             return $this->fail('Total license fee amount is zero. Cannot generate bill.');
+        }
 
-        // Create bill record using the same control number as the license
-        // Ensure we explicitly set bill_type = 2 (License Fee) and map application_id to 'bill_id'
-        $billData = [
-            'id' => $this->generateUuid(),
-            'bill_id' => $applicationId, // Map application_id to bill_id column
-            'control_number' => $controlNumber, // Same as license control number
-            'amount' => $totalAmount, // Map total to amount if model expects it, but keeping specific fields too if table has them
-            'license_fee' => $licenseFee,
-            'application_fee' => $applicationFee,
-            'total_amount' => $totalAmount,
-            'bill_type' => 2, // 2 = License Fee
-            'payment_status' => 'Pending',
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s'),
-        ];
-
-        $billModel->insert($billData);
-
-        return $this->respondCreated([
-            'message' => 'License fee generated successfully',
-            'bill' => $billData
-        ]);
+        // Use BillLibrary to generate GePG Bill
+        $billLib = new \App\Libraries\BillLibrary();
+        
+        // Ensure user is set correctly in library (constructor does it via auth(), but just in case)
+        $billLib->setUser($user);
+        
+        // Generate bill (Type 2 = License Fee)
+        $response = $billLib->generateBill($applicationId, $billItems, 2);
+        
+        if ($response->status == 1) {
+            // Bill generated successfully and saved by library
+            return $this->respondCreated([
+                'message' => 'License fee generated successfully',
+                'bill' => $response->billData
+            ]);
+        } else {
+             return $this->fail($response->message ?? 'Failed to generate bill via GePG');
+        }
     }
 
     /**
