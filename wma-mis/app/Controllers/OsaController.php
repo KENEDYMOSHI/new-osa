@@ -247,6 +247,51 @@ public function licenseReport()
     return view('Pages/Osa/LicenseReport', $data);
 }
 
+public function exportLicenses()
+{
+    // Get filters from request
+    $filters = [
+        'name' => $this->request->getVar('name'),
+        'region' => $this->request->getVar('region'),
+        'license_type' => $this->request->getVar('license_type'),
+        'year' => $this->request->getVar('year'),
+        'dateRange' => $this->request->getVar('dateRange'),
+        // 'company_name' removed as per recent changes
+    ];
+
+    // Fetch data from API
+    $licenses = $this->licenseModel->getIssuedLicensesFromApi($filters);
+
+    // Set headers for download
+    $filename = 'licenses_report_' . date('Y-m-d_H-i-s') . '.csv';
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    
+    $output = fopen('php://output', 'w');
+    
+    // Header Row
+    fputcsv($output, ['License Number', 'Applicant Name', 'License Type', 'Region', 'Issue Date', 'Expiry Date', 'Status']);
+    
+    // Data Rows
+    if (!empty($licenses)) {
+        foreach ($licenses as $l) {
+            $status = (date('Y-m-d', strtotime($l->expiry_date)) < date('Y-m-d')) ? 'Expired' : 'Active';
+            fputcsv($output, [
+                $l->license_number,
+                $l->applicant_name ?? ($l->first_name . ' ' . $l->last_name),
+                $l->license_type,
+                $l->region ?? 'N/A',
+                date('d M Y', strtotime($l->created_at)),
+                date('d M Y', strtotime($l->expiry_date)),
+                $status
+            ]);
+        }
+    }
+    
+    fclose($output);
+    exit;
+}
+
 public function saveExamRemark()
 {
     $application_id = $this->request->getVar('application_id');

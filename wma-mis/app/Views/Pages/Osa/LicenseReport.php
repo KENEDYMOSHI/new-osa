@@ -92,10 +92,16 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-search mr-1"></i>Filter</button>
-                            <a href="<?= base_url('licenseReport') ?>" class="btn btn-secondary"><i class="fas fa-redo mr-1"></i>Reset</a>
+                    <div class="row mt-2">
+                        <div class="col-md-12 d-flex justify-content-between align-items-center">
+                            <div>
+                                <button type="submit" class="btn btn-primary shadow-sm px-4">
+                                    <i class="fas fa-search mr-1"></i> Filter
+                                </button>
+                                <a href="<?= base_url('licenseReport') ?>" class="btn btn-outline-secondary shadow-sm ml-2 px-3">
+                                    <i class="fas fa-redo mr-1"></i> Reset
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -128,8 +134,8 @@
                     <span class="badge badge-danger ml-1" style="font-size: 0.9rem;"><?= $expiredCount ?> Expired</span>
                 </h3>
             </div>
-            <div class="card-body table-responsive p-0">
-                <table class="table table-hover table-striped">
+            <div class="card-body table-responsive">
+                <table id="licenseTable" class="table table-hover table-striped table-sm text-nowrap" style="font-size: 0.9rem;">
                     <thead class="bg-light">
                         <tr>
                             <th>#</th>
@@ -137,16 +143,17 @@
                             <th>Applicant Name</th>
                             <th>License Type</th>
                             <th>Region</th>
-                            <th>Issue Date</th>
-                            <th>Expiry Date</th>
                             <th>Status</th>
+                            <th>Payment</th>
+                            <th>Control #</th>
+                            <th>Amount</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($licenses)): ?>
                             <tr>
-                                <td colspan="9" class="text-center text-muted py-4">
+                                <td colspan="10" class="text-center text-muted py-4">
                                     <i class="fas fa-inbox fa-3x mb-3"></i>
                                     <p>No licenses found</p>
                                 </td>
@@ -154,18 +161,18 @@
                         <?php else: ?>
                             <?php $i = 1; foreach ($licenses as $license): ?>
                                 <tr>
-                                    <td><?= $i++ ?></td>
-                                    <td>
+                                    <td class="align-middle"><?= $i++ ?></td>
+                                    <td class="align-middle">
                                         <strong class="text-primary"><?= $license->license_number ?></strong>
                                     </td>
-                                    <td><?= $license->applicant_name ?? ($license->first_name . ' ' . $license->last_name) ?></td>
-                                    <td>
+                                    <td class="align-middle">
+                                        <?= ucwords(strtolower($license->applicant_name ?? ($license->first_name . ' ' . $license->last_name))) ?>
+                                    </td>
+                                    <td class="align-middle text-truncate" style="max-width: 150px;" title="<?= $license->license_type ?>">
                                         <?= $license->license_type ?>
                                     </td>
-                                    <td><?= $license->region ?? 'N/A' ?></td>
-                                    <td><?= date('d M Y', strtotime($license->created_at)) ?></td>
-                                    <td><?= date('d M Y', strtotime($license->expiry_date)) ?></td>
-                                    <td>
+                                    <td class="align-middle"><?= $license->region ?? 'N/A' ?></td>
+                                    <td class="align-middle">
                                         <?php
                                         $today = date('Y-m-d');
                                         $expiry = date('Y-m-d', strtotime($license->expiry_date));
@@ -174,15 +181,27 @@
                                         } else {
                                             $daysLeft = floor((strtotime($expiry) - strtotime($today)) / 86400);
                                             if ($daysLeft <= 30) {
-                                                echo '<span class="badge badge-warning">Expiring Soon (' . $daysLeft . ' days)</span>';
+                                                // Calculate expiring date string for tooltip or context if needed, but not displaying column
+                                                echo '<span class="badge badge-warning">Expiring Soon</span>';
                                             } else {
                                                 echo '<span class="badge badge-success">Active</span>';
                                             }
                                         }
                                         ?>
                                     </td>
-                                    <td>
-                                            <button class="btn btn-success btn-sm" onclick="viewLicense('<?= $license->license_number ?>')" title="View License" data-toggle="tooltip">
+                                    <td class="align-middle">
+                                        <?php if ($license->payment_status == 'Paid'): ?>
+                                            <span class="badge badge-success">Paid</span>
+                                        <?php elseif ($license->payment_status == 'Pending'): ?>
+                                            <span class="badge badge-warning">Pending</span>
+                                        <?php else: ?>
+                                            <span class="badge badge-secondary"><?= $license->payment_status ?? 'N/A' ?></span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="align-middle"><?= $license->control_number ?? '-' ?></td>
+                                    <td class="align-middle"><?= number_format($license->total_amount ?? 0) ?></td>
+                                    <td class="align-middle">
+                                            <button class="btn btn-success btn-xs" onclick="viewLicense('<?= $license->license_number ?>')" title="View" data-toggle="tooltip">
                                                 <i class="fas fa-eye"></i>
                                             </button>
                                     </td>
@@ -287,6 +306,13 @@ function printImage(url) {
     win.document.write('</body></html>');
     win.focus();
 }
+
+function exportToCsv() {
+    // Collect current filter values
+    var params = new URLSearchParams(window.location.search);
+    var url = '<?= base_url('license/export') ?>' + '?' + params.toString();
+    window.location.href = url;
+}
 </script>
 
 </script>
@@ -307,6 +333,17 @@ function printImage(url) {
 
         $('#reservation').on('cancel.daterangepicker', function(ev, picker) {
             $(this).val('');
+        });
+
+        // Initialize DataTable with Buttons
+        $("#licenseTable").DataTable({
+            "responsive": true,
+            "lengthChange": true,
+            "autoWidth": false,
+            "buttons": ["copy", "csv", "excel", "print"],
+            "dom": 'Bfrtip',
+            "order": [], // Disable initial sort if needed, or let it sort by first column
+            "pageLength": 20
         });
     });
 </script>

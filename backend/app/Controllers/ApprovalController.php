@@ -677,13 +677,19 @@ class ApprovalController extends BaseController
                           practitioner_personal_infos.first_name,
                           practitioner_personal_infos.last_name,
                           practitioner_personal_infos.phone,
-                          practitioner_business_infos.company_name as business_name');
+                          practitioner_business_infos.company_name as business_name,
+                          osabill.control_number,
+                          osabill.amount as total_amount,
+                          osabill.payment_status');
         
         // Join with personal info
         $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = licenses.applicant_id', 'left');
         
         // Join with business info
         $builder->join('practitioner_business_infos', 'practitioner_business_infos.user_uuid = licenses.applicant_id', 'left');
+
+        // Join with osabill - specifically for License Fee (bill_type = 2)
+        $builder->join('osabill', 'osabill.bill_id = licenses.application_id AND osabill.bill_type = 2', 'left');
         
         // Apply filters
         if (!empty($filters['name'])) {
