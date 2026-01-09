@@ -122,3 +122,5 @@ The license control number shall only be generated after the CEO has approved th
 In the My Applications module, the View License button should initially appear as Request Control Number. When the applicant clicks Request Control Number, the system will then generate the license control number, and the button will change from Request Control Number to View License.
 
 However, the applicant will not be able to view the license until the generated control number has been paid. Only after successful payment will the View License functionality be enabled. fix bila kuvuruga kitu 
+
+Kwenye mfumo wa WMA-MIS kwenye module ya license report tengeneza report ya leseni na ueke na sehemu ya kuview hiyo tengeneza report nzuri 

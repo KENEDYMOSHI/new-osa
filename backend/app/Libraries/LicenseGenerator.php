@@ -13,7 +13,7 @@ class LicenseGenerator
         }
 
         // Check if license image already exists to avoid regeneration (and expensive API calls)
-        $title = str_shuffle('HFEF473THGE7843693475JEGEBJ').$data->licenseNumber . '.jpg';
+        $title = md5($data->licenseNumber) . '.jpg';
         $savePath = 'certificates/' . $title;
         $absoluteSavePath = FCPATH . $savePath;
         $imgPath = base_url($savePath);

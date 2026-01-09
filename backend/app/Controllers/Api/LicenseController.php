@@ -1857,4 +1857,67 @@ class LicenseController extends ResourceController
 
         return $this->respond($documents);
     }
+    /**
+     * View License Image (On-Demand Generation)
+     * GET /api/license/view-image/{licenseNumber}
+     */
+    public function viewLicenseImage($licenseNumber)
+    {
+        if (empty($licenseNumber)) {
+            return $this->failNotFound('License number is required');
+        }
+
+        $licenseNumber = urldecode($licenseNumber); // Decode in case of special chars
+
+        // 1. Calculate deterministic path
+        $filename = md5($licenseNumber) . '.jpg';
+        $filepath = FCPATH . 'certificates/' . $filename;
+
+        // 2. Check if file exists
+        if (!file_exists($filepath)) {
+            // Regeneration Logic
+            $db = \Config\Database::connect();
+            $license = $db->table('licenses')->where('license_number', $licenseNumber)->get()->getRow();
+
+            if (!$license) {
+                return $this->failNotFound('License not found in database');
+            }
+
+            // Prepare data for generator
+            // We need to map DB columns to what LicenseGenerator expects ($data object)
+            // LicenseGenerator expects: licenseNumber, licenseType, applicantName, company, address
+            
+            // Fetch Applicant Name and Company
+            // Note: licenses table has applicant_name, company_name, address
+            
+            $genData = (object) [
+                'licenseNumber' => $license->license_number,
+                'licenseType' => $license->license_type,
+                'applicantName' => $license->applicant_name,
+                'company' => $license->company_name,
+                'address' => $license->postal_address // or region based on generator logic
+            ];
+            
+            // If address is empty, try to fetch from user info (similar to how createLicense did it)
+            if (empty($genData->address) || empty($genData->applicantName)) {
+                 // Try to fetch from relation if needed, but 'licenses' table should have snapshot.
+                 // Let's rely on licenses table snapshot for consistency.
+            }
+
+            $generator = new \App\Libraries\LicenseGenerator();
+            $generatedUrl = $generator->generateLicense($genData); // This saves the file to certificates/md5.jpg
+            
+            // Re-check file existence
+            if (!file_exists($filepath)) {
+                 return $this->failServerError('Failed to generate license image');
+            }
+        }
+
+        // 3. Serve the file
+        $mime = mime_content_type($filepath);
+        header('Content-Type: ' . $mime);
+        header('Content-Length: ' . filesize($filepath));
+        readfile($filepath);
+        exit;
+    }
 }

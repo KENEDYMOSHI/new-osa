@@ -36,8 +36,15 @@
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
-                                <label>Company Name</label>
-                                <input type="text" name="company_name" class="form-control" placeholder="Search by company" value="<?= $filters['company_name'] ?? '' ?>">
+                                <label>Date Range</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="far fa-calendar-alt"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" class="form-control float-right" id="reservation" name="dateRange" value="<?= $filters['dateRange'] ?? '' ?>">
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-2">
@@ -96,9 +103,30 @@
         </div>
 
         <!-- Licenses Table -->
+        <?php
+        $activeCount = 0;
+        $expiredCount = 0;
+        $today = date('Y-m-d');
+        if (!empty($licenses)) {
+            foreach($licenses as $l) {
+                $expiry = date('Y-m-d', strtotime($l->expiry_date));
+                if ($expiry < $today) {
+                    $expiredCount++;
+                } else {
+                    $activeCount++;
+                }
+            }
+        }
+        ?>
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-id-card mr-2"></i>Issued Licenses (<?= count($licenses) ?>)</h3>
+                <h3 class="card-title">
+                    <i class="fas fa-id-card mr-2"></i>
+                    Issued Licenses
+                    <span class="badge badge-info ml-2" style="font-size: 0.9rem;"><?= count($licenses) ?> Total</span>
+                    <span class="badge badge-success ml-1" style="font-size: 0.9rem;"><?= $activeCount ?> Active</span>
+                    <span class="badge badge-danger ml-1" style="font-size: 0.9rem;"><?= $expiredCount ?> Expired</span>
+                </h3>
             </div>
             <div class="card-body table-responsive p-0">
                 <table class="table table-hover table-striped">
@@ -107,7 +135,6 @@
                             <th>#</th>
                             <th>License Number</th>
                             <th>Applicant Name</th>
-                            <th>Company Name</th>
                             <th>License Type</th>
                             <th>Region</th>
                             <th>Issue Date</th>
@@ -119,7 +146,7 @@
                     <tbody>
                         <?php if (empty($licenses)): ?>
                             <tr>
-                                <td colspan="10" class="text-center text-muted py-4">
+                                <td colspan="9" class="text-center text-muted py-4">
                                     <i class="fas fa-inbox fa-3x mb-3"></i>
                                     <p>No licenses found</p>
                                 </td>
@@ -132,9 +159,8 @@
                                         <strong class="text-primary"><?= $license->license_number ?></strong>
                                     </td>
                                     <td><?= $license->applicant_name ?? ($license->first_name . ' ' . $license->last_name) ?></td>
-                                    <td><?= $license->company_name ?? $license->business_name ?? 'N/A' ?></td>
                                     <td>
-                                        <span class="badge badge-info"><?= $license->license_type ?></span>
+                                        <?= $license->license_type ?>
                                     </td>
                                     <td><?= $license->region ?? 'N/A' ?></td>
                                     <td><?= date('d M Y', strtotime($license->created_at)) ?></td>
@@ -156,14 +182,9 @@
                                         ?>
                                     </td>
                                     <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <button class="btn btn-info" onclick="viewLicense('<?= $license->id ?>')">
-                                                <i class="fas fa-eye"></i> View
+                                            <button class="btn btn-success btn-sm" onclick="viewLicense('<?= $license->license_number ?>')" title="View License" data-toggle="tooltip">
+                                                <i class="fas fa-eye"></i>
                                             </button>
-                                            <button class="btn btn-primary" onclick="printLicense('<?= $license->id ?>')">
-                                                <i class="fas fa-print"></i> Print
-                                            </button>
-                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -175,16 +196,118 @@
     </div>
 </div>
 
+<!-- Enhanced License View Modal -->
+<div class="modal fade" id="licenseModal" tabindex="-1" role="dialog" aria-labelledby="licenseModalLabel" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light border-bottom-0">
+                <h5 class="modal-title font-weight-bold" id="licenseModalLabel"><i class="fas fa-certificate text-primary mr-2"></i>License Preview</h5>
+                <button type="button" class="close text-secondary" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body bg-light text-center p-0">
+                <div id="licenseLoading" class="py-5">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Loading license...</p>
+                </div>
+                
+                <div class="license-wrapper p-4 d-none" id="licenseContainer" style="overflow-y: auto; max-height: 80vh;">
+                    <img id="licenseImage" src="" class="img-fluid shadow-sm" alt="License Image" style="border: 1px solid #dee2e6; max-width: 100%; border-radius: 4px;">
+                </div>
+
+                <div id="licenseError" class="py-5 d-none">
+                    <i class="fas fa-exclamation-circle text-danger fa-3x mb-3"></i>
+                    <p class="text-danger font-weight-bold">License image not found or failed to load.</p>
+                </div>
+            </div>
+            <div class="modal-footer bg-white border-top-0 d-flex justify-content-between">
+                 <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Close</button>
+                 <div>
+                     <a href="#" id="downloadBtn" class="btn btn-success px-4 mr-2" download>
+                        <i class="fas fa-download mr-1"></i> Download
+                     </a>
+                     <button type="button" class="btn btn-primary px-4" id="printBtn">
+                        <i class="fas fa-print mr-1"></i> Print
+                     </button>
+                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <script>
-function viewLicense(licenseId) {
-    alert('View license: ' + licenseId);
-    // TODO: Implement license view modal or redirect
+function viewLicense(licenseNumber) {
+    if (!licenseNumber) {
+        alert('Invalid License Number');
+        return;
+    }
+
+    $('#licenseModal').modal('show');
+    
+    // Reset state
+    $('#licenseLoading').removeClass('d-none');
+    $('#licenseContainer').addClass('d-none');
+    $('#licenseError').addClass('d-none');
+
+    // Construct URL pointing to the smart endpoint
+    // We encode the license number to handle slashes/spaces safely in URL
+    var imageUrl = 'http://localhost:8080/api/license/view-image/' + encodeURIComponent(licenseNumber);
+    
+    // Set verify and load
+    var img = new Image();
+    img.onload = function() {
+        $('#licenseLoading').addClass('d-none');
+        $('#licenseContainer').removeClass('d-none');
+        $('#licenseImage').attr('src', imageUrl);
+        
+        // Setup Download Button
+        $('#downloadBtn').attr('href', imageUrl);
+        
+        // Setup Print Button
+        $('#printBtn').off('click').on('click', function() {
+            printImage(imageUrl);
+        });
+    };
+    img.onerror = function() {
+        $('#licenseLoading').addClass('d-none');
+        $('#licenseError').removeClass('d-none');
+        // Retry logic or explicit error message could go here
+    };
+    img.src = imageUrl;
 }
 
-function printLicense(licenseId) {
-    alert('Print license: ' + licenseId);
-    // TODO: Implement license print functionality
+function printImage(url) {
+    var win = window.open('');
+    win.document.write('<html><head><title>Print License</title></head><body style="margin:0; text-align:center;">');
+    win.document.write('<img src="' + url + '" style="max-width:100%;" onload="window.print();window.close()" />');
+    win.document.write('</body></html>');
+    win.focus();
 }
 </script>
 
+</script>
+<!-- Date Range Picker Script -->
+<script>
+    $(function() {
+        // Initialize Date Range Picker
+        $('#reservation').daterangepicker({
+            locale: {
+                format: 'YYYY-MM-DD'
+            },
+            autoUpdateInput: false
+        });
+
+        $('#reservation').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+        });
+
+        $('#reservation').on('cancel.daterangepicker', function(ev, picker) {
+            $(this).val('');
+        });
+    });
+</script>
 <?= $this->endSection(); ?>

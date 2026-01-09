@@ -641,4 +641,37 @@ class LicenseModel extends Model
             'monthly_data' => []
         ];
     }
+    /**
+     * Get Issued Licenses from API
+     */
+    public function getIssuedLicensesFromApi($filters = [])
+    {
+        $apiUrl = 'http://localhost:8080/api/approval/issued-licenses';
+        $apiKey = 'osa_approval_api_key_12345'; // TODO: Move to .env
+        
+        // Build query string
+        $queryString = http_build_query($filters);
+        if (!empty($queryString)) {
+            $apiUrl .= '?' . $queryString;
+        }
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $apiUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'X-API-KEY: ' . $apiKey,
+            'Content-Type: application/json'
+        ]);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($httpCode !== 200 || !$response) {
+            log_message('error', 'Failed to fetch issued licenses from API. HTTP Code: ' . $httpCode);
+            return [];
+        }
+        
+        return json_decode($response); // Returns array of objects
+    }
 }

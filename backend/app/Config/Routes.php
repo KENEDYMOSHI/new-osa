@@ -26,6 +26,7 @@ $routes->group('api/approval', function($routes) {
     $routes->get('applications', 'ApprovalController::getApplications'); 
     $routes->get('application/(:segment)', 'ApprovalController::getApplicationDetails/$1');
     $routes->get('license-types', 'ApprovalController::getLicenseTypes');
+    $routes->get('issued-licenses', 'ApprovalController::getIssuedLicenses');
     $routes->post('update-status', 'ApprovalController::updateApplicationStatus');
     $routes->post('update-exam-scores', 'ApprovalController::updateExamScores');
     
@@ -62,6 +63,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->get('license/application/(:segment)/documents', 'LicenseController::getApplicationDocuments/$1');
     $routes->get('license/types', 'LicenseController::getLicenseTypes');
     $routes->get('license/approved-licenses', 'LicenseController::getApprovedLicenses');
+    $routes->get('license/view-image/(:segment)', 'LicenseController::viewLicenseImage/$1');
     $routes->get('admin/applications', 'AdminController::getApplications');
     $routes->get('admin/applicants', 'AdminController::getApplicants');
     $routes->get('admin/application/(:segment)', 'AdminController::getApplicationDetails/$1');
