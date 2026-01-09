@@ -68,10 +68,12 @@
                                 <select name="license_type" class="form-control">
                                     <option value="">All Types</option>
                                     <?php
-                                    $types = ['Gas Meter Calibration', 'Fixed Storage Tanks Verification', 'Vehicle Tank Calibration', 'Water Meter Verification', 'Pre-Package Verification'];
-                                    foreach ($types as $type) {
-                                        $selected = (isset($filters['license_type']) && $filters['license_type'] == $type) ? 'selected' : '';
-                                        echo "<option value='$type' $selected>$type</option>";
+                                    if (!empty($licenseTypes)) {
+                                        foreach ($licenseTypes as $type) {
+                                            $typeName = $type['name'];
+                                            $selected = (isset($filters['license_type']) && $filters['license_type'] == $typeName) ? 'selected' : '';
+                                            echo "<option value='$typeName' $selected>$typeName</option>";
+                                        }
                                     }
                                     ?>
                                 </select>

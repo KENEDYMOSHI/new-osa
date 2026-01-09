@@ -11,6 +11,7 @@ class OsaController extends BaseController
 
   public $token;
   private $licenseModel;
+  private $licenseTypeModel;
 
   public function __construct()
   {
@@ -20,6 +21,7 @@ class OsaController extends BaseController
           $this->token         = csrf_hash();
           $this->searchModel        = new SearchModel();
           $this->licenseModel       = new \App\Models\LicenseModel();
+          $this->licenseTypeModel   = new \App\Models\LicenseTypeModel();
           $this->uniqueId        = auth()->user()->unique_id;
           $this->user = auth()->user();
   }
@@ -243,6 +245,7 @@ public function licenseReport()
     $data['user'] = $this->user;
     $data['licenses'] = $licenses;
     $data['filters'] = $filters;
+    $data['licenseTypes'] = $this->licenseTypeModel->findAll();
 
     return view('Pages/Osa/LicenseReport', $data);
 }
