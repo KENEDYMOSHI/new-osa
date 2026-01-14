@@ -23,6 +23,7 @@ class LicenseModel extends Model
         'company_name',
         'application_number',
         'license_type',
+        'issue_date',
         'expiry_date',
         'license_number',
         'license_token',
@@ -146,6 +147,7 @@ class LicenseModel extends Model
             'company_name' => $businessInfo->company_name ?? null,
             'application_number' => null, // Add if you have application number
             'license_type' => $licenseItem->license_type ?? 'Unknown',
+            'issue_date' => $paymentDate,
             'expiry_date' => $expiryDate,
             'license_number' => $licenseNumber,
             'license_token' => bin2hex(random_bytes(16)), // Generate random token

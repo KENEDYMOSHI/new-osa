@@ -163,12 +163,16 @@ class ApprovalController extends BaseController
         $appBuilder = $db->table('license_applications');
         $appBuilder->select('
             license_applications.*,
-            osabill.payer_name,
-            osabill.control_number,
-            osabill.payment_status,
-            osabill.amount as bill_amount
+            app_bill.payer_name,
+            app_bill.control_number as app_control_number,
+            app_bill.payment_status as app_payment_status,
+            app_bill.amount as app_bill_amount,
+            license_bill.control_number as license_control_number,
+            license_bill.payment_status as license_payment_status,
+            license_bill.amount as license_bill_amount
         ');
-        $appBuilder->join('osabill', 'osabill.bill_id = license_applications.id', 'left');
+        $appBuilder->join('osabill as app_bill', 'app_bill.bill_id = license_applications.id AND app_bill.bill_type = 1', 'left');
+        $appBuilder->join('osabill as license_bill', 'license_bill.bill_id = license_applications.id AND license_bill.bill_type = 2', 'left');
         $appBuilder->where('license_applications.id', $id);
         $application = $appBuilder->get()->getRow();
         
@@ -264,9 +268,15 @@ class ApprovalController extends BaseController
             $item->description = $item->license_type . ' (' . $item->application_type . ')';
             
             // Add Billing Info
-            $item->control_number = $application->control_number ?? '-';
-            $item->payment_status = $application->payment_status ?? 'Pending';
-            $item->application_fee = $application->bill_amount ?? 0;
+            // Application Fee Info (Backwards compatibility + Explicit)
+            $item->control_number = $application->app_control_number ?? '-'; // Used by view for App Fee
+            $item->payment_status = $application->app_payment_status ?? 'Pending'; // Used by view for App Fee
+            $item->application_fee = $application->app_bill_amount ?? 0;
+            
+            // License Fee Info
+            $item->license_fee_control_number = $application->license_control_number ?? '-';
+            $item->license_payment_status = $application->license_payment_status ?? 'Pending';
+            $item->license_bill_amount = $application->license_bill_amount ?? $item->fee ?? 0;
         }
         
         // 7. Get approval history
@@ -338,6 +348,8 @@ class ApprovalController extends BaseController
                 'application_type' => $application->application_type ?? 'New',
                 'status' => $application->status ?? 'Submitted',
                 'control_number' => $application->control_number ?? '',
+                'app_control_number' => $application->app_control_number ?? '',
+                'license_control_number' => $application->license_control_number ?? '',
                 'license_number' => $application->license_number ?? '',
                 'created_at' => $application->created_at,
                 'updated_at' => $application->updated_at

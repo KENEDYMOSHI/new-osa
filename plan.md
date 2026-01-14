@@ -124,3 +124,5 @@ In the My Applications module, the View License button should initially appear a
 However, the applicant will not be able to view the license until the generated control number has been paid. Only after successful payment will the View License functionality be enabled. fix bila kuvuruga kitu 
 
 Kwenye mfumo wa WMA-MIS kwenye module ya license report tengeneza report ya leseni na ueke na sehemu ya kuview hiyo tengeneza report nzuri 
+
+kwenye my application boresha condition kwa sas naona napata control number ya leseni kama nilivyokua natakaka but boresha baada ya leseni kutoka ile button ya view inakua kama inavyotaki hiden mpaka malipo yatakapo kua paid ndipo view lesen button iwe inaweza kufanya kazi kwa sasa malipo yako paid but button still haioneshe leseni fix that iwe kam ilivyokua usivuruge kitu chochote 

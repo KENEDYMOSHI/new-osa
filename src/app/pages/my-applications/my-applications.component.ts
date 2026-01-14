@@ -59,12 +59,12 @@ export class MyApplicationsComponent implements OnInit {
   }
 
   get approvedApplications() {
-    return this.applications.filter(app => app.status === 'Approved' || app.status === 'Approved_CEO' || app.status === 'License_Generated');
+    return this.applications.filter(app => app.status === 'Approved' || app.status === 'Approved_CEO' || app.status === 'License_Generated' || app.status === 'Approved_Surveillance' || app.status === 'Approved_Exams');
   }
 
   get inProgressApplications() {
     // Return applications that are NOT approved
-    return this.applications.filter(app => !(app.status === 'Approved' || app.status === 'Approved_CEO' || app.status === 'License_Generated'));
+    return this.applications.filter(app => !(app.status === 'Approved' || app.status === 'Approved_CEO' || app.status === 'License_Generated' || app.status === 'Approved_Surveillance' || app.status === 'Approved_Exams'));
   }
 
   getStepClass(step: any, index: number, allSteps: any[]): string {
@@ -237,12 +237,18 @@ export class MyApplicationsComponent implements OnInit {
     });
   }
 
+  // Helper method to check payment status case-insensitively
+  isPaid(status: any): boolean {
+    if (!status) return false;
+    return String(status).trim().toLowerCase() === 'paid';
+  }
+
   // Helper method to determine button state
   getLicenseButtonState(application: any): 'generate' | 'view-bill' | 'view-license' | 'none' {
     // This will be enhanced when we add payment status to the application object
-    if (application.status === 'Approved' || application.status === 'Approved_CEO') {
+    if (application.status === 'Approved' || application.status === 'Approved_CEO' || application.status === 'Approved_Surveillance' || application.status === 'Approved_Exams') {
       // Check if bill exists (you'll need to add this to the application data)
-      if (application.bill_status === 'Paid') {
+      if (this.isPaid(application.bill_status)) {
         return 'view-license';
       } else if (application.bill_status === 'Pending') {
         return 'view-bill';

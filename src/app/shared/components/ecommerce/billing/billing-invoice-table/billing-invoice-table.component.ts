@@ -90,4 +90,9 @@ export class BillingInvoiceTableComponent {
   onViewInvoice(id: string): void {
     console.log(`View invoice ${id}`);
   }
+
+  isPaid(status: string): boolean {
+    if (!status) return false;
+    return String(status).toLowerCase() === 'paid';
+  }
 }

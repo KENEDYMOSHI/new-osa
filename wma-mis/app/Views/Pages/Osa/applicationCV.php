@@ -125,11 +125,31 @@
                 <i class="fas fa-arrow-left"></i> Back to List
             </a>
             <div>
-                 <a href="<?= base_url('print-application/' . ($application->application_id ?? '#')) ?>" target="_blank" class="btn btn-sm btn-outline-success">
-                    <i class="fas fa-print mr-1"></i> Print / Download PDF
-                </a>
+                 <button onclick="printApplication('<?= base_url('print-application/' . ($application->application_id ?? '#')) ?>')" class="btn btn-sm btn-outline-success">
+                    <i class="fas fa-file-pdf mr-1"></i> Download PDF
+                </button>
             </div>
         </div>
+
+        <script>
+        function printApplication(url) {
+            // Create a hidden iframe
+            var iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            iframe.src = url;
+            
+            // Append to body
+            document.body.appendChild(iframe);
+            
+            // The iframe's page has its own onload -> window.print() logic which will trigger the dialog
+            // We can leave the iframe there or remove it later, but leaving it is safer ensuring the print dialog has time to instantiate
+        }
+        </script>
 
         <!-- Header -->
         <div class="cv-header">
@@ -340,9 +360,9 @@
                             </td>
                             <td>TZS <?= number_format($item->application_fee ?? 0, 2) ?></td>
                             <td><?= $item->control_number ?? 'Pending' ?></td>
-                            <td>TZS <?= number_format($item->fee ?? 0, 2) ?></td>
+                            <td>TZS <?= number_format($item->license_bill_amount ?? $item->amount ?? $item->fee ?? 0, 2) ?></td>
                             <td><?= $item->license_fee_control_number ?? 'Pending' ?></td>
-                            <td><strong>TZS <?= number_format(($item->fee ?? 0) + ($item->application_fee ?? 0), 2) ?></strong></td>
+                            <td><strong>TZS <?= number_format(($item->license_bill_amount ?? $item->fee ?? 0) + ($item->application_fee ?? 0), 2) ?></strong></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>

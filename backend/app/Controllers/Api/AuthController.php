@@ -253,6 +253,7 @@ class AuthController extends ResourceController
                  $db = \Config\Database::connect();
                  $builder = $db->table('license_applications');
                  // Select relevant fields, especially license_type from items
+                 // Join with licenses table to get actual issue_date and expiry_date
                  $builder->select('
                     license_applications.id as app_id,
                     license_applications.created_at,
@@ -260,9 +261,12 @@ class AuthController extends ResourceController
                     license_applications.valid_to,
                     license_applications.license_number,
                     license_application_items.license_type,
-                    license_application_items.status
+                    license_application_items.status,
+                    licenses.issue_date,
+                    licenses.expiry_date as license_expiry_date
                  ');
                  $builder->join('license_application_items', 'license_application_items.application_id = license_applications.id');
+                 $builder->join('licenses', 'licenses.application_id = license_applications.id', 'left');
                  $builder->where('license_applications.user_id', $user->id);
                  $builder->orderBy('license_applications.created_at', 'DESC');
                  $licenses = $builder->get()->getResult();

@@ -116,7 +116,7 @@ class ContentSecurityPolicy extends BaseConfig
      *
      * @var list<string>|string|null
      */
-    public $frameAncestors;
+    public $frameAncestors = 'self';
 
     /**
      * The frame-src directive restricts the URLs which may

@@ -360,6 +360,9 @@ class LicenseModel extends Model
             $app->application_type = $apiData->application_info->application_type ?? 'New';
             $app->status = $apiData->application_info->status ?? 'Submitted';
             $app->control_number = $apiData->application_info->control_number ?? '';
+            $app->app_control_number = $apiData->application_info->app_control_number ?? '';
+            $app->license_control_number = $apiData->application_info->license_control_number ?? '';
+            $app->license_number = $apiData->application_info->license_number ?? '';
             $app->license_number = $apiData->application_info->license_number ?? '';
             $app->applied_date = $apiData->application_info->created_at ?? date('Y-m-d');
         }

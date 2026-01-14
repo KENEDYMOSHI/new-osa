@@ -141,21 +141,12 @@
                             <b>Application Type</b> <a class="float-right"><?= $application->application_type ?? 'New' ?></a>
                         </li>
                         <li class="list-group-item">
-                            <b>App Fee CN</b> <a class="float-right"><?= $application->control_number ?? 'N/A' ?></a>
+                            <b>App Fee CN</b> <a class="float-right"><?= $application->app_control_number ?? 'N/A' ?></a>
                         </li>
                         <li class="list-group-item">
                             <b>License Fee CN</b> 
                             <a class="float-right">
-                                <?php 
-                                    $licCn = 'Not Generated';
-                                    if (!empty($application->license_items) && is_array($application->license_items)) {
-                                        // key 0 usually holds the main license item if singular
-                                        if (!empty($application->license_items[0]->control_number)) {
-                                            $licCn = $application->license_items[0]->control_number;
-                                        }
-                                    }
-                                    echo $licCn;
-                                ?>
+                                <?= $application->license_control_number ?? 'Not Generated' ?>
                             </a>
                         </li>
                         <li class="list-group-item">
@@ -719,14 +710,33 @@
                                                             </div>
                                                         </td>
                                                         <td class="text-center py-3">
-                                                            <span class="badge badge-light text-muted border border-dashed font-weight-normal px-3 py-2">
-                                                                <i class="fas fa-hourglass-start mr-1 text-gray-400"></i> Pending Approval
-                                                            </span>
+                                                            <?php if (!empty($item->license_fee_control_number) && $item->license_fee_control_number !== '-' && $item->license_fee_control_number !== 'Pending'): ?>
+                                                                <div class="bg-white border rounded px-2 py-1 d-inline-block shadow-sm">
+                                                                    <code class="text-primary font-weight-bold" style="font-size: 0.95rem;"><?= $item->license_fee_control_number ?></code>
+                                                                </div>
+                                                            <?php else: ?>
+                                                                <span class="badge badge-light text-muted border border-dashed font-weight-normal px-3 py-2">
+                                                                    <i class="fas fa-hourglass-start mr-1 text-gray-400"></i> Pending Approval
+                                                                </span>
+                                                            <?php endif; ?>
                                                         </td>
-                                                        <td class="text-right py-3 font-weight-bold text-dark h6 mb-0"><?= number_format($item->amount ?? $item->fee ?? 0, 2) ?></td>
+                                                        <td class="text-right py-3 font-weight-bold text-dark h6 mb-0"><?= number_format($item->license_bill_amount ?? $item->amount ?? $item->fee ?? 0, 2) ?></td>
                                                         <td class="text-center py-3 pr-4">
-                                                            <span class="badge badge-light text-warning border border-warning px-3 py-2 rounded-pill">
-                                                                <i class="fas fa-clock mr-1"></i> Pending
+                                                            <?php 
+                                                                $licPayStatus = $item->license_payment_status ?? 'Pending';
+                                                                $licStatusBadge = 'badge-light text-warning border border-warning'; // Default styling for Pending/Unpaid
+                                                                $licStatusIcon = 'fa-clock';
+                                                                
+                                                                if (strtolower($licPayStatus) === 'paid') {
+                                                                    $licStatusBadge = 'badge-success';
+                                                                    $licStatusIcon = 'fa-check-circle';
+                                                                } elseif (strtolower($licPayStatus) === 'partially paid') {
+                                                                    $licStatusBadge = 'badge-info';
+                                                                    $licStatusIcon = 'fa-adjust';
+                                                                }
+                                                            ?>
+                                                            <span class="badge <?= $licStatusBadge ?> px-3 py-2 rounded-pill">
+                                                                <i class="fas <?= $licStatusIcon ?> mr-1"></i> <?= $licPayStatus ?>
                                                             </span>
                                                         </td>
                                                     </tr>

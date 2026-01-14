@@ -50,7 +50,7 @@ export class PractitionerRegistrationFormComponent implements OnInit {
       // Step 1: Personal Information
       personalInfo: this.fb.group({
         nationality: ['Tanzania', Validators.required],
-        identityNumber: ['', [Validators.required, Validators.minLength(20), Validators.maxLength(20)]],
+        identityNumber: ['', [Validators.required, Validators.minLength(20), Validators.maxLength(20), Validators.pattern(/^[0-9]*$/)]],
         firstName: ['', Validators.required],
         secondName: ['', Validators.required],
         lastName: ['', Validators.required],
@@ -60,7 +60,7 @@ export class PractitionerRegistrationFormComponent implements OnInit {
         district: ['', Validators.required],
         ward: ['', Validators.required],
         street: ['', Validators.required],
-        phoneNumber: ['', Validators.required],
+        phoneNumber: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(10), Validators.pattern(/^[0-9]*$/)]],
       }),
       // Step 2: Business Information
       businessInfo: this.fb.group({
@@ -93,7 +93,7 @@ export class PractitionerRegistrationFormComponent implements OnInit {
       const dobControl = this.personalInfo.get('dateOfBirth');
       
       if (this.isTanzanian) {
-        identityControl?.setValidators([Validators.required, Validators.minLength(20), Validators.maxLength(20)]);
+        identityControl?.setValidators([Validators.required, Validators.minLength(20), Validators.maxLength(20), Validators.pattern(/^[0-9]*$/)]);
         // If switching to Tanzania, trigger validation to potentially auto-fill if value exists
         identityControl?.updateValueAndValidity();
       } else {
