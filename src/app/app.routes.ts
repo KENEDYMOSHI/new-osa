@@ -201,6 +201,11 @@ export const routes: Routes = [
     title:'Angular Sign In Dashboard | TailAdmin - Angular Admin Dashboard Template'
   },
   {
+    path: 'auth/forgot-password',
+    loadComponent: () => import('./pages/auth-pages/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
+    title: 'Forgot Password | WMA Online Services Portal'
+  },
+  {
     path:'signup',
     component:SignUpComponent,
     title:'Angular Sign Up Dashboard | TailAdmin - Angular Admin Dashboard Template'

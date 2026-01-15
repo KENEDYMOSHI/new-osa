@@ -240,7 +240,8 @@ export class MyApplicationsComponent implements OnInit {
   // Helper method to check payment status case-insensitively
   isPaid(status: any): boolean {
     if (!status) return false;
-    return String(status).trim().toLowerCase() === 'paid';
+    const s = String(status).trim().toLowerCase();
+    return s === 'paid' || s === 'completed' || s === 'success';
   }
 
   // Helper method to determine button state

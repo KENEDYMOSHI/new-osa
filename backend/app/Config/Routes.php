@@ -44,11 +44,15 @@ service('auth')->routes($routes);
 
 $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) {
     $routes->post('auth/register', 'AuthController::register');
+    $routes->post('auth/check-phone', 'AuthController::checkPhone');
     $routes->post('auth/login', 'AuthController::login');
     $routes->get('auth/me', 'AuthController::me');
     $routes->post('auth/update-personal', 'AuthController::updatePersonalProfile');
     $routes->post('auth/update-business', 'AuthController::updateBusinessProfile');
     $routes->post('auth/change-password', 'AuthController::changePassword');
+    $routes->post('auth/forgot-password', 'AuthController::forgotPassword');
+    $routes->post('auth/verify-otp', 'AuthController::verifyResetOtp');
+    $routes->post('auth/reset-password', 'AuthController::resetPassword');
     $routes->post('license/submit', 'LicenseController::submit');
     $routes->post('license/upload', 'LicenseController::upload');
     $routes->get('license/documents', 'LicenseController::getUserDocuments');

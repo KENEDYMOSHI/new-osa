@@ -25,6 +25,10 @@ export class AuthService {
     );
   }
 
+  checkPhone(phone: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/check-phone`, { phone });
+  }
+
   login(credentials: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, credentials).pipe(
       tap((response: any) => {
@@ -66,6 +70,18 @@ export class AuthService {
 
   changePassword(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/change-password`, data, { headers: this.getHeaders() });
+  }
+
+  forgotPassword(phone: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/forgot-password`, { phone });
+  }
+
+  verifyOtp(phone: string, otp: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/verify-otp`, { phone, otp });
+  }
+
+  resetPassword(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/reset-password`, data);
   }
 
   getToken(): string | null {

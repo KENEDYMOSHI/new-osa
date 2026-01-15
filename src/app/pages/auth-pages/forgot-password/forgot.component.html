@@ -1,0 +1,203 @@
+<div class="min-h-screen flex flex-col font-sans bg-[#F3DEBA]">
+
+  <!-- Top Bar -->
+  <div class="bg-[#F59E0B] text-white py-1 px-4 text-xs flex justify-between items-center shadow-sm z-30 relative">
+    <div class="font-bold">WMA Portal</div>
+    <div class="flex gap-4">
+      <a href="#" class="hover:underline">Help/FAQ</a>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="relative bg-white shadow-md z-20">
+    <div class="h-2 w-full flex">
+      <div class="h-full w-1/4 bg-green-600"></div>
+      <div class="h-full w-1/4 bg-yellow-400"></div>
+      <div class="h-full w-1/4 bg-blue-600"></div>
+      <div class="h-full w-1/4 bg-black"></div>
+    </div>
+    
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center">
+        <img src="/images/coat-of-arms.png" alt="Coat of Arms" class="h-16 w-auto">
+      </div>
+      <div class="text-center hidden md:block">
+        <h1 class="text-xs font-bold text-gray-700 uppercase tracking-wider">The United Republic of Tanzania</h1>
+        <h2 class="text-[10px] font-semibold text-gray-500 uppercase">Ministry of Industry and Trade</h2>
+        <h3 class="text-base font-extrabold text-gray-900 uppercase">Weights and Measures Agency</h3>
+      </div>
+      <div class="flex items-center">
+        <img src="/images/wma-logo.jpg" alt="WMA Logo" class="h-16 w-auto">
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="flex-grow flex flex-col items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl overflow-hidden max-w-3xl w-full flex flex-col md:flex-row min-h-[400px]">
+      
+      <!-- Left Side: Image (Static for consistency) -->
+      <div class="w-full md:w-1/2 relative h-48 md:h-auto bg-gray-800 overflow-hidden">
+         <img [src]="bannerImage" alt="WMA Banner" class="w-full h-full object-cover opacity-80">
+         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+         <div class="absolute bottom-8 left-0 right-0 p-4 text-white text-center">
+            <h3 class="text-base font-bold mb-1">Account Recovery</h3>
+            <p class="text-xs text-gray-200">Securely reset your password to regain access.</p>
+         </div>
+      </div>
+
+      <!-- Right Side: Forms -->
+      <div class="w-full md:w-1/2 p-8 flex flex-col justify-center">
+        
+        <!-- Step 1: Phone Entry -->
+        <div *ngIf="currentStep === 1">
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3 text-orange-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                    </svg>
+                </div>
+                <h2 class="text-lg font-bold text-gray-800">Forgot Password?</h2>
+                <p class="text-gray-600 text-xs mt-1">Enter your registered phone number to receive a verification code.</p>
+            </div>
+
+            <form (ngSubmit)="onSendOtp()" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <input type="tel" [(ngModel)]="phone" name="phone" placeholder="e.g. 0712345678"
+                           [disabled]="isLoading"
+                           [class.border-red-500]="phoneError"
+                           class="w-full rounded-lg border border-gray-300 py-2.5 px-4 text-sm focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B] outline-none transition-colors">
+                    <p *ngIf="phoneError" class="mt-1 text-xs text-red-500">{{ phoneError }}</p>
+                </div>
+
+                <button type="submit" [disabled]="isLoading"
+                        class="w-full bg-[#F59E0B] hover:bg-[#D97706] text-white font-bold py-2.5 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+                    <app-loading-spinner *ngIf="isLoading"></app-loading-spinner>
+                    <span *ngIf="!isLoading">Send Verification Code</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Step 2: Verify OTP -->
+        <div *ngIf="currentStep === 2">
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 text-green-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h2 class="text-lg font-bold text-gray-800">Verification</h2>
+                <p class="text-gray-600 text-xs mt-1">We sent a 6-digit code to <span class="font-bold text-gray-800">{{ phone }}</span></p>
+            </div>
+
+            <form (ngSubmit)="onVerifyOtp()" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Enter OTP Code</label>
+                    <input type="text" [(ngModel)]="otp" name="otp" placeholder="XXXXXX" maxlength="6"
+                           [disabled]="isLoading"
+                           [class.border-red-500]="otpError"
+                           class="w-full rounded-lg border border-gray-300 py-2.5 px-4 text-center text-lg tracking-widest font-mono focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B] outline-none transition-colors">
+                    <p *ngIf="otpError" class="mt-1 text-xs text-red-500 text-center">{{ otpError }}</p>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <button type="submit" [disabled]="isLoading"
+                            class="w-full bg-[#F59E0B] hover:bg-[#D97706] text-white font-bold py-2.5 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+                        <app-loading-spinner *ngIf="isLoading"></app-loading-spinner>
+                        <span *ngIf="!isLoading">Verify Code</span>
+                    </button>
+                    
+                    <button type="button" (click)="onSendOtp()" 
+                            class="text-xs text-center text-gray-500 hover:text-[#F59E0B] font-medium transition-colors">
+                        Resend Code
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Step 3: New Password -->
+        <div *ngIf="currentStep === 3">
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                </div>
+                <h2 class="text-lg font-bold text-gray-800">Reset Password</h2>
+                <p class="text-gray-600 text-xs mt-1">Create a new, secure password for your account.</p>
+            </div>
+
+            <form (ngSubmit)="onResetPassword()" class="space-y-4">
+                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                    <div class="relative">
+                        <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="newPassword" name="newPassword" placeholder="Minimum 8 characters"
+                               [disabled]="isLoading"
+                               class="w-full rounded-lg border border-gray-300 py-2.5 px-4 pr-10 text-sm focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B] outline-none">
+                        <button type="button" (click)="togglePasswordVisibility()" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600">
+                             <svg *ngIf="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                             <svg *ngIf="showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.057 10.057 0 01-1.555 3.058m-5.889-2.08a3 3 0 01-2.08-2.08m0 0l-3.29-3.29M20.9 20.9L3 3" /></svg>
+                        </button>
+                    </div>
+                    <p *ngIf="passwordError" class="mt-1 text-xs text-red-500">{{ passwordError }}</p>
+                </div>
+                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                    <div class="relative">
+                        <input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="confirmPassword" name="confirmPassword" placeholder="Confirm your password"
+                               [disabled]="isLoading"
+                               class="w-full rounded-lg border border-gray-300 py-2.5 px-4 pr-10 text-sm focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B] outline-none">
+                        <button type="button" (click)="toggleConfirmPasswordVisibility()" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600">
+                             <svg *ngIf="!showConfirmPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                             <svg *ngIf="showConfirmPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.057 10.057 0 01-1.555 3.058m-5.889-2.08a3 3 0 01-2.08-2.08m0 0l-3.29-3.29M20.9 20.9L3 3" /></svg>
+                        </button>
+                    </div>
+                    <p *ngIf="confirmPasswordError" class="mt-1 text-xs text-red-500">{{ confirmPasswordError }}</p>
+                </div>
+
+                <button type="submit" [disabled]="isLoading"
+                        class="w-full bg-[#F59E0B] hover:bg-[#D97706] text-white font-bold py-2.5 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+                    <app-loading-spinner *ngIf="isLoading"></app-loading-spinner>
+                    <span *ngIf="!isLoading">Reset Password</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Step 4: Success -->
+        <div *ngIf="currentStep === 4">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800">Password Reset Successful</h2>
+                <p class="text-gray-600 text-sm mt-2">Your password has been securely updated. You can now use your new password to sign in.</p>
+            </div>
+
+            <button (click)="goToLogin()" class="w-full bg-[#F59E0B] hover:bg-[#D97706] text-white font-bold py-3 rounded-lg shadow-sm transition-colors">
+                Back to Sign In
+            </button>
+        </div>
+
+        <!-- Footer Links -->
+        <div class="mt-8 text-center" *ngIf="currentStep < 4">
+            <button (click)="goBack()" class="text-xs text-gray-500 hover:text-gray-700 flex items-center justify-center mx-auto gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3 h-3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                Back to {{ currentStep === 1 ? 'Login' : 'Previous Step' }}
+            </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="pb-3 text-center text-gray-600 text-xs mt-4">
+    &copy; 2025 Weights and Measures Agency. All rights reserved.
+  </div>
+
+</div>

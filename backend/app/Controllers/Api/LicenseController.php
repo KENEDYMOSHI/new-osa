@@ -1578,16 +1578,15 @@ class LicenseController extends ResourceController
         }
 
         // Check payment status
-        // BYPASS FOR TESTING: Assume payment is completed
-        // if (!$billModel->isPaymentCompleted($applicationId)) {
-        //     $bill = $billModel->getBillByApplicationId($applicationId);
-        //     return $this->respond([
-        //         'status' => 402,
-        //         'error' => 'Payment must be completed before viewing license',
-        //         'bill' => $bill,
-        //         'message' => 'Please complete payment to view your license'
-        //     ], 402);
-        // }
+        if (!$billModel->isPaymentCompleted($applicationId)) {
+            $bill = $billModel->getBillByApplicationId($applicationId);
+            return $this->respond([
+                'status' => 402,
+                'error' => 'Payment must be completed before viewing license',
+                'bill' => $bill,
+                'message' => 'Please complete payment to view your license'
+            ], 402);
+        }
 
         // Return license details (you can expand this to include actual license document)
         // Get or Create License

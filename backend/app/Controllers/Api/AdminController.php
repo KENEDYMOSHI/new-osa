@@ -347,6 +347,33 @@ class AdminController extends ResourceController
                 if (!$notifBuilder->insert($notifData)) {
                     log_message('error', 'Notification insert failed: ' . json_encode($db->error()));
                 }
+
+                // --- SEND SMS NOTIFICATION ---
+                try {
+                    // Fetch user's phone number
+                    // We have doc->user_id (users.id). We need to bridge to practitioner_personal_infos via users.uuid
+                    $userPhone = $db->table('users')
+                        ->select('practitioner_personal_infos.phone')
+                        ->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid')
+                        ->where('users.id', $doc->user_id)
+                        ->get()
+                        ->getRow();
+
+                    if ($userPhone && !empty($userPhone->phone)) {
+                        $smsLib = new \App\Libraries\SmsLibrary();
+                        $message = "Habari,\n\nMaombi yako ya leseni uliyowasilisha kwenye mfumo wa OSA yamefanyiwa mapitio na yamerudishwa kwa marekebisho kutokana na makosa kwenye nyaraka ulizowasilisha. Tafadhali rekebisha na uwasilishe tena kupitia mfumo.\n\nAhsante";
+                        
+                        // Send SMS
+                        $smsLib->sendSms($userPhone->phone, $message);
+                        log_message('info', "SMS sent to {$userPhone->phone} for returned document.");
+                    } else {
+                        log_message('warning', "Could not find phone number for user ID: {$doc->user_id} to send return SMS.");
+                    }
+                } catch (\Exception $e) {
+                    log_message('error', 'Failed to send SMS for returned document: ' . $e->getMessage());
+                    // Do not fail the request if SMS fails
+                }
+                // -----------------------------
             }
         } catch (\Exception $e) {
             log_message('error', 'Exception in returnDocument: ' . $e->getMessage());
