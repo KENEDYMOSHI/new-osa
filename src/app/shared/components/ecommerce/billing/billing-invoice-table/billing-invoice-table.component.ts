@@ -12,6 +12,7 @@ export interface Invoice {
   date: string;
   licenseType: string;
   billType: number; // 1 = Application Fee, 2 = License Fee
+  feeType?: string; // e.g. "Application Fee", "License Fee"
 }
 
 @Component({

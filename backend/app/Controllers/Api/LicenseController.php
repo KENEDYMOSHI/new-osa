@@ -787,10 +787,11 @@ class LicenseController extends ResourceController
                             'bill_id' => $appId, // Link bill to application
                             'control_number' => $cn,
                             'amount' => $fee,
-                            'bill_type' => $billTypeInt, 
+                            'bill_type' => $billTypeInt,
+                            'fee_type' => $billType, // "Application Fee" or "License Fee"
                             'payer_name' => $user->username,
                             'payer_phone' => 'N/A',
-                            'bill_description' => $licenseName . ' - ' . $billType,
+                            'bill_description' => $licenseName, // Only license name
                             'bill_expiry_date' => date('Y-m-d', strtotime('+30 days')),
                             'collection_center' => 'Headquarters',
                             'user_id' => $userId,
@@ -932,11 +933,8 @@ class LicenseController extends ResourceController
 
         $feeType = $this->request->getGet('feeType');
         if (!empty($feeType)) {
-            if ($feeType === 'Application Fee') {
-                $builder->where('osabill.bill_type', 1);
-            } elseif ($feeType === 'License Fee') {
-                $builder->where('osabill.bill_type', 2);
-            }
+            // Use the fee_type column directly instead of bill_type
+            $builder->where('osabill.fee_type', $feeType);
         }
 
         $paymentStatus = $this->request->getGet('paymentStatus');
@@ -969,7 +967,8 @@ class LicenseController extends ResourceController
                 'billDescription' => $bill['bill_description'],
                 'date' => $bill['created_at'],
                 'licenseType' => $bill['bill_description'],
-                'billType' => $bill['bill_type'] // 1 or 2
+                'billType' => $bill['bill_type'], // Keep for backward compatibility
+                'feeType' => $bill['fee_type'] ?? 'N/A' // Add fee_type from database
             ];
         }
 

@@ -58,9 +58,6 @@ class BillLibrary
         $itemNames = array_map(fn($item) => $item->itemName, $items);
         
         $billDescription = implode(', ', $itemNames);
-        if ($billType == 1) {
-            $billDescription = "Application Fee";
-        }
 
         // Fetch Practitioner Personal Info
         $personalInfoModel = new \App\Models\PractitionerPersonalInfoModel();
@@ -170,12 +167,17 @@ class BillLibrary
 
             // Save bill info to osabill table
             $osabillModel = new \App\Models\OsabillModel();
+            
+            // Determine fee_type text
+            $feeType = ($billType == 1) ? 'Application Fee' : 'License Fee';
+            
             $osabillData = [
                 'id' => strtoupper(md5(uniqid(rand(), true))),
                 'bill_id' => $billId,
                 'control_number' => $controlNumber,
                 'amount' => (int) preg_replace('/\D/', '', $billData->amount),
                 'bill_type' => $billType,
+                'fee_type' => $feeType,
                 'payer_name' => $payerName,
                 'payer_phone' => $payerPhone, 
                 'bill_description' => $billDescription,

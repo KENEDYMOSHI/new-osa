@@ -632,6 +632,19 @@ class BillModel extends Model
         return $this->reconciliations->select()->where($params)->get()->getResult();
     }
 
+    // NEW: Get multiple bills by control numbers (for License Bill Report)
+    public function getBillsByControlNumbers($controlNumbers)
+    {
+        if (empty($controlNumbers)) {
+            return [];
+        }
+        
+        return $this->billTable->select('PayCntrNum, BillAmt, PaidAmount, PaymentStatus, BillGenDt, BillTyp, PyrName, BillDesc')
+            ->whereIn('PayCntrNum', $controlNumbers)
+            ->get()
+            ->getResult();
+    }
+
     //save payment data from the params
     public function getPaymentData($params)
     {

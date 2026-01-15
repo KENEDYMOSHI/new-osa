@@ -65,7 +65,8 @@ export class BillingPaymentsComponent implements OnInit {
           billDescription: bill.billDescription,
           date: new Date(bill.date).toLocaleDateString(),
           licenseType: bill.licenseType,
-          billType: bill.billType // 1 or 2
+          billType: bill.billType, // 1 or 2
+          feeType: bill.feeType // Mapped from API response
         }));
         this.isLoading = false;
       },

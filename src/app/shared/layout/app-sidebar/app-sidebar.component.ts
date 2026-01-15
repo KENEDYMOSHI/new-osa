@@ -10,7 +10,6 @@ import { SidebarService } from "../../services/sidebar.service";
 import { LicenseService } from "../../../services/license.service";
 import { NavigationEnd, Router, RouterModule } from "@angular/router";
 import { SafeHtmlPipe } from "../../pipe/safe-html.pipe";
-import { SidebarWidgetComponent } from "./app-sidebar-widget.component";
 import { combineLatest, Subscription } from "rxjs";
 
 type NavItem = {
@@ -23,7 +22,7 @@ type NavItem = {
 
 @Component({
   selector: "app-sidebar",
-  imports: [CommonModule, RouterModule, SafeHtmlPipe, SidebarWidgetComponent],
+  imports: [CommonModule, RouterModule, SafeHtmlPipe],
   templateUrl: "./app-sidebar.component.html",
 })
 export class AppSidebarComponent {
@@ -84,32 +83,6 @@ export class AppSidebarComponent {
       icon: `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
       name: "Support / Help",
       path: "/support-help",
-    },
-  ];
-  // Others nav items
-  othersItems: NavItem[] = [
-    {
-      icon: `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15h6"></path><path d="M12 12v6"></path></svg>`,
-      name: "Certificates",
-      path: "/certificates",
-    },
-    {
-      icon: `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3zM3 9h18M9 21V9"></path></svg>`,
-      name: "OSA",
-      subItems: [
-        { name: "OSA Dashboard", path: "/osa-dashboard" },
-        {
-          name: "Initial Application Approval",
-          path: "/initial-application-approval",
-        },
-        { name: "License Approval", path: "/license-approval" },
-        { name: "Exam Remark", path: "/exam-remark" },
-        { name: "License Report", path: "/license-report" },
-        { name: "License Bill Report", path: "/license-bill-report" },
-        { name: "Applicants Verification", path: "/applicants-verification" },
-        { name: "Search", path: "/search" },
-        { name: "License Setting", path: "/osa/settings" },
-      ],
     },
   ];
 
@@ -231,7 +204,6 @@ export class AppSidebarComponent {
   private setActiveMenuFromRoute(currentUrl: string) {
     const menuGroups = [
       { items: this.navItems, prefix: "main" },
-      { items: this.othersItems, prefix: "others" },
     ];
 
     menuGroups.forEach((group) => {

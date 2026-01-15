@@ -235,6 +235,7 @@ $routes->group('', ['filter' => 'AuthFilter'], function ($routes, $appRoutes = [
     $appRoutes['examRemark'] = 'OsaController::examRemark';
     $appRoutes['saveExamRemark'] = 'OsaController::saveExamRemark';
     $appRoutes['licenseReport'] = 'OsaController::licenseReport';
+    $appRoutes['licenseBillReport'] = 'OsaController::licenseBillReport';
     $appRoutes['osaApproveApplication'] = 'OsaController::approveApplication';
     $appRoutes['osaRejectApplication'] = 'OsaController::rejectApplication';
     $appRoutes['paymentSimulator'] = 'Home::index';

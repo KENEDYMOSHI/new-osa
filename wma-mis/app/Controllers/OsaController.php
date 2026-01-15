@@ -12,6 +12,7 @@ class OsaController extends BaseController
   public $token;
   private $licenseModel;
   private $licenseTypeModel;
+  private $billModel; // Added property
 
   public function __construct()
   {
@@ -22,6 +23,7 @@ class OsaController extends BaseController
           $this->searchModel        = new SearchModel();
           $this->licenseModel       = new \App\Models\LicenseModel();
           $this->licenseTypeModel   = new \App\Models\LicenseTypeModel();
+          $this->billModel          = new \App\Models\BillModel(); // Injected BillModel
           $this->uniqueId        = auth()->user()->unique_id;
           $this->user = auth()->user();
   }
@@ -248,6 +250,103 @@ public function licenseReport()
     $data['licenseTypes'] = $this->licenseTypeModel->findAll();
 
     return view('Pages/Osa/LicenseReport', $data);
+}
+
+public function licenseBillReport()
+{
+    $db = \Config\Database::connect();
+    
+    // Get filters from request
+    $filters = [
+        'name' => $this->request->getVar('name'),
+        'region' => $this->request->getVar('region'),
+        'license_type' => $this->request->getVar('license_type'),
+        'year' => $this->request->getVar('year'),
+        'dateRange' => $this->request->getVar('dateRange'),
+        'company_name' => $this->request->getVar('company_name')
+    ];
+
+    // Build query for licenses
+    // Fetch from API
+    $licenses = $this->licenseModel->getIssuedLicensesFromApi($filters);
+
+    // Extract Control Numbers
+    $controlNumbers = [];
+    foreach ($licenses as $l) {
+        if (!empty($l->control_number)) { 
+             // Ensure robust cleaning: trim and remove spaces
+             $cn = str_replace(' ', '', trim((string)$l->control_number));
+             $l->control_number = $cn; // Update object property
+             $controlNumbers[] = $cn;
+        }
+    }
+    
+    // Fetch Bill Data local
+    $bills = [];
+    if (!empty($controlNumbers)) {
+        $bills = $this->billModel->getBillsByControlNumbers(array_unique($controlNumbers));
+    }
+    
+    // Index bills by control number for easy lookup
+    $billsByCn = [];
+    foreach ($bills as $b) {
+        // Ensure cleaning on keys from DB as well
+        $dbCn = str_replace(' ', '', trim((string)$b->PayCntrNum));
+        $billsByCn[$dbCn] = $b;
+    }
+
+    // Merge Bill Data into Licenses
+    foreach ($licenses as $l) {
+        // Set payer_name to Applicant Name by default (User Request)
+        $l->payer_name = trim(($l->first_name ?? '') . ' ' . ($l->last_name ?? ''));
+
+        $cn = isset($l->control_number) ? str_replace(' ', '', trim((string)$l->control_number)) : '';
+        
+        if ($cn && isset($billsByCn[$cn])) {
+            $bill = $billsByCn[$cn];
+            $l->bill_amount = $bill->BillAmt;
+            $l->paid_amount = $bill->PaidAmount;
+            $l->payment_status = $bill->PaymentStatus;
+            $l->outstanding_balance = $bill->BillAmt - $bill->PaidAmount;
+            
+            // Determine Fee Type based on Description text first, fallback to BillTyp
+            $desc = strtolower($bill->BillDesc ?? '');
+            if (strpos($desc, 'application') !== false) {
+                $l->fee_type = 'Application Fee';
+            } elseif (strpos($desc, 'license') !== false) {
+                $l->fee_type = 'License Fee';
+            } else {
+                $l->fee_type = ($bill->BillTyp == 1) ? 'Application Fee' : 'License Fee';
+            }
+
+            $l->bill_date = isset($bill->BillGenDt) ? date('d M, Y', strtotime($bill->BillGenDt)) : 'N/A';
+            // Overwrite payer_name if bill has one? No, user explicitly asked for applicant name.
+            // But if bill name is different significantly? 
+            // The user request "payer name ni aapplicant name" implies they want the applicant name in that column.
+            // So I will keep the applicant name constructed above.
+        } else {
+             // Default if no local bill found (or no CN)
+             $l->bill_amount = 0;
+             $l->paid_amount = 0;
+             $l->payment_status = 'N/A';
+             $l->outstanding_balance = 0;
+             $l->fee_type = 'N/A';
+             $l->bill_date = 'N/A';
+             // payer_name is already set above
+        }
+    }
+
+    $data['page'] = [
+        'title' => 'License Bill Report',
+        'heading' => 'License Bill Report',
+    ];
+
+    $data['user'] = $this->user;
+    $data['licenses'] = $licenses;
+    $data['filters'] = $filters;
+    $data['licenseTypes'] = $this->licenseTypeModel->findAll();
+
+    return view('Pages/Osa/LicenseBillReport', $data);
 }
 
 public function exportLicenses()

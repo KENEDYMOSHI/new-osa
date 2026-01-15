@@ -4,14 +4,14 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { LicenseService } from '../../services/license.service';
 import { AppModalComponent } from '../../components/app-modal/app-modal.component';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, AppModalComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, AppModalComponent, RouterLink],
   templateUrl: './profile.component.html',
 })
 export class ProfileComponent implements OnInit {
