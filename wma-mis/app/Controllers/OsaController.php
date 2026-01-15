@@ -13,6 +13,7 @@ class OsaController extends BaseController
   private $licenseModel;
   private $licenseTypeModel;
   private $billModel; // Added property
+  private $osabillModel;
 
   public function __construct()
   {
@@ -24,6 +25,7 @@ class OsaController extends BaseController
           $this->licenseModel       = new \App\Models\LicenseModel();
           $this->licenseTypeModel   = new \App\Models\LicenseTypeModel();
           $this->billModel          = new \App\Models\BillModel(); // Injected BillModel
+          $this->osabillModel       = new \App\Models\OsabillModel();
           $this->uniqueId        = auth()->user()->unique_id;
           $this->user = auth()->user();
   }
@@ -212,6 +214,9 @@ public function examRemark()
         'title' => 'Exam Remark',
         'heading' => 'Exam Remark',
     ];
+    
+    // Fetch license types for filter
+    $data['licenseTypes'] = $this->licenseModel->getLicenseTypesFromApi();
 
     $data['user']= $this->user;
     $data['applications'] = $applications;
@@ -232,7 +237,10 @@ public function licenseReport()
         'license_type' => $this->request->getVar('license_type'),
         'year' => $this->request->getVar('year'),
         'dateRange' => $this->request->getVar('dateRange'),
-        'company_name' => $this->request->getVar('company_name')
+        'company_name' => $this->request->getVar('company_name'),
+        'control_number' => $this->request->getVar('control_number'),
+        'status' => $this->request->getVar('status'),
+        'payment_status' => $this->request->getVar('payment_status')
     ];
 
     // Build query for licenses
@@ -263,87 +271,55 @@ public function licenseBillReport()
         'license_type' => $this->request->getVar('license_type'),
         'year' => $this->request->getVar('year'),
         'dateRange' => $this->request->getVar('dateRange'),
-        'company_name' => $this->request->getVar('company_name')
+        'company_name' => $this->request->getVar('company_name'),
+        'control_number' => $this->request->getVar('control_number'),
+        'fee_type' => $this->request->getVar('fee_type'),
+        'payment_status' => $this->request->getVar('payment_status')
     ];
 
-    // Build query for licenses
-    // Fetch from API
-    $licenses = $this->licenseModel->getIssuedLicensesFromApi($filters);
-
-    // Extract Control Numbers
-    $controlNumbers = [];
-    foreach ($licenses as $l) {
-        if (!empty($l->control_number)) { 
-             // Ensure robust cleaning: trim and remove spaces
-             $cn = str_replace(' ', '', trim((string)$l->control_number));
-             $l->control_number = $cn; // Update object property
-             $controlNumbers[] = $cn;
-        }
-    }
+    // Fetch All Bills directly from osabill
+    $bills = $this->osabillModel->getBillsWithFilters($filters);
     
-    // Fetch Bill Data local
-    $bills = [];
-    if (!empty($controlNumbers)) {
-        $bills = $this->billModel->getBillsByControlNumbers(array_unique($controlNumbers));
-    }
-    
-    // Index bills by control number for easy lookup
-    $billsByCn = [];
-    foreach ($bills as $b) {
-        // Ensure cleaning on keys from DB as well
-        $dbCn = str_replace(' ', '', trim((string)$b->PayCntrNum));
-        $billsByCn[$dbCn] = $b;
-    }
-
-    // Merge Bill Data into Licenses
-    foreach ($licenses as $l) {
-        // Set payer_name to Applicant Name by default (User Request)
-        $l->payer_name = trim(($l->first_name ?? '') . ' ' . ($l->last_name ?? ''));
-
-        $cn = isset($l->control_number) ? str_replace(' ', '', trim((string)$l->control_number)) : '';
+    // Map to view structure
+    $mappedBills = [];
+    foreach ($bills as $bill) {
+        $obj = new \stdClass();
+        $obj->payer_name = $bill->payer_name;
+        // bill_description contains license type name
+        $obj->license_type = $bill->bill_description; 
         
-        if ($cn && isset($billsByCn[$cn])) {
-            $bill = $billsByCn[$cn];
-            $l->bill_amount = $bill->BillAmt;
-            $l->paid_amount = $bill->PaidAmount;
-            $l->payment_status = $bill->PaymentStatus;
-            $l->outstanding_balance = $bill->BillAmt - $bill->PaidAmount;
-            
-            // Determine Fee Type based on Description text first, fallback to BillTyp
-            $desc = strtolower($bill->BillDesc ?? '');
-            if (strpos($desc, 'application') !== false) {
-                $l->fee_type = 'Application Fee';
-            } elseif (strpos($desc, 'license') !== false) {
-                $l->fee_type = 'License Fee';
-            } else {
-                $l->fee_type = ($bill->BillTyp == 1) ? 'Application Fee' : 'License Fee';
-            }
-
-            $l->bill_date = isset($bill->BillGenDt) ? date('d M, Y', strtotime($bill->BillGenDt)) : 'N/A';
-            // Overwrite payer_name if bill has one? No, user explicitly asked for applicant name.
-            // But if bill name is different significantly? 
-            // The user request "payer name ni aapplicant name" implies they want the applicant name in that column.
-            // So I will keep the applicant name constructed above.
-        } else {
-             // Default if no local bill found (or no CN)
-             $l->bill_amount = 0;
-             $l->paid_amount = 0;
-             $l->payment_status = 'N/A';
-             $l->outstanding_balance = 0;
-             $l->fee_type = 'N/A';
-             $l->bill_date = 'N/A';
-             // payer_name is already set above
+        // Fee type
+        $obj->fee_type = $bill->fee_type;
+        if (empty($obj->fee_type) || $obj->fee_type === 'N/A') {
+             $obj->fee_type = ($bill->bill_type == 1) ? 'Application Fee' : 'License Fee';
         }
+        
+        $obj->payment_status = $bill->payment_status;
+        
+        // Paid Amount logic
+        if (strtolower($obj->payment_status ?? '') === 'paid') {
+            $obj->paid_amount = $bill->amount;
+            $obj->outstanding_balance = 0;
+        } else {
+            $obj->paid_amount = 0;
+            $obj->outstanding_balance = $bill->amount;
+        }
+        
+        $obj->bill_date = isset($bill->created_at) ? date('d M, Y', strtotime($bill->created_at)) : 'N/A';
+        $obj->control_number = $bill->control_number;
+        $obj->bill_amount = $bill->amount;
+        
+        // Add other fields if necessary for view to avoid undefined errors
+        $obj->first_name = ''; 
+        $obj->last_name = '';
+        
+        $mappedBills[] = $obj;
     }
-
-    $data['page'] = [
-        'title' => 'License Bill Report',
-        'heading' => 'License Bill Report',
-    ];
-
-    $data['user'] = $this->user;
-    $data['licenses'] = $licenses;
+    
+    $data['licenses'] = $mappedBills;
     $data['filters'] = $filters;
+    $data['page'] = ['title' => 'License Bill Report', 'heading' => 'License Bill Report']; // Re-added title for consistency
+    $data['user'] = $this->user; // Added back user data
     $data['licenseTypes'] = $this->licenseTypeModel->findAll();
 
     return view('Pages/Osa/LicenseBillReport', $data);

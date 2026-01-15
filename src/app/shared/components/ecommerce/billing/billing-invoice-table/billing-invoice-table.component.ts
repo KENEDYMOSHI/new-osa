@@ -96,4 +96,16 @@ export class BillingInvoiceTableComponent {
     if (!status) return false;
     return String(status).toLowerCase() === 'paid';
   }
+
+  onItemsPerPageChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const value = Number(target.value);
+    
+    if (value === -1) {
+      this.itemsPerPage = this.totalInvoices > 0 ? this.totalInvoices : 20; // Show all
+    } else {
+      this.itemsPerPage = value;
+    }
+    this.currentPage = 1; // Reset to first page
+  }
 }

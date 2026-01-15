@@ -74,9 +74,17 @@
                             <label><i class="fas fa-id-card mr-1"></i> License Type</label>
                             <select class="form-control select2" name="license_type" style="width: 100%;">
                                 <option value="" selected>Select License Type</option>
-                                <option <?= ($filters['license_type'] ?? '') == 'Class A' ? 'selected' : '' ?>>Class A</option>
-                                <option <?= ($filters['license_type'] ?? '') == 'Class B' ? 'selected' : '' ?>>Class B</option>
-                                <option <?= ($filters['license_type'] ?? '') == 'Class C' ? 'selected' : '' ?>>Class C</option>
+                                <?php
+                                if (!empty($licenseTypes)) {
+                                    foreach ($licenseTypes as $type) {
+                                        $typeName = $type->name ?? $type->license_type ?? '';
+                                        if ($typeName) {
+                                            $selected = ($filters['license_type'] ?? '') == $typeName ? 'selected' : '';
+                                            echo "<option value='$typeName' $selected>$typeName</option>";
+                                        }
+                                    }
+                                }
+                                ?>
                             </select>
                         </div>
                     </div>
@@ -87,8 +95,13 @@
                             <label><i class="fas fa-calendar mr-1"></i> Year</label>
                             <select class="form-control select2" name="year" style="width: 100%;">
                                 <option value="" selected>Select Year</option>
-                                <option <?= ($filters['year'] ?? '') == '2025' ? 'selected' : '' ?>>2025</option>
-                                <option <?= ($filters['year'] ?? '') == '2026' ? 'selected' : '' ?>>2026</option>
+                                <?php
+                                $currentYear = date('Y');
+                                for ($i = $currentYear; $i >= 2020; $i--) {
+                                    $selected = ($filters['year'] ?? '') == $i ? 'selected' : '';
+                                    echo "<option value='$i' $selected>$i</option>";
+                                }
+                                ?>
                             </select>
                         </div>
                     </div>
@@ -105,11 +118,22 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 d-flex align-items-end justify-content-end">
-                        <div class="form-group w-100 text-right">
-                             <button type="submit" class="btn btn-primary"><i class="fas fa-search mr-1"></i> Filter</button>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                             <label><i class="fas fa-info-circle mr-1"></i> Status</label>
+                             <select class="form-control select2" name="status" style="width: 100%;">
+                                 <option value="" selected>All Status</option>
+                                 <option value="Pass" <?= ($filters['status'] ?? '') == 'Pass' ? 'selected' : '' ?>>Pass</option>
+                                 <option value="Fail" <?= ($filters['status'] ?? '') == 'Fail' ? 'selected' : '' ?>>Fail</option>
+                             </select>
                         </div>
                     </div>
+                </div>
+                <div class="row mt-2">
+                     <div class="col-md-12 text-right">
+                         <button type="submit" class="btn btn-primary"><i class="fas fa-search mr-1"></i> Filter</button>
+                         <a href="<?= base_url('examRemark') ?>" class="btn btn-default"><i class="fas fa-undo mr-1"></i> Reset</a>
+                     </div>
                 </div>
             </form>
         </div>

@@ -17,6 +17,22 @@
     </div>
   </div>
 </div>
+<div class="px-6 flex items-center justify-between pb-4">
+  <div class="flex items-center gap-2">
+    <label class="text-sm text-gray-700 dark:text-gray-400">Show</label>
+    <select
+      class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 outline-none transition focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+      (change)="onItemsPerPageChange($event)"
+    >
+      <option value="10">10</option>
+      <option value="20" selected>20</option>
+      <option value="25">25</option>
+      <option value="50">50</option>
+      <option value="-1">All</option>
+    </select>
+    <label class="text-sm text-gray-700 dark:text-gray-400">entries</label>
+  </div>
+</div>
 <div>
   <div class="custom-scrollbar overflow-x-auto px-6">
     <table class="min-w-full">

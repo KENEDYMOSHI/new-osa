@@ -30,8 +30,31 @@
                     <div class="row">
                         <div class="col-md-3">
                             <div class="form-group">
-                                <label>Applicant Name</label>
+                                <label>Payer Name</label>
                                 <input type="text" name="name" class="form-control" placeholder="Search by name" value="<?= $filters['name'] ?? '' ?>">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Control Number</label>
+                                <input type="text" name="control_number" class="form-control" placeholder="Enter Control Number" value="<?= $filters['control_number'] ?? '' ?>">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Bill Description (License Type)</label>
+                                <select name="license_type" class="form-control">
+                                    <option value="">All Types</option>
+                                    <?php
+                                    if (!empty($licenseTypes)) {
+                                        foreach ($licenseTypes as $type) {
+                                            $typeName = $type['name'];
+                                            $selected = (isset($filters['license_type']) && $filters['license_type'] == $typeName) ? 'selected' : '';
+                                            echo "<option value='$typeName' $selected>$typeName</option>";
+                                        }
+                                    }
+                                    ?>
+                                </select>
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -47,39 +70,43 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-2">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                             <div class="form-group">
+                                <label>Fee Type</label>
+                                <select name="fee_type" class="form-control">
+                                    <option value="">All</option>
+                                    <option value="Application Fee" <?= (isset($filters['fee_type']) && $filters['fee_type'] == 'Application Fee') ? 'selected' : '' ?>>Application Fee</option>
+                                    <option value="License Fee" <?= (isset($filters['fee_type']) && $filters['fee_type'] == 'License Fee') ? 'selected' : '' ?>>License Fee</option>
+                                </select>
+                             </div>
+                        </div>
+                        <div class="col-md-3">
+                             <div class="form-group">
+                                <label>Payment Status</label>
+                                <select name="payment_status" class="form-control">
+                                    <option value="">All</option>
+                                    <option value="Paid" <?= (isset($filters['payment_status']) && $filters['payment_status'] == 'Paid') ? 'selected' : '' ?>>Paid</option>
+                                    <option value="Pending" <?= (isset($filters['payment_status']) && $filters['payment_status'] == 'Pending') ? 'selected' : '' ?>>Pending</option>
+                                </select>
+                             </div>
+                        </div>
+                        <div class="col-md-3">
                             <div class="form-group">
-                                <label>Region</label>
-                                <select name="region" class="form-control">
-                                    <option value="">All Regions</option>
+                                <label>Year</label>
+                                <select name="year" class="form-control">
+                                    <option value="">All Years</option>
                                     <?php
-                                    $regions = ['Dar es Salaam', 'Arusha', 'Dodoma', 'Geita', 'Iringa', 'Kagera', 'Katavi', 'Kigoma', 'Kilimanjaro', 'Lindi', 'Manyara', 'Mara', 'Mbeya', 'Morogoro', 'Mtwara', 'Mwanza', 'Njombe', 'Pwani', 'Rukwa', 'Ruvuma', 'Shinyanga', 'Simiyu', 'Singida', 'Songwe', 'Tabora', 'Tanga'];
-                                    foreach ($regions as $region) {
-                                        $selected = (isset($filters['region']) && $filters['region'] == $region) ? 'selected' : '';
-                                        echo "<option value='$region' $selected>$region</option>";
+                                    for ($y = date('Y'); $y >= 2020; $y--) {
+                                        $selected = (isset($filters['year']) && $filters['year'] == $y) ? 'selected' : '';
+                                        echo "<option value='$y' $selected>$y</option>";
                                     }
                                     ?>
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label>License Type</label>
-                                <select name="license_type" class="form-control">
-                                    <option value="">All Types</option>
-                                    <?php
-                                    if (!empty($licenseTypes)) {
-                                        foreach ($licenseTypes as $type) {
-                                            $typeName = $type['name'];
-                                            $selected = (isset($filters['license_type']) && $filters['license_type'] == $typeName) ? 'selected' : '';
-                                            echo "<option value='$typeName' $selected>$typeName</option>";
-                                        }
-                                    }
-                                    ?>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                            <div class="form-group">
                                 <label>&nbsp;</label>
                                 <button type="submit" class="btn btn-primary btn-block shadow-sm">
@@ -105,8 +132,8 @@
                 </div>
             </div>
             <div class="card-body table-responsive">
-                <table id="licenseBillTable" class="table table-hover table-striped table-sm text-nowrap" style="font-size: 0.9rem;">
-                    <thead class="bg-light">
+                <table id="licenseBillTable" class="table table-hover table-striped table-sm text-nowrap" style="font-size: 0.8rem;">
+                    <thead class="bg-light" style="font-size: 0.75rem;">
                         <tr>
                             <th>Payer Name</th>
                             <th>License Type</th>
@@ -115,6 +142,7 @@
                             <th>Date</th>
                             <th>Control Number</th>
                             <th>Amount (TZS)</th>
+                            <th>Paid Amount (TZS)</th>
                             <th class="text-right">Actions</th>
                         </tr>
                     </thead>
@@ -132,7 +160,7 @@
                                     <td class="align-middle">
                                         <?= ucwords(strtolower($l->payer_name ?? ($l->applicant_name ?? ($l->first_name . ' ' . $l->last_name)))) ?>
                                     </td>
-                                    <td class="align-middle text-primary font-weight-bold">
+                                    <td class="align-middle">
                                         <?= $l->license_type ?? 'N/A' ?>
                                     </td>
                                     <td class="align-middle">
@@ -155,6 +183,7 @@
                                     </td>
                                     <td class="align-middle"><?= $l->control_number ?? '-' ?></td>
                                     <td class="align-middle"><?= number_format($l->bill_amount ?? 0, 2) ?></td>
+                                    <td class="align-middle"><?= number_format($l->paid_amount ?? 0, 2) ?></td>
                                     <td class="align-middle text-right">
                                         <button class="btn btn-sm btn-outline-primary" title="View Bill" onclick="window.location.href='#'">
                                             <i class="fas fa-eye"></i>
@@ -194,8 +223,9 @@
             "responsive": true,
             "lengthChange": true,
             "autoWidth": false,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
             "buttons": ["copy", "csv", "excel", "print"],
-            "dom": 'Bfrtip',
+            "dom": 'lBfrtip',
             "order": [], 
             "pageLength": 20
         });

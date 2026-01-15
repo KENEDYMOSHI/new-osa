@@ -664,6 +664,19 @@ class ApprovalController extends BaseController
         $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
+    public function getLicenseTypes()
+    {
+        $requestKey = $this->request->getHeaderLine('X-API-KEY');
+        
+        if ($requestKey !== $this->apiKey) {
+            return $this->failUnauthorized('Invalid API Key');
+        }
+
+        $model = model('App\Models\LicenseTypeModel');
+        $types = $model->findAll();
+        return $this->respond($types);
+    }
+
     public function getIssuedLicenses()
     {
         $requestKey = $this->request->getHeaderLine('X-API-KEY');
@@ -681,6 +694,9 @@ class ApprovalController extends BaseController
             'year' => $this->request->getVar('year'),
             'dateRange' => $this->request->getVar('dateRange'),
             'company_name' => $this->request->getVar('company_name'),
+            'control_number' => $this->request->getVar('control_number'),
+            'status' => $this->request->getVar('status'),
+            'payment_status' => $this->request->getVar('payment_status'),
         ];
 
         // Build query for licenses
@@ -722,6 +738,23 @@ class ApprovalController extends BaseController
         
         if (!empty($filters['company_name'])) {
             $builder->like('licenses.company_name', $filters['company_name']);
+        }
+
+        if (!empty($filters['control_number'])) {
+            $builder->like('osabill.control_number', $filters['control_number']);
+        }
+
+        if (!empty($filters['payment_status'])) {
+            $builder->where('osabill.payment_status', $filters['payment_status']);
+        }
+
+        if (!empty($filters['status'])) {
+            $today = date('Y-m-d');
+            if ($filters['status'] == 'Active') {
+                $builder->where('licenses.expiry_date >=', $today);
+            } elseif ($filters['status'] == 'Expired') {
+                $builder->where('licenses.expiry_date <', $today);
+            }
         }
         
         if (!empty($filters['year'])) {

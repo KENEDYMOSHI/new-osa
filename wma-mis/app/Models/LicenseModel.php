@@ -278,25 +278,18 @@ class LicenseModel extends Model
                 }
             }
 
-            // Filter by status (Strict 4-stage approval for 'Approved'/'Completed')
+            // Filter by exam status (Pass/Fail)
             if (!empty($filters['status'])) {
-                if ($filters['status'] === 'Approved' || $filters['status'] === 'Completed') {
-                    // MUST be approved by ALL 4 stages
-                    if ($app->region_manager_status !== 'Approved' || 
-                        $app->surveillance_status !== 'Approved' || 
-                        $app->dts_status !== 'Approved' || 
-                        $app->ceo_status !== 'Approved') {
+                $status = $filters['status'];
+                $totalScore = (float)$app->total_score;
+                
+                if ($status === 'Pass') {
+                    if ($totalScore < 50) {
                         return false;
                     }
-                } elseif ($filters['status'] === 'Pending') {
-                    // Any stage pending
-                     if ($app->region_manager_status === 'Pending' || 
-                        $app->surveillance_status === 'Pending' || 
-                        $app->dts_status === 'Pending' || 
-                        $app->ceo_status === 'Pending') {
-                        // It is pending somewhere
-                    } else {
-                        return false; // Not pending (either fully approved or rejected)
+                } elseif ($status === 'Fail') {
+                    if ($totalScore >= 50) {
+                        return false;
                     }
                 }
             }

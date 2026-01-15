@@ -36,18 +36,11 @@
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
-                                <label>Date Range</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">
-                                            <i class="far fa-calendar-alt"></i>
-                                        </span>
-                                    </div>
-                                    <input type="text" class="form-control float-right" id="reservation" name="dateRange" value="<?= $filters['dateRange'] ?? '' ?>">
-                                </div>
+                                <label>Control Number</label>
+                                <input type="text" name="control_number" class="form-control" placeholder="Enter Control Number" value="<?= $filters['control_number'] ?? '' ?>">
                             </div>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label>Region</label>
                                 <select name="region" class="form-control">
@@ -62,7 +55,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label>License Type</label>
                                 <select name="license_type" class="form-control">
@@ -79,6 +72,41 @@
                                 </select>
                             </div>
                         </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Date Range</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="far fa-calendar-alt"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" class="form-control float-right" id="reservation" name="dateRange" value="<?= $filters['dateRange'] ?? '' ?>">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                             <div class="form-group">
+                                <label>License Status</label>
+                                <select name="status" class="form-control">
+                                    <option value="">All</option>
+                                    <option value="Active" <?= (isset($filters['status']) && $filters['status'] == 'Active') ? 'selected' : '' ?>>Active</option>
+                                    <option value="Expired" <?= (isset($filters['status']) && $filters['status'] == 'Expired') ? 'selected' : '' ?>>Expired</option>
+                                </select>
+                             </div>
+                        </div>
+                        <div class="col-md-2">
+                             <div class="form-group">
+                                <label>Payment Status</label>
+                                <select name="payment_status" class="form-control">
+                                    <option value="">All</option>
+                                    <option value="Paid" <?= (isset($filters['payment_status']) && $filters['payment_status'] == 'Paid') ? 'selected' : '' ?>>Paid</option>
+                                    <option value="Pending" <?= (isset($filters['payment_status']) && $filters['payment_status'] == 'Pending') ? 'selected' : '' ?>>Pending</option>
+                                </select>
+                             </div>
+                        </div>
                         <div class="col-md-2">
                             <div class="form-group">
                                 <label>Year</label>
@@ -93,17 +121,18 @@
                                 </select>
                             </div>
                         </div>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="col-md-12 d-flex justify-content-between align-items-center">
-                            <div>
-                                <button type="submit" class="btn btn-primary shadow-sm px-4">
-                                    <i class="fas fa-search mr-1"></i> Filter
-                                </button>
-                                <a href="<?= base_url('licenseReport') ?>" class="btn btn-outline-secondary shadow-sm ml-2 px-3">
-                                    <i class="fas fa-redo mr-1"></i> Reset
-                                </a>
-                            </div>
+                        <div class="col-md-3">
+                             <div class="form-group">
+                                <label>&nbsp;</label>
+                                <div class="d-flex">
+                                    <button type="submit" class="btn btn-primary shadow-sm flex-fill mr-2">
+                                        <i class="fas fa-search mr-1"></i> Filter
+                                    </button>
+                                    <a href="<?= base_url('licenseReport') ?>" class="btn btn-outline-secondary shadow-sm">
+                                        <i class="fas fa-redo"></i>
+                                    </a>
+                                </div>
+                             </div>
                         </div>
                     </div>
                 </form>
@@ -137,13 +166,14 @@
                 </h3>
             </div>
             <div class="card-body table-responsive">
-                <table id="licenseTable" class="table table-hover table-striped table-sm text-nowrap" style="font-size: 0.9rem;">
-                    <thead class="bg-light">
+                <table id="licenseTable" class="table table-hover table-striped table-sm text-nowrap" style="font-size: 0.8rem;">
+                    <thead class="bg-light" style="font-size: 0.75rem;">
                         <tr>
                             <th>#</th>
                             <th>License Number</th>
                             <th>Applicant Name</th>
                             <th>License Type</th>
+                            <th>Issue Date</th>
                             <th>Region</th>
                             <th>Status</th>
                             <th>Payment</th>
@@ -165,13 +195,16 @@
                                 <tr>
                                     <td class="align-middle"><?= $i++ ?></td>
                                     <td class="align-middle">
-                                        <strong class="text-primary"><?= $license->license_number ?></strong>
+                                        <?= $license->license_number ?>
                                     </td>
                                     <td class="align-middle">
                                         <?= ucwords(strtolower($license->applicant_name ?? ($license->first_name . ' ' . $license->last_name))) ?>
                                     </td>
-                                    <td class="align-middle text-truncate" style="max-width: 150px;" title="<?= $license->license_type ?>">
+                                    <td class="align-middle">
                                         <?= $license->license_type ?>
+                                    </td>
+                                    <td class="align-middle">
+                                        <?= isset($license->issue_date) ? date('d M, Y', strtotime($license->issue_date)) : 'N/A' ?>
                                     </td>
                                     <td class="align-middle"><?= $license->region ?? 'N/A' ?></td>
                                     <td class="align-middle">
@@ -342,8 +375,9 @@ function exportToCsv() {
             "responsive": true,
             "lengthChange": true,
             "autoWidth": false,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
             "buttons": ["copy", "csv", "excel", "print"],
-            "dom": 'Bfrtip',
+            "dom": 'lBfrtip',
             "order": [], // Disable initial sort if needed, or let it sort by first column
             "pageLength": 20
         });
