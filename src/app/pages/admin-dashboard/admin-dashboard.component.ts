@@ -229,6 +229,24 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
+  acceptDocument(docId: string) {
+    if (confirm('Are you sure you want to accept this document?')) {
+        this.adminService.acceptDocument(docId).subscribe({
+            next: () => {
+                alert('Document accepted successfully');
+                if (this.expandedAppId) {
+                    this.toggleAttachments(this.expandedAppId);
+                    this.toggleAttachments(this.expandedAppId); // Toggle twice to refresh
+                }
+            },
+            error: (err) => {
+                console.error('Failed to accept document', err);
+                alert('Failed to accept document.');
+            }
+        });
+    }
+  }
+
   setActiveTab(tab: string) {
     this.activeTab = tab;
   }

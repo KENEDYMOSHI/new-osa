@@ -102,6 +102,22 @@ class AdminController extends ResourceController
 
         // Admin can view any document, so no user_id check needed here (assuming route is protected by admin guard/middleware)
 
+        // 1. Serve from File System (New Uploads)
+        if (!empty($doc->file_path)) {
+            $fullPath = WRITEPATH . $doc->file_path;
+            
+            if (file_exists($fullPath)) {
+                $mime = mime_content_type($fullPath);
+                return $this->response
+                    ->setHeader('Content-Type', $mime)
+                    ->setHeader('Content-Disposition', 'inline; filename="' . $doc->original_name . '"')
+                    ->setBody(file_get_contents($fullPath));
+            } else {
+                 return $this->failNotFound('Physical file not found: ' . $doc->original_name);
+            }
+        }
+
+        // 2. Serve from BLOB (Legacy Documents)
         if (!empty($doc->file_content)) {
             return $this->response
                 ->setHeader('Content-Type', $doc->mime_type)

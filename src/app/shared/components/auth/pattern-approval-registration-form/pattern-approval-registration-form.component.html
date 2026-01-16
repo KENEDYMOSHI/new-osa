@@ -1,0 +1,397 @@
+<div class="w-full">
+  
+  <!-- Steps Indicator -->
+  <div class="flex justify-between items-center mb-10 px-4">
+    <div class="flex flex-col items-center">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300"
+           [ngClass]="{'bg-[#F59E0B] text-white': currentStep >= 1, 'bg-gray-200 text-gray-500': currentStep < 1}">
+        1
+      </div>
+      <span class="text-xs mt-2 font-medium" [ngClass]="{'text-[#F59E0B]': currentStep >= 1, 'text-gray-400': currentStep < 1}">Personal</span>
+    </div>
+    <div class="flex-grow h-1 mx-2 bg-gray-200">
+      <div class="h-full bg-[#F59E0B] transition-all duration-300" [style.width.%]="currentStep >= 2 ? 100 : 0"></div>
+    </div>
+    
+    <div class="flex flex-col items-center">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300"
+           [ngClass]="{'bg-[#F59E0B] text-white': currentStep >= 2, 'bg-gray-200 text-gray-500': currentStep < 2}">
+        2
+      </div>
+      <span class="text-xs mt-2 font-medium" [ngClass]="{'text-[#F59E0B]': currentStep >= 2, 'text-gray-400': currentStep < 2}">Business</span>
+    </div>
+    <div class="flex-grow h-1 mx-2 bg-gray-200">
+      <div class="h-full bg-[#F59E0B] transition-all duration-300" [style.width.%]="currentStep >= 3 ? 100 : 0"></div>
+    </div>
+
+    <div class="flex flex-col items-center">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300"
+           [ngClass]="{'bg-[#F59E0B] text-white': currentStep >= 3, 'bg-gray-200 text-gray-500': currentStep < 3}">
+        3
+      </div>
+      <span class="text-xs mt-2 font-medium" [ngClass]="{'text-[#F59E0B]': currentStep >= 3, 'text-gray-400': currentStep < 3}">Security</span>
+    </div>
+    <div class="flex-grow h-1 mx-2 bg-gray-200">
+      <div class="h-full bg-[#F59E0B] transition-all duration-300" [style.width.%]="currentStep >= 4 ? 100 : 0"></div>
+    </div>
+
+    <div class="flex flex-col items-center">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300"
+           [ngClass]="{'bg-[#F59E0B] text-white': currentStep >= 4, 'bg-gray-200 text-gray-500': currentStep < 4}">
+        4
+      </div>
+      <span class="text-xs mt-2 font-medium" [ngClass]="{'text-[#F59E0B]': currentStep >= 4, 'text-gray-400': currentStep < 4}">Review</span>
+    </div>
+  </div>
+
+  <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()">
+    
+    <!-- Step 1: Personal Information -->
+    <div *ngIf="currentStep === 1" formGroupName="personalInfo">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Personal Information</h2>
+      
+      <div class="space-y-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nationality <span class="text-red-500">*</span></label>
+          
+          <div class="relative">
+            <!-- Trigger Button -->
+            <div (click)="toggleNationalityDropdown()" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all cursor-pointer flex justify-between items-center text-gray-700">
+              <span>{{ personalInfo.get('nationality')?.value || 'Select Nationality' }}</span>
+              <svg class="w-4 h-4 text-gray-500 transition-transform duration-200" [ngClass]="{'rotate-180': showNationalityDropdown}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+
+            <!-- Dropdown Menu -->
+            <div *ngIf="showNationalityDropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-hidden flex flex-col">
+              <!-- Search Input -->
+              <div class="p-2 border-b border-gray-100 bg-gray-50">
+                <input 
+                  id="nationalitySearch" 
+                  type="text" 
+                  [(ngModel)]="nationalitySearchTerm" 
+                  [ngModelOptions]="{standalone: true}"
+                  placeholder="Search nationality..." 
+                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#F59E0B] focus:border-[#F59E0B]"
+                  (click)="$event.stopPropagation()">
+              </div>
+              
+              <!-- Options List -->
+              <div class="overflow-y-auto max-h-48">
+                <div 
+                  *ngFor="let country of filteredCountries" 
+                  (click)="selectNationality(country)"
+                  class="px-4 py-2 hover:bg-[#FDF6E9] hover:text-[#F59E0B] cursor-pointer text-sm transition-colors text-gray-700"
+                  [class.bg-[#FDF6E9]]="personalInfo.get('nationality')?.value === country"
+                  [class.text-[#F59E0B]]="personalInfo.get('nationality')?.value === country">
+                  {{ country }}
+                </div>
+                <div *ngIf="filteredCountries.length === 0" class="px-4 py-3 text-center text-sm text-gray-500">
+                  No results found
+                </div>
+              </div>
+            </div>
+            
+            <!-- Backdrop to close -->
+            <div *ngIf="showNationalityDropdown" (click)="closeNationalityDropdown()" class="fixed inset-0 z-40 bg-transparent cursor-default"></div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ isTanzanian ? 'NIDA Number' : 'Passport Number' }} <span class="text-red-500">*</span></label>
+          <input *ngIf="isTanzanian" type="text" formControlName="identityNumber" maxlength="20" placeholder="Enter 20 digit NIDA number" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+          <input *ngIf="!isTanzanian" type="text" formControlName="identityNumber" placeholder="Enter Passport Number" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+          <div *ngIf="personalInfo.get('identityNumber')?.invalid && personalInfo.get('identityNumber')?.touched" class="text-red-500 text-xs mt-1">
+            {{ isTanzanian ? 'Valid 20-digit NIDA number is required.' : 'Passport Number is required.' }}
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">First Name <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="firstName" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+            <div *ngIf="personalInfo.get('firstName')?.invalid && personalInfo.get('firstName')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Second Name <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="secondName" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+            <div *ngIf="personalInfo.get('secondName')?.invalid && personalInfo.get('secondName')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Last Name <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="lastName" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+            <div *ngIf="personalInfo.get('lastName')?.invalid && personalInfo.get('lastName')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth <span class="text-red-500">*</span></label>
+            <input type="date" formControlName="dateOfBirth" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+            <div *ngIf="personalInfo.get('dateOfBirth')?.invalid && personalInfo.get('dateOfBirth')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Gender <span class="text-red-500">*</span></label>
+            <select formControlName="gender" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+            <div *ngIf="personalInfo.get('gender')?.invalid && personalInfo.get('gender')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="phoneNumber" maxlength="10" placeholder="07XX XXX XXX" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+            <div *ngIf="personalInfo.get('phoneNumber')?.invalid && personalInfo.get('phoneNumber')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Region <span class="text-red-500">*</span> <span class="text-xs text-gray-500 font-normal ml-1">(Chagua mkoa wa ofisi ya wakala wa vipimo)</span></label>
+            <select formControlName="region" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+              <option value="">Select Region</option>
+              <option *ngFor="let region of regions" [value]="region">{{ region }}</option>
+            </select>
+            <div *ngIf="personalInfo.get('region')?.invalid && personalInfo.get('region')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">District <span class="text-red-500">*</span></label>
+            <select formControlName="district" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+              <option value="">Select District</option>
+              <option *ngFor="let district of personalDistricts" [value]="district.name">{{ district.name }}</option>
+            </select>
+            <div *ngIf="personalInfo.get('district')?.invalid && personalInfo.get('district')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Ward <span class="text-red-500">*</span></label>
+            <select formControlName="ward" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+              <option value="">Select Ward</option>
+              <option *ngFor="let ward of personalWards" [value]="ward.name">{{ ward.name }}</option>
+            </select>
+            <div *ngIf="personalInfo.get('ward')?.invalid && personalInfo.get('ward')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Street/Village <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="street" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+            <div *ngIf="personalInfo.get('street')?.invalid && personalInfo.get('street')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+
+    <!-- Step 2: Business Information -->
+    <div *ngIf="currentStep === 2" formGroupName="businessInfo">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Business Information</h2>
+      
+      <div class="space-y-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Tax Number (TIN) <span class="text-red-500">*</span></label>
+          <input type="text" formControlName="tin" placeholder="Type your tax identification number" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+          <div *ngIf="businessInfo.get('tin')?.invalid && businessInfo.get('tin')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Company Name <span class="text-gray-400 text-xs">(Optional)</span></label>
+          <input type="text" formControlName="companyName" placeholder="Type your company name" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Company Email <span class="text-gray-400 text-xs">(Optional)</span></label>
+            <input type="email" formControlName="companyEmail" placeholder="Type your company email" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+            <div *ngIf="businessInfo.get('companyEmail')?.invalid && businessInfo.get('companyEmail')?.touched" class="text-red-500 text-xs mt-1">Valid email required</div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Company Phone <span class="text-gray-400 text-xs">(Optional)</span></label>
+            <input type="text" formControlName="companyPhone" placeholder="Type your company phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+          </div>
+        </div>
+
+
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Region <span class="text-red-500">*</span></label>
+            <select formControlName="region" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+              <option value="">Select Region</option>
+              <option *ngFor="let region of regions" [value]="region">{{ region }}</option>
+            </select>
+            <div *ngIf="businessInfo.get('region')?.invalid && businessInfo.get('region')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">District <span class="text-red-500">*</span></label>
+            <select formControlName="district" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+              <option value="">Select District</option>
+              <option *ngFor="let district of businessDistricts" [value]="district.name">{{ district.name }}</option>
+            </select>
+            <div *ngIf="businessInfo.get('district')?.invalid && businessInfo.get('district')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Ward <span class="text-red-500">*</span></label>
+            <select formControlName="ward" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+              <option value="">Select Ward</option>
+              <option *ngFor="let ward of businessWards" [value]="ward.name">{{ ward.name }}</option>
+            </select>
+            <div *ngIf="businessInfo.get('ward')?.invalid && businessInfo.get('ward')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Postal Code <span class="text-red-500">*</span></label>
+            <!-- Show as readonly text if only one postal code, otherwise show dropdown -->
+            <input 
+              *ngIf="businessPostalCodes.length === 1" 
+              type="text" 
+              formControlName="postalCode" 
+              readonly
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 outline-none cursor-not-allowed">
+            <select 
+              *ngIf="businessPostalCodes.length !== 1" 
+              formControlName="postalCode" 
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+              <option value="">Select Postal Code</option>
+              <option *ngFor="let pc of businessPostalCodes" [value]="pc.postcode">{{ pc.postcode }}</option>
+            </select>
+            <div *ngIf="businessInfo.get('postalCode')?.invalid && businessInfo.get('postalCode')?.touched" class="text-red-500 text-xs mt-1">
+              <span *ngIf="businessInfo.get('postalCode')?.errors?.['required']">Required</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Street/Village <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="street" placeholder="Type here street/village" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+            <div *ngIf="businessInfo.get('street')?.invalid && businessInfo.get('street')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Contact & Security -->
+    <div *ngIf="currentStep === 3" formGroupName="contactSecurity">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Contact & Security</h2>
+      
+      <div class="space-y-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Email Address <span class="text-red-500">*</span></label>
+          <input type="email" formControlName="email" placeholder="example@domain.com" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+          <div *ngIf="contactSecurity.get('email')?.invalid && contactSecurity.get('email')?.touched" class="text-red-500 text-xs mt-1">Valid email required</div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number <span class="text-red-500">*</span></label>
+          <input type="text" formControlName="phone" placeholder="07XX XXX XXX" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+          <div *ngIf="contactSecurity.get('phone')?.invalid && contactSecurity.get('phone')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Password <span class="text-red-500">*</span></label>
+            <input type="password" formControlName="password" placeholder="Minimum 8 characters" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+            <p class="text-xs text-gray-500 mt-1">Use a strong password with symbols, numbers and letters</p>
+            <div *ngIf="contactSecurity.get('password')?.invalid && contactSecurity.get('password')?.touched" class="text-red-500 text-xs mt-1">Min 8 chars required</div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password <span class="text-red-500">*</span></label>
+            <input type="password" formControlName="confirmPassword" placeholder="Confirm your password" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+            <div *ngIf="contactSecurity.get('confirmPassword')?.invalid && contactSecurity.get('confirmPassword')?.touched" class="text-red-500 text-xs mt-1">Required</div>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3 mt-4">
+          <input type="checkbox" formControlName="termsAccepted" class="mt-1 w-4 h-4 text-[#F59E0B] border-gray-300 rounded focus:ring-[#F59E0B]">
+          <label class="text-sm text-gray-600">
+            I accept the terms and conditions.<br>
+            By clicking Next, you agree to our Terms of Service and Privacy Policy. We'll send you important account updates via email.
+          </label>
+        </div>
+        <div *ngIf="contactSecurity.get('termsAccepted')?.invalid && contactSecurity.get('termsAccepted')?.touched" class="text-red-500 text-xs mt-1">You must accept the terms</div>
+      </div>
+    </div>
+
+    <!-- Step 4: Review -->
+    <div *ngIf="currentStep === 4">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Create Your Pattern Approval Account</h2>
+      <p class="text-gray-600 mb-8">Please review your details before submitting.</p>
+
+      <div class="bg-[#FDF6E9] p-6 rounded-lg border border-[#F59E0B]/20 space-y-6 text-sm">
+        
+        <!-- Personal Info Review -->
+        <div>
+          <h3 class="font-bold text-gray-800 border-b border-[#F59E0B]/20 pb-2 mb-3 text-base">Personal Information</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
+            <p><span class="font-medium text-gray-500">Nationality:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('nationality')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">{{ isTanzanian ? 'NIDA Number' : 'Passport Number' }}:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('identityNumber')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">First Name:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('firstName')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Second Name:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('secondName')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Last Name:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('lastName')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Phone Number:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('phoneNumber')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Gender:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('gender')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Date of Birth:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('dateOfBirth')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Region:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('region')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">District:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('district')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Ward:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('ward')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Street/Village:</span> <span class="block md:inline text-gray-900">{{ personalInfo.get('street')?.value }}</span></p>
+
+          </div>
+        </div>
+
+        <!-- Business Info Review -->
+        <div>
+          <h3 class="font-bold text-gray-800 border-b border-[#F59E0B]/20 pb-2 mb-3 text-base">Business Information</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
+            <p><span class="font-medium text-gray-500">TIN:</span> <span class="block md:inline text-gray-900">{{ businessInfo.get('tin')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Company Name:</span> <span class="block md:inline text-gray-900">{{ businessInfo.get('companyName')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Company Email:</span> <span class="block md:inline text-gray-900">{{ businessInfo.get('companyEmail')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Company Phone:</span> <span class="block md:inline text-gray-900">{{ businessInfo.get('companyPhone')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Region:</span> <span class="block md:inline text-gray-900">{{ businessInfo.get('region')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">District:</span> <span class="block md:inline text-gray-900">{{ businessInfo.get('district')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Ward:</span> <span class="block md:inline text-gray-900">{{ businessInfo.get('ward')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Postal Code:</span> <span class="block md:inline text-gray-900">{{ businessInfo.get('postalCode')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Street/Village:</span> <span class="block md:inline text-gray-900">{{ businessInfo.get('street')?.value }}</span></p>
+          </div>
+        </div>
+
+        <!-- Contact Info Review -->
+        <div>
+          <h3 class="font-bold text-gray-800 border-b border-[#F59E0B]/20 pb-2 mb-3 text-base">Contact & Security</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
+            <p><span class="font-medium text-gray-500">Email Address:</span> <span class="block md:inline text-gray-900">{{ contactSecurity.get('email')?.value }}</span></p>
+            <p><span class="font-medium text-gray-500">Phone Number:</span> <span class="block md:inline text-gray-900">{{ contactSecurity.get('phone')?.value }}</span></p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="flex justify-between mt-10">
+      <button type="button" (click)="prevStep()" *ngIf="currentStep > 1"
+              class="px-6 py-2 border border-gray-300 rounded-full text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+        Back
+      </button>
+      <div *ngIf="currentStep === 1"></div> <!-- Spacer -->
+
+      <button type="button" (click)="nextStep()" *ngIf="currentStep < totalSteps"
+              class="px-8 py-2 bg-[#F59E0B] text-white rounded-full font-medium hover:bg-[#D97706] transition-colors shadow-md flex items-center gap-2">
+        Next
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+      </button>
+
+      <button type="submit" *ngIf="currentStep === totalSteps" [disabled]="isSubmitting"
+              class="px-8 py-2 bg-[#F59E0B] text-white rounded-full font-medium hover:bg-[#D97706] transition-colors shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+        <span *ngIf="isSubmitting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+        {{ isSubmitting ? 'Submitting...' : 'Submit Application' }}
+      </button>
+    </div>
+
+  </form>
+</div>

@@ -74,7 +74,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->get('admin/document/(:segment)/view', 'AdminController::viewDocument/$1');
     $routes->post('admin/application/(:segment)/approve', 'AdminController::approveApplication/$1');
     $routes->post('admin/document/return', 'AdminController::returnDocument');
-    $routes->post('admin/document/(:segment)/accept', 'AdminController::acceptDocument/$1');
+    $routes->post('admin/document/accept', 'AdminController::acceptDocument');
 
     // Temporary Backfill Route
     $routes->get('admin/backfill-license-numbers', 'AdminController::backfillLicenseNumbers');

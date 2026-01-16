@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { RouterModule, RouterLink } from '@angular/router';
 
 interface SupportDetails {
   address: string;
@@ -19,7 +18,7 @@ interface SupportDetails {
 @Component({
   selector: 'app-support-help',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './support-help.component.html',
 })
 export class SupportHelpComponent implements OnInit {

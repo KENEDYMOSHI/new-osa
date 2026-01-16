@@ -560,6 +560,7 @@ export class LicenseApplicationComponent implements OnInit {
       const targetDoc = this.selectedDoc;
       
       // NEW LOGIC: If application is submitted and doc was not uploaded, set pending state
+      // NOTE: Returned documents should upload directly, not go to Pending state
       if (this.isApplicationSubmitted && targetDoc && targetDoc.status === 'Not Uploaded') {
         // Store the file temporarily and show Edit/Save buttons
         targetDoc.pendingFile = file;

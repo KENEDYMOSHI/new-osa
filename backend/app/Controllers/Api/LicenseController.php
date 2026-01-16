@@ -77,130 +77,132 @@ class LicenseController extends ResourceController
 
         // Read file content for BLOB storage
         $fileContent = file_get_contents($file->getTempName());
-        $mimeType = $file->getMimeType();
-
+        
         $attachmentModel = new LicenseApplicationAttachmentModel();
         $docType = $this->request->getPost('documentType');
         $applicationId = $this->request->getPost('applicationId');
         $category = $this->request->getPost('category');
 
-        // If applicationId is provided, we are updating a specific application's document
+        $existingDoc = null;
+        $currentApp = null;
+
+        // 1. Identify Existing Document and Application
         if ($applicationId && $applicationId !== 'null' && $applicationId !== 'undefined') {
-            // Verify application belongs to user (optional but recommended security check)
+            // Verify application belongs to user
             $appModel = new LicenseApplicationModel();
             $app = $appModel->where('id', $applicationId)->where('user_id', $user->id)->first();
             
             if (!$app) {
                 return $this->failForbidden('Invalid application ID');
             }
+            $currentApp = $app;
 
             // Check if a document of this type already exists for this application
             $existingDoc = $attachmentModel->where('application_id', $applicationId)
                                            ->where('document_type', $docType)
                                            ->first();
-            
-            if ($existingDoc) {
-                // ROBUST PRESERVATION of Category
-                // If incoming category is empty, null, or string 'null'/'undefined', try to keep existing
-                if ((!$category || $category === 'null' || $category === 'undefined') && !empty($existingDoc->category)) {
-                    $category = $existingDoc->category;
-                }
-                
-                // Check if we are replacing a returned document
-                if ($existingDoc->status === 'Returned') {
-                    $notifyAdmin = true;
-                    // Keep application details for notification logic later
-                    $currentApp = $app; 
-                }
-
-                // Delete ALL documents of this type for this user across all applications
-                $attachmentModel->where('user_id', $user->id)
-                               ->where('document_type', $docType)
-                               ->delete();
-            }
         } else {
             // Draft mode: Check if a document of this type already exists for the user (unattached)
             $existingDoc = $attachmentModel->where('user_id', $user->id)
                                            ->where('document_type', $docType)
                                            ->where('application_id', null)
                                            ->first();
-    
-            if ($existingDoc) {
-                // ROBUST PRESERVATION of Category
-                if ((!$category || $category === 'null' || $category === 'undefined') && !empty($existingDoc->category)) {
-                    $category = $existingDoc->category;
+            $applicationId = null; // Ensure null for insertion
+        }
+
+        // 2. Handle Existing Document (Update if Returned, Delete otherwise)
+        if ($existingDoc) {
+            // Preserve Category if not provided in new request
+            if ((!$category || $category === 'null' || $category === 'undefined') && !empty($existingDoc->category)) {
+                $category = $existingDoc->category;
+            }
+
+            // CHECK: Is it a Returned document?
+            if ($existingDoc->status === 'Returned') {
+                // UPDATE LOGIC: Update existing record, preserve ID
+                $id = $existingDoc->id;
+                $status = 'Uploaded';
+
+                // Cleanup: Delete old file from disk if it exists
+                if (!empty($existingDoc->file_path)) {
+                    $oldFullPath = WRITEPATH . $existingDoc->file_path;
+                    if (file_exists($oldFullPath)) {
+                        unlink($oldFullPath);
+                    }
                 }
-                
-                // Delete the existing document
+
+                // Move new file to uploads directory
+                $newName = $file->getRandomName();
+                $file->move(WRITEPATH . 'uploads', $newName);
+                $filePath = 'uploads/' . $newName;
+
+                $data = [
+                    'original_name'    => $file->getClientName(),
+                    'file_content'     => null, // Clear BLOB content
+                    'file_path'        => $filePath, // Set file path
+                    'status'           => $status,
+                    'rejection_reason' => null,
+                    // Ensure category is updated/preserved
+                    'category'         => $category,
+                    // Ensure app link is preserved (should vary rarely change here)
+                    'application_id'   => $applicationId
+                ];
+
+                try {
+                    if (!$attachmentModel->update($id, $data)) {
+                        return $this->failServerError('Failed to update record: ' . json_encode($attachmentModel->errors()));
+                    }
+
+                    // Send Notification for Re-upload
+                    $this->sendReuploadNotification($currentApp, $user, $docType);
+
+                    return $this->respondCreated([
+                        'message' => 'File re-uploaded successfully',
+                        'id' => $id,
+                        'fileName' => $file->getClientName(),
+                        'status' => $status,
+                        'date' => date('d/m/Y')
+                    ]);
+
+                } catch (\Exception $e) {
+                    return $this->failServerError('Exception during update: ' . $e->getMessage());
+                }
+            } else {
+                // DELETE LOGIC: Not returned, simple overwrite (Delete Old, Insert New)
+                // Use ID to delete specifically this document to be safe
                 $attachmentModel->delete($existingDoc->id);
             }
-            $applicationId = null; // Ensure it's null for insertion
         }
 
+        // 3. Insert New Document (If we didn't update above)
         $id = md5(uniqid(rand(), true));
+        $status = 'Draft';
 
-        // Determine status: if re-uploading a returned document, mark as Resubmitted
-        $status = 'Draft'; // Default status
-        if (isset($notifyAdmin) && $notifyAdmin) {
-            $status = 'Resubmitted'; // Document was returned and now re-uploaded
-        }
-
+        // Move file to uploads directory
+        $newName = $file->getRandomName();
+        $file->move(WRITEPATH . 'uploads', $newName);
+        $filePath = 'uploads/' . $newName;
+        
         $data = [
             'id'             => $id,
             'user_id'        => $user->id,
             'application_id' => $applicationId,
             'document_type'  => $docType,
             'category'       => $category,
-            'file_path'      => null, // Not using file system
+            'file_path'      => $filePath,
             'original_name'  => $file->getClientName(),
-            'mime_type'      => 'application/pdf', // Enforced by validation
-            'file_content'   => $fileContent, // Storing as BLOB
+            'mime_type'      => 'application/pdf',
+            'file_content'   => null, // No BLOB
             'status'         => $status,
-            'rejection_reason' => null // Clear rejection reason on re-upload
+            'rejection_reason' => null 
         ];
 
         try {
             if (!$attachmentModel->insert($data)) {
                 return $this->failServerError('Failed to insert record: ' . json_encode($attachmentModel->errors()));
             }
-
-            // --- Notification Logic for Re-upload ---
-            if (isset($notifyAdmin) && $notifyAdmin && isset($currentApp)) {
-                $db = \Config\Database::connect();
-                
-                // Determine the approver based on current stage
-                $currentStage = $currentApp['current_stage'] ?? 1;
-                $approverColumn = 'approver_stage_' . $currentStage;
-                $approverId = $currentApp[$approverColumn] ?? null;
-
-                // Only send notification if an approver is assigned
-                if ($approverId) {
-                    $notifId = md5(uniqid(rand(), true));
-                    // Get applicant name for better message
-                    $personalInfo = $db->table('practitioner_personal_infos')->where('user_uuid', $user->uuid)->get()->getRow();
-                    $applicantName = $personalInfo ? ($personalInfo->first_name . ' ' . $personalInfo->last_name) : 'Applicant';
-
-                    $controlNumber = $currentApp['control_number'] ?? 'Unknown';
-
-                    $notifData = [
-                        'id' => $notifId,
-                        'user_id' => $approverId, // Target the Admin/Approver
-                        'title' => 'Document Re-uploaded',
-                        'message' => "Applicant {$applicantName} has re-uploaded '{$docType}' for Application {$controlNumber}.",
-                        'type' => 'document_reuploaded',
-                        'related_entity_id' => $currentApp['id'],
-                        'is_read' => 0,
-                        'created_at' => date('Y-m-d H:i:s'),
-                        'updated_at' => date('Y-m-d H:i:s')
-                    ];
-                    
-                    $db->table('notifications')->insert($notifData);
-                }
-            }
-            // ----------------------------------------
-
         } catch (\Exception $e) {
-            return $this->failServerError('Exception: ' . $e->getMessage());
+             return $this->failServerError('Exception during insert: ' . $e->getMessage());
         }
 
         return $this->respondCreated([
@@ -210,6 +212,44 @@ class LicenseController extends ResourceController
             'status' => 'Uploaded',
             'date' => date('d/m/Y')
         ]);
+    }
+
+    /**
+     * Helper to send notification when document is re-uploaded
+     */
+    private function sendReuploadNotification($currentApp, $user, $docType) {
+        if (!$currentApp) return;
+
+        $db = \Config\Database::connect();
+        
+        // Determine the approver based on current stage
+        $currentStage = $currentApp->current_stage ?? 1;
+        $approverColumn = 'approver_stage_' . $currentStage;
+        $approverId = $currentApp->$approverColumn ?? null;
+
+        // Only send notification if an approver is assigned
+        if ($approverId) {
+            $notifId = md5(uniqid(rand(), true));
+            // Get applicant name
+            $personalInfo = $db->table('practitioner_personal_infos')->where('user_uuid', $user->uuid)->get()->getRow();
+            $applicantName = $personalInfo ? ($personalInfo->first_name . ' ' . $personalInfo->last_name) : 'Applicant';
+
+            $controlNumber = $currentApp->control_number ?? 'Unknown';
+
+            $notifData = [
+                'id' => $notifId,
+                'user_id' => $approverId, 
+                'title' => 'Document Re-uploaded',
+                'message' => "Applicant {$applicantName} has re-uploaded '{$docType}' for Application {$controlNumber}.",
+                'type' => 'document_reuploaded',
+                'related_entity_id' => $currentApp->id,
+                'is_read' => 0,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+            
+            $db->table('notifications')->insert($notifData);
+        }
     }
 
     public function getUserDocuments()

@@ -129,4 +129,65 @@ kwenye my application boresha condition kwa sas naona napata control number ya l
 
 Implement Forgot Password functionality where a user initiates the process by entering their registered phone number on the login page. The system should verify that the phone number exists and then generate a temporary numeric token (OTP) with an expiry time. This token must be saved in the database and sent to the user via SMS using SmsLibrary.php. After receiving the SMS, the user enters the token into the system, which validates that the token is correct, not expired, not previously used, and linked to the correct user account. If the token is valid, the system should allow the user to proceed to a password reset page where they must create and confirm a new password. The new password must meet security requirements and must not be the same as the previous password. Once submitted successfully, the system should hash and update the new password in the database, mark the token as used to prevent reuse, and then redirect the user to the login page with a success message indicating that the password has been changed successfully
 
-Implement an automated SMS notification feature in the OSA system to inform an applicant whenever their submitted license application documents are reviewed and returned for corrections. Once an officer marks the application documents as “Returned” in the system, the system should immediately trigger two notifications: an in-system notification displayed on the applicant’s profile and an SMS sent to the applicant’s registered phone number. The SMS message content should be: “Habari, maombi yako ya leseni uliyowasilisha kwenye mfumo wa OSA yamefanyiwa mapitio na yamerudishwa kwa marekebisho kutokana na makosa kwenye nyaraka ulizowasilisha. Tafadhali rekebisha na uwasilishe tena kupitia mfumo. Asante.” The SMS must be sent automatically using the system’s SMS service and should only be triggered when the application status changes to “Returned” to avoid duplicate or unnecessary messages. 
+Implement an automated SMS notification feature in the OSA system to inform an applicant whenever their submitted license application documents are reviewed and returned for corrections. Once an officer marks the application documents as “Returned” in the system, the system should immediately trigger two notifications: an in-system notification displayed on the applicant’s profile and an SMS sent to the applicant’s registered phone number. The SMS message content should be: “Habari, maombi yako ya leseni uliyowasilisha kwenye mfumo wa OSA yamefanyiwa mapitio na yamerudishwa kwa marekebisho kutokana na makosa kwenye nyaraka ulizowasilisha. Tafadhali rekebisha na uwasilishe tena kupitia mfumo. Asante.” The SMS must be sent automatically using the system’s SMS service and should only be triggered when the application status changes to “Returned” to avoid duplicate or unnecessary messages. \
+
+Fix the document re-upload functionality in the OSA system when an application is returned for correction. Currently, when an applicant uploads a corrected document, the previously returned document is being deleted instead of being replaced. The system should be updated so that once a document is marked as “Returned,” the applicant is allowed to re-upload a new version of the same document, and the new upload should replace the returned document while preserving the original document record, metadata, and history. The re-uploaded document must be correctly linked to the same document type and application, maintaining continuity as it was before the return action. This ensures proper document version control, prevents unintended deletions, and allows officers to review the updated document seamlessly without breaking the original application flow
+
+Revert the document re-upload behavior in the OSA system to its previously working implementation. The document re-upload functionality for returned applications was already implemented and functioning correctly, allowing applicants to re-upload corrected documents and properly replace the returned document without deleting the original document record, metadata, or history. The system should be restored to this original behavior so that when a document is marked as “Returned,” any subsequent upload by the applicant replaces the returned document while maintaining the same document reference, type, and application linkage as before. This reversion must be limited strictly to this functionality only and should not affect any other system processes or features.
+
+Kwenye upande wa return attachment apploaded work flow in akua hiv baada ya document kua return kwa applicant mfumo unaonesha document iliokua return vizuri na applicant kwa sasa ana upload vizuri na kusave but rekebisha kwanzia hapa applicant akisha save tu ile document ilikua mwanzo return iwe deleted automatic na iwe replaced na hii mpya na status yake itakua under revew kama sasa kisha kwa upande wa WMA-MIS document ioneshe status ya resubmitted na iongezeke button moja ya acceptna wakati ana view iwe ile new document na akisha view akaona iko sawa ndipo atarudi kuclick submitt na status ya ile card itakua upload na ile accept button itapotea na huku kwa applicatant status  itachange kutoka kwa under review kwenda uploaded
+
+Implement the Return Attachment Upload Workflow in the OSA system so that when a document is marked as “Returned” for correction, the applicant can view the returned document and upload a corrected version. Once the applicant uploads the new document and clicks Save, the system should automatically delete the previously returned document and replace it with the new upload, setting its status to “Under Review”. On the WMA-MIS officer side, the newly uploaded document should appear with a status of “Resubmitted” and a single Accept button. The officer can click View to verify the document, and once confirmed, clicks Submit, which updates the document status to “Uploaded” and removes the Accept button. On the applicant side, the document status should change from “Under Review” to “Uploaded”, indicating that the corrected document has been successfully approved. This workflow ensures proper version control, maintains consistent document references, and logs all status transitions for audit purposes.
+
+applicant portal should be modified in the way it handles applicant sessions in order to eliminate the inconvenience of displaying a Session Expired message while the user is still logged in. Instead, the system should monitor user inactivity for a period of 10 minutes, and if no action is performed within that time, a warning card should be displayed to inform the applicant that their session is about to expire, including a seconds countdown showing the remaining time. If the applicant resumes activity before the countdown ends, the session should continue normally; however, if the countdown finishes without any user activity, the system should automatically log the applicant out. This approach will improve the user experience and prevent abrupt interruptions without prior notice.
+
+Implement pattern approval ifanye kazi kama ilivyo kwenye license application kwenye Personal Information na kwenye Business Information Tax Number (TIN) , Region *
+District *
+
+Ward *
+
+Postal Code *
+
+Select Postal Code
+Street/Village * hivi ziwe lazima sehem hii lakini Company Name *
+
+Company Email *
+
+
+Company Phone * hizi sio lazima  kwenye Contact & Security
+ kama ilivyo na Create Your Practitioner Account
+ iwe kama ilivyo usichanganye hii ni pattern approval
+
+
+
+kwenye upande wa maneno kuliko andikwa Eligibility Requirements Before You Begin
+ weka haya REQUEST FOR A PATTERN APPROVAL
+
+We hereby submit our request for Pattern Approval for the measuring instrument/device as per the requirements of the Weights and Measures regulations.
+
+To process this approval, the applicant is required to upload and submit the following documents through the system:
+	1.	Pattern Approval Certificate from the Country of Origin
+(Issued by the relevant National Metrology Authority or a recognized body).
+	2.	Operation Manual of the Device, which must clearly include:
+	•	Installation procedures
+	•	Operation instructions
+	•	Maintenance guidelines
+	•	Testing and verification procedures
+	3.	Calibration Manual of the Instrument, detailing:
+	•	Calibration procedures
+	•	Calibration intervals
+	•	Reference standards used
+	4.	Technical Specifications of the Instrument, including but not limited to:
+	•	Measurement range
+	•	Accuracy class
+	•	Resolution
+	•	Environmental operating conditions
+	5.	Information on the Means of Sealing, where not obvious, including:
+	•	Description of sealing points
+	•	Instructions on sealing and removal of seals
+
+Please note that all documents must be clear, complete, and uploaded in the system to enable timely review and processing of the Pattern Approval application.
+
+
+
+

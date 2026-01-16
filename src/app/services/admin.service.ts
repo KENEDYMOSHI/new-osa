@@ -38,6 +38,13 @@ export class AdminService {
     return this.http.post<any>(`${this.apiUrl}/application/${id}/approve`, {}, { headers: this.getHeaders() });
   }
 
+  acceptDocument(documentId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/document/accept`, 
+      { doc_id: documentId }, 
+      { headers: this.getHeaders() }
+    );
+  }
+
   returnDocument(documentId: string, rejectionReason: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/document/return`, 
       { document_id: documentId, rejection_reason: rejectionReason }, 

@@ -385,7 +385,7 @@
                     </svg>
                     {{ doc.fileName }}
                   </div>
-                  <div *ngIf="doc.status === 'Returned' && doc.rejectionReason" class="text-xs mt-2 p-2 rounded rejection-alert">
+                  <div *ngIf="(doc.status === 'Returned' || doc.status === 'Pending') && doc.rejectionReason" class="text-xs mt-2 p-2 rounded rejection-alert">
                     <span class="font-bold">Reason:</span> {{ doc.rejectionReason }}
                   </div>
                 </td>
@@ -447,7 +447,7 @@
                     <!-- Hidden File Input -->
                     <input type="file" [id]="'fileInput-' + doc.id" class="hidden" (change)="onFileSelected($event, doc.id)" accept="application/pdf">
                   </div>
-                  <div *ngIf="doc.status === 'Returned' && doc.rejectionReason" class="text-xs text-red-600 mt-1 font-medium bg-red-50 p-1 rounded">
+                  <div *ngIf="(doc.status === 'Returned' || doc.status === 'Pending') && doc.rejectionReason" class="text-xs text-red-600 mt-1 font-medium bg-red-50 p-1 rounded">
                     Reason: {{ doc.rejectionReason }}
                   </div>
                 </td>
@@ -498,7 +498,7 @@
                     </svg>
                     {{ doc.fileName }}
                   </div>
-                  <div *ngIf="doc.status === 'Returned' && doc.rejectionReason" class="text-xs mt-2 p-2 rounded rejection-alert">
+                  <div *ngIf="(doc.status === 'Returned' || doc.status === 'Pending') && doc.rejectionReason" class="text-xs mt-2 p-2 rounded rejection-alert">
                     <span class="font-bold">Reason:</span> {{ doc.rejectionReason }}
                   </div>
                 </td>
@@ -637,7 +637,7 @@
                     <!-- Hidden File Input -->
                     <input type="file" [id]="'fileInput-' + doc.id" class="hidden" (change)="onFileSelected($event, doc.id)" accept="application/pdf">
                   </div>
-                  <div *ngIf="doc.status === 'Returned' && doc.rejectionReason" class="text-xs text-red-600 mt-1 font-medium bg-red-50 p-1 rounded">
+                  <div *ngIf="(doc.status === 'Returned' || doc.status === 'Pending') && doc.rejectionReason" class="text-xs text-red-600 mt-1 font-medium bg-red-50 p-1 rounded">
                     Reason: {{ doc.rejectionReason }}
                   </div>
                 </td>

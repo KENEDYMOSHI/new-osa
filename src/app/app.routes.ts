@@ -177,6 +177,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/auth-pages/practitioner-registration/practitioner-registration.component').then(m => m.PractitionerRegistrationComponent),
     title: 'Practitioner Registration | WMA Online Services Portal'
   },
+  {
+    path: 'register-pattern-approval',
+    loadComponent: () => import('./pages/auth-pages/pattern-approval-registration/pattern-approval-registration.component').then(m => m.PatternApprovalRegistrationComponent),
+    title: 'Pattern Approval Registration | WMA Online Services Portal'
+  },
 
   {
     path: 'admin-test',

@@ -108,6 +108,7 @@ class AuthController extends ResourceController
 
             // Activate user immediately
             $user->activate();
+            $users->save($user);
 
             // 2. Create Practitioner Personal Info
             $personalInfoModel = new \App\Models\PractitionerPersonalInfoModel();
@@ -133,10 +134,10 @@ class AuthController extends ResourceController
             $businessInfoData = [
                 'user_uuid' => $uuid, // Use UUID
                 'tin' => $data['businessInfo']['tin'],
-                'company_name' => $data['businessInfo']['companyName'],
-                'company_email' => $data['businessInfo']['companyEmail'],
-                'company_phone' => $data['businessInfo']['companyPhone'],
-                'brela_number' => $data['businessInfo']['brelaNumber'],
+                'company_name' => $data['businessInfo']['companyName'] ?? null,
+                'company_email' => $data['businessInfo']['companyEmail'] ?? null,
+                'company_phone' => $data['businessInfo']['companyPhone'] ?? null,
+                'brela_number' => $data['businessInfo']['brelaNumber'] ?? null,
                 'bus_region' => $data['businessInfo']['region'],
                 'bus_district' => $data['businessInfo']['district'],
                 'bus_ward' => $data['businessInfo']['ward'],
@@ -207,7 +208,16 @@ class AuthController extends ResourceController
 
         $auth = service('auth');
         if ($auth->attempt($credentials)) {
-            $user = $auth->user();
+            // Get user directly from UserModel instead of $auth->user()
+            // because Shield's user() method may return null in API context
+            $users = model(UserModel::class);
+            $user = $users->findByCredentials(['email' => $data['email']]);
+            
+            // Check if user object is null
+            if (!$user) {
+                log_message('error', 'Auth: attempt() succeeded but could not find user for email: ' . $data['email']);
+                return $this->failServerError('Authentication succeeded but user data could not be retrieved');
+            }
 
             // Generate JWT
             $key = getenv('JWT_SECRET') ?: 'your_secret_key_here';
