@@ -131,7 +131,7 @@ export class SignInComponent implements OnInit, OnDestroy {
     this.isLoading = true;
 
     try {
-      await firstValueFrom(this.authService.login({ email: this.email, password: this.password }));
+      const response: any = await firstValueFrom(this.authService.login({ email: this.email, password: this.password }));
       
       this.isLoading = false;
       
@@ -143,7 +143,13 @@ export class SignInComponent implements OnInit, OnDestroy {
         showConfirmButton: false
       });
 
-      this.router.navigate(['/']);
+      // Redirect based on user_type
+      const userType = response?.user?.user_type;
+      if (userType === 'pattern_approval') {
+        this.router.navigate(['/pattern-approval/dashboard']);
+      } else {
+        this.router.navigate(['/']); // Default to main dashboard
+      }
     } catch (error) {
       this.isLoading = false;
       console.error('Login failed', error);

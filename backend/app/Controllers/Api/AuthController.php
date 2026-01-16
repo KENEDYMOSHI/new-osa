@@ -92,8 +92,12 @@ class AuthController extends ResourceController
         $users = model(UserModel::class);
         $uuid = strtoupper(md5(uniqid(rand(), true))); // Uppercase 32 char hash
 
+        // Generate unique username by adding timestamp
+        $baseUsername = $data['personalInfo']['firstName'] . ' ' . $data['personalInfo']['lastName'];
+        $uniqueUsername = $baseUsername . '_' . time();
+        
         $user = new \CodeIgniter\Shield\Entities\User([
-            'username' => $data['personalInfo']['firstName'] . ' ' . $data['personalInfo']['lastName'],
+            'username' => $uniqueUsername,
             'email'    => $data['contactSecurity']['email'],
             'password' => $data['contactSecurity']['password'],
         ]);
@@ -102,9 +106,16 @@ class AuthController extends ResourceController
             $users->save($user);
             $user = $users->findById($users->getInsertID());
 
-            // Update UUID
+            // Update UUID and user_type
             $db = \Config\Database::connect();
-            $db->table('users')->where('id', $user->id)->update(['uuid' => $uuid]);
+            $userType = isset($data['registrationType']) && $data['registrationType'] === 'pattern_approval' 
+                ? 'pattern_approval' 
+                : 'practitioner';
+            
+            $db->table('users')->where('id', $user->id)->update([
+                'uuid' => $uuid,
+                'user_type' => $userType
+            ]);
 
             // Activate user immediately
             $user->activate();
@@ -232,13 +243,19 @@ class AuthController extends ResourceController
 
             $token = JWT::encode($payload, $key, 'HS256');
 
+            // Get user_type from database
+            $db = \Config\Database::connect();
+            $userRecord = $db->table('users')->where('id', $user->id)->get()->getRow();
+            $userType = $userRecord->user_type ?? 'practitioner';
+
             return $this->respond([
                 'message' => 'Login successful',
                 'token' => $token,
                 'user' => [
                     'id' => $user->id,
                     'username' => $user->username,
-                    'email' => $user->email
+                    'email' => $user->email,
+                    'user_type' => $userType
                 ]
             ]);
         } else {

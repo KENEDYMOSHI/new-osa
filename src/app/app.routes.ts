@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { userTypeGuard } from './core/guards/user-type.guard';
 import { EcommerceComponent } from './pages/dashboard/ecommerce/ecommerce.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ProfileComponent } from './pages/profile/profile.component';
@@ -25,7 +26,7 @@ export const routes: Routes = [
   {
     path:'',
     component:AppLayoutComponent,
-    canActivate: [authGuard],
+    canActivate: [authGuard, userTypeGuard('practitioner')],
     children:[
       {
         path: '',
@@ -182,6 +183,32 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/auth-pages/pattern-approval-registration/pattern-approval-registration.component').then(m => m.PatternApprovalRegistrationComponent),
     title: 'Pattern Approval Registration | WMA Online Services Portal'
   },
+
+  // Pattern Approval Module Routes
+  {
+    path: 'pattern-approval',
+    loadComponent: () => import('./shared/layout/pattern-approval-layout/pattern-approval-layout.component').then(m => m.PatternApprovalLayoutComponent),
+    canActivate: [authGuard, userTypeGuard('pattern_approval')],
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./pages/pattern-approval/dashboard/pattern-approval-dashboard.component').then(m => m.PatternApprovalDashboardComponent),
+        title: 'Dashboard | Pattern Approval - WMA'
+      },
+      {
+        path: 'application',
+        loadComponent: () => import('./pages/pattern-approval/application/pattern-approval-application.component').then(m => m.PatternApprovalApplicationComponent),
+        title: 'Application | Pattern Approval - WMA'
+      },
+      // Future Pattern Approval routes will be added here
+    ]
+  },
+
 
   {
     path: 'admin-test',

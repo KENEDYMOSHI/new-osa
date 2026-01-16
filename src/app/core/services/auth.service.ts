@@ -32,11 +32,13 @@ export class AuthService {
   login(credentials: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, credentials).pipe(
       tap((response: any) => {
-        if (response.token) {
-          localStorage.setItem('token', response.token);
-          if (response.user) {
-              this.currentUserSubject.next(response.user);
-          }
+        if (response.token && response.user) {
+          const userType = response.user.user_type || 'practitioner';
+          // Store token with user type prefix
+          const storageKey = `token_${userType}`;
+          localStorage.setItem(storageKey, response.token);
+          localStorage.setItem('current_user_type', userType);
+          this.currentUserSubject.next(response.user);
         }
       })
     );
@@ -85,11 +87,22 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    const currentUserType = this.getCurrentUserType();
+    if (!currentUserType) return null;
+    return localStorage.getItem(`token_${currentUserType}`);
+  }
+
+  getCurrentUserType(): string | null {
+    return localStorage.getItem('current_user_type');
   }
 
   logout(): void {
-    localStorage.removeItem('token');
+    const currentUserType = this.getCurrentUserType();
+    if (currentUserType) {
+      // Only clear current user type's session
+      localStorage.removeItem(`token_${currentUserType}`);
+      localStorage.removeItem('current_user_type');
+    }
     this.currentUserSubject.next(null);
     this.router.navigate(['/signin']);
   }
