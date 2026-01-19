@@ -50,13 +50,20 @@ class PatternApprovalController extends BaseController
     /**
      * Get all instrument categories
      * GET /api/pattern-approval/instrument-categories
+     * Query Params: pattern_type_id (optional)
      */
     public function getInstrumentCategories()
     {
         try {
-            $categories = $this->instrumentCategoryModel
-                ->where('is_active', 1)
-                ->findAll();
+            $patternTypeId = $this->request->getGet('pattern_type_id');
+            
+            $query = $this->instrumentCategoryModel->where('is_active', 1);
+            
+            if ($patternTypeId) {
+                $query->where('pattern_type_id', $patternTypeId);
+            }
+            
+            $categories = $query->findAll();
 
             return $this->respond([
                 'success' => true,

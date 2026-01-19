@@ -26,8 +26,10 @@ interface SelectedInstrument {
   make: string;
   serial_number: string;
   maximum_capacity: string;
+  accuracy_class?: string;
   manual_calibration_doc: File | null;
   specification_doc: File | null;
+  [key: string]: any;
 }
 
 @Component({
@@ -38,6 +40,17 @@ interface SelectedInstrument {
   styleUrl: './pattern-selection.component.css'
 })
 export class PatternSelectionComponent implements OnInit {
+  // Document Configuration
+  instrumentDocuments = [
+    { key: 'manual_calibration_doc', name: 'Manual Calibration Document', accept: '.pdf,.doc,.docx' },
+    { key: 'specification_doc', name: 'Specification of Instrument', accept: '.pdf,.doc,.docx' }
+  ];
+
+  // Modal State
+  showPreviewModal = false;
+  previewFile: File | null = null;
+  previewFileUrl: any = null;
+  previewTitle: string = '';
   // Pattern Types
   patternTypes: any[] = [];
   selectedPatternTypeId: number | null = null;
@@ -53,6 +66,7 @@ export class PatternSelectionComponent implements OnInit {
   
   // Current instrument being added
   currentInstrument: SelectedInstrument | null = null;
+  selectedInstrumentType: InstrumentType | null = null;
   
   // UI State
   isLoading = false;
@@ -60,9 +74,10 @@ export class PatternSelectionComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  // Document Preview
-  previewDocument: File | null = null;
-  previewDocumentUrl: SafeResourceUrl | null = null;
+  get selectedPatternTypeName(): string {
+    const type = this.patternTypes.find(t => t.id === this.selectedPatternTypeId);
+    return type ? type.name : '';
+  }
 
   // Application ID (if editing existing)
   applicationId: number | null = null;
@@ -74,7 +89,8 @@ export class PatternSelectionComponent implements OnInit {
 
   ngOnInit() {
     this.loadPatternTypes();
-    this.loadInstrumentCategories();
+    // Don't load categories immediately, wait for pattern type selection
+    // this.loadInstrumentCategories(); 
   }
 
   loadPatternTypes() {
@@ -95,13 +111,23 @@ export class PatternSelectionComponent implements OnInit {
   }
 
   loadInstrumentCategories() {
-    this.patternApprovalService.getInstrumentCategories().subscribe({
+    if (!this.selectedPatternTypeId) {
+      this.instrumentCategories = [];
+      return;
+    }
+
+    this.patternApprovalService.getInstrumentCategories(this.selectedPatternTypeId).subscribe({
       next: (response: any) => {
         if (response.success) {
           this.instrumentCategories = response.data.map((cat: any) => ({
             ...cat,
-            expanded: false
+            expanded: true // Always expanded
           }));
+
+          // Automatically load instruments for each category
+          this.instrumentCategories.forEach(cat => {
+            this.loadInstrumentTypes(cat.id);
+          });
         }
       },
       error: (error) => {
@@ -111,6 +137,9 @@ export class PatternSelectionComponent implements OnInit {
     });
   }
 
+  // toggleCategory removed as it is no longer needed
+  /* toggleCategory(category: InstrumentCategory) { ... } */
+
   toggleCategory(category: InstrumentCategory) {
     category.expanded = !category.expanded;
     
@@ -118,6 +147,28 @@ export class PatternSelectionComponent implements OnInit {
     if (category.expanded && !this.instrumentTypesByCategory[category.id]) {
       this.loadInstrumentTypes(category.id);
     }
+  }
+
+  // Modal State
+  showChangePatternModal = false;
+
+
+
+  changePattern() {
+    this.showChangePatternModal = true;
+  }
+
+  confirmChangePattern() {
+    this.selectedPatternTypeId = null;
+    this.instrumentCategories = [];
+    this.selectedInstrumentType = null;
+    this.selectedInstruments = [];
+    this.onPatternTypeChange();
+    this.showChangePatternModal = false;
+  }
+
+  cancelChangePattern() {
+    this.showChangePatternModal = false;
   }
 
   loadInstrumentTypes(categoryId: number) {
@@ -135,6 +186,8 @@ export class PatternSelectionComponent implements OnInit {
   }
 
   selectInstrumentType(instrumentType: InstrumentType) {
+    this.selectedInstrumentType = instrumentType;
+    
     // Check if already selected
     const alreadySelected = this.selectedInstruments.find(
       i => i.instrument_type_id === instrumentType.id
@@ -167,42 +220,40 @@ export class PatternSelectionComponent implements OnInit {
     }
   }
 
-  onFileSelected(event: any, docType: 'manual_calibration' | 'specification') {
+  onFileSelected(event: any, docKey: string) {
     const file = event.target.files[0];
     if (file && this.currentInstrument) {
-      if (docType === 'manual_calibration') {
-        this.currentInstrument.manual_calibration_doc = file;
-      } else {
-        this.currentInstrument.specification_doc = file;
-      }
-      
-      // Set for preview
-      this.setPreviewDocument(file);
+      this.currentInstrument[docKey] = file;
     }
   }
 
-  setPreviewDocument(file: File) {
-    this.previewDocument = file;
+  removeDocument(docKey: string) {
+    if (this.currentInstrument) {
+      this.currentInstrument[docKey] = null;
+    }
+  }
+
+  openPreview(file: File | null, title: string) {
+    if (!file) return;
+    this.previewFile = file;
+    this.previewTitle = title;
     
-    // Create URL for preview
     if (file.type === 'application/pdf') {
       const url = URL.createObjectURL(file);
-      this.previewDocumentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+      this.previewFileUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
     } else {
-      this.previewDocumentUrl = null;
+      this.previewFileUrl = null;
     }
+    this.showPreviewModal = true;
   }
 
-  clearPreview() {
-    if (this.previewDocumentUrl && this.previewDocument?.type === 'application/pdf') {
-      // Revoke the object URL to free memory
-      const url = (this.previewDocumentUrl as any).changingThisBreaksApplicationSecurity;
-      if (url) {
-        URL.revokeObjectURL(url);
-      }
+  closePreview() {
+    this.showPreviewModal = false;
+    if (this.previewFileUrl) {
+        // Optional: revoke URL if needed, though Angular sanitizer might handle it
     }
-    this.previewDocument = null;
-    this.previewDocumentUrl = null;
+    this.previewFile = null;
+    this.previewFileUrl = null;
   }
 
   saveInstrumentDetails() {
@@ -221,6 +272,7 @@ export class PatternSelectionComponent implements OnInit {
     
     // Clear current instrument
     this.currentInstrument = null;
+    this.selectedInstrumentType = null; // Also clear selection to go back to list
     
     this.successMessage = 'Instrument details saved successfully';
     setTimeout(() => this.successMessage = '', 3000);

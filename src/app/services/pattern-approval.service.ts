@@ -26,8 +26,12 @@ export class PatternApprovalService {
   }
 
   // Instrument Categories
-  getInstrumentCategories(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/instrument-categories`, { 
+  getInstrumentCategories(patternTypeId?: number): Observable<any> {
+    let url = `${this.apiUrl}/instrument-categories`;
+    if (patternTypeId) {
+      url += `?pattern_type_id=${patternTypeId}`;
+    }
+    return this.http.get(url, { 
       headers: this.getHeaders() 
     });
   }
