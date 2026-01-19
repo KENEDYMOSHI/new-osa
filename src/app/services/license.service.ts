@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { AuthService } from '../core/services/auth.service';
 
 
 @Injectable({
@@ -9,7 +10,17 @@ import { Observable } from 'rxjs';
 export class LicenseService {
   private apiUrl = 'http://localhost:8080/api/license'; // Hardcoded for now based on context
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private authService: AuthService) { }
+
+  // ... (keeping methods the same until getHeaders)
+
+  // NOTE: Helper methods omitted for brevity in search/replace block if they are between constructor and getHeaders?
+  // No, replace_file_content needs contiguous block. 
+  // I will just replace constructor and add import, then replace getHeaders separately?
+  // Or I can use multi_replace.
+  
+  // Actually, I'll use multi_replace.
+
 
   uploadDocument(file: File, documentType: string, applicationId?: string, category?: string): Observable<any> {
     const formData = new FormData();
@@ -138,7 +149,7 @@ export class LicenseService {
   }
 
   private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('token');
+    const token = this.authService.getToken();
     return new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });

@@ -127,6 +127,19 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->get('license/details/(:segment)', 'LicenseController::getApplicationDetails/$1');
     $routes->get('support-details', 'OsaSupportController::getDetails');
 
+    // Pattern Approval Module
+    $routes->group('pattern-approval', function($routes) {
+        $routes->get('pattern-types', 'PatternApprovalController::getPatternTypes');
+        $routes->get('instrument-categories', 'PatternApprovalController::getInstrumentCategories');
+        $routes->get('instrument-types/(:segment)', 'PatternApprovalController::getInstrumentTypesByCategory/$1');
+        $routes->post('applications', 'PatternApprovalController::createApplication');
+        $routes->get('applications/(:segment)', 'PatternApprovalController::getApplication/$1');
+        $routes->get('my-applications', 'PatternApprovalController::getMyApplications');
+        $routes->put('applications/(:segment)', 'PatternApprovalController::updateApplication/$1');
+        $routes->post('applications/(:segment)/instruments', 'PatternApprovalController::addInstrument/$1');
+        $routes->delete('applications/(:segment)/instruments/(:segment)', 'PatternApprovalController::removeInstrument/$1/$2');
+    });
+
     $routes->options('(:any)', static function () {
         return response()->setStatusCode(200);
     });

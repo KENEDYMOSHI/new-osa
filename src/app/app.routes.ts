@@ -26,7 +26,7 @@ export const routes: Routes = [
   {
     path:'',
     component:AppLayoutComponent,
-    canActivate: [authGuard, userTypeGuard('practitioner')],
+    canActivate: [authGuard, userTypeGuard(['practitioner', 'applicant', 'user'])],
     children:[
       {
         path: '',

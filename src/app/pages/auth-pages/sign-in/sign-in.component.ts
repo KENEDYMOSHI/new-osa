@@ -54,17 +54,17 @@ export class SignInComponent implements OnInit, OnDestroy {
     this.startSlideShow();
     
     // Check if redirected due to session expiration
-    this.route.queryParams.subscribe(params => {
-      if (params['sessionExpired'] === 'true') {
-        Swal.fire({
-          title: 'Session Expired',
-          text: 'Your session has expired. Please log in again.',
-          icon: 'warning',
-          confirmButtonText: 'OK',
-          confirmButtonColor: '#F59E0B'
-        });
-      }
-    });
+    // this.route.queryParams.subscribe(params => {
+    //   if (params['sessionExpired'] === 'true') {
+    //     Swal.fire({
+    //       title: 'Session Expired',
+    //       text: 'Your session has expired. Please log in again.',
+    //       icon: 'warning',
+    //       confirmButtonText: 'OK',
+    //       confirmButtonColor: '#F59E0B'
+    //     });
+    //   }
+    // });
   }
 
   ngOnDestroy() {
@@ -144,11 +144,17 @@ export class SignInComponent implements OnInit, OnDestroy {
       });
 
       // Redirect based on user_type
-      const userType = response?.user?.user_type;
+      const rawUserType = response?.user?.user_type || '';
+      const userType = rawUserType.toLowerCase().trim();
+      console.log('SignIn Redirect:', { raw: rawUserType, processed: userType });
+      
       if (userType === 'pattern_approval') {
         this.router.navigate(['/pattern-approval/dashboard']);
+      } else if (userType === 'practitioner' || userType === 'applicant' || userType === 'user') {
+        this.router.navigate(['/']); // Main dashboard for License Application / Business Owner
       } else {
-        this.router.navigate(['/']); // Default to main dashboard
+        // Fallback for unknown types (or if type is missing/practitioner default)
+        this.router.navigate(['/']); 
       }
     } catch (error) {
       this.isLoading = false;

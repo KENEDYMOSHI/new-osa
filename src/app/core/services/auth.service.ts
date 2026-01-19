@@ -33,9 +33,10 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/login`, credentials).pipe(
       tap((response: any) => {
         if (response.token && response.user) {
-          const userType = response.user.user_type || 'practitioner';
+          const userType = (response.user.user_type || 'practitioner').trim();
           // Store token with user type prefix
           const storageKey = `token_${userType}`;
+          console.log('AuthService Login: Storing', { userType, storageKey });
           localStorage.setItem(storageKey, response.token);
           localStorage.setItem('current_user_type', userType);
           this.currentUserSubject.next(response.user);

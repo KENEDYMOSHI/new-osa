@@ -189,5 +189,14 @@ To process this approval, the applicant is required to upload and submit the fol
 Please note that all documents must be clear, complete, and uploaded in the system to enable timely review and processing of the Pattern Approval application.
 
 
+ Kwenye pattern approval module ya pattern-approval/application iwe active na ukiclick ionesha Personal Information, Company Information applicant alizo register implement 
+
+ card kwenye module ya pattern approvalinayofuata itakua select of pattern tayp to be approved then kutakea weighting Istrument ,Fuel pump,water meter ,capacity measures , then baada yakua zote tunaanza tengeneza iput ya kila moja tukianza na weighting Istrument ukiclick itokee drop down yakuselect Types of weighing Instruments ambazo ni Counter Scale cIs
+Platform scale P/m
+balance scale S/B
+Spring balance BS 
+Woighbridge W/B
+
+then ukiselect Types of weighing Instruments pattern itatokea sehemu yakuapplod document ambayo ni manual calibratio, na specification of isntrument then kutakua na input za kujaza ambazo ni brand name, Make, serial number, na maximam capacity 
 
 

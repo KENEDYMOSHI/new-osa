@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
+import { PatternSelectionComponent } from '../pattern-selection/pattern-selection.component';
 
 @Component({
   selector: 'app-pattern-approval-application',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PatternSelectionComponent],
   templateUrl: './pattern-approval-application.component.html',
 })
 export class PatternApprovalApplicationComponent implements OnInit {

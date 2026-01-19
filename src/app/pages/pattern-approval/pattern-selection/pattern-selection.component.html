@@ -1,0 +1,336 @@
+<div class="pattern-selection-container">
+  <!-- Alert Messages -->
+  <div *ngIf="errorMessage" class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 mb-6">
+    <div class="flex items-center">
+      <svg class="w-5 h-5 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <p class="text-sm font-medium text-red-800">{{ errorMessage }}</p>
+    </div>
+  </div>
+
+  <div *ngIf="successMessage" class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 mb-6">
+    <div class="flex items-center">
+      <svg class="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <p class="text-sm font-medium text-green-800">{{ successMessage }}</p>
+    </div>
+  </div>
+
+  <!-- Unified Card: Pattern Type & Instrument Selection -->
+  <div class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden mb-6">
+    <!-- Card Header -->
+    <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+      <h2 class="text-2xl font-bold text-gray-900">Pattern Type & Instrument Selection</h2>
+      <p class="text-gray-500 mt-1">Select pattern type and add instruments for approval</p>
+    </div>
+
+    <!-- Card Body -->
+    <div class="p-6">
+      <!-- Pattern Type Selection -->
+      <div class="mb-6">
+        <h3 class="text-lg font-bold text-gray-900 flex items-center mb-4">
+          <div class="w-8 h-8 bg-[#F7941D]/10 rounded-full flex items-center justify-center mr-2">
+            <svg class="w-4 h-4 text-[#F7941D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+          Select Pattern Type
+        </h3>
+        <select 
+          [(ngModel)]="selectedPatternTypeId" 
+          (ngModelChange)="onPatternTypeChange()"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent"
+          [disabled]="isLoading || isSaving">
+          <option [ngValue]="null">-- Select Pattern Type --</option>
+          <option *ngFor="let type of patternTypes" [ngValue]="type.id">
+            {{ type.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Split View: Instrument Categories (Left) & Document Preview (Right) -->
+      <div *ngIf="selectedPatternTypeId" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Left Side: Instrument Categories -->
+        <div class="border border-gray-200 rounded-lg overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-bold text-gray-900 flex items-center">
+              <div class="w-8 h-8 bg-[#F7941D]/10 rounded-full flex items-center justify-center mr-2">
+                <svg class="w-4 h-4 text-[#F7941D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+              </div>
+              Instrument Categories
+            </h3>
+          </div>
+          <div class="p-4 max-h-[600px] overflow-y-auto">
+            <div class="space-y-3">
+              <div *ngFor="let category of instrumentCategories" class="border border-gray-200 rounded-lg overflow-hidden">
+                <!-- Category Header -->
+                <button 
+                  (click)="toggleCategory(category)"
+                  class="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 flex items-center justify-between transition-colors">
+                  <span class="font-semibold text-gray-900">{{ category.name }}</span>
+                  <svg 
+                    class="w-5 h-5 text-gray-600 transition-transform"
+                    [class.rotate-180]="category.expanded"
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </button>
+
+                <!-- Instrument Types -->
+                <div *ngIf="category.expanded" class="p-4 bg-white border-t border-gray-200">
+                  <div *ngIf="instrumentTypesByCategory[category.id]" class="space-y-2">
+                    <button
+                      *ngFor="let type of instrumentTypesByCategory[category.id]"
+                      (click)="selectInstrumentType(type)"
+                      class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-[#F7941D] hover:bg-[#F7941D]/5 transition-all text-left">
+                      <div class="font-medium text-gray-900">{{ type.name }}</div>
+                      <div class="text-sm text-gray-500">Code: {{ type.code }}</div>
+                    </button>
+                  </div>
+                  <div *ngIf="!instrumentTypesByCategory[category.id]" class="text-center py-4">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F7941D] mx-auto"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side: Document Preview / Instrument Form -->
+        <div class="border border-gray-200 rounded-lg overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-bold text-gray-900 flex items-center">
+              <div class="w-8 h-8 bg-[#F7941D]/10 rounded-full flex items-center justify-center mr-2">
+                <svg class="w-4 h-4 text-[#F7941D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+              {{ currentInstrument ? 'Instrument Details' : 'Document Preview' }}
+            </h3>
+          </div>
+
+          <!-- Instrument Details Form -->
+          <div *ngIf="currentInstrument" class="p-4 max-h-[600px] overflow-y-auto">
+            <div class="mb-4 p-3 bg-[#F7941D]/10 rounded-lg">
+              <p class="text-sm font-semibold text-gray-900">{{ currentInstrument.instrument_type_name }}</p>
+              <p class="text-xs text-gray-600">{{ currentInstrument.instrument_type_code }}</p>
+            </div>
+
+            <div class="space-y-4">
+              <!-- Brand Name -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Brand Name *</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="currentInstrument.brand_name"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent"
+                  placeholder="Enter brand name">
+              </div>
+
+              <!-- Make -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Make *</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="currentInstrument.make"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent"
+                  placeholder="Enter make">
+              </div>
+
+              <!-- Serial Number -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Serial Number *</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="currentInstrument.serial_number"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent"
+                  placeholder="Enter serial number">
+              </div>
+
+              <!-- Maximum Capacity -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Maximum Capacity *</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="currentInstrument.maximum_capacity"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent"
+                  placeholder="Enter maximum capacity (e.g., 100kg)">
+              </div>
+
+              <!-- Manual Calibration Document -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Manual Calibration Document</label>
+                <input 
+                  type="file" 
+                  (change)="onFileSelected($event, 'manual_calibration')"
+                  accept=".pdf,.doc,.docx"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent">
+                <p class="text-xs text-gray-500 mt-1">Accepted formats: PDF, DOC, DOCX</p>
+              </div>
+
+              <!-- Specification Document -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Specification of Instrument</label>
+                <input 
+                  type="file" 
+                  (change)="onFileSelected($event, 'specification')"
+                  accept=".pdf,.doc,.docx"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent">
+                <p class="text-xs text-gray-500 mt-1">Accepted formats: PDF, DOC, DOCX</p>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <button 
+                  (click)="cancelInstrumentDetails()"
+                  class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
+                  Cancel
+                </button>
+                <button 
+                  (click)="saveInstrumentDetails()"
+                  class="px-6 py-2 bg-[#F7941D] text-white rounded-lg hover:bg-[#e8850c] transition-colors">
+                  Save Instrument
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Document Preview Area -->
+          <div *ngIf="!currentInstrument" class="p-4 max-h-[600px] overflow-y-auto">
+            <div *ngIf="previewDocument" class="space-y-4">
+              <!-- Document Info -->
+              <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-semibold text-gray-700">{{ previewDocument.name }}</span>
+                  <button 
+                    (click)="clearPreview()"
+                    class="text-red-600 hover:text-red-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-xs text-gray-500">{{ (previewDocument.size / 1024).toFixed(2) }} KB</p>
+              </div>
+
+              <!-- PDF Preview -->
+              <div *ngIf="previewDocumentUrl && previewDocument.type === 'application/pdf'" class="border border-gray-300 rounded-lg overflow-hidden">
+                <iframe 
+                  [src]="previewDocumentUrl" 
+                  class="w-full h-[500px]"
+                  frameborder="0">
+                </iframe>
+              </div>
+
+              <!-- Non-PDF Preview -->
+              <div *ngIf="previewDocument.type !== 'application/pdf'" class="text-center py-12">
+                <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p class="text-gray-600">Preview not available for this file type</p>
+                <p class="text-sm text-gray-500 mt-2">{{ previewDocument.name }}</p>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="!previewDocument" class="text-center py-12">
+              <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <p class="text-gray-500">No document selected</p>
+              <p class="text-sm text-gray-400 mt-2">Upload a document to preview it here</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selected Instruments List -->
+  <div *ngIf="selectedInstruments.length > 0" class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden mb-6">
+    <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+      <h3 class="text-xl font-bold text-gray-900 flex items-center">
+        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+          <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        Selected Instruments ({{ selectedInstruments.length }})
+      </h3>
+    </div>
+    <div class="px-6 py-6">
+      <div class="space-y-4">
+        <div *ngFor="let instrument of selectedInstruments; let i = index" 
+             class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <h4 class="font-bold text-gray-900">{{ instrument.instrument_type_name }} ({{ instrument.instrument_type_code }})</h4>
+              <div class="grid grid-cols-2 gap-3 mt-3 text-sm">
+                <div>
+                  <span class="text-gray-600 font-medium">Brand:</span>
+                  <span class="text-gray-900 ml-2">{{ instrument.brand_name }}</span>
+                </div>
+                <div>
+                  <span class="text-gray-600 font-medium">Make:</span>
+                  <span class="text-gray-900 ml-2">{{ instrument.make }}</span>
+                </div>
+                <div>
+                  <span class="text-gray-600 font-medium">Serial Number:</span>
+                  <span class="text-gray-900 ml-2">{{ instrument.serial_number }}</span>
+                </div>
+                <div>
+                  <span class="text-gray-600 font-medium">Max Capacity:</span>
+                  <span class="text-gray-900 ml-2">{{ instrument.maximum_capacity }}</span>
+                </div>
+              </div>
+              <div class="mt-2 flex space-x-4 text-xs">
+                <span *ngIf="instrument.manual_calibration_doc" class="text-green-600 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  Manual Calibration Uploaded
+                </span>
+                <span *ngIf="instrument.specification_doc" class="text-green-600 flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  Specification Uploaded
+                </span>
+              </div>
+            </div>
+            <button 
+              (click)="removeInstrument(i)"
+              class="ml-4 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit Button -->
+  <div class="flex justify-end">
+    <button 
+      (click)="submitApplication()"
+      [disabled]="!selectedPatternTypeId || selectedInstruments.length === 0 || isSaving"
+      class="px-8 py-3 bg-[#F7941D] text-white rounded-lg hover:bg-[#e8850c] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-semibold flex items-center">
+      <span *ngIf="!isSaving">Submit Application</span>
+      <span *ngIf="isSaving" class="flex items-center">
+        <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Submitting...
+      </span>
+    </button>
+  </div>
+</div>

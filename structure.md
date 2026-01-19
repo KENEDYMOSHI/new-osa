@@ -14,4 +14,5 @@ NOTE: please dont mix up pattern approval with license application
 
 session separation for pattern approval and license application users even if i use same browser or device treat them as different users and session data should be separated
 
- Kwenye pattern approval module ya pattern-approval/application iwe active na ukiclick ionesha Personal Information, Company Information applicant alizo register implement 
+
+
