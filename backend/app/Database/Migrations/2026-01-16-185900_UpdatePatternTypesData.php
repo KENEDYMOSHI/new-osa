@@ -21,12 +21,12 @@ class UpdatePatternTypesData extends Migration
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
 
-        // Check if Water Meter and Capacity Measures already exist
-        $waterMeter = $this->db->table('pattern_types')->where('name', 'Water Meter')->get()->getRow();
+        // Check if Meter and Capacity Measures already exist
+        $waterMeter = $this->db->table('pattern_types')->where('name', 'Meter')->get()->getRow();
         if (!$waterMeter) {
             $this->db->table('pattern_types')->insert([
-                'name' => 'Water Meter',
-                'description' => 'Pattern approval for water metering devices',
+                'name' => 'Meter',
+                'description' => 'Pattern approval for metering devices',
                 'is_active' => 1,
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s'),
@@ -60,8 +60,8 @@ class UpdatePatternTypesData extends Migration
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
 
-        // Delete Water Meter and Capacity Measures if they exist
-        $this->db->table('pattern_types')->where('name', 'Water Meter')->delete();
+        // Delete Meter and Capacity Measures if they exist
+        $this->db->table('pattern_types')->where('name', 'Meter')->delete();
         $this->db->table('pattern_types')->where('name', 'Capacity Measures')->delete();
     }
 }

@@ -200,3 +200,314 @@ Woighbridge W/B
 then ukiselect Types of weighing Instruments pattern itatokea sehemu yakuapplod document ambayo ni manual calibratio, na specification of isntrument then kutakua na input za kujaza ambazo ni brand name, Make, serial number, na maximam capacity 
 
 
+kwenye card ya fuel pump kwenye category ya standard fuel pump uki click implement this form kwa umakini . General Form Structure
+	•	The application shall be implemented as a multi-section digital form (step-based wizard or collapsible sections).
+	•	Each section shall have:
+	•	Clearly defined mandatory and optional fields
+	•	Input validation rules
+	•	The system shall support saving applications as drafts prior to final submission.
+	•	Certain fields shall be conditionally displayed or enabled based on user selections.
+	•	All submitted data shall be stored in a structured and auditable format.
+
+⸻
+
+2. Manufacturer Details
+
+Purpose: To identify the origin of the fuel pump.
+	•	Manufacturer Name
+	•	Input type: Text
+	•	Mandatory
+	•	Stores the official name of the manufacturer.
+	•	Country of Manufacture
+	•	Input type: Dropdown or Text
+	•	Mandatory
+	•	Used for regulatory traceability and international conformity assessment.
+
+⸻
+
+3. Fuel Pump Identification
+
+Purpose: To uniquely identify the fuel pump(s) covered by the application.
+	•	Make / Brand
+	•	Input type: Text
+	•	Mandatory
+	•	Model / Type Designation
+	•	Input type: Text
+	•	Mandatory
+	•	Quantity of Pumps
+	•	Input type: Number (integer, minimum value = 1)
+	•	Mandatory
+	•	Determines how many serial numbers must be provided.
+	•	Serial Number
+	•	Input type: Dynamically generated text fields
+	•	Mandatory
+	•	System Rule:
+	•	The number of serial number fields shall automatically match the entered quantity of pumps.
+	•	Each serial number shall be unique.
+	•	Manufacturing Year
+	•	Input type: Number or Date (Year only)
+	•	Optional
+	•	Number of Nozzles / Measuring Units
+	•	Input type: Number
+	•	Mandatory
+	•	Dispenser Type
+	•	Input type: Dropdown (single selection)
+	•	Mandatory
+	•	Options:
+	•	Single hose
+	•	Multi-hose
+	•	Multi-product
+
+⸻
+
+4. Metrological Characteristics
+
+Purpose: To capture the measurement-related technical parameters.
+	•	Measured Quantity
+	•	Fixed value: Volume
+	•	Display only (non-editable)
+	•	Fuel Type(s)
+	•	Input type: Dropdown (single or multi-select, as defined by regulation)
+	•	Mandatory
+	•	Options:
+	•	Petrol
+	•	Diesel
+	•	Kerosene
+	•	Other (if selected, a text field shall appear to specify)
+	•	Minimum Flow Rate (Qmin)
+	•	Input type: Numeric (L/min)
+	•	Mandatory
+	•	Maximum Flow Rate (Qmax)
+	•	Input type: Numeric (L/min)
+	•	Mandatory
+	•	Validation: Qmax must be greater than Qmin.
+	•	Minimum Measured Volume (Vmin)
+	•	Input type: Numeric (Litres)
+	•	Mandatory
+	•	Operating Temperature Range
+	•	Input type: Numeric range (°C)
+	•	Mandatory
+
+⸻
+
+5. Accuracy & Performance
+
+Purpose: To define declared metrological performance.
+	•	Declared Accuracy Class
+	•	Input type: Numeric or Text (percentage format)
+	•	Mandatory
+	•	Maximum Permissible Error (Declared)
+	•	Input type: Numeric or Text
+	•	Mandatory
+	•	Used for conformity assessment and verification decisions.
+
+⸻
+
+6. Indicating & Power System
+
+Purpose: To describe indication, display, and power characteristics.
+	•	Volume Indicator Type
+	•	Input type: Checkbox (single selection only)
+	•	Mandatory
+	•	Options:
+	•	Mechanical
+	•	Electronic
+	•	Price Display
+	•	Input type: Checkbox / Radio button
+	•	Mandatory
+	•	Options:
+	•	Yes
+	•	No
+	•	Display Location
+	•	Input type: Checkbox (single or multiple as allowed)
+	•	Mandatory
+	•	Options:
+	•	Customer side
+	•	Operator side
+	•	Both
+	•	Power Supply
+	•	Input type: Checkbox (multiple selection allowed)
+	•	Mandatory
+	•	Options:
+	•	Mains
+	•	Generator
+	•	Solar
+	•	Battery backup
+
+⸻
+
+7. Software Information (Electronic Pumps Only)
+
+Purpose: To capture legally relevant software information.
+	•	Conditional Rule:
+	•	This section shall be visible only if “Electronic” indicator type is selected.
+	•	Software Version
+	•	Input type: Text
+	•	Mandatory (for electronic pumps)
+	•	Software Legally Relevant
+	•	Input type: Radio button
+	•	Mandatory
+	•	Options:
+	•	Yes
+	•	No
+	•	Software Protection Method
+	•	Input type: Checkbox (multiple selection allowed)
+	•	Mandatory
+	•	Options:
+	•	Password
+	•	Hardware seal
+	•	Secure module
+	•	Event Log Available
+	•	Input type: Radio button
+	•	Mandatory
+	•	Options:
+	•	Yes
+	•	No
+
+⸻
+
+8. Sealing & Security
+
+Purpose: To document tamper-prevention measures.
+	•	Adjustment Points Requiring Sealing
+	•	Input type: Text area
+	•	Mandatory
+	•	Seal Type
+	•	Input type: Checkbox (multiple selection allowed)
+	•	Mandatory
+	•	Options:
+	•	Wire seal
+	•	Lead seal
+	•	Electronic seal
+	•	Seal Locations
+	•	Input type: Text area or reference to uploaded diagram
+	•	Mandatory
+
+⸻
+
+9. Installation Information
+
+Purpose: To define intended installation and usage conditions.
+	•	Intended Installation
+	•	Input type: Checkbox (multiple selection allowed)
+	•	Mandatory
+	•	Options:
+	•	Fixed fuel station
+	•	Mobile tanker
+	•	Intended Country of Use
+	•	Input type: Text or Dropdown
+	•	Mandatory
+	•	Installation Manual Available
+	•	Input type: Radio button
+	•	Mandatory
+	•	Options:
+	•	Yes
+	•	No
+
+⸻
+
+10. Supporting Documents (Upload Section)
+
+Purpose: To collect all required technical and regulatory evidence.
+	•	File Upload Fields (multiple files allowed where applicable):
+	•	Calibration manual
+	•	User / installation manual
+	•	Drawings or photographs:
+	•	Pump exterior
+	•	Nameplate
+	•	Display
+	•	Sealing points
+	•	Type examination certificate (if available)
+	•	Software documentation (if applicable)
+	•	System Rules:
+	•	Accept only approved file formats (PDF, JPG, PNG).
+	•	Enforce maximum file size limits.
+	•	Uploaded documents shall be linked to the specific application record.
+
+1.	implement kwenye Meter card kwenye category za water meter , flow meter ,bulk flow meter form hii form
+ Brand Meter Name: ___________________________
+Quntity of meter 
+Serial Number: ( idadi ya sehemu zakuingiza serial number zina tegemeana na quantity of meter ) 
+Nominal flow rate (Q₃) in m³/h: 
+Class of meter /
+Ratio (R): (optional)
+Maximum Admissible Pressure (MAP) in bar/Mpa: ___________________
+Maximum Temperature (T) in °C: 
+Meter Size (DN)
+Size / Diameter of the meter: ________________
+Position of measurement H/V:  check box yes or no 
+Sealing Mechanism / Adjustment knob (checkbox inayoonesh provided or not provided)
+Direction of flow ( checkbox inayoonesh indicated or not indicated 
+
+
+design kwenye category ya Standard Electrical Meter hii form t
+Brand meter name………..
+Meter manufacturer: ___________________________
+Meter model: _________________________________
+Quantity of meter
+Serial number(s): (serial number idadi  inategemeana na quantity of meter)
+Meter type (electromechanical / static): ___________________________
+
+Accuracy class: select class i,ii,iii,iv
+ 
+Nominal voltage, Unom: ____________ V
+Nominal frequency, fnom: __________ Hz
+Maximum current, Imax: ____________ A
+Transitional current, Itr: __________ A
+Minimum current, Imin: ____________ A
+Starting current, Ist: _____________ A
+ 
+☐ Direct-connected
+☐ Current transformer
+☐ Current and Voltage transformers
+ 
+Connection mode (select phases, wires, elements):
+Alternative connection mode(s):
+ 
+Direction of energy flow / registers: unaselect kwenye 
+☐ Single-register, bi-directional
+☐ Single-register, positive direction only
+☐ Two-register, bi-directional
+☐ Single-register, uni-directional
+ 
+Meter constant: _______________________________
+(include units of measurement)
+
+Specified clock frequencies: __________________
+(include units of measurement)
+
+Indoor / Outdoor: _____________________________
+
+IP Rating: ___________________________________
+
+Terminal arrangement (e.g. BS, DIN): ___________
+
+Insulation protection class: ___________________
+ 
+Lower specified temperature:
+☐ -55°C  ☐ -40°C  ☐ -25°C  ☐ -10°C  ☐ +5°C
+Upper specified temperature:
+☐ +30°C  ☐ +40°C  ☐ +55°C  ☐ +70°C
+ Humidity class:
+☐ H1  ☐ H2  ☐ H3
+ 
+Hardware version(s): ___________________________
+
+Software version(s): ___________________________
+ 
+REMARKS:
+ 
+ 
+ 
+1.2 Test values
+
+When ranges of values are specified by the manufacturer, the values used for testing shall be specified below.
+
+Test voltage: _______________________ V
+
+Test frequency: _____________________ Hz
+
+Test connection mode: _______________
+ 
+REMARKS:
+

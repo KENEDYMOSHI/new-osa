@@ -119,21 +119,50 @@
           </div>
           <div class="p-2 max-h-[600px] overflow-y-auto">
             <div class="space-y-2">
-              <div *ngFor="let category of instrumentCategories" class="border border-gray-200 rounded-lg overflow-hidden">
+              <div *ngFor="let category of instrumentCategories" 
+                   class="border rounded-lg overflow-hidden transition-all duration-300"
+                   [ngClass]="{
+                     'border-[#F7941D] ring-2 ring-[#F7941D]/20 shadow-md transform scale-[1.02] bg-white relative z-10': selectedInstrumentType?.category_id === category.id,
+                     'border-gray-200 hover:border-gray-300': selectedInstrumentType?.category_id !== category.id
+                   }">
                 <!-- Category Header (Static) -->
-                <div class="w-full px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                  <span class="font-semibold text-gray-900 text-left text-sm">{{ category.name }}</span>
+                <div class="w-full px-3 py-2 border-b flex items-center justify-between"
+                     [ngClass]="selectedInstrumentType?.category_id === category.id ? 'bg-[#F7941D]/10 border-[#F7941D]/20' : 'bg-gray-50 border-gray-200'">
+                  <div class="flex items-center">
+                    <span class="font-semibold text-left text-sm"
+                          [ngClass]="selectedInstrumentType?.category_id === category.id ? 'text-[#F7941D]' : 'text-gray-900'">
+                      {{ category.name }}
+                    </span>
+                    <!-- Active Indicator -->
+                    <span *ngIf="selectedInstrumentType?.category_id === category.id" class="ml-2 flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-[#F7941D] opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-[#F7941D]"></span>
+                    </span>
+                  </div>
+                  
+                  <!-- Optional: Working Label -->
+                  <span *ngIf="selectedInstrumentType?.category_id === category.id" class="text-[10px] font-bold uppercase tracking-wider text-[#F7941D] bg-white px-2 py-0.5 rounded-full shadow-sm">
+                    Active
+                  </span>
                 </div>
 
                 <!-- Instrument Types (Always Visible) -->
-                <div class="p-2 bg-white">
+                <div class="p-2" [ngClass]="selectedInstrumentType?.category_id === category.id ? 'bg-[#F7941D]/5' : 'bg-white'">
                   <div *ngIf="instrumentTypesByCategory[category.id]" class="space-y-1">
                     <button
                       *ngFor="let type of instrumentTypesByCategory[category.id]"
                       (click)="selectInstrumentType(type)"
-                      class="w-full px-3 py-2 border border-gray-200 rounded hover:border-[#F7941D] hover:bg-[#F7941D]/5 transition-all text-left text-xs">
-                      <div class="font-medium text-gray-900">{{ type.name }}</div>
-                      <div class="text-[10px] text-gray-500 text-nowrap">Code: {{ type.code }}</div>
+                      class="w-full px-3 py-2 border rounded transition-all text-left text-xs relative overflow-hidden"
+                      [ngClass]="selectedInstrumentType?.id === type.id ? 'border-[#F7941D] bg-white text-[#F7941D] shadow-sm' : 'border-gray-200 hover:border-[#F7941D] hover:bg-[#F7941D]/5 text-gray-900'">
+                      
+                      <!-- Active Selection Marker -->
+                      <div *ngIf="selectedInstrumentType?.id === type.id" class="absolute left-0 top-0 bottom-0 w-1 bg-[#F7941D]"></div>
+                      
+                      <div class="font-medium truncate pr-4">{{ type.name }}</div>
+                      <div class="text-[10px] text-nowrap" [ngClass]="selectedInstrumentType?.id === type.id ? 'text-[#F7941D]/80' : 'text-gray-500'">Code: {{ type.code }}</div>
+                      
+                      <!-- Selected Checkmark -->
+                      <svg *ngIf="selectedInstrumentType?.id === type.id" class="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#F7941D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                     </button>
                   </div>
                   <div *ngIf="!instrumentTypesByCategory[category.id]" class="text-center py-2">
@@ -180,57 +209,402 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Brand Name -->
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Brand Name *</label>
-                <input 
-                  type="text" 
-                  [(ngModel)]="currentInstrument.brand_name"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
-                  placeholder="Enter brand name">
-              </div>
+              <!-- GENERIC FORM (Non-Meter) -->
+              <ng-container *ngIf="!isFlowMeterCategory() && !isElectricalMeterCategory()">
+                  <!-- Brand Name -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Brand Name *</label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="currentInstrument.brand_name"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                      placeholder="Enter brand name">
+                  </div>
 
-              <!-- Make -->
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Make *</label>
-                <input 
-                  type="text" 
-                  [(ngModel)]="currentInstrument.make"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
-                  placeholder="Enter make">
-              </div>
+                  <!-- Make -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Make *</label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="currentInstrument.make"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                      placeholder="Enter make">
+                  </div>
 
-              <!-- Accuracy Class (Only for Weighing Instrument) -->
-              <div *ngIf="selectedPatternTypeName.toLowerCase().includes('weigh')">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Accuracy Class *</label>
-                <select 
-                  [(ngModel)]="currentInstrument.accuracy_class"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm bg-white">
-                  <option value="" disabled selected>Select Accuracy Class</option>
-                  <option value="High Class (I & II)">High Class (I & II)</option>
-                  <option value="Normal Class (III & IV)">Normal Class (III & IV)</option>
-                </select>
-              </div>
+                  <!-- Accuracy Class (Only for Weighing Instrument) -->
+                  <div *ngIf="selectedPatternTypeName.toLowerCase().includes('weigh')">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Accuracy Class *</label>
+                    <select 
+                      [(ngModel)]="currentInstrument.accuracy_class"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm bg-white">
+                      <option value="" disabled selected>Select Accuracy Class</option>
+                      <option value="High Class (I & II)">High Class (I & II)</option>
+                      <option value="Normal Class (III & IV)">Normal Class (III & IV)</option>
+                    </select>
+                  </div>
 
-              <!-- Serial Number -->
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Serial Number *</label>
-                <input 
-                  type="text" 
-                  [(ngModel)]="currentInstrument.serial_number"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
-                  placeholder="Enter serial number">
-              </div>
+                  <!-- Serial Number -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Serial Number *</label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="currentInstrument.serial_number"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                      placeholder="Enter serial number">
+                  </div>
 
-              <!-- Maximum Capacity -->
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Maximum Capacity *</label>
-                <input 
-                  type="text" 
-                  [(ngModel)]="currentInstrument.maximum_capacity"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
-                  placeholder="e.g., 100kg">
-              </div>
+                  <!-- Maximum Capacity -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Maximum Capacity *</label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="currentInstrument.maximum_capacity"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                      placeholder="e.g., 100kg">
+                  </div>
+              </ng-container>
+
+              <!-- FLOW METER FORM (Water/Bulk/Flow) -->
+              <ng-container *ngIf="isFlowMeterCategory()">
+                  <!-- ... Existing Meter Form Content ... -->
+                  <!-- Brand Meter Name -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Brand Meter Name *</label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="currentInstrument.brand_name"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                      placeholder="Enter brand meter name">
+                  </div>
+                  
+                  <!-- Manufacturer -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Manufacturer *</label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="currentInstrument.make"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                      placeholder="Enter manufacturer">
+                  </div>
+
+                  <!-- Quantity -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Quantity of meter *</label>
+                    <input 
+                      type="number" 
+                      min="1"
+                      [(ngModel)]="currentInstrument.quantity"
+                      (change)="onQuantityChange()"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                      placeholder="Enter quantity">
+                  </div>
+
+                  <!-- Serial Numbers (Dynamic) -->
+                  <div class="col-span-1 md:col-span-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <label class="block text-sm font-bold text-gray-700 mb-3">Serial Numbers ({{ currentInstrument.serial_numbers?.length || 0 }}) *</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        <div *ngFor="let sn of currentInstrument.serial_numbers; let i = index; trackBy: trackByIndex">
+                            <input 
+                              type="text" 
+                              [(ngModel)]="currentInstrument.serial_numbers![i]"
+                              class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-[#F7941D] focus:border-[#F7941D]"
+                              [placeholder]="'Serial No. ' + (i + 1)">
+                        </div>
+                    </div>
+                  </div>
+
+                  <!-- Nominal flow rate (Q3) -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nominal flow rate (Q₃) in m³/h *</label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="currentInstrument.nominal_flow_rate"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                      placeholder="e.g. 2.5">
+                  </div>
+
+                  <!-- Class of meter -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Class of meter *</label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="currentInstrument.meter_class"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                      placeholder="Enter class">
+                  </div>
+
+                  <!-- Ratio (R) -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Ratio (R) <span class="text-gray-400 font-normal">(Optional)</span></label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="currentInstrument.ratio"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                      placeholder="Enter ratio">
+                  </div>
+
+                  <!-- MAP -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Maximum Admissible Pressure (MAP)</label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="currentInstrument.max_admissible_pressure"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                      placeholder="In bar/Mpa">
+                  </div>
+
+                  <!-- Max Temperature -->
+                  <div>
+                     <label class="block text-sm font-semibold text-gray-700 mb-2">Maximum Temperature (T) in °C *</label>
+                     <input 
+                       type="text" 
+                       [(ngModel)]="currentInstrument.max_temperature"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                       placeholder="e.g. 50">
+                   </div>
+
+                   <!-- Meter Size (DN) -->
+                   <div>
+                     <label class="block text-sm font-semibold text-gray-700 mb-2">Meter Size (DN) *</label>
+                     <input 
+                       type="text" 
+                       [(ngModel)]="currentInstrument.meter_size_dn"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                       placeholder="Enter size (DN)">
+                   </div>
+
+                   <!-- Size / Diameter -->
+                   <div>
+                     <label class="block text-sm font-semibold text-gray-700 mb-2">Size / Diameter of the meter *</label>
+                     <input 
+                       type="text" 
+                       [(ngModel)]="currentInstrument.diameter"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                       placeholder="Enter diameter">
+                   </div>
+
+                   <!-- NEW: Position of Measurement H/V -->
+                   <div class="col-span-1 md:col-span-2 pt-4 border-t border-gray-100">
+                      <label class="block text-sm font-bold text-gray-700 mb-3">Position of measurement H/V *</label>
+                      <div class="flex items-center space-x-6">
+                          <label class="flex items-center cursor-pointer">
+                              <input type="radio" value="horizontal" name="pos_hv" [(ngModel)]="currentInstrument.position_hv_type" class="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500">
+                              <span class="ml-2 text-sm text-gray-700">H (Horizontal)</span>
+                          </label>
+                          <label class="flex items-center cursor-pointer">
+                              <input type="radio" value="vertical" name="pos_hv" [(ngModel)]="currentInstrument.position_hv_type" class="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500">
+                              <span class="ml-2 text-sm text-gray-700">V (Vertical)</span>
+                          </label>
+                      </div>
+                   </div>
+
+                   <!-- NEW: Sealing Mechanism -->
+                   <div class="col-span-1 md:col-span-2 pt-2">
+                      <label class="block text-sm font-bold text-gray-700 mb-3">Sealing Mechanism / Adjustment knob *</label>
+                      <div class="flex items-center space-x-6">
+                          <label class="flex items-center cursor-pointer">
+                              <input type="radio" value="provided" name="sealing" [(ngModel)]="currentInstrument.sealing_mechanism_type" class="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500">
+                              <span class="ml-2 text-sm text-gray-700">Provided</span>
+                          </label>
+                          <label class="flex items-center cursor-pointer">
+                              <input type="radio" value="not_provided" name="sealing" [(ngModel)]="currentInstrument.sealing_mechanism_type" class="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500">
+                              <span class="ml-2 text-sm text-gray-700">Not Provided</span>
+                          </label>
+                      </div>
+                   </div>
+
+                   <!-- NEW: Direction of Flow -->
+                   <div class="col-span-1 md:col-span-2 pt-2">
+                       <label class="block text-sm font-bold text-gray-700 mb-3">Direction of flow *</label>
+                       <div class="flex items-center space-x-6">
+                           <label class="flex items-center cursor-pointer">
+                               <input type="radio" value="indicated" name="flow_dir" [(ngModel)]="currentInstrument.flow_direction_type" class="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500">
+                               <span class="ml-2 text-sm text-gray-700">Indicated</span>
+                           </label>
+                           <label class="flex items-center cursor-pointer">
+                               <input type="radio" value="not_indicated" name="flow_dir" [(ngModel)]="currentInstrument.flow_direction_type" class="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500">
+                               <span class="ml-2 text-sm text-gray-700">Not Indicated</span>
+                           </label>
+                       </div>
+                   </div>
+              </ng-container>
+
+              <!-- ELECTRICAL METER FORM -->
+              <ng-container *ngIf="isElectricalMeterCategory()">
+                  <!-- Brand Name -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Brand Meter Name *</label>
+                    <input type="text" [(ngModel)]="currentInstrument.brand_name" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Enter brand name">
+                  </div>
+                  <!-- Manufacturer -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Meter Manufacturer *</label>
+                    <input type="text" [(ngModel)]="currentInstrument.make" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Enter manufacturer">
+                  </div>
+                  <!-- Model -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Meter Model *</label>
+                    <input type="text" [(ngModel)]="currentInstrument.meter_model" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Enter model">
+                  </div>
+                  <!-- Quantity -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Quantity of meter *</label>
+                    <input type="number" min="1" [(ngModel)]="currentInstrument.quantity" (change)="onQuantityChange()" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Enter quantity">
+                  </div>
+                  
+                  <!-- Dynamic Serial Numbers (Copied Logic) -->
+                  <div class="col-span-1 md:col-span-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <label class="block text-sm font-bold text-gray-700 mb-3">Serial Numbers ({{ currentInstrument.serial_numbers?.length || 0 }}) *</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        <div *ngFor="let sn of currentInstrument.serial_numbers; let i = index; trackBy: trackByIndex">
+                            <input type="text" [(ngModel)]="currentInstrument.serial_numbers![i]" class="w-full px-3 py-2 border border-gray-300 rounded text-sm" [placeholder]="'Serial No. ' + (i + 1)">
+                        </div>
+                    </div>
+                  </div>
+
+                  <!-- Meter Type -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Meter Type *</label>
+                    <select [(ngModel)]="currentInstrument.meter_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+                        <option value="">Select Type</option>
+                        <option value="electromechanical">Electromechanical</option>
+                        <option value="static">Static</option>
+                    </select>
+                  </div>
+                  
+                  <!-- Accuracy Class -->
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Accuracy class *</label>
+                    <select [(ngModel)]="currentInstrument.accuracy_class" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+                        <option value="">Select Class</option>
+                        <option value="i">I</option>
+                        <option value="ii">II</option>
+                        <option value="iii">III</option>
+                        <option value="iv">IV</option>
+                    </select>
+                  </div>
+
+                  <!-- Ratings -->
+                  <div><label class="block text-sm font-semibold text-gray-700 mb-2">Nominal Voltage (Unom) V *</label><input type="text" [(ngModel)]="currentInstrument.nominal_voltage" class="w-full px-4 py-2 border text-sm rounded-lg" placeholder="e.g. 230"></div>
+                  <div><label class="block text-sm font-semibold text-gray-700 mb-2">Nominal Frequency (fnom) Hz *</label><input type="text" [(ngModel)]="currentInstrument.nominal_frequency" class="w-full px-4 py-2 border text-sm rounded-lg" placeholder="e.g. 50"></div>
+                  <div><label class="block text-sm font-semibold text-gray-700 mb-2">Maximum Current (Imax) A *</label><input type="text" [(ngModel)]="currentInstrument.maximum_current" class="w-full px-4 py-2 border text-sm rounded-lg" placeholder="e.g. 100"></div>
+                  <div><label class="block text-sm font-semibold text-gray-700 mb-2">Transitional Current (Itr) A</label><input type="text" [(ngModel)]="currentInstrument.transitional_current" class="w-full px-4 py-2 border text-sm rounded-lg" placeholder="Optional"></div>
+                  <div><label class="block text-sm font-semibold text-gray-700 mb-2">Minimum Current (Imin) A *</label><input type="text" [(ngModel)]="currentInstrument.minimum_current" class="w-full px-4 py-2 border text-sm rounded-lg" placeholder="e.g. 5"></div>
+                  <div><label class="block text-sm font-semibold text-gray-700 mb-2">Starting Current (Ist) A</label><input type="text" [(ngModel)]="currentInstrument.starting_current" class="w-full px-4 py-2 border text-sm rounded-lg" placeholder="Optional"></div>
+
+                  <!-- Connection Type -->
+                  <div class="col-span-1 md:col-span-2 pt-2">
+                      <label class="block text-sm font-bold text-gray-700 mb-2">Connection Type *</label>
+                      <div class="flex flex-wrap gap-4">
+                        <label class="flex items-center"><input type="radio" value="direct" name="conn_type" [(ngModel)]="currentInstrument.connection_type" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Direct-connected</span></label>
+                        <label class="flex items-center"><input type="radio" value="ct" name="conn_type" [(ngModel)]="currentInstrument.connection_type" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Current transformer</span></label>
+                        <label class="flex items-center"><input type="radio" value="ct_vt" name="conn_type" [(ngModel)]="currentInstrument.connection_type" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Current and Voltage transformers</span></label>
+                      </div>
+                  </div>
+
+                  <!-- Connection Mode -->
+                  <div class="col-span-1 md:col-span-2">
+                       <label class="block text-sm font-semibold text-gray-700 mb-2">Connection mode (phases, wires, elements) *</label>
+                       <input type="text" [(ngModel)]="currentInstrument.connection_mode" class="w-full px-4 py-2 border text-sm rounded-lg" placeholder="e.g. 3-phase 4-wire">
+                  </div>
+                  <div class="col-span-1 md:col-span-2">
+                       <label class="block text-sm font-semibold text-gray-700 mb-2">Alternative connection mode(s)</label>
+                       <input type="text" [(ngModel)]="currentInstrument.alternative_connection_mode" class="w-full px-4 py-2 border text-sm rounded-lg" placeholder="Optional">
+                  </div>
+
+                  <!-- Energy Flow Direction -->
+                   <div class="col-span-1 md:col-span-2 pt-2">
+                       <label class="block text-sm font-bold text-gray-700 mb-2">Direction of energy flow / registers *</label>
+                       <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                           <label class="flex items-center"><input type="radio" value="single_bi" name="energy_dir" [(ngModel)]="currentInstrument.energy_flow_direction" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Single-register, bi-directional</span></label>
+                           <label class="flex items-center"><input type="radio" value="single_pos" name="energy_dir" [(ngModel)]="currentInstrument.energy_flow_direction" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Single-register, positive direction only</span></label>
+                           <label class="flex items-center"><input type="radio" value="two_bi" name="energy_dir" [(ngModel)]="currentInstrument.energy_flow_direction" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Two-register, bi-directional</span></label>
+                           <label class="flex items-center"><input type="radio" value="single_uni" name="energy_dir" [(ngModel)]="currentInstrument.energy_flow_direction" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Single-register, uni-directional</span></label>
+                       </div>
+                   </div>
+
+                   <div>
+                       <label class="block text-sm font-semibold text-gray-700 mb-2">
+                           Meter constant * 
+                           <span class="text-gray-500 font-normal italic text-xs ml-1">(include units of measurement)</span>
+                       </label>
+                       <input type="text" [(ngModel)]="currentInstrument.meter_constant" class="w-full px-4 py-2 border text-sm rounded-lg" placeholder="Include units">
+                   </div>
+                   <div>
+                       <label class="block text-sm font-semibold text-gray-700 mb-2">
+                           Specified clock frequencies
+                           <span class="text-gray-500 font-normal italic text-xs ml-1">(include units of measurement)</span>
+                       </label>
+                       <input type="text" [(ngModel)]="currentInstrument.clock_frequency" class="w-full px-4 py-2 border text-sm rounded-lg" placeholder="Include units">
+                   </div>
+                   
+                   <div>
+                       <label class="block text-sm font-semibold text-gray-700 mb-2">Environment (Indoor/Outdoor) *</label>
+                       <select [(ngModel)]="currentInstrument.environment" class="w-full px-4 py-2 border text-sm rounded-lg bg-white">
+                           <option value="">Select Environment</option>
+                           <option value="indoor">Indoor</option>
+                           <option value="outdoor">Outdoor</option>
+                           <option value="indoor_outdoor">Indoor / Outdoor</option>
+                       </select>
+                   </div>
+                   <div><label class="block text-sm font-semibold text-gray-700 mb-2">IP Rating *</label><input type="text" [(ngModel)]="currentInstrument.ip_rating" class="w-full px-4 py-2 border text-sm rounded-lg" placeholder="e.g. IP54"></div>
+                   <div><label class="block text-sm font-semibold text-gray-700 mb-2">Terminal arrangement</label><input type="text" [(ngModel)]="currentInstrument.terminal_arrangement" class="w-full px-4 py-2 border text-sm rounded-lg" placeholder="e.g. BS, DIN"></div>
+                   <div><label class="block text-sm font-semibold text-gray-700 mb-2">Insulation protection class</label><input type="text" [(ngModel)]="currentInstrument.insulation_protection_class" class="w-full px-4 py-2 border text-sm rounded-lg" placeholder="Enter class"></div>
+                
+                   <!-- Temperatures -->
+                   <!-- Lower Temp -->
+                   <div class="col-span-1 md:col-span-2 pt-2">
+                       <label class="block text-sm font-bold text-gray-700 mb-2">Lower specified temperature *</label>
+                       <div class="flex flex-wrap gap-4">
+                           <label class="flex items-center"><input type="radio" value="-55" name="temp_low" [(ngModel)]="currentInstrument.temperature_lower" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">-55°C</span></label>
+                           <label class="flex items-center"><input type="radio" value="-40" name="temp_low" [(ngModel)]="currentInstrument.temperature_lower" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">-40°C</span></label>
+                           <label class="flex items-center"><input type="radio" value="-25" name="temp_low" [(ngModel)]="currentInstrument.temperature_lower" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">-25°C</span></label>
+                           <label class="flex items-center"><input type="radio" value="-10" name="temp_low" [(ngModel)]="currentInstrument.temperature_lower" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">-10°C</span></label>
+                           <label class="flex items-center"><input type="radio" value="+5" name="temp_low" [(ngModel)]="currentInstrument.temperature_lower" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">+5°C</span></label>
+                       </div>
+                   </div>
+                   <!-- Upper Temp -->
+                   <div class="col-span-1 md:col-span-2 pt-2">
+                       <label class="block text-sm font-bold text-gray-700 mb-2">Upper specified temperature *</label>
+                       <div class="flex flex-wrap gap-4">
+                           <label class="flex items-center"><input type="radio" value="+30" name="temp_high" [(ngModel)]="currentInstrument.temperature_upper" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">+30°C</span></label>
+                           <label class="flex items-center"><input type="radio" value="+40" name="temp_high" [(ngModel)]="currentInstrument.temperature_upper" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">+40°C</span></label>
+                           <label class="flex items-center"><input type="radio" value="+55" name="temp_high" [(ngModel)]="currentInstrument.temperature_upper" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">+55°C</span></label>
+                           <label class="flex items-center"><input type="radio" value="+70" name="temp_high" [(ngModel)]="currentInstrument.temperature_upper" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">+70°C</span></label>
+                       </div>
+                   </div>
+                   
+                   <!-- Humidity -->
+                   <div class="col-span-1 md:col-span-2 pt-2">
+                       <label class="block text-sm font-bold text-gray-700 mb-2">Humidity class *</label>
+                       <div class="flex flex-wrap gap-6">
+                           <label class="flex items-center"><input type="radio" value="H1" name="hum_class" [(ngModel)]="currentInstrument.humidity_class" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">H1</span></label>
+                           <label class="flex items-center"><input type="radio" value="H2" name="hum_class" [(ngModel)]="currentInstrument.humidity_class" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">H2</span></label>
+                           <label class="flex items-center"><input type="radio" value="H3" name="hum_class" [(ngModel)]="currentInstrument.humidity_class" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">H3</span></label>
+                       </div>
+                   </div>
+
+                   <!-- Versions & Remarks -->
+                   <div><label class="block text-sm font-semibold text-gray-700 mb-2">Hardware version(s)</label><input type="text" [(ngModel)]="currentInstrument.hardware_version" class="w-full px-4 py-2 border text-sm rounded-lg" placeholder="Optional"></div>
+                   <div><label class="block text-sm font-semibold text-gray-700 mb-2">Software version(s)</label><input type="text" [(ngModel)]="currentInstrument.software_version" class="w-full px-4 py-2 border text-sm rounded-lg" placeholder="Optional"></div>
+                   <div class="col-span-1 md:col-span-2">
+                       <label class="block text-sm font-semibold text-gray-700 mb-2">Result/Remarks</label>
+                       <textarea [(ngModel)]="currentInstrument.remarks" rows="2" class="w-full px-4 py-2 border text-sm rounded-lg" placeholder="Enter remarks"></textarea>
+                   </div>
+                   
+                   <!-- Test Values Section -->
+                   <div class="col-span-1 md:col-span-2 mt-4 pt-4 border-t-2 border-dashed border-gray-200">
+                       <h3 class="font-bold text-md text-gray-800 mb-1">Test values</h3>
+                       <p class="text-sm text-gray-600 mb-4 italic">When ranges of values are specified by the manufacturer, the values used for testing shall be specified below.</p>
+                       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                           <div><label class="block text-sm font-semibold text-gray-700 mb-2">Test voltage (V)</label><input type="text" [(ngModel)]="currentInstrument.test_voltage" class="w-full px-4 py-2 border text-sm rounded-lg"></div>
+                           <div><label class="block text-sm font-semibold text-gray-700 mb-2">Test frequency (Hz)</label><input type="text" [(ngModel)]="currentInstrument.test_frequency" class="w-full px-4 py-2 border text-sm rounded-lg"></div>
+                           <div class="col-span-1 md:col-span-2"><label class="block text-sm font-semibold text-gray-700 mb-2">Test connection mode</label><input type="text" [(ngModel)]="currentInstrument.test_connection_mode" class="w-full px-4 py-2 border text-sm rounded-lg"></div>
+                           <div class="col-span-1 md:col-span-2"><label class="block text-sm font-semibold text-gray-700 mb-2">Remarks</label><textarea [(ngModel)]="currentInstrument.test_remarks" rows="2" class="w-full px-4 py-2 border text-sm rounded-lg"></textarea></div>
+                       </div>
+                   </div>
+
+              </ng-container>
 
               <!-- Required Documents Table -->
               <div class="col-span-1 md:col-span-2 mt-4">

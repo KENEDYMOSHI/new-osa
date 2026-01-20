@@ -25,7 +25,7 @@ class InstrumentDataSeeder extends Seeder
                 'updated_at' => date('Y-m-d H:i:s'),
             ],
             [
-                'name' => 'Water Meter',
+                'name' => 'Meter',
                 'code' => 'water_meter',
                 'is_active' => 1,
                 'created_at' => date('Y-m-d H:i:s'),
@@ -102,7 +102,7 @@ class InstrumentDataSeeder extends Seeder
             ],
             [
                 'category_id' => $waterMeterId,
-                'name' => 'Standard Water Meter',
+                'name' => 'Standard Meter',
                 'code' => 'SWM',
                 'is_active' => 1,
                 'created_at' => date('Y-m-d H:i:s'),
@@ -137,8 +137,8 @@ class InstrumentDataSeeder extends Seeder
                 'updated_at' => date('Y-m-d H:i:s'),
             ],
             [
-                'name' => 'Water Meter',
-                'description' => 'Pattern approval for water metering devices',
+                'name' => 'Meter',
+                'description' => 'Pattern approval for metering devices',
                 'is_active' => 1,
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s'),

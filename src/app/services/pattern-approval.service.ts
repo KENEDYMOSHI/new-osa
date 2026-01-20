@@ -69,10 +69,10 @@ export class PatternApprovalService {
   }
 
   // Instruments
-  addInstrument(applicationId: number, instrumentTypeId: number): Observable<any> {
+  addInstrument(applicationId: number, data: any): Observable<any> {
     return this.http.post(
       `${this.apiUrl}/applications/${applicationId}/instruments`, 
-      { instrument_type_id: instrumentTypeId }, 
+      data, 
       { headers: this.getHeaders() }
     );
   }

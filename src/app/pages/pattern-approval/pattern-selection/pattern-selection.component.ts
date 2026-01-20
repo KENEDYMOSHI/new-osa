@@ -6,21 +6,22 @@ import { PatternApprovalService } from '../../../services/pattern-approval.servi
 import { FuelPumpFormComponent } from '../fuel-pump-form/fuel-pump-form.component';
 
 interface InstrumentCategory {
-  id: number;
+  id: number | string;
   name: string;
   code: string;
   expanded: boolean;
+  [key: string]: any; // Allow optional properties
 }
 
 interface InstrumentType {
-  id: number;
-  category_id: number;
+  id: number | string;
+  category_id: number | string;
   name: string;
   code: string;
 }
 
 interface SelectedInstrument {
-  instrument_type_id: number;
+  instrument_type_id: number | string;
   instrument_type_name: string;
   instrument_type_code: string;
   brand_name: string;
@@ -28,6 +29,49 @@ interface SelectedInstrument {
   serial_number: string;
   maximum_capacity: string;
   accuracy_class?: string;
+  quantity?: number;
+  nominal_flow_rate?: string;
+  meter_class?: string;
+  ratio?: string;
+  max_admissible_pressure?: string;
+  max_temperature?: string;
+  meter_size_dn?: string;
+  diameter?: string;
+  position_hv_type?: string; // 'horizontal' | 'vertical'
+  sealing_mechanism_type?: string; // 'provided' | 'not_provided'
+  flow_direction_type?: string; // 'indicated' | 'not_indicated'
+  
+  // Electrical Meter Fields
+  meter_model?: string;
+  meter_type?: string; // 'electromechanical' | 'static'
+  nominal_voltage?: string;
+  nominal_frequency?: string;
+  maximum_current?: string;
+  transitional_current?: string;
+  minimum_current?: string;
+  starting_current?: string;
+  connection_type?: string; // 'direct', 'ct', 'ct_vt'
+  connection_mode?: string;
+  alternative_connection_mode?: string;
+  energy_flow_direction?: string;
+  meter_constant?: string;
+  clock_frequency?: string;
+  environment?: string;
+  ip_rating?: string;
+  terminal_arrangement?: string;
+  insulation_protection_class?: string;
+  temperature_lower?: string;
+  temperature_upper?: string;
+  humidity_class?: string;
+  hardware_version?: string;
+  software_version?: string;
+  remarks?: string;
+  test_voltage?: string;
+  test_frequency?: string;
+  test_connection_mode?: string;
+  test_remarks?: string;
+
+  serial_numbers?: string[]; // Array for dynamic serials
   manual_calibration_doc: File | null;
   specification_doc: File | null;
   [key: string]: any;
@@ -60,7 +104,7 @@ export class PatternSelectionComponent implements OnInit {
   instrumentCategories: InstrumentCategory[] = [];
   
   // Instrument Types by Category
-  instrumentTypesByCategory: { [key: number]: InstrumentType[] } = {};
+  instrumentTypesByCategory: { [key: string]: InstrumentType[] } = {}; // Changed key to string to support both
   
   // Selected Instruments with Details
   selectedInstruments: SelectedInstrument[] = [];
@@ -125,25 +169,143 @@ export class PatternSelectionComponent implements OnInit {
       return;
     }
 
-    this.patternApprovalService.getInstrumentCategories(this.selectedPatternTypeId).subscribe({
-      next: (response: any) => {
-        if (response.success) {
-          this.instrumentCategories = response.data.map((cat: any) => ({
-            ...cat,
-            expanded: true // Always expanded
-          }));
+    // Check for specific pattern types that have hardcoded categories
+    switch (this.selectedPatternTypeName) {
+      case 'Meter': // Changed from 'Meters' to match backend name 'Meter'
+        this.instrumentCategories = [
+          {
+            id: 'water-meter',
+            name: 'Water Meters',
+            icon: 'assets/icons/water-meter.svg',
+            description: 'Domestic and industrial water meters',
+            expanded: true,
+            code: 'WM'
+          },
+          {
+            id: 'flow-meter',
+            name: 'Flow Meter',
+            icon: 'assets/icons/flow-meter.svg',
+            description: 'General purpose flow meters',
+            expanded: true,
+            code: 'FM'
+          },
+          {
+            id: 'bulk-flow-meter',
+            name: 'Bulk Flow Meter',
+            icon: 'assets/icons/bulk-flow-meter.svg',
+            description: 'High volume flow measurement',
+            expanded: true,
+            code: 'BFM'
+          },
+          {
+            id: 'electrical-meter',
+            name: 'Electrical Meter',
+            icon: 'assets/icons/electrical-meter.svg',
+            description: 'Electricity consumption meters',
+            expanded: true,
+            code: 'EM'
+          }
+        ];
+        
+        // Pre-populate instrument types (sub-categories) for these hardcoded categories
+        this.instrumentTypesByCategory['water-meter'] = [
+            { id: 'standard-water-meter', category_id: 'water-meter', name: 'Standard Water Meter', code: 'SWM' }
+        ];
+        this.instrumentTypesByCategory['flow-meter'] = [
+            { id: 'standard-flow-meter', category_id: 'flow-meter', name: 'Standard Flow Meter', code: 'SFM' }
+        ];
+        this.instrumentTypesByCategory['bulk-flow-meter'] = [
+            { id: 'standard-bulk-flow-meter', category_id: 'bulk-flow-meter', name: 'Standard Bulk Flow Meter', code: 'SBFM' }
+        ];
+        this.instrumentTypesByCategory['electrical-meter'] = [
+            { id: 'standard-electrical-meter', category_id: 'electrical-meter', name: 'Standard Electrical Meter', code: 'SEM' }
+        ];
+        break;
 
-          // Automatically load instruments for each category
-          this.instrumentCategories.forEach(cat => {
-            this.loadInstrumentTypes(cat.id);
-          });
-        }
-      },
-      error: (error) => {
-        console.error('Error loading instrument categories:', error);
-        this.errorMessage = 'Failed to load instrument categories';
-      }
-    });
+      case 'Weighing Instrument':
+        this.instrumentCategories = [
+          {
+            id: 'counter-scale',
+            name: 'Counter Scale',
+            icon: 'assets/icons/weighing-scale.svg', // Generic icon
+            description: 'Counter scales for general weighing',
+            expanded: true,
+            code: 'CIS'
+          },
+          {
+            id: 'platform-scale',
+            name: 'Platform Scale',
+            icon: 'assets/icons/platform-scale.svg',
+            description: 'Heavy duty platform scales',
+            expanded: true,
+            code: 'P/M'
+          },
+          {
+            id: 'balance-scale',
+            name: 'Balance Scale',
+            icon: 'assets/icons/balance-scale.svg',
+            description: 'Precision balance scales',
+            expanded: true,
+            code: 'S/B'
+          },
+          {
+            id: 'spring-balance',
+            name: 'Spring Balance',
+            icon: 'assets/icons/spring-balance.svg',
+            description: 'Spring operated weighing devices',
+            expanded: true,
+            code: 'BS'
+          },
+          {
+            id: 'weighbridge',
+            name: 'Weighbridge',
+            icon: 'assets/icons/weighbridge.svg',
+            description: 'Large capacity vehicle weighing',
+            expanded: true,
+            code: 'W/B'
+          }
+        ];
+
+        // Pre-populate Standard types similar to Meter design
+        this.instrumentTypesByCategory['counter-scale'] = [
+            { id: 'standard-counter-scale', category_id: 'counter-scale', name: 'Standard Counter Scale', code: 'CIS' }
+        ];
+        this.instrumentTypesByCategory['platform-scale'] = [
+            { id: 'standard-platform-scale', category_id: 'platform-scale', name: 'Standard Platform Scale', code: 'P/M' }
+        ];
+        this.instrumentTypesByCategory['balance-scale'] = [
+            { id: 'standard-balance-scale', category_id: 'balance-scale', name: 'Standard Balance Scale', code: 'S/B' }
+        ];
+        this.instrumentTypesByCategory['spring-balance'] = [
+            { id: 'standard-spring-balance', category_id: 'spring-balance', name: 'Standard Spring Balance', code: 'BS' }
+        ];
+        this.instrumentTypesByCategory['weighbridge'] = [
+            { id: 'standard-weighbridge', category_id: 'weighbridge', name: 'Standard Weighbridge', code: 'W/B' }
+        ];
+        break;
+      default:
+        // Default behavior: load categories from the API
+        this.patternApprovalService.getInstrumentCategories(this.selectedPatternTypeId).subscribe({
+          next: (response: any) => {
+            if (response.success) {
+              this.instrumentCategories = response.data.map((cat: any) => ({
+                ...cat,
+                expanded: true // Always expanded
+              }));
+
+              // Automatically load instruments for each category
+              this.instrumentCategories.forEach(cat => {
+                this.loadInstrumentTypes(cat.id as number); // Cast to number for API call
+              });
+            }
+          },
+          error: (error) => {
+            console.error('Error loading instrument categories:', error);
+            this.errorMessage = 'Failed to load instrument categories';
+          }
+        });
+        break;
+    }
   }
 
   // toggleCategory removed as it is no longer needed
@@ -154,7 +316,9 @@ export class PatternSelectionComponent implements OnInit {
     
     // Load instrument types if not already loaded
     if (category.expanded && !this.instrumentTypesByCategory[category.id]) {
-      this.loadInstrumentTypes(category.id);
+        if (typeof category.id === 'number') {
+           this.loadInstrumentTypes(category.id);
+        }
     }
   }
 
@@ -180,8 +344,11 @@ export class PatternSelectionComponent implements OnInit {
     this.showChangePatternModal = false;
   }
 
-  loadInstrumentTypes(categoryId: number) {
-    this.patternApprovalService.getInstrumentTypesByCategory(categoryId).subscribe({
+  loadInstrumentTypes(categoryId: number | string) {
+    // Skip API call for hardcoded non-numeric categories (e.g. 'water-meter', 'flow-meter')
+    if (typeof categoryId === 'string' && isNaN(Number(categoryId))) return;
+
+    this.patternApprovalService.getInstrumentTypesByCategory(categoryId as any).subscribe({
       next: (response: any) => {
         if (response.success) {
           this.instrumentTypesByCategory[categoryId] = response.data;
@@ -223,9 +390,91 @@ export class PatternSelectionComponent implements OnInit {
       make: '',
       serial_number: '',
       maximum_capacity: '',
+      // Meter Fields Initialization
+      quantity: 1,
+      nominal_flow_rate: '',
+      meter_class: '',
+      ratio: '',
+      max_admissible_pressure: '',
+      max_temperature: '',
+      meter_size_dn: '',
+      diameter: '',
+      position_hv_type: '',
+      sealing_mechanism_type: '',
+      flow_direction_type: '',
+      
+      // Electrical Fields
+      meter_model: '',
+      meter_type: '',
+      nominal_voltage: '',
+      nominal_frequency: '',
+      maximum_current: '',
+      transitional_current: '',
+      minimum_current: '',
+      starting_current: '',
+      connection_type: '',
+      connection_mode: '',
+      alternative_connection_mode: '',
+      energy_flow_direction: '',
+      meter_constant: '',
+      clock_frequency: '',
+      environment: '',
+      ip_rating: '',
+      terminal_arrangement: '',
+      insulation_protection_class: '',
+      temperature_lower: '',
+      temperature_upper: '',
+      humidity_class: '',
+      hardware_version: '',
+      software_version: '',
+      remarks: '',
+      test_voltage: '',
+      test_frequency: '',
+      test_connection_mode: '',
+      test_remarks: '',
+
+      serial_numbers: [''], // Start with one serial number field
       manual_calibration_doc: null,
       specification_doc: null
     };
+  }
+
+  // Helper Methods
+  isFlowMeterCategory(): boolean {
+    const flowCategories = ['water-meter', 'flow-meter', 'bulk-flow-meter'];
+    return this.selectedInstrumentType && 
+           flowCategories.includes(this.selectedInstrumentType.category_id.toString()) ? true : false;
+  }
+
+  isElectricalMeterCategory(): boolean {
+    return this.selectedInstrumentType && 
+           this.selectedInstrumentType.category_id.toString() === 'electrical-meter' ? true : false;
+  }
+
+  onQuantityChange() {
+    if (!this.currentInstrument || !this.currentInstrument.quantity) return;
+    
+    const count = this.currentInstrument.quantity;
+    const currentSerials = this.currentInstrument.serial_numbers || [];
+    
+    // Adjust array size
+    if (count > currentSerials.length) {
+        // Add more fields
+        const toAdd = count - currentSerials.length;
+        for (let i = 0; i < toAdd; i++) {
+            currentSerials.push('');
+        }
+    } else if (count < currentSerials.length) {
+        // Remove excess fields
+        currentSerials.splice(count);
+    }
+    
+    this.currentInstrument.serial_numbers = currentSerials;
+  }
+
+  // Track by index for *ngFor
+  trackByIndex(index: number, obj: any): any {
+    return index;
   }
 
   onPatternTypeChange() {
@@ -287,10 +536,71 @@ export class PatternSelectionComponent implements OnInit {
   saveInstrumentDetails() {
     if (!this.currentInstrument) return;
 
-    // Validate required fields
-    if (!this.currentInstrument.brand_name || !this.currentInstrument.make || 
-        !this.currentInstrument.serial_number || !this.currentInstrument.maximum_capacity) {
-      this.errorMessage = 'Please fill in all instrument details';
+    let isValid = false;
+
+    if (this.isFlowMeterCategory()) {
+        // Flow Meter Validation
+        if (this.currentInstrument.brand_name && 
+            this.currentInstrument.quantity && 
+            this.currentInstrument.nominal_flow_rate && 
+            this.currentInstrument.meter_class && 
+            this.currentInstrument.max_temperature && 
+            this.currentInstrument.meter_size_dn && 
+            this.currentInstrument.diameter &&
+            this.currentInstrument.position_hv_type &&
+            this.currentInstrument.sealing_mechanism_type &&
+            this.currentInstrument.flow_direction_type) {
+            
+            // Check serial numbers
+            const serials = this.currentInstrument.serial_numbers || [];
+            const allSerialsFilled = serials.every(s => s && s.trim().length > 0);
+            
+            if (allSerialsFilled && serials.length === this.currentInstrument.quantity) {
+                isValid = true;
+            }
+        }
+    } else if (this.isElectricalMeterCategory()) {
+        // Electrical Meter Validation
+        if (this.currentInstrument.brand_name &&
+            this.currentInstrument.make && // Manufacturer
+            this.currentInstrument.meter_model &&
+            this.currentInstrument.quantity &&
+            this.currentInstrument.meter_type &&
+            this.currentInstrument.accuracy_class &&
+            this.currentInstrument.nominal_voltage &&
+            this.currentInstrument.nominal_frequency &&
+            this.currentInstrument.maximum_current &&
+            this.currentInstrument.minimum_current &&
+            this.currentInstrument.connection_type &&
+            this.currentInstrument.connection_mode &&
+            this.currentInstrument.energy_flow_direction &&
+            this.currentInstrument.meter_constant &&
+            this.currentInstrument.environment &&
+            this.currentInstrument.ip_rating &&
+            this.currentInstrument.temperature_lower &&
+            this.currentInstrument.temperature_upper &&
+            this.currentInstrument.humidity_class) {
+
+             // Check serial numbers
+             const serials = this.currentInstrument.serial_numbers || [];
+             const allSerialsFilled = serials.every(s => s && s.trim().length > 0);
+             
+             if (allSerialsFilled && serials.length === this.currentInstrument.quantity) {
+                 isValid = true;
+             }
+        }
+    } else {
+        // Standard Validation
+        if (this.currentInstrument.brand_name && 
+            this.currentInstrument.make && 
+            this.currentInstrument.serial_number && 
+            this.currentInstrument.maximum_capacity) {
+            isValid = true;
+        }
+    }
+
+    if (!isValid) {
+      this.errorMessage = 'Please fill in all required fields (marked *)';
       setTimeout(() => this.errorMessage = '', 3000);
       return;
     }
@@ -359,13 +669,57 @@ export class PatternSelectionComponent implements OnInit {
         instrument_type_id: instrument.instrument_type_id,
         brand_name: instrument.brand_name,
         make: instrument.make,
-        serial_number: instrument.serial_number,
+        // Use dynamically entered serial numbers if available, otherwise the single one
+        serial_number: instrument.serial_numbers && instrument.serial_numbers.length > 0 
+            ? instrument.serial_numbers.join(', ') 
+            : instrument.serial_number,
         maximum_capacity: instrument.maximum_capacity,
-        // Note: File uploads would need to be handled separately via FormData
-        // For now, we'll just save the metadata
+        
+        // Meter Specific Fields
+        quantity: instrument.quantity,
+        nominal_flow_rate: instrument.nominal_flow_rate,
+        meter_class: instrument.meter_class,
+        ratio: instrument.ratio,
+        max_admissible_pressure: instrument.max_admissible_pressure,
+        max_temperature: instrument.max_temperature,
+        meter_size_dn: instrument.meter_size_dn,
+        diameter: instrument.diameter,
+        position_hv_type: instrument.position_hv_type,
+        sealing_mechanism_type: instrument.sealing_mechanism_type,
+        flow_direction_type: instrument.flow_direction_type,
+
+        // Electrical Meter Fields
+        meter_model: instrument.meter_model,
+        meter_type: instrument.meter_type,
+        nominal_voltage: instrument.nominal_voltage,
+        nominal_frequency: instrument.nominal_frequency,
+        maximum_current: instrument.maximum_current,
+        transitional_current: instrument.transitional_current,
+        minimum_current: instrument.minimum_current,
+        starting_current: instrument.starting_current,
+        connection_type: instrument.connection_type,
+        connection_mode: instrument.connection_mode,
+        alternative_connection_mode: instrument.alternative_connection_mode,
+        energy_flow_direction: instrument.energy_flow_direction,
+        meter_constant: instrument.meter_constant,
+        clock_frequency: instrument.clock_frequency,
+        environment: instrument.environment,
+        ip_rating: instrument.ip_rating,
+        terminal_arrangement: instrument.terminal_arrangement,
+        insulation_protection_class: instrument.insulation_protection_class,
+        temperature_lower: instrument.temperature_lower,
+        temperature_upper: instrument.temperature_upper,
+        humidity_class: instrument.humidity_class,
+        hardware_version: instrument.hardware_version,
+        software_version: instrument.software_version,
+        remarks: instrument.remarks,
+        test_voltage: instrument.test_voltage,
+        test_frequency: instrument.test_frequency,
+        test_connection_mode: instrument.test_connection_mode,
+        test_remarks: instrument.test_remarks
       };
 
-      this.patternApprovalService.addInstrument(this.applicationId!, instrument.instrument_type_id).subscribe({
+      this.patternApprovalService.addInstrument(this.applicationId!, instrumentData).subscribe({
         next: (response: any) => {
           savedCount++;
           if (savedCount === this.selectedInstruments.length) {
