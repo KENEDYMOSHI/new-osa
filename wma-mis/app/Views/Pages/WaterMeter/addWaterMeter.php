@@ -35,9 +35,9 @@ $pageSession = \CodeIgniter\Config\Services::session();
 
                     <div class="row">
                         <div class="col-md-6 flex">
-                            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" onclick="openMeterModal()"><i class="far fa-plus"></i> Add Water Meter</button>
+                            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" onclick="openMeterModal()"><i class="far fa-plus"></i> Add Meter</button>
                             <button type="button" class="btn btn-success btn-sm" onclick="getWaterMeters()"><i class="far fa-list"></i>
-                                List Water Meters</button>
+                                List Meters</button>
 
                         </div>
 
@@ -95,7 +95,7 @@ $pageSession = \CodeIgniter\Config\Services::session();
         <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add Extra Water Meters</h5>
+                    <h5 class="modal-title">Add Extra Meters</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -188,7 +188,7 @@ $pageSession = \CodeIgniter\Config\Services::session();
         <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add Water Meters</h5>
+                    <h5 class="modal-title">Add Meters</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>

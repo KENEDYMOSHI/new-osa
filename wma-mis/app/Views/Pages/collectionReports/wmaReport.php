@@ -39,7 +39,7 @@
                                         <option value="<?= $key ?>"><?= $value ?></option>
                                     <?php endforeach; ?>
                                     <!-- <option value="sbl">Sandy & Ballast Lorries</option>
-                                    <option value="waterMeter">Water Meters</option>
+                                    <option value="waterMeter">Meters</option>
                                     <option value="prepackage">Pre Package</option>
                                     <option value="others">Others</option> -->
                                 </select>

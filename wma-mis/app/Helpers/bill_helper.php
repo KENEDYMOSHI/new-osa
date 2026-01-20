@@ -1193,7 +1193,7 @@ $code = [
     [
         'activity' => 'waterMeter',
         'code' => '142101210026',
-        'title' => 'Water Meter'
+        'title' => 'Meter'
     ],
 
 ];
@@ -1211,7 +1211,7 @@ function gfsCod()
         '142101210010' => 'CNG filling Station',
         '142101210011' => 'F/M – Flow Meter',
         '142101210012' => 'Ch/p - check pump',
-        '142101210013' => 'Water Meter',
+        '142101210013' => 'Meter',
         '142101210014' => 'Metrological Supervision (On Board & Shore Tanks)',
         '142101210015' => 'Pressure gauges',
         '142101210016' => 'Proving Tank',
@@ -1294,7 +1294,7 @@ function gfsCodes()
         '142101210010' => 'CNG filling Station',
         '142101210011' => 'F/M – Flow Meter',
         '142101210012' => 'Ch/p - check pump',
-        '142101210013' => 'Water Meter',
+        '142101210013' => 'Meter',
         '142101210014' => 'Metrological Supervision',
         '142101210015' => 'Pressure gauges',
         '142101210016' => 'Proving Tank',
@@ -1371,7 +1371,7 @@ function activityName($code = ''): string
             return ' Check pump ';
             break;
         case '142101210013':
-            return ' Water Meter ';
+            return ' Meter ';
             break;
         case '142101210014':
             return ' Metrological Supervision ';

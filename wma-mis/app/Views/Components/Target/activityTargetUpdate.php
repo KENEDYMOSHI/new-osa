@@ -14,7 +14,7 @@
 
                     <option value="vtc">Vehicle Tank Verification</option>
                     <option value="sbl">Sandy & Ballast Lorries</option>
-                    <option value="waterMeter">Water Meters</option>
+                    <option value="waterMeter">Meters</option>
                 </select>
             </div>
             <div class="form-group col-md-6">

@@ -1464,7 +1464,7 @@ class BillApiController extends ResourceController
             ['name' => 'CNG filling Station', 'code' => '142101210010'],
             ['name' => 'F/M – Flow Meter', 'code' => '142101210011'],
             ['name' => 'Ch/p - check pump', 'code' => '142101210012'],
-            ['name' => 'Water Meter', 'code' => '142101210013'],
+            ['name' => 'Meter', 'code' => '142101210013'],
             ['name' => 'Metrological Supervision (On Board & Shore Tanks)', 'code' => '142101210014'],
             ['name' => 'Pressure gauges', 'code' => '142101210015'],
             ['name' => 'Proving Tank', 'code' => '142101210016'],

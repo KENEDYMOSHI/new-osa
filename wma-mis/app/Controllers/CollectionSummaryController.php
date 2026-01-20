@@ -228,7 +228,7 @@ class CollectionSummaryController extends BaseController
             ],
             [
                 'code' => setting('Gfs.waterMeter'),
-                'name' => 'Water Meter',
+                'name' => 'Meter',
                 'url' => 'WaterMeterList/' . $center
             ],
             [

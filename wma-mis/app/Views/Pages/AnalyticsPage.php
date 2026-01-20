@@ -208,7 +208,7 @@
         <div class="col-md-4">
             <div class="card elevation-1">
                 <div class="card-header">
-                    WATER METER (<span id="waterMeterAmount"></span>)
+                    METER (<span id="waterMeterAmount"></span>)
                 </div>
                 <div class="card-body">
                     <div id="waterMeterProgress" class="the-progress mb-3">

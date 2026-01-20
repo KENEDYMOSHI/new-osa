@@ -450,7 +450,7 @@ function viewActivities(region) {
                      </td>
                  </tr>
                  <tr>
-                     <td>Water Meters</td>
+                     <td>Meters</td>
                      <td> Tsh ${formatNumber(waterMeterTotal)} Of ${formatNumber(cleanValue(waterMeterTarget))}</td>
                      <td>Tsh ${formatNumber(waterMeterPaid)}</td>
                      <td>Tsh ${formatNumber(waterMeterPending)}</td>

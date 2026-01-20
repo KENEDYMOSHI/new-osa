@@ -21,7 +21,7 @@ function reportTemplateAllActivities($collection)
 
     ],
     (object)[
-      'title' => 'Water Meters',
+      'title' => 'Meters',
       'tag' => 'waterMeter',
 
     ],

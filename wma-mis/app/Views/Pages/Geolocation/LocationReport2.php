@@ -62,7 +62,7 @@
                                 <option value="vtv">Vehicle Tank Verification</option>
                                 <option value="sbl">Sandy & Ballast Lorries</option>
                                 <option value="prepackage">Pre Package</option>
-                                <option value="waterMeter">Water Meters</option>
+                                <option value="waterMeter">Meters</option>
                                 <option value="fuelPump">Fuel Pump</option>
                                 <option value="fst">Fixed Storage Tank</option>
                                 <option value="bst">Bulk Storage Tank</option>

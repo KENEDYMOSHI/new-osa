@@ -324,6 +324,8 @@ export class PatternSelectionComponent implements OnInit {
 
   // Modal State
   showChangePatternModal = false;
+  showSaveConfirmModal = false;
+  attemptedSave = false; // Track if user attempted to save
 
 
 
@@ -342,6 +344,15 @@ export class PatternSelectionComponent implements OnInit {
 
   cancelChangePattern() {
     this.showChangePatternModal = false;
+  }
+
+  confirmSaveInstrument() {
+    this.showSaveConfirmModal = false;
+    this.proceedWithSave();
+  }
+
+  cancelSaveInstrument() {
+    this.showSaveConfirmModal = false;
   }
 
   loadInstrumentTypes(categoryId: number | string) {
@@ -363,6 +374,7 @@ export class PatternSelectionComponent implements OnInit {
 
   selectInstrumentType(instrumentType: InstrumentType) {
     this.selectedInstrumentType = instrumentType;
+    this.attemptedSave = false; // Reset validation state
     
     // Check if this is a Fuel Pump instrument
     if (this.isFuelPumpPattern() && instrumentType.name.toLowerCase().includes('standard')) {
@@ -533,11 +545,17 @@ export class PatternSelectionComponent implements OnInit {
     this.previewFileUrl = null;
   }
 
+  // Helper method to check if a field should show error styling
+  isFieldInvalid(fieldValue: any): boolean {
+    return this.attemptedSave && !fieldValue;
+  }
+
   saveInstrumentDetails() {
     if (!this.currentInstrument) return;
 
     let isValid = false;
 
+    // Validate based on instrument type
     if (this.isFlowMeterCategory()) {
         // Flow Meter Validation
         if (this.currentInstrument.brand_name && 
@@ -562,7 +580,7 @@ export class PatternSelectionComponent implements OnInit {
     } else if (this.isElectricalMeterCategory()) {
         // Electrical Meter Validation
         if (this.currentInstrument.brand_name &&
-            this.currentInstrument.make && // Manufacturer
+            this.currentInstrument.make && 
             this.currentInstrument.meter_model &&
             this.currentInstrument.quantity &&
             this.currentInstrument.meter_type &&
@@ -581,36 +599,65 @@ export class PatternSelectionComponent implements OnInit {
             this.currentInstrument.temperature_upper &&
             this.currentInstrument.humidity_class) {
 
-             // Check serial numbers
-             const serials = this.currentInstrument.serial_numbers || [];
-             const allSerialsFilled = serials.every(s => s && s.trim().length > 0);
-             
-             if (allSerialsFilled && serials.length === this.currentInstrument.quantity) {
-                 isValid = true;
-             }
+           // Check serial numbers
+           const serials = this.currentInstrument.serial_numbers || [];
+           const allSerialsFilled = serials.every(s => s && s.trim().length > 0);
+           
+           if (allSerialsFilled && serials.length === this.currentInstrument.quantity) {
+               isValid = true;
+           }
+        }
+    } else if (this.selectedPatternTypeName.toLowerCase().includes('weigh')) {
+        // Weighing Instrument Validation
+        if (this.currentInstrument.brand_name && 
+            this.currentInstrument.make && 
+            this.currentInstrument.quantity && 
+            this.currentInstrument.accuracy_class &&
+            this.currentInstrument.maximum_capacity &&
+            this.currentInstrument.manual_calibration_doc &&
+            this.currentInstrument.specification_doc) {
+            
+            // Check serial numbers
+            const serials = this.currentInstrument.serial_numbers || [];
+            const allSerialsFilled = serials.every(s => s && s.trim().length > 0);
+            
+            if (allSerialsFilled && serials.length === this.currentInstrument.quantity) {
+                isValid = true;
+            }
         }
     } else {
-        // Standard Validation
+        // Standard Validation (other instruments)
         if (this.currentInstrument.brand_name && 
             this.currentInstrument.make && 
             this.currentInstrument.serial_number && 
-            this.currentInstrument.maximum_capacity) {
+            this.currentInstrument.maximum_capacity &&
+            this.currentInstrument.manual_calibration_doc &&
+            this.currentInstrument.specification_doc) {
             isValid = true;
         }
     }
 
     if (!isValid) {
-      this.errorMessage = 'Please fill in all required fields (marked *)';
+      this.attemptedSave = true; // Mark that save was attempted
+      this.errorMessage = 'Please fill in all required fields (marked with *) and upload all required documents';
       setTimeout(() => this.errorMessage = '', 3000);
       return;
     }
 
-    // Add to selected instruments
+    // All validation passed - show confirmation modal
+    this.showSaveConfirmModal = true;
+  }
+
+  proceedWithSave() {
+    if (!this.currentInstrument) return;
+
+    // Validation already done in saveInstrumentDetails() - just save the instrument
     this.selectedInstruments.push({ ...this.currentInstrument });
     
     // Clear current instrument
     this.currentInstrument = null;
-    this.selectedInstrumentType = null; // Also clear selection to go back to list
+    this.selectedInstrumentType = null;
+    this.attemptedSave = false; // Reset attemptedSave for the next instrument
     
     this.successMessage = 'Instrument details saved successfully';
     setTimeout(() => this.successMessage = '', 3000);
@@ -618,6 +665,7 @@ export class PatternSelectionComponent implements OnInit {
 
   cancelInstrumentDetails() {
     this.currentInstrument = null;
+    this.attemptedSave = false; // Reset attemptedSave when cancelling
   }
 
   removeInstrument(index: number) {

@@ -200,7 +200,7 @@
                             <a href="<?= base_url() ?>/WaterMeterList" class="nav-link">
 
                                 <i class="fal fa-ring nav-icon"></i>
-                                <p>Water Meter</p>
+                                <p>Meter</p>
                             </a>
                         </li>
 

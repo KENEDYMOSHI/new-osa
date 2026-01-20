@@ -82,7 +82,7 @@
                     <span class="info-box-icon bg-primary elevation-2 p-10"><i class="fal fa-ring"></i></span>
 
                     <div class="info-box-content">
-                        <span class="info-box-number">Water Meters(<?= count($waterMeter) ?>)</span>
+                        <span class="info-box-number">Meters(<?= count($waterMeter) ?>)</span>
                         <span class="">Paid: Tsh <?= paidAmount($waterMeter); ?></span><br>
                         <span class="">Pending: Tsh <?= pendingAmount($waterMeter); ?></span>
                         <span class="info-box-number">Total: Tsh <?= totalAmount($waterMeter); ?></span>

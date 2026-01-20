@@ -143,7 +143,7 @@
         <div class="col-md-3">
             <div class="card elevation-1">
                 <div class="card-header">
-                    <b>Water Meters</b>
+                    <b>Meters</b>
                 </div>
                 <div class="card-body">
                     <div id="waterMeterProgress" class="the-progress mb-3">
@@ -265,7 +265,7 @@
             // sblAmount.textContent = data.sblCollectedAmount + ' Of ' + data.sblTargetAmount
 
 
-            //=================WATER METERS====================  
+            //=================METERS====================  
 
             const waterMeterProgress = document.querySelector('#waterMeterProgress')
             const waterMeterLabel = document.querySelector('#waterMeterLabel')

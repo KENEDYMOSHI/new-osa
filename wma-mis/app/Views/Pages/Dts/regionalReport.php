@@ -166,7 +166,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Inspection Of Water Meter</td>
+                                        <td>Inspection Of Meter</td>
                                         <td>Tsh <?= paidAmount($waterMeterCollection) ?></td>
                                         <td>
                                             Tsh <?= pendingAmount($waterMeterCollection) ?>

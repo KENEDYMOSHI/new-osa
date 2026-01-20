@@ -190,7 +190,7 @@
                 </tr>
                 <tr>
 
-                    <td>Water Meters</td>
+                    <td>Meters</td>
                     <td>Tsh <?= $allActivities['waterMeter']['totalWaterMeter'] ?></td>
                     <td>Tsh <?= $allActivities['waterMeter']['paidWaterMeter'] ?></td>
                     <td>Tsh <?= $allActivities['waterMeter']['pendingWaterMeter'] ?></td>

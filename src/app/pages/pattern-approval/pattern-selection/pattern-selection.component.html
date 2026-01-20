@@ -197,15 +197,11 @@
 
           <!-- Instrument Details Form (For other instruments) -->
           <div *ngIf="currentInstrument" class="p-6 max-h-[600px] overflow-y-auto">
-            <div class="mb-6 p-3 bg-[#F7941D]/10 rounded-lg flex justify-between items-center">
+            <div class="mb-6 p-3 bg-[#F7941D]/10 rounded-lg">
                 <div>
                      <p class="text-sm font-semibold text-gray-900">{{ currentInstrument.instrument_type_name }}</p>
                     <p class="text-xs text-gray-600">{{ currentInstrument.instrument_type_code }}</p>
                 </div>
-                <!-- Close/Cancel mini button for quick exit -->
-                <button (click)="cancelInstrumentDetails()" class="text-gray-500 hover:text-red-500">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -217,8 +213,9 @@
                     <input 
                       type="text" 
                       [(ngModel)]="currentInstrument.brand_name"
-                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                      [class]="isFieldInvalid(currentInstrument.brand_name) ? 'w-full px-4 py-2 border-2 border-red-500 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm' : 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm'"
                       placeholder="Enter brand name">
+                    <p *ngIf="isFieldInvalid(currentInstrument.brand_name)" class="text-red-500 text-xs mt-1">Brand Name is required</p>
                   </div>
 
                   <!-- Make -->
@@ -238,13 +235,41 @@
                       [(ngModel)]="currentInstrument.accuracy_class"
                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm bg-white">
                       <option value="" disabled selected>Select Accuracy Class</option>
-                      <option value="High Class (I & II)">High Class (I & II)</option>
-                      <option value="Normal Class (III & IV)">Normal Class (III & IV)</option>
+                      <option value="i">I</option>
+                      <option value="ii">II</option>
+                      <option value="iii">III</option>
+                      <option value="iv">IV</option>
                     </select>
                   </div>
 
-                  <!-- Serial Number -->
-                  <div>
+                  <!-- Quantity of Instrument (Only for Weighing Instrument) -->
+                  <div *ngIf="selectedPatternTypeName.toLowerCase().includes('weigh')">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Quantity of Instrument *</label>
+                    <input 
+                      type="number" 
+                      min="1"
+                      [(ngModel)]="currentInstrument.quantity"
+                      (input)="onQuantityChange()"
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                      placeholder="Enter quantity">
+                  </div>
+
+                  <!-- Serial Numbers (Dynamic - Only for Weighing Instrument) -->
+                  <div *ngIf="selectedPatternTypeName.toLowerCase().includes('weigh')" class="col-span-1 md:col-span-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <label class="block text-sm font-bold text-gray-700 mb-3">Serial Numbers ({{ currentInstrument.serial_numbers?.length || 0 }}) *</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        <div *ngFor="let sn of currentInstrument.serial_numbers; let i = index; trackBy: trackByIndex">
+                            <input 
+                              type="text" 
+                              [(ngModel)]="currentInstrument.serial_numbers![i]"
+                              class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-[#F7941D] focus:border-[#F7941D]"
+                              [placeholder]="'Serial No. ' + (i + 1)">
+                        </div>
+                    </div>
+                  </div>
+
+                  <!-- Serial Number (For non-Weighing Instruments) -->
+                  <div *ngIf="!selectedPatternTypeName.toLowerCase().includes('weigh')">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Serial Number *</label>
                     <input 
                       type="text" 
@@ -294,7 +319,7 @@
                       type="number" 
                       min="1"
                       [(ngModel)]="currentInstrument.quantity"
-                      (change)="onQuantityChange()"
+                      (input)="onQuantityChange()"
                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
                       placeholder="Enter quantity">
                   </div>
@@ -449,7 +474,7 @@
                   <!-- Quantity -->
                   <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Quantity of meter *</label>
-                    <input type="number" min="1" [(ngModel)]="currentInstrument.quantity" (change)="onQuantityChange()" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Enter quantity">
+                    <input type="number" min="1" [(ngModel)]="currentInstrument.quantity" (input)="onQuantityChange()" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Enter quantity">
                   </div>
                   
                   <!-- Dynamic Serial Numbers (Copied Logic) -->
@@ -496,9 +521,9 @@
                   <div class="col-span-1 md:col-span-2 pt-2">
                       <label class="block text-sm font-bold text-gray-700 mb-2">Connection Type *</label>
                       <div class="flex flex-wrap gap-4">
-                        <label class="flex items-center"><input type="radio" value="direct" name="conn_type" [(ngModel)]="currentInstrument.connection_type" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Direct-connected</span></label>
-                        <label class="flex items-center"><input type="radio" value="ct" name="conn_type" [(ngModel)]="currentInstrument.connection_type" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Current transformer</span></label>
-                        <label class="flex items-center"><input type="radio" value="ct_vt" name="conn_type" [(ngModel)]="currentInstrument.connection_type" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Current and Voltage transformers</span></label>
+                        <label class="flex items-center"><input type="radio" value="direct" name="conn_type" [(ngModel)]="currentInstrument.connection_type" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Direct-connected</span></label>
+                        <label class="flex items-center"><input type="radio" value="ct" name="conn_type" [(ngModel)]="currentInstrument.connection_type" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Current transformer</span></label>
+                        <label class="flex items-center"><input type="radio" value="ct_vt" name="conn_type" [(ngModel)]="currentInstrument.connection_type" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Current and Voltage transformers</span></label>
                       </div>
                   </div>
 
@@ -516,10 +541,10 @@
                    <div class="col-span-1 md:col-span-2 pt-2">
                        <label class="block text-sm font-bold text-gray-700 mb-2">Direction of energy flow / registers *</label>
                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                           <label class="flex items-center"><input type="radio" value="single_bi" name="energy_dir" [(ngModel)]="currentInstrument.energy_flow_direction" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Single-register, bi-directional</span></label>
-                           <label class="flex items-center"><input type="radio" value="single_pos" name="energy_dir" [(ngModel)]="currentInstrument.energy_flow_direction" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Single-register, positive direction only</span></label>
-                           <label class="flex items-center"><input type="radio" value="two_bi" name="energy_dir" [(ngModel)]="currentInstrument.energy_flow_direction" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Two-register, bi-directional</span></label>
-                           <label class="flex items-center"><input type="radio" value="single_uni" name="energy_dir" [(ngModel)]="currentInstrument.energy_flow_direction" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Single-register, uni-directional</span></label>
+                           <label class="flex items-center"><input type="radio" value="single_bi" name="energy_dir" [(ngModel)]="currentInstrument.energy_flow_direction" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Single-register, bi-directional</span></label>
+                           <label class="flex items-center"><input type="radio" value="single_pos" name="energy_dir" [(ngModel)]="currentInstrument.energy_flow_direction" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Single-register, positive direction only</span></label>
+                           <label class="flex items-center"><input type="radio" value="two_bi" name="energy_dir" [(ngModel)]="currentInstrument.energy_flow_direction" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Two-register, bi-directional</span></label>
+                           <label class="flex items-center"><input type="radio" value="single_uni" name="energy_dir" [(ngModel)]="currentInstrument.energy_flow_direction" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">Single-register, uni-directional</span></label>
                        </div>
                    </div>
 
@@ -556,21 +581,21 @@
                    <div class="col-span-1 md:col-span-2 pt-2">
                        <label class="block text-sm font-bold text-gray-700 mb-2">Lower specified temperature *</label>
                        <div class="flex flex-wrap gap-4">
-                           <label class="flex items-center"><input type="radio" value="-55" name="temp_low" [(ngModel)]="currentInstrument.temperature_lower" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">-55°C</span></label>
-                           <label class="flex items-center"><input type="radio" value="-40" name="temp_low" [(ngModel)]="currentInstrument.temperature_lower" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">-40°C</span></label>
-                           <label class="flex items-center"><input type="radio" value="-25" name="temp_low" [(ngModel)]="currentInstrument.temperature_lower" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">-25°C</span></label>
-                           <label class="flex items-center"><input type="radio" value="-10" name="temp_low" [(ngModel)]="currentInstrument.temperature_lower" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">-10°C</span></label>
-                           <label class="flex items-center"><input type="radio" value="+5" name="temp_low" [(ngModel)]="currentInstrument.temperature_lower" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">+5°C</span></label>
+                           <label class="flex items-center"><input type="radio" value="-55" name="temp_low" [(ngModel)]="currentInstrument.temperature_lower" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">-55°C</span></label>
+                           <label class="flex items-center"><input type="radio" value="-40" name="temp_low" [(ngModel)]="currentInstrument.temperature_lower" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">-40°C</span></label>
+                           <label class="flex items-center"><input type="radio" value="-25" name="temp_low" [(ngModel)]="currentInstrument.temperature_lower" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">-25°C</span></label>
+                           <label class="flex items-center"><input type="radio" value="-10" name="temp_low" [(ngModel)]="currentInstrument.temperature_lower" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">-10°C</span></label>
+                           <label class="flex items-center"><input type="radio" value="+5" name="temp_low" [(ngModel)]="currentInstrument.temperature_lower" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">+5°C</span></label>
                        </div>
                    </div>
                    <!-- Upper Temp -->
                    <div class="col-span-1 md:col-span-2 pt-2">
                        <label class="block text-sm font-bold text-gray-700 mb-2">Upper specified temperature *</label>
                        <div class="flex flex-wrap gap-4">
-                           <label class="flex items-center"><input type="radio" value="+30" name="temp_high" [(ngModel)]="currentInstrument.temperature_upper" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">+30°C</span></label>
-                           <label class="flex items-center"><input type="radio" value="+40" name="temp_high" [(ngModel)]="currentInstrument.temperature_upper" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">+40°C</span></label>
-                           <label class="flex items-center"><input type="radio" value="+55" name="temp_high" [(ngModel)]="currentInstrument.temperature_upper" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">+55°C</span></label>
-                           <label class="flex items-center"><input type="radio" value="+70" name="temp_high" [(ngModel)]="currentInstrument.temperature_upper" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">+70°C</span></label>
+                           <label class="flex items-center"><input type="radio" value="+30" name="temp_high" [(ngModel)]="currentInstrument.temperature_upper" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">+30°C</span></label>
+                           <label class="flex items-center"><input type="radio" value="+40" name="temp_high" [(ngModel)]="currentInstrument.temperature_upper" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">+40°C</span></label>
+                           <label class="flex items-center"><input type="radio" value="+55" name="temp_high" [(ngModel)]="currentInstrument.temperature_upper" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">+55°C</span></label>
+                           <label class="flex items-center"><input type="radio" value="+70" name="temp_high" [(ngModel)]="currentInstrument.temperature_upper" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">+70°C</span></label>
                        </div>
                    </div>
                    
@@ -578,9 +603,9 @@
                    <div class="col-span-1 md:col-span-2 pt-2">
                        <label class="block text-sm font-bold text-gray-700 mb-2">Humidity class *</label>
                        <div class="flex flex-wrap gap-6">
-                           <label class="flex items-center"><input type="radio" value="H1" name="hum_class" [(ngModel)]="currentInstrument.humidity_class" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">H1</span></label>
-                           <label class="flex items-center"><input type="radio" value="H2" name="hum_class" [(ngModel)]="currentInstrument.humidity_class" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">H2</span></label>
-                           <label class="flex items-center"><input type="radio" value="H3" name="hum_class" [(ngModel)]="currentInstrument.humidity_class" class="text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">H3</span></label>
+                           <label class="flex items-center"><input type="radio" value="H1" name="hum_class" [(ngModel)]="currentInstrument.humidity_class" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">H1</span></label>
+                           <label class="flex items-center"><input type="radio" value="H2" name="hum_class" [(ngModel)]="currentInstrument.humidity_class" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">H2</span></label>
+                           <label class="flex items-center"><input type="radio" value="H3" name="hum_class" [(ngModel)]="currentInstrument.humidity_class" class="w-5 h-5 text-blue-600 focus:ring-blue-500"><span class="ml-2 text-sm">H3</span></label>
                        </div>
                    </div>
 
@@ -881,6 +906,52 @@
       </button>
       <button 
         (click)="cancelChangePattern()" 
+        class="w-full sm:w-auto px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Save Instrument Confirmation Modal -->
+<div *ngIf="showSaveConfirmModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
+  <!-- Backdrop -->
+  <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" (click)="cancelSaveInstrument()"></div>
+
+  <!-- Modal Card -->
+  <div class="relative bg-white rounded-2xl shadow-xl transform transition-all sm:w-full sm:max-w-md overflow-hidden">
+    <div class="p-6">
+      <div class="flex items-start space-x-4">
+        <!-- Icon -->
+        <div class="flex-shrink-0 w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
+          <svg class="w-6 h-6 text-[#F7941D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        
+        <!-- Content -->
+        <div class="flex-1">
+          <h3 class="text-lg font-bold text-gray-900 mb-2">Save Instrument Details?</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">
+            Are you sure you want to save this instrument? 
+            <br><br>
+            <span class="text-orange-600 font-medium">Warning:</span> Once saved, you will <strong>NOT</strong> be able to edit this instrument's details.
+            <br><br>
+            Please review all information carefully before confirming.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="bg-gray-50 px-6 py-4 flex flex-row-reverse gap-3">
+      <button 
+        (click)="confirmSaveInstrument()" 
+        class="w-full sm:w-auto px-4 py-2 bg-[#F7941D] hover:bg-[#E58310] text-white text-sm font-medium rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F7941D]">
+        Yes, Save Instrument
+      </button>
+      <button 
+        (click)="cancelSaveInstrument()" 
         class="w-full sm:w-auto px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300">
         Cancel
       </button>

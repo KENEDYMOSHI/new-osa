@@ -87,17 +87,17 @@
                 </div>
                 <div class="card col-md-12">
 
-                    <div class="card-header">Water Meters</div>
+                    <div class="card-header">Meters</div>
                     <div class="card-body row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="my-input">Water Meters </label>
+                                <label for="my-input">Meters </label>
                                 <input name="waterMeter" id="waterMeter" class="form-control" type="number" min="0" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="my-input">Water Meters Amount</label>
+                                <label for="my-input">Meters Amount</label>
                                 <input name="waterMeterAmt" id="waterMeterAmt" class="form-control" type="number" min="0" required>
                             </div>
                         </div>

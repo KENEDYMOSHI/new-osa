@@ -735,7 +735,7 @@
                             <a href="#" class="nav-link">
                                 <i class="fal fa-ring nav-icon"></i>
                                 <p>
-                                    Water Meter
+                                    Meter
                                     <i class="right fal fa-angle-left"></i>
                                 </p>
                             </a>
@@ -746,7 +746,7 @@
                                     <li class="nav-item">
                                         <a href="<?= base_url('addWaterMeter') ?>" class="nav-link">
                                             <i class="fal fa-plus nav-icon"></i>
-                                            <p>Add Water Meter</p>
+                                            <p>Add Meter</p>
                                         </a>
                                     </li>
                                 <?php endif; ?>
@@ -754,7 +754,7 @@
                                 <li class="nav-item">
                                     <a href="<?= base_url('WaterMeterList/' . $center) ?>" class="nav-link">
                                         <i class="fal fa-clipboard-list-check nav-icon"></i>
-                                        <p>Registered Water Meters</p>
+                                        <p>Registered Meters</p>
                                     </a>
                                 </li>
 

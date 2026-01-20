@@ -178,7 +178,7 @@ class WaterMeter extends BaseController
                         'status' => 1,
                         // 'meter' => $this->waterMeterModel->getMetersByBatchId($data['hash'][0]),
                         'meters' => $notBilled,
-                        'msg' => 'Water Meters Added',
+                        'msg' => 'Meters Added',
                         'token' => $this->token
                     ]);
                 } else {
@@ -346,7 +346,7 @@ class WaterMeter extends BaseController
                         'status' => 1,
                         // 'meter' => $this->waterMeterModel->getMetersByBatchId($data['hash'][0]),
                         'meters' => $notBilled,
-                        'msg' => 'Water Meters Added',
+                        'msg' => 'Meters Added',
                         'token' => $this->token
                     ]);
                 } else {
@@ -449,7 +449,7 @@ class WaterMeter extends BaseController
         }
     }
 
-    //=================Publishing Water meter In transaction table====================
+    //=================Publishing Meter In transaction table====================
 
     public function publishWaterMeterData()
     {
@@ -544,7 +544,7 @@ class WaterMeter extends BaseController
                     'extendedExpiryDate' => (new DateTime())->modify('+360 days')->format('Y-m-d\TH:i:s'),
                     'PyrId' =>  $customer->hash,
                     'PyrName' =>  $customer->name,
-                    'BillDesc' =>  'Water Meters Verification',
+                    'BillDesc' =>  'Meters Verification',
                     'BillGenDt' => date('Y-m-d\TH:i:s'),
                     'BillGenBy' =>   $this->getUser()->name,
                     'CollectionCenter' =>   $this->collectionCenter,
@@ -661,8 +661,8 @@ class WaterMeter extends BaseController
         $data['validation'] = null;
 
         $data['page'] = [
-            "title" => "Water Meter",
-            "heading" => "Water Meter",
+            "title" => "Meter",
+            "heading" => "Meter",
         ];
         $data['statusResult'] = ['Pass', 'Rejected'];
         $data['genderValues'] = ['Male', 'Female'];
@@ -678,8 +678,8 @@ class WaterMeter extends BaseController
 
         try {
             $data['page'] = [
-                "title" => "Verified  Water Meters",
-                "heading" => "Verified  Water Meters",
+                "title" => "Verified  Meters",
+                "heading" => "Verified  Meters",
             ];
 
 

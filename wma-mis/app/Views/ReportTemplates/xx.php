@@ -216,12 +216,12 @@
          $data['sblSummary'] = $sblSummary;
          $dompdf->loadHtml(view('ReportTemplates/sblReport',$data));
          ##################################
-         ##############WATER METER#################
+         ##############METER#################
          ###################################
               
                break;
            case 'water':
-            $title = 'Water Meters ' .$reportTitle;
+            $title = 'Meters ' .$reportTitle;
             //=================check payment status and render a report====================
        switch ($status) {
         case 'total':
