@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { PatternApprovalService } from '../../../services/pattern-approval.service';
+import { FuelPumpFormComponent } from '../fuel-pump-form/fuel-pump-form.component';
 
 interface InstrumentCategory {
   id: number;
@@ -35,7 +36,7 @@ interface SelectedInstrument {
 @Component({
   selector: 'app-pattern-selection',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FuelPumpFormComponent],
   templateUrl: './pattern-selection.component.html',
   styleUrl: './pattern-selection.component.css'
 })
@@ -81,6 +82,9 @@ export class PatternSelectionComponent implements OnInit {
 
   // Application ID (if editing existing)
   applicationId: number | null = null;
+  
+  // Fuel Pump Form State
+  showFuelPumpForm = false;
 
   constructor(
     private patternApprovalService: PatternApprovalService,
@@ -91,6 +95,11 @@ export class PatternSelectionComponent implements OnInit {
     this.loadPatternTypes();
     // Don't load categories immediately, wait for pattern type selection
     // this.loadInstrumentCategories(); 
+  }
+  
+  // Check if selected pattern is Fuel Pump
+  isFuelPumpPattern(): boolean {
+    return this.selectedPatternTypeName.toLowerCase().includes('fuel');
   }
 
   loadPatternTypes() {
@@ -188,6 +197,12 @@ export class PatternSelectionComponent implements OnInit {
   selectInstrumentType(instrumentType: InstrumentType) {
     this.selectedInstrumentType = instrumentType;
     
+    // Check if this is a Fuel Pump instrument
+    if (this.isFuelPumpPattern() && instrumentType.name.toLowerCase().includes('standard')) {
+      this.showFuelPumpForm = true;
+      return;
+    }
+    
     // Check if already selected
     const alreadySelected = this.selectedInstruments.find(
       i => i.instrument_type_id === instrumentType.id
@@ -214,7 +229,20 @@ export class PatternSelectionComponent implements OnInit {
   }
 
   onPatternTypeChange() {
-    // Load instrument categories when pattern type changes
+    // Strict Session Reset
+    this.selectedInstruments = [];
+    this.currentInstrument = null;
+    this.selectedInstrumentType = null;
+    this.instrumentCategories = [];
+    this.instrumentTypesByCategory = {};
+    this.showFuelPumpForm = false;
+    this.errorMessage = '';
+    this.successMessage = '';
+    
+    // Clear Fuel Pump Draft from LocalStorage
+    localStorage.removeItem('fuelPumpFormDraft');
+
+    // Load instrument categories for the new pattern type
     if (this.selectedPatternTypeId) {
       this.loadInstrumentCategories();
     }
@@ -360,10 +388,46 @@ export class PatternSelectionComponent implements OnInit {
 
   resetForm() {
     this.selectedPatternTypeId = null;
+    this.instrumentCategories = [];
     this.selectedInstruments = [];
     this.currentInstrument = null;
     this.applicationId = null;
+    this.showFuelPumpForm = false;
     this.successMessage = '';
     this.errorMessage = '';
+  }
+  
+  // Fuel Pump Form Handlers
+  onFuelPumpFormSubmitted(formData: FormData) {
+    this.isSaving = true;
+    
+    // Create application first
+    this.patternApprovalService.createApplication({
+      pattern_type_id: this.selectedPatternTypeId
+    }).subscribe({
+      next: (response: any) => {
+        if (response.success) {
+          this.applicationId = response.data.id;
+          
+          // For now, just show success message
+          // You can add the fuel pump submission endpoint later
+          this.isSaving = false;
+          this.successMessage = 'Fuel pump application submitted successfully!';
+          setTimeout(() => {
+            this.resetForm();
+          }, 2000);
+        }
+      },
+      error: (error) => {
+        console.error('Error creating application:', error);
+        this.errorMessage = 'Failed to create application';
+        this.isSaving = false;
+      }
+    });
+  }
+  
+  onFuelPumpFormCancelled() {
+    this.showFuelPumpForm = false;
+    this.selectedInstrumentType = null;
   }
 }

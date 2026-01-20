@@ -1,0 +1,1119 @@
+<div class="fuel-pump-form-content">
+  <!-- Progress Indicator (Compact) -->
+  <div class="mb-4 pb-4 border-b border-gray-200">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs font-semibold text-gray-700">Step {{ currentStep }} of {{ totalSteps }}</span>
+      <span class="text-xs text-gray-500">{{ (currentStep / totalSteps * 100).toFixed(0) }}% Complete</span>
+    </div>
+    <div class="w-full bg-gray-200 rounded-full h-1.5">
+      <div class="bg-[#F7941D] h-1.5 rounded-full transition-all duration-300" [style.width.%]="(currentStep / totalSteps * 100)"></div>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage" class="bg-red-50 border-l-4 border-red-500 rounded p-3 mb-4">
+    <p class="text-xs font-medium text-red-800">{{ errorMessage }}</p>
+  </div>
+
+  <!-- Form Steps -->
+  <div class="form-steps">
+    
+    <!-- Step 1: Manufacturer Details -->
+    <div *ngIf="currentStep === 1">
+      <h3 class="text-lg font-bold text-gray-900 mb-3">Manufacturer Details</h3>
+      
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            Manufacturer Name <span class="text-red-500">*</span>
+          </label>
+          <input type="text" [(ngModel)]="formData.manufacturerName"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                 placeholder="Enter manufacturer name">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            Country of Manufacture <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <!-- Selected Value Display -->
+            <div (click)="toggleCountryDropdown()" 
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent bg-white text-sm cursor-pointer flex justify-between items-center">
+              <span [class.text-gray-400]="!formData.countryOfManufacture">
+                {{ formData.countryOfManufacture || 'Select country' }}
+              </span>
+              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </div>
+            
+            <!-- Dropdown Menu -->
+            <div *ngIf="showCountryDropdown" 
+                 class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-hidden">
+              <!-- Search Input -->
+              <div class="p-2 border-b border-gray-200">
+                <input type="text" 
+                       [(ngModel)]="countrySearchTerm"
+                       (ngModelChange)="filterCountries()"
+                       class="w-full px-3 py-2 border border-[#F7941D] rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                       placeholder="Search nationality..."
+                       (click)="$event.stopPropagation()">
+              </div>
+              
+              <!-- Country List -->
+              <div class="overflow-y-auto max-h-48">
+                <div *ngFor="let country of filteredCountries"
+                     (click)="selectCountry(country)"
+                     class="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                     [class.bg-gray-100]="formData.countryOfManufacture === country">
+                  {{ country }}
+                </div>
+                <div *ngIf="filteredCountries.length === 0" class="px-3 py-2 text-sm text-gray-500 text-center">
+                  No countries found
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Fuel Pump Identification -->
+    <div *ngIf="currentStep === 2" class="space-y-4">
+      <h3 class="text-lg font-bold text-gray-900 mb-3">Fuel Pump Identification</h3>
+      
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            Make / Brand <span class="text-red-500">*</span>
+          </label>
+          <input type="text" [(ngModel)]="formData.make"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                 placeholder="Enter make/brand">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            Model <span class="text-red-500">*</span>
+          </label>
+          <input type="text" [(ngModel)]="formData.model"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                 placeholder="Enter model">
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            Quantity of Pumps <span class="text-red-500">*</span>
+          </label>
+          <input type="number" [(ngModel)]="formData.quantityOfPumps" (ngModelChange)="onQuantityChange()" min="1"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                 placeholder="Enter quantity">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            Manufacturing Year
+          </label>
+          <input type="text" [(ngModel)]="formData.manufacturingYear"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                 placeholder="e.g., 2024">
+        </div>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Serial Numbers <span class="text-red-500">*</span>
+        </label>
+        <div class="grid grid-cols-2 gap-2">
+          <div *ngFor="let serial of formData.serialNumbers; let i = index">
+            <input type="text" [(ngModel)]="formData.serialNumbers[i]"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                   [placeholder]="'Serial #' + (i + 1)">
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Each serial number must be unique</p>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            Number of Nozzles <span class="text-red-500">*</span>
+          </label>
+          <input type="number" [(ngModel)]="formData.numberOfNozzles" min="1"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                 placeholder="Enter number">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            Dispenser Type <span class="text-red-500">*</span>
+          </label>
+          <select [(ngModel)]="formData.dispenserType"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent bg-white text-sm">
+            <option value="">Select type</option>
+            <option *ngFor="let type of dispenserTypeOptions" [value]="type">{{ type }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Metrological Characteristics -->
+    <div *ngIf="currentStep === 3" class="space-y-4">
+      <h3 class="text-lg font-bold text-gray-900 mb-3">Metrological Characteristics</h3>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Measured Quantity
+        </label>
+        <input type="text" [value]="formData.measuredQuantity" disabled
+               class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 text-sm">
+      </div>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Fuel Type <span class="text-red-500">*</span>
+        </label>
+        <div class="grid grid-cols-2 gap-2">
+          <label *ngFor="let type of fuelTypeOptions" class="flex items-center space-x-2 cursor-pointer text-sm">
+            <input type="radio" [(ngModel)]="formData.fuelType" [value]="type"
+                   class="w-4 h-4 text-[#F7941D] border-gray-300 focus:ring-[#F7941D]">
+            <span class="text-gray-700">{{ type }}</span>
+          </label>
+        </div>
+        <div *ngIf="formData.fuelType === 'Other'" class="mt-2">
+          <input type="text" [(ngModel)]="formData.otherFuelType"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                 placeholder="Specify other fuel type">
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            Min Flow Rate (L/min) <span class="text-red-500">*</span>
+          </label>
+          <input type="number" [(ngModel)]="formData.minFlowRate" min="0" step="0.1"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                 placeholder="Qmin">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            Max Flow Rate (L/min) <span class="text-red-500">*</span>
+          </label>
+          <input type="number" [(ngModel)]="formData.maxFlowRate" min="0" step="0.1"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                 placeholder="Qmax">
+        </div>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Min Measured Volume (Litres) <span class="text-red-500">*</span>
+        </label>
+        <input type="number" [(ngModel)]="formData.minMeasuredVolume" min="0" step="0.1"
+               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+               placeholder="Vmin">
+      </div>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Operating Temperature Range (°C) <span class="text-red-500">*</span>
+        </label>
+        <div class="grid grid-cols-2 gap-2">
+          <input type="number" [(ngModel)]="formData.operatingTempMin" step="1"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                 placeholder="Min">
+          <input type="number" [(ngModel)]="formData.operatingTempMax" step="1"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                 placeholder="Max">
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Accuracy & Performance -->
+    <div *ngIf="currentStep === 4" class="space-y-4">
+      <h3 class="text-lg font-bold text-gray-900 mb-3">Accuracy & Performance</h3>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Declared Accuracy Class <span class="text-red-500">*</span>
+        </label>
+        <input type="text" [(ngModel)]="formData.declaredAccuracyClass"
+               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+               placeholder="e.g., ±0.5%">
+      </div>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Maximum Permissible Error <span class="text-red-500">*</span>
+        </label>
+        <input type="text" [(ngModel)]="formData.maxPermissibleError"
+               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+               placeholder="Enter maximum permissible error">
+      </div>
+    </div>
+
+    <!-- Step 5: Indicating & Power System -->
+    <div *ngIf="currentStep === 5" class="space-y-4">
+      <h3 class="text-lg font-bold text-gray-900 mb-3">Indicating & Power System</h3>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Volume Indicator Type <span class="text-red-500">*</span>
+        </label>
+        <div class="flex space-x-4">
+          <label class="flex items-center space-x-2 cursor-pointer text-sm">
+            <input type="radio" name="volumeIndicatorType" [(ngModel)]="formData.volumeIndicatorType" value="Mechanical"
+                   class="w-4 h-4 text-[#F7941D] border-gray-300 focus:ring-[#F7941D]">
+            <span class="text-gray-700">Mechanical</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer text-sm">
+            <input type="radio" name="volumeIndicatorType" [(ngModel)]="formData.volumeIndicatorType" value="Electronic"
+                   class="w-4 h-4 text-[#F7941D] border-gray-300 focus:ring-[#F7941D]">
+            <span class="text-gray-700">Electronic</span>
+          </label>
+        </div>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Price Display <span class="text-red-500">*</span>
+        </label>
+        <div class="flex space-x-4">
+          <label class="flex items-center space-x-2 cursor-pointer text-sm">
+            <input type="radio" name="priceDisplay" [(ngModel)]="formData.priceDisplay" value="Yes"
+                   class="w-4 h-4 text-[#F7941D] border-gray-300 focus:ring-[#F7941D]">
+            <span class="text-gray-700">Yes</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer text-sm">
+            <input type="radio" name="priceDisplay" [(ngModel)]="formData.priceDisplay" value="No"
+                   class="w-4 h-4 text-[#F7941D] border-gray-300 focus:ring-[#F7941D]">
+            <span class="text-gray-700">No</span>
+          </label>
+        </div>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Display Location <span class="text-red-500">*</span>
+        </label>
+        <div class="space-y-2">
+          <label class="flex items-center space-x-2 cursor-pointer text-sm">
+            <input type="checkbox" [checked]="isChecked(formData.displayLocation, 'Customer side')"
+                   (change)="toggleCheckbox(formData.displayLocation, 'Customer side'); onDisplayLocationChange('Customer side')"
+                   class="w-4 h-4 text-[#F7941D] border-gray-300 rounded focus:ring-[#F7941D]">
+            <span class="text-gray-700">Customer side</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer text-sm">
+            <input type="checkbox" [checked]="isChecked(formData.displayLocation, 'Operator side')"
+                   (change)="toggleCheckbox(formData.displayLocation, 'Operator side'); onDisplayLocationChange('Operator side')"
+                   class="w-4 h-4 text-[#F7941D] border-gray-300 rounded focus:ring-[#F7941D]">
+            <span class="text-gray-700">Operator side</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer text-sm">
+            <input type="checkbox" [checked]="isChecked(formData.displayLocation, 'Both')"
+                   (change)="toggleCheckbox(formData.displayLocation, 'Both'); onDisplayLocationChange('Both')"
+                   class="w-4 h-4 text-[#F7941D] border-gray-300 rounded focus:ring-[#F7941D]">
+            <span class="text-gray-700">Both (selects all)</span>
+          </label>
+        </div>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Power Supply <span class="text-red-500">*</span>
+        </label>
+        <div class="grid grid-cols-2 gap-2">
+          <label *ngFor="let power of powerSupplyOptions" class="flex items-center space-x-2 cursor-pointer text-sm">
+            <input type="checkbox" [checked]="isChecked(formData.powerSupply, power)"
+                   (change)="toggleCheckbox(formData.powerSupply, power)"
+                   class="w-4 h-4 text-[#F7941D] border-gray-300 rounded focus:ring-[#F7941D]">
+            <span class="text-gray-700">{{ power }}</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6: Software Information (Conditional) -->
+    <div *ngIf="currentStep === 6" class="space-y-4">
+      <h3 class="text-lg font-bold text-gray-900 mb-3">Software Information</h3>
+      
+      <div *ngIf="!shouldShowSoftwareSection()" class="text-center py-8">
+        <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <p class="text-sm text-gray-600">Only required for electronic pumps</p>
+      </div>
+      
+      <div *ngIf="shouldShowSoftwareSection()">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              Software Version <span class="text-red-500">*</span>
+            </label>
+            <input type="text" [(ngModel)]="formData.softwareVersion"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                   placeholder="e.g., v2.1.5">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              Software Legally Relevant <span class="text-red-500">*</span>
+            </label>
+            <div class="flex space-x-4">
+              <label class="flex items-center space-x-2 cursor-pointer text-sm">
+                <input type="radio" [(ngModel)]="formData.softwareLegallyRelevant" value="Yes"
+                       class="w-4 h-4 text-[#F7941D] border-gray-300 focus:ring-[#F7941D]">
+                <span class="text-gray-700">Yes</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer text-sm">
+                <input type="radio" [(ngModel)]="formData.softwareLegallyRelevant" value="No"
+                       class="w-4 h-4 text-[#F7941D] border-gray-300 focus:ring-[#F7941D]">
+                <span class="text-gray-700">No</span>
+              </label>
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              Software Protection Method <span class="text-red-500">*</span>
+            </label>
+            <div class="grid grid-cols-2 gap-2">
+              <label *ngFor="let method of softwareProtectionOptions" class="flex items-center space-x-2 cursor-pointer text-sm">
+                <input type="checkbox" [checked]="isChecked(formData.softwareProtectionMethod, method)"
+                       (change)="toggleCheckbox(formData.softwareProtectionMethod, method)"
+                       class="w-4 h-4 text-[#F7941D] border-gray-300 rounded focus:ring-[#F7941D]">
+                <span class="text-gray-700">{{ method }}</span>
+              </label>
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              Event Log Available <span class="text-red-500">*</span>
+            </label>
+            <div class="flex space-x-4">
+              <label class="flex items-center space-x-2 cursor-pointer text-sm">
+                <input type="radio" [(ngModel)]="formData.eventLogAvailable" value="Yes"
+                       class="w-4 h-4 text-[#F7941D] border-gray-300 focus:ring-[#F7941D]">
+                <span class="text-gray-700">Yes</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer text-sm">
+                <input type="radio" [(ngModel)]="formData.eventLogAvailable" value="No"
+                       class="w-4 h-4 text-[#F7941D] border-gray-300 focus:ring-[#F7941D]">
+                <span class="text-gray-700">No</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7: Sealing & Security -->
+    <div *ngIf="currentStep === 7" class="space-y-4">
+      <h3 class="text-lg font-bold text-gray-900 mb-3">Sealing & Security</h3>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Adjustment Points Requiring Sealing <span class="text-red-500">*</span>
+        </label>
+        <textarea [(ngModel)]="formData.adjustmentPoints" rows="3"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                  placeholder="Describe all adjustment points..."></textarea>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Seal Type <span class="text-red-500">*</span>
+        </label>
+        <div class="grid grid-cols-2 gap-2">
+          <label *ngFor="let seal of sealTypeOptions" class="flex items-center space-x-2 cursor-pointer text-sm">
+            <input type="checkbox" [checked]="isChecked(formData.sealType, seal)"
+                   (change)="toggleCheckbox(formData.sealType, seal)"
+                   class="w-4 h-4 text-[#F7941D] border-gray-300 rounded focus:ring-[#F7941D]">
+            <span class="text-gray-700">{{ seal }}</span>
+          </label>
+        </div>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Seal Locations <span class="text-red-500">*</span>
+        </label>
+        <textarea [(ngModel)]="formData.sealLocations" rows="3"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+                  placeholder="Describe seal locations..."></textarea>
+      </div>
+    </div>
+
+    <!-- Step 8: Installation Information -->
+    <div *ngIf="currentStep === 8" class="space-y-4">
+      <h3 class="text-lg font-bold text-gray-900 mb-3">Installation Information</h3>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Intended Installation <span class="text-red-500">*</span>
+        </label>
+        <div class="grid grid-cols-2 gap-2">
+          <label *ngFor="let installation of installationOptions" class="flex items-center space-x-2 cursor-pointer text-sm">
+            <input type="checkbox" [checked]="isChecked(formData.intendedInstallation, installation)"
+                   (change)="toggleCheckbox(formData.intendedInstallation, installation)"
+                   class="w-4 h-4 text-[#F7941D] border-gray-300 rounded focus:ring-[#F7941D]">
+            <span class="text-gray-700">{{ installation }}</span>
+          </label>
+        </div>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Intended Country of Use <span class="text-red-500">*</span>
+        </label>
+        <input type="text" [(ngModel)]="formData.intendedCountryOfUse"
+               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
+               placeholder="Enter country">
+      </div>
+      
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          Installation Manual Available <span class="text-red-500">*</span>
+        </label>
+        <div class="flex space-x-4">
+          <label class="flex items-center space-x-2 cursor-pointer text-sm">
+            <input type="radio" [(ngModel)]="formData.installationManualAvailable" value="Yes"
+                   class="w-4 h-4 text-[#F7941D] border-gray-300 focus:ring-[#F7941D]">
+            <span class="text-gray-700">Yes</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer text-sm">
+            <input type="radio" [(ngModel)]="formData.installationManualAvailable" value="No"
+                   class="w-4 h-4 text-[#F7941D] border-gray-300 focus:ring-[#F7941D]">
+            <span class="text-gray-700">No</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 9: Supporting Documents -->
+    <div *ngIf="currentStep === 9" class="space-y-3">
+      <h3 class="text-lg font-bold text-gray-900 mb-3">Supporting Documents</h3>
+      
+      <!-- Calibration Manual -->
+      <div class="border border-gray-200 rounded-lg p-3">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <h4 class="text-sm font-semibold text-gray-900">Calibration Manual <span class="text-red-500">*</span></h4>
+            <p class="text-xs text-gray-500 mb-2">PDF, JPG, PNG (Max 10MB)</p>
+            <p *ngIf="formData.documents.calibrationManual" class="text-xs text-gray-700 truncate max-w-xs">
+              {{ formData.documents.calibrationManual.name }}
+            </p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <input #calibrationManualInput type="file" accept=".pdf,.jpg,.jpeg,.png" class="hidden"
+                   (change)="onFileSelected($event, 'calibrationManual')">
+            
+            <!-- View Icon -->
+            <button *ngIf="formData.documents.calibrationManual" 
+                    (click)="openPreview('calibrationManual', 'Calibration Manual')"
+                    class="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                    title="View">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+            
+            <!-- Remove Icon -->
+            <button *ngIf="formData.documents.calibrationManual" 
+                    (click)="removeDocument('calibrationManual')"
+                    class="text-red-600 hover:text-red-800 transition"
+                    title="Remove">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+            
+            <!-- Upload/Change Button -->
+            <button (click)="calibrationManualInput.click()"
+                    class="px-3 py-1 bg-[#F7941D] text-white rounded text-xs hover:bg-[#e8850c]">
+              {{ formData.documents.calibrationManual ? 'Change' : 'Upload' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Manual -->
+      <div class="border border-gray-200 rounded-lg p-3">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <h4 class="text-sm font-semibold text-gray-900">User Manual <span class="text-red-500">*</span></h4>
+            <p class="text-xs text-gray-500 mb-2">PDF, JPG, PNG (Max 10MB)</p>
+            <p *ngIf="formData.documents.userManual" class="text-xs text-gray-700 truncate max-w-xs">
+              {{ formData.documents.userManual.name }}
+            </p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <input #userManualInput type="file" accept=".pdf,.jpg,.jpeg,.png" class="hidden"
+                   (change)="onFileSelected($event, 'userManual')">
+            
+            <!-- View Icon -->
+            <button *ngIf="formData.documents.userManual" 
+                    (click)="openPreview('userManual', 'User Manual')"
+                    class="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                    title="View">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+            
+            <!-- Remove Icon -->
+            <button *ngIf="formData.documents.userManual" 
+                    (click)="removeDocument('userManual')"
+                    class="text-red-600 hover:text-red-800 transition"
+                    title="Remove">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+            
+            <!-- Upload/Change Button -->
+            <button (click)="userManualInput.click()"
+                    class="px-3 py-1 bg-[#F7941D] text-white rounded text-xs hover:bg-[#e8850c]">
+              {{ formData.documents.userManual ? 'Change' : 'Upload' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pump Exterior Photo -->
+      <div class="border border-gray-200 rounded-lg p-3">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <h4 class="text-sm font-semibold text-gray-900">Pump Exterior Photo</h4>
+            <p class="text-xs text-gray-500 mb-2">JPG, PNG (Max 10MB)</p>
+            <p *ngIf="formData.documents.pumpExteriorPhoto" class="text-xs text-gray-700 truncate max-w-xs">
+              {{ formData.documents.pumpExteriorPhoto.name }}
+            </p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <input #pumpExteriorPhotoInput type="file" accept=".jpg,.jpeg,.png" class="hidden"
+                   (change)="onFileSelected($event, 'pumpExteriorPhoto')">
+            
+            <button *ngIf="formData.documents.pumpExteriorPhoto" 
+                    (click)="openPreview('pumpExteriorPhoto', 'Pump Exterior Photo')"
+                    class="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                    title="View">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+            
+            <button *ngIf="formData.documents.pumpExteriorPhoto" 
+                    (click)="removeDocument('pumpExteriorPhoto')"
+                    class="text-red-600 hover:text-red-800 transition"
+                    title="Remove">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+            
+            <button (click)="pumpExteriorPhotoInput.click()"
+                    class="px-3 py-1 bg-[#F7941D] text-white rounded text-xs hover:bg-[#e8850c]">
+              {{ formData.documents.pumpExteriorPhoto ? 'Change' : 'Upload' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nameplate Photo -->
+      <div class="border border-gray-200 rounded-lg p-3">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <h4 class="text-sm font-semibold text-gray-900">Nameplate Photo</h4>
+            <p class="text-xs text-gray-500 mb-2">JPG, PNG (Max 10MB)</p>
+            <p *ngIf="formData.documents.nameplatePhoto" class="text-xs text-gray-700 truncate max-w-xs">
+              {{ formData.documents.nameplatePhoto.name }}
+            </p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <input #nameplatePhotoInput type="file" accept=".jpg,.jpeg,.png" class="hidden"
+                   (change)="onFileSelected($event, 'nameplatePhoto')">
+            
+            <button *ngIf="formData.documents.nameplatePhoto" 
+                    (click)="openPreview('nameplatePhoto', 'Nameplate Photo')"
+                    class="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                    title="View">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+            
+            <button *ngIf="formData.documents.nameplatePhoto" 
+                    (click)="removeDocument('nameplatePhoto')"
+                    class="text-red-600 hover:text-red-800 transition"
+                    title="Remove">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+            
+            <button (click)="nameplatePhotoInput.click()"
+                    class="px-3 py-1 bg-[#F7941D] text-white rounded text-xs hover:bg-[#e8850c]">
+              {{ formData.documents.nameplatePhoto ? 'Change' : 'Upload' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Display Photo -->
+      <div class="border border-gray-200 rounded-lg p-3">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <h4 class="text-sm font-semibold text-gray-900">Display Photo</h4>
+            <p class="text-xs text-gray-500 mb-2">JPG, PNG (Max 10MB)</p>
+            <p *ngIf="formData.documents.displayPhoto" class="text-xs text-gray-700 truncate max-w-xs">
+              {{ formData.documents.displayPhoto.name }}
+            </p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <input #displayPhotoInput type="file" accept=".jpg,.jpeg,.png" class="hidden"
+                   (change)="onFileSelected($event, 'displayPhoto')">
+            
+            <button *ngIf="formData.documents.displayPhoto" 
+                    (click)="openPreview('displayPhoto', 'Display Photo')"
+                    class="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                    title="View">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+            
+            <button *ngIf="formData.documents.displayPhoto" 
+                    (click)="removeDocument('displayPhoto')"
+                    class="text-red-600 hover:text-red-800 transition"
+                    title="Remove">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+            
+            <button (click)="displayPhotoInput.click()"
+                    class="px-3 py-1 bg-[#F7941D] text-white rounded text-xs hover:bg-[#e8850c]">
+              {{ formData.documents.displayPhoto ? 'Change' : 'Upload' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sealing Points Photo -->
+      <div class="border border-gray-200 rounded-lg p-3">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <h4 class="text-sm font-semibold text-gray-900">Sealing Points Photo</h4>
+            <p class="text-xs text-gray-500 mb-2">JPG, PNG (Max 10MB)</p>
+            <p *ngIf="formData.documents.sealingPointsPhoto" class="text-xs text-gray-700 truncate max-w-xs">
+              {{ formData.documents.sealingPointsPhoto.name }}
+            </p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <input #sealingPointsPhotoInput type="file" accept=".jpg,.jpeg,.png" class="hidden"
+                   (change)="onFileSelected($event, 'sealingPointsPhoto')">
+            
+            <button *ngIf="formData.documents.sealingPointsPhoto" 
+                    (click)="openPreview('sealingPointsPhoto', 'Sealing Points Photo')"
+                    class="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                    title="View">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+            
+            <button *ngIf="formData.documents.sealingPointsPhoto" 
+                    (click)="removeDocument('sealingPointsPhoto')"
+                    class="text-red-600 hover:text-red-800 transition"
+                    title="Remove">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+            
+            <button (click)="sealingPointsPhotoInput.click()"
+                    class="px-3 py-1 bg-[#F7941D] text-white rounded text-xs hover:bg-[#e8850c]">
+              {{ formData.documents.sealingPointsPhoto ? 'Change' : 'Upload' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Type Examination Certificate -->
+      <div class="border border-gray-200 rounded-lg p-3">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <h4 class="text-sm font-semibold text-gray-900">Type Examination Certificate <span class="text-gray-400 text-xs">(if available)</span></h4>
+            <p class="text-xs text-gray-500 mb-2">PDF, JPG, PNG (Max 10MB)</p>
+            <p *ngIf="formData.documents.typeExaminationCert" class="text-xs text-gray-700 truncate max-w-xs">
+              {{ formData.documents.typeExaminationCert.name }}
+            </p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <input #typeExaminationCertInput type="file" accept=".pdf,.jpg,.jpeg,.png" class="hidden"
+                   (change)="onFileSelected($event, 'typeExaminationCert')">
+            
+            <button *ngIf="formData.documents.typeExaminationCert" 
+                    (click)="openPreview('typeExaminationCert', 'Type Examination Certificate')"
+                    class="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                    title="View">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+            
+            <button *ngIf="formData.documents.typeExaminationCert" 
+                    (click)="removeDocument('typeExaminationCert')"
+                    class="text-red-600 hover:text-red-800 transition"
+                    title="Remove">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+            
+            <button (click)="typeExaminationCertInput.click()"
+                    class="px-3 py-1 bg-[#F7941D] text-white rounded text-xs hover:bg-[#e8850c]">
+              {{ formData.documents.typeExaminationCert ? 'Change' : 'Upload' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Software Documentation -->
+      <div class="border border-gray-200 rounded-lg p-3">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <h4 class="text-sm font-semibold text-gray-900">Software Documentation <span class="text-gray-400 text-xs">(if applicable)</span></h4>
+            <p class="text-xs text-gray-500 mb-2">PDF (Max 10MB)</p>
+            <p *ngIf="formData.documents.softwareDocumentation" class="text-xs text-gray-700 truncate max-w-xs">
+              {{ formData.documents.softwareDocumentation.name }}
+            </p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <input #softwareDocumentationInput type="file" accept=".pdf" class="hidden"
+                   (change)="onFileSelected($event, 'softwareDocumentation')">
+            
+            <button *ngIf="formData.documents.softwareDocumentation" 
+                    (click)="openPreview('softwareDocumentation', 'Software Documentation')"
+                    class="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                    title="View">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+            
+            <button *ngIf="formData.documents.softwareDocumentation" 
+                    (click)="removeDocument('softwareDocumentation')"
+                    class="text-red-600 hover:text-red-800 transition"
+                    title="Remove">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+            
+            <button (click)="softwareDocumentationInput.click()"
+                    class="px-3 py-1 bg-[#F7941D] text-white rounded text-xs hover:bg-[#e8850c]">
+              {{ formData.documents.softwareDocumentation ? 'Change' : 'Upload' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Note -->
+      <p class="text-xs text-gray-500 italic mt-2">Note: Required documents are marked with (*). Optional documents help speed up the approval process.</p>
+    </div>
+
+    <!-- Step 10: Review & Submit -->
+    <div *ngIf="currentStep === 10" class="space-y-3">
+      <h3 class="text-lg font-bold text-gray-900 mb-3">Review & Submit</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <!-- Manufacturer Details -->
+        <div class="border border-gray-200 rounded-lg p-3">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-sm font-bold text-gray-900">Manufacturer Details</h4>
+            <button (click)="currentStep = 1" class="text-[#F7941D] text-xs hover:underline">Edit</button>
+          </div>
+          <div class="text-xs space-y-1">
+            <div><span class="text-gray-600">Manufacturer:</span> <span class="font-medium">{{ formData.manufacturerName }}</span></div>
+            <div><span class="text-gray-600">Country:</span> <span class="font-medium">{{ formData.countryOfManufacture }}</span></div>
+          </div>
+        </div>
+
+        <!-- Fuel Pump Identification -->
+        <div class="border border-gray-200 rounded-lg p-3">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-sm font-bold text-gray-900">Fuel Pump Identification</h4>
+            <button (click)="currentStep = 2" class="text-[#F7941D] text-xs hover:underline">Edit</button>
+          </div>
+          <div class="text-xs space-y-1">
+            <div><span class="text-gray-600">Make:</span> <span class="font-medium">{{ formData.make }}</span></div>
+            <div><span class="text-gray-600">Model:</span> <span class="font-medium">{{ formData.model }}</span></div>
+            <div><span class="text-gray-600">Quantity:</span> <span class="font-medium">{{ formData.quantityOfPumps }}</span></div>
+            <div><span class="text-gray-600">Manufacturing Year:</span> <span class="font-medium">{{ formData.manufacturingYear }}</span></div>
+            <div><span class="text-gray-600">Number of Nozzles:</span> <span class="font-medium">{{ formData.numberOfNozzles }}</span></div>
+            <div><span class="text-gray-600">Dispenser Type:</span> <span class="font-medium">{{ formData.dispenserType }}</span></div>
+          </div>
+        </div>
+
+        <!-- Metrological Characteristics -->
+        <div class="border border-gray-200 rounded-lg p-3">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-sm font-bold text-gray-900">Metrological Characteristics</h4>
+            <button (click)="currentStep = 3" class="text-[#F7941D] text-xs hover:underline">Edit</button>
+          </div>
+          <div class="text-xs space-y-1">
+            <div><span class="text-gray-600">Measured Quantity:</span> <span class="font-medium">{{ formData.measuredQuantity }}</span></div>
+            <div><span class="text-gray-600">Fuel Type:</span> <span class="font-medium">{{ formData.fuelType }}</span></div>
+            <div *ngIf="formData.fuelType === 'Other'"><span class="text-gray-600">Other Fuel Type:</span> <span class="font-medium">{{ formData.otherFuelType }}</span></div>
+            <div><span class="text-gray-600">Flow Rate:</span> <span class="font-medium">{{ formData.minFlowRate }} - {{ formData.maxFlowRate }} L/min</span></div>
+            <div><span class="text-gray-600">Min Measured Volume:</span> <span class="font-medium">{{ formData.minMeasuredVolume }} L</span></div>
+            <div><span class="text-gray-600">Operating Temperature:</span> <span class="font-medium">{{ formData.operatingTempMin }}°C - {{ formData.operatingTempMax }}°C</span></div>
+          </div>
+        </div>
+
+        <!-- Accuracy & Performance -->
+        <div class="border border-gray-200 rounded-lg p-3">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-sm font-bold text-gray-900">Accuracy & Performance</h4>
+            <button (click)="currentStep = 4" class="text-[#F7941D] text-xs hover:underline">Edit</button>
+          </div>
+          <div class="text-xs space-y-1">
+            <div><span class="text-gray-600">Declared Accuracy Class:</span> <span class="font-medium">{{ formData.declaredAccuracyClass }}</span></div>
+            <div><span class="text-gray-600">Max Permissible Error:</span> <span class="font-medium">{{ formData.maxPermissibleError }}</span></div>
+          </div>
+        </div>
+
+        <!-- Indicating & Power System -->
+        <div class="border border-gray-200 rounded-lg p-3">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-sm font-bold text-gray-900">Indicating & Power System</h4>
+            <button (click)="currentStep = 5" class="text-[#F7941D] text-xs hover:underline">Edit</button>
+          </div>
+          <div class="text-xs space-y-1">
+            <div><span class="text-gray-600">Volume Indicator Type:</span> <span class="font-medium">{{ formData.volumeIndicatorType }}</span></div>
+            <div><span class="text-gray-600">Price Display:</span> <span class="font-medium">{{ formData.priceDisplay }}</span></div>
+            <div><span class="text-gray-600">Display Location:</span> <span class="font-medium">{{ formData.displayLocation.join(', ') }}</span></div>
+            <div><span class="text-gray-600">Power Supply:</span> <span class="font-medium">{{ formData.powerSupply.join(', ') }}</span></div>
+          </div>
+        </div>
+
+        <!-- Software Information (if applicable) -->
+        <div *ngIf="shouldShowSoftwareSection()" class="border border-gray-200 rounded-lg p-3">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-sm font-bold text-gray-900">Software Information</h4>
+            <button (click)="currentStep = 6" class="text-[#F7941D] text-xs hover:underline">Edit</button>
+          </div>
+          <div class="text-xs space-y-1">
+            <div><span class="text-gray-600">Software Version:</span> <span class="font-medium">{{ formData.softwareVersion }}</span></div>
+            <div><span class="text-gray-600">Legally Relevant:</span> <span class="font-medium">{{ formData.softwareLegallyRelevant }}</span></div>
+            <div><span class="text-gray-600">Protection Method:</span> <span class="font-medium">{{ formData.softwareProtectionMethod.join(', ') }}</span></div>
+            <div><span class="text-gray-600">Event Log Available:</span> <span class="font-medium">{{ formData.eventLogAvailable }}</span></div>
+          </div>
+        </div>
+
+        <!-- Sealing & Security -->
+        <div class="border border-gray-200 rounded-lg p-3">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-sm font-bold text-gray-900">Sealing & Security</h4>
+            <button (click)="currentStep = 7" class="text-[#F7941D] text-xs hover:underline">Edit</button>
+          </div>
+          <div class="text-xs space-y-1">
+            <div><span class="text-gray-600">Adjustment Points:</span> <span class="font-medium">{{ formData.adjustmentPoints }}</span></div>
+            <div><span class="text-gray-600">Seal Type:</span> <span class="font-medium">{{ formData.sealType.join(', ') }}</span></div>
+            <div><span class="text-gray-600">Seal Locations:</span> <span class="font-medium">{{ formData.sealLocations }}</span></div>
+          </div>
+        </div>
+
+        <!-- Installation Information -->
+        <div class="border border-gray-200 rounded-lg p-3">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-sm font-bold text-gray-900">Installation Information</h4>
+            <button (click)="currentStep = 8" class="text-[#F7941D] text-xs hover:underline">Edit</button>
+          </div>
+          <div class="text-xs space-y-1">
+            <div><span class="text-gray-600">Intended Installation:</span> <span class="font-medium">{{ formData.intendedInstallation.join(', ') }}</span></div>
+            <div><span class="text-gray-600">Intended Country:</span> <span class="font-medium">{{ formData.intendedCountryOfUse }}</span></div>
+            <div><span class="text-gray-600">Installation Manual Available:</span> <span class="font-medium">{{ formData.installationManualAvailable }}</span></div>
+          </div>
+        </div>
+
+        <!-- Documents -->
+        <div class="border border-gray-200 rounded-lg p-3">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-sm font-bold text-gray-900">Documents</h4>
+            <button (click)="currentStep = 9" class="text-[#F7941D] text-xs hover:underline">Edit</button>
+          </div>
+          <div class="text-xs space-y-1">
+            <div *ngIf="formData.documents.calibrationManual" class="flex items-center justify-between">
+              <span class="text-green-600">✓ Calibration Manual</span>
+              <button (click)="openPreview('calibrationManual', 'Calibration Manual')" 
+                      class="p-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded transition"
+                      title="View">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
+            </div>
+            <div *ngIf="formData.documents.userManual" class="flex items-center justify-between">
+              <span class="text-green-600">✓ User Manual</span>
+              <button (click)="openPreview('userManual', 'User Manual')" 
+                      class="p-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded transition"
+                      title="View">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
+            </div>
+            <div *ngIf="formData.documents.pumpExteriorPhoto" class="flex items-center justify-between">
+              <span class="text-green-600">✓ Pump Exterior Photo</span>
+              <button (click)="openPreview('pumpExteriorPhoto', 'Pump Exterior Photo')" 
+                      class="p-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded transition"
+                      title="View">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
+            </div>
+            <div *ngIf="formData.documents.nameplatePhoto" class="flex items-center justify-between">
+              <span class="text-green-600">✓ Nameplate Photo</span>
+              <button (click)="openPreview('nameplatePhoto', 'Nameplate Photo')" 
+                      class="p-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded transition"
+                      title="View">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
+            </div>
+            <div *ngIf="formData.documents.displayPhoto" class="flex items-center justify-between">
+              <span class="text-green-600">✓ Display Photo</span>
+              <button (click)="openPreview('displayPhoto', 'Display Photo')" 
+                      class="p-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded transition"
+                      title="View">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
+            </div>
+            <div *ngIf="formData.documents.sealingPointsPhoto" class="flex items-center justify-between">
+              <span class="text-green-600">✓ Sealing Points Photo</span>
+              <button (click)="openPreview('sealingPointsPhoto', 'Sealing Points Photo')" 
+                      class="p-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded transition"
+                      title="View">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
+            </div>
+            <div *ngIf="formData.documents.typeExaminationCert" class="flex items-center justify-between">
+              <span class="text-green-600">✓ Type Examination Certificate</span>
+              <button (click)="openPreview('typeExaminationCert', 'Type Examination Certificate')" 
+                      class="p-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded transition"
+                      title="View">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
+            </div>
+            <div *ngIf="formData.documents.softwareDocumentation" class="flex items-center justify-between">
+              <span class="text-green-600">✓ Software Documentation</span>
+              <button (click)="openPreview('softwareDocumentation', 'Software Documentation')" 
+                      class="p-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded transition"
+                      title="View">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Buttons -->
+  <div class="flex justify-between items-center pt-4 mt-4 border-t border-gray-200">
+    <div>
+      <button (click)="saveDraft()" class="px-3 py-1.5 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-xs font-medium">
+        Save Draft
+      </button>
+      <button (click)="cancel()" class="ml-2 px-3 py-1.5 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-xs font-medium">
+        Cancel
+      </button>
+    </div>
+    
+    <div class="flex space-x-2">
+      <button *ngIf="currentStep > 1" (click)="previousStep()"
+              class="px-4 py-1.5 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-xs font-medium">
+        Previous
+      </button>
+      
+      <button *ngIf="currentStep < totalSteps" (click)="nextStep()"
+              class="px-4 py-1.5 bg-[#F7941D] text-white rounded hover:bg-[#e8850c] text-xs font-medium">
+        Next
+      </button>
+      
+      <button *ngIf="currentStep === totalSteps" (click)="submitForm()"
+              class="px-4 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium flex items-center">
+        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        Submit
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Preview Modal using app-modal -->
+<app-modal *ngIf="showPreviewModal" 
+           size="lg" 
+           [title]="previewTitle" 
+           [staticBackdrop]="true"
+           (close)="closePreview()">
+     
+  <div body class="w-full h-full flex flex-col bg-gray-100 border-none p-0 overflow-y-auto rounded-lg">
+    <div class="relative w-full min-h-full flex items-start justify-center p-4">
+      <!-- PDF Preview -->
+      <iframe *ngIf="previewFileType === 'application/pdf'" 
+              [src]="previewFileUrl" 
+              class="w-full h-[70vh] border-0 shadow-sm">
+      </iframe>
+      
+      <!-- Image Preview -->
+      <img *ngIf="previewFileType.startsWith('image/')" 
+           [src]="previewFileUrl" 
+           class="w-full h-auto shadow-sm"
+           alt="Document preview">
+    </div>
+  </div>
+
+  <div footer class="flex gap-2 w-full justify-end">
+    <button (click)="closePreview()" 
+            class="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+      Close
+    </button>
+  </div>
+</app-modal>

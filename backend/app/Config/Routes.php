@@ -140,6 +140,17 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
         $routes->delete('applications/(:segment)/instruments/(:segment)', 'PatternApprovalController::removeInstrument/$1/$2');
     });
 
+    // Fuel Pump Pattern Approval Module
+    $routes->group('fuel-pump', function($routes) {
+        $routes->get('applications', 'FuelPumpController::index');
+        $routes->get('applications/(:segment)', 'FuelPumpController::show/$1');
+        $routes->post('applications', 'FuelPumpController::create');
+        $routes->put('applications/(:segment)', 'FuelPumpController::update/$1');
+        $routes->delete('applications/(:segment)', 'FuelPumpController::delete/$1');
+        $routes->post('applications/(:segment)/submit', 'FuelPumpController::submit/$1');
+        $routes->post('upload-document', 'FuelPumpController::uploadDocument');
+    });
+
     $routes->options('(:any)', static function () {
         return response()->setStatusCode(200);
     });

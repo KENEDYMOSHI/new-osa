@@ -1,0 +1,58 @@
+.fuel-pump-form-container {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Lighter placeholder color */
+.fuel-pump-form-content input::placeholder,
+.fuel-pump-form-content textarea::placeholder {
+  color: #d1d5db; /* Light gray color */
+  opacity: 1;
+}
+
+.fuel-pump-form-content input::-webkit-input-placeholder,
+.fuel-pump-form-content textarea::-webkit-input-placeholder {
+  color: #d1d5db;
+  opacity: 1;
+}
+
+.fuel-pump-form-content input::-moz-placeholder,
+.fuel-pump-form-content textarea::-moz-placeholder {
+  color: #d1d5db;
+  opacity: 1;
+}
+
+.fuel-pump-form-content input:-ms-input-placeholder,
+.fuel-pump-form-content textarea:-ms-input-placeholder {
+  color: #d1d5db;
+  opacity: 1;
+}
+
+/* Custom scrollbar for better UX */
+.fuel-pump-form-container ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.fuel-pump-form-container ::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.fuel-pump-form-container ::-webkit-scrollbar-thumb {
+  background: #F7941D;
+  border-radius: 10px;
+}
+
+.fuel-pump-form-container ::-webkit-scrollbar-thumb:hover {
+  background: #e8850c;
+}
