@@ -41,6 +41,11 @@ interface SelectedInstrument {
   sealing_mechanism_type?: string; // 'provided' | 'not_provided'
   flow_direction_type?: string; // 'indicated' | 'not_indicated'
   
+  // Weighing Scale Fields
+  scale_type?: string; // 'mechanical' | 'digital'
+  value_e?: string;
+  value_d?: string;
+  
   // Electrical Meter Fields
   meter_model?: string;
   meter_type?: string; // 'electromechanical' | 'static'
@@ -129,6 +134,10 @@ export class PatternSelectionComponent implements OnInit {
   
   // Fuel Pump Form State
   showFuelPumpForm = false;
+
+  // Application Fee
+  applicationFee: number = 0;
+  feeBaseAmount: number = 0;
 
   constructor(
     private patternApprovalService: PatternApprovalService,
@@ -382,6 +391,9 @@ export class PatternSelectionComponent implements OnInit {
       return;
     }
     
+    // Calculate Fee based on category
+    this.calculateFee();
+
     // Check if already selected
     const alreadySelected = this.selectedInstruments.find(
       i => i.instrument_type_id === instrumentType.id
@@ -461,6 +473,50 @@ export class PatternSelectionComponent implements OnInit {
   isElectricalMeterCategory(): boolean {
     return this.selectedInstrumentType && 
            this.selectedInstrumentType.category_id.toString() === 'electrical-meter' ? true : false;
+  }
+
+  calculateFee() {
+    let categoryId = '';
+
+    if (this.selectedInstrumentType) {
+        categoryId = this.selectedInstrumentType.category_id.toString();
+    } else if (this.selectedInstruments.length > 0) {
+        // Find category from first selected instrument
+        const firstInst = this.selectedInstruments[0];
+        // Loop through loaded categories to find the instrument type
+        for (const catId of Object.keys(this.instrumentTypesByCategory)) {
+             const types = this.instrumentTypesByCategory[catId];
+             if (types && types.some(t => t.id === firstInst.instrument_type_id)) {
+                 categoryId = catId;
+                 break;
+             }
+        }
+    } else {
+        this.applicationFee = 0;
+        this.feeBaseAmount = 0;
+        return;
+    }
+
+    const multiplier = 5;
+    
+    switch (categoryId) {
+        case 'water-meter':
+            this.feeBaseAmount = 10000;
+            break;
+        case 'flow-meter':
+            this.feeBaseAmount = 500000;
+            break;
+        case 'bulk-flow-meter':
+            this.feeBaseAmount = 2500000;
+            break;
+        case 'electrical-meter':
+            this.feeBaseAmount = 10000;
+            break;
+        default:
+            this.feeBaseAmount = 0;
+    }
+
+    this.applicationFee = this.feeBaseAmount * multiplier;
   }
 
   onQuantityChange() {
@@ -547,7 +603,63 @@ export class PatternSelectionComponent implements OnInit {
 
   // Helper method to check if a field should show error styling
   isFieldInvalid(fieldValue: any): boolean {
-    return this.attemptedSave && !fieldValue;
+    return false; // Using template validation primarily
+  }
+
+  // Method to check if current form is complete enough to show fee
+  isCurrentFormComplete(): boolean {
+    if (!this.currentInstrument) return false;
+    
+    // Common required fields
+    if (!this.currentInstrument.brand_name || !this.currentInstrument.make) return false;
+
+    // Category specific checks
+    if (this.selectedPatternTypeName?.toLowerCase().includes('weigh')) {
+        // Weighing Instrument Requirements
+        const basicReqs = !!(this.currentInstrument.brand_name &&
+                  this.currentInstrument.make &&
+                  this.currentInstrument.accuracy_class && 
+                  this.currentInstrument.quantity && 
+                  this.currentInstrument.serial_numbers && 
+                  this.currentInstrument.serial_numbers.length > 0 &&
+                  this.currentInstrument.maximum_capacity &&
+                  this.currentInstrument.scale_type);
+        
+        if (!basicReqs) return false;
+
+        // Digital specific checks
+        if (this.currentInstrument.scale_type === 'digital') {
+            return !!(this.currentInstrument.value_e && this.currentInstrument.value_d);
+        }
+        
+        return true;
+    } 
+    else if (this.isFlowMeterCategory()) {
+        // Flow Meter Requirements
+        return !!(this.currentInstrument.quantity && 
+                  this.currentInstrument.serial_numbers && 
+                  this.currentInstrument.serial_numbers.length > 0 &&
+                  this.currentInstrument.nominal_flow_rate && 
+                  this.currentInstrument.meter_class && 
+                  this.currentInstrument.meter_size_dn && 
+                  this.currentInstrument.diameter);
+    }
+    else if (this.isElectricalMeterCategory()) {
+        // Electrical Meter Requirements
+        return !!(this.currentInstrument.quantity && 
+                  this.currentInstrument.serial_numbers && 
+                  this.currentInstrument.serial_numbers.length > 0 && 
+                  this.currentInstrument.meter_model && 
+                  this.currentInstrument.meter_type && 
+                  this.currentInstrument.accuracy_class && 
+                  this.currentInstrument.nominal_voltage && 
+                  this.currentInstrument.nominal_frequency && 
+                  this.currentInstrument.maximum_current && 
+                  this.currentInstrument.minimum_current);
+    }
+
+    // Default basic check for other types
+    return !!this.currentInstrument.serial_number; 
   }
 
   saveInstrumentDetails() {
@@ -659,19 +771,25 @@ export class PatternSelectionComponent implements OnInit {
     this.selectedInstrumentType = null;
     this.attemptedSave = false; // Reset attemptedSave for the next instrument
     
+    
     this.successMessage = 'Instrument details saved successfully';
     setTimeout(() => this.successMessage = '', 3000);
+    
+    this.calculateFee();
   }
 
   cancelInstrumentDetails() {
     this.currentInstrument = null;
+    this.selectedInstrumentType = null;
     this.attemptedSave = false; // Reset attemptedSave when cancelling
+    this.calculateFee();
   }
 
   removeInstrument(index: number) {
     this.selectedInstruments.splice(index, 1);
     this.successMessage = 'Instrument removed';
     setTimeout(() => this.successMessage = '', 3000);
+    this.calculateFee();
   }
 
   submitApplication() {
@@ -831,5 +949,15 @@ export class PatternSelectionComponent implements OnInit {
   onFuelPumpFormCancelled() {
     this.showFuelPumpForm = false;
     this.selectedInstrumentType = null;
+  }
+
+  get selectedInstrumentCategories(): string {
+    if (!this.selectedInstruments || this.selectedInstruments.length === 0) {
+      return 'None';
+    }
+    const categories = this.selectedInstruments.map(i => i.instrument_type_name);
+    // Get unique categories
+    const uniqueCategories = categories.filter((value, index, self) => self.indexOf(value) === index);
+    return uniqueCategories.join(', ');
   }
 }
