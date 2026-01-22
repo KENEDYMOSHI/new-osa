@@ -1,0 +1,122 @@
+<div class="space-y-6 h-[calc(100vh-140px)] flex flex-col">
+  <!-- Header -->
+  <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200 flex-shrink-0">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Notifications</h1>
+        <p class="text-gray-500 mt-1">Updates on your application status</p>
+      </div>
+
+
+    </div>
+  </div>
+
+  <!-- Content (Split View) -->
+  <div class="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex min-h-0">
+    <!-- Message List -->
+    <div class="w-1/3 border-r border-gray-200 overflow-y-auto bg-gray-50">
+      <!-- Filters -->
+      <div class="p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
+        <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+          <button 
+            (click)="setFilter('all')" 
+            [class.bg-[#eff6ff]]="activeFilter === 'all'"
+            [class.text-blue-600]="activeFilter === 'all'"
+            [class.bg-gray-100]="activeFilter !== 'all'"
+            [class.text-gray-600]="activeFilter !== 'all'"
+            class="px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border border-transparent shadow-sm"
+            [class.border-blue-100]="activeFilter === 'all'">
+            All ({{ allCount }})
+          </button>
+          <button 
+            (click)="setFilter('unread')" 
+            [class.bg-[#eff6ff]]="activeFilter === 'unread'"
+            [class.text-blue-600]="activeFilter === 'unread'"
+            [class.bg-gray-100]="activeFilter !== 'unread'"
+            [class.text-gray-600]="activeFilter !== 'unread'"
+            class="px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border border-transparent shadow-sm"
+            [class.border-blue-100]="activeFilter === 'unread'">
+            Unread ({{ unreadCount }})
+          </button>
+          <button 
+            (click)="setFilter('read')" 
+            [class.bg-[#eff6ff]]="activeFilter === 'read'"
+            [class.text-blue-600]="activeFilter === 'read'"
+            [class.bg-gray-100]="activeFilter !== 'read'"
+            [class.text-gray-600]="activeFilter !== 'read'"
+            class="px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border border-transparent shadow-sm"
+            [class.border-blue-100]="activeFilter === 'read'">
+            Read ({{ readCount }})
+          </button>
+          <button 
+            (click)="setFilter('starred')" 
+            [class.bg-[#eff6ff]]="activeFilter === 'starred'"
+            [class.text-blue-600]="activeFilter === 'starred'"
+            [class.bg-gray-100]="activeFilter !== 'starred'"
+            [class.text-gray-600]="activeFilter !== 'starred'"
+            class="px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border border-transparent shadow-sm"
+            [class.border-blue-100]="activeFilter === 'starred'">
+            Starred ({{ starredCount }})
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="filteredMessages.length === 0" class="p-8 text-center text-gray-500">
+        No notifications found.
+      </div>
+      <div 
+        *ngFor="let msg of filteredMessages" 
+        (click)="selectMessage(msg)"
+        class="p-4 border-b border-gray-200 cursor-pointer hover:bg-white transition-colors relative"
+        [ngClass]="{
+          'bg-white border-l-4 border-l-[#F7941D]': selectedMessage?.id === msg.id,
+          'bg-gray-50 border-l-4 border-l-transparent': selectedMessage?.id !== msg.id,
+          'font-semibold': !msg.isRead
+        }">
+        <div class="flex justify-between items-start mb-1">
+          <span class="text-sm font-medium text-gray-900 truncate pr-2">{{ msg.sender }}</span>
+          <span class="text-xs text-gray-500 whitespace-nowrap">{{ msg.time }}</span>
+        </div>
+        <p class="text-sm text-gray-800 mb-1 truncate">{{ msg.subject }}</p>
+        <p class="text-xs text-gray-500 truncate">{{ msg.preview }}</p>
+        
+        <div *ngIf="!msg.isRead" class="absolute top-4 right-4 w-2 h-2 bg-blue-500 rounded-full"></div>
+      </div>
+    </div>
+
+    <!-- Message Detail -->
+    <div class="w-2/3 flex flex-col bg-white">
+      <div *ngIf="selectedMessage; else noMessageSelected" class="flex flex-col h-full">
+        <!-- Message Header -->
+        <div class="p-6 border-b border-gray-100">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-lg">
+              {{ selectedMessage.initials }}
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-gray-900">{{ selectedMessage.subject }}</h2>
+              <div class="flex items-center gap-2 text-sm text-gray-500">
+                <span>{{ selectedMessage.sender }}</span>
+                <span>&bull;</span>
+                <span>{{ selectedMessage.date }} at {{ selectedMessage.time }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Message Body -->
+        <div class="p-8 overflow-y-auto flex-1 text-gray-700 leading-relaxed" [innerHTML]="selectedMessage.content">
+        </div>
+      </div>
+
+      <ng-template #noMessageSelected>
+        <div class="flex flex-col items-center justify-center h-full text-gray-400">
+          <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
+          <p class="text-lg">Select a notification to view details</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>

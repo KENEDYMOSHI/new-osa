@@ -44,13 +44,48 @@ class PatternApplication extends Model
 
     public function getSelectedInstruments($applicationId)
     {
-        return $this->db->table('pattern_application_instruments')
-            ->select('pattern_application_instruments.*, instrument_types.name, instrument_types.code, instrument_categories.name as category_name')
+        // Get standard instruments
+        $standardInstruments = $this->db->table('pattern_application_instruments')
+            ->select('pattern_application_instruments.*, instrument_types.name as instrument_type_name, instrument_types.code as instrument_type_code, instrument_categories.name as category_name')
             ->join('instrument_types', 'instrument_types.id = pattern_application_instruments.instrument_type_id')
             ->join('instrument_categories', 'instrument_categories.id = instrument_types.category_id')
             ->where('pattern_application_instruments.pattern_application_id', $applicationId)
             ->get()
             ->getResultArray();
+
+        // Get weighing instruments
+        $weighingInstruments = $this->db->table('weighing_instruments')
+            ->select('weighing_instruments.*, instrument_types.name as instrument_type_name, instrument_types.code as instrument_type_code, instrument_categories.name as category_name')
+            ->join('instrument_types', 'instrument_types.id = weighing_instruments.instrument_type_id')
+            ->join('instrument_categories', 'instrument_categories.id = instrument_types.category_id')
+            ->where('weighing_instruments.pattern_application_id', $applicationId)
+            ->get()
+            ->getResultArray();
+
+        // Process serial numbers for weighing instruments
+        foreach ($weighingInstruments as &$instrument) {
+            if (isset($instrument['serial_numbers'])) {
+                $instrument['serial_numbers'] = explode(',', $instrument['serial_numbers']);
+            }
+        }
+
+        // Get capacity measure instruments
+        $capacityMeasureInstruments = $this->db->table('capacity_measure_instruments')
+            ->select('capacity_measure_instruments.*, instrument_types.name as instrument_type_name, instrument_types.code as instrument_type_code, instrument_categories.name as category_name')
+            ->join('instrument_types', 'instrument_types.id = capacity_measure_instruments.instrument_type_id')
+            ->join('instrument_categories', 'instrument_categories.id = instrument_types.category_id')
+            ->where('capacity_measure_instruments.pattern_application_id', $applicationId)
+            ->get()
+            ->getResultArray();
+
+        // Process serial numbers for capacity measure instruments
+        foreach ($capacityMeasureInstruments as &$instrument) {
+            if (isset($instrument['serial_numbers'])) {
+                 $instrument['serial_numbers'] = explode(',', $instrument['serial_numbers']);
+            }
+        }
+
+        return array_merge($standardInstruments, $weighingInstruments, $capacityMeasureInstruments);
     }
 
     public function addInstrument($applicationId, $instrumentTypeId)

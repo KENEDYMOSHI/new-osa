@@ -516,3 +516,58 @@ impliment this condition in meter fees shall be determined based on the selected
 When Water Meter is selected, the system shall apply a base amount of 10,000 and calculate the final fee as 10,000 × 5. When Flow Meter is selected, the system shall apply a base amount of 500,000 and calculate the final fee as 500,000 × 5. For Bulk Flow Meter, the system shall apply a base amount of 2,500,000 and calculate the final fee as 2,500,000 × 5. When Electrical Meter is selected, the system shall apply a base amount of 10,000 and calculate the final fee as 10,000 × 5.
 
 The system shall automatically identify the selected meter category, apply the corresponding calculation rule, and display the calculated fee to the user. Any change to the meter category shall immediately trigger a recalculation of the fee to ensure accuracy and consistency before submission.
+
+Boresha kwenye weighing instrument form pembeni  ya Scale Type * weka uses of weighing instrument kisha ataselect Normal Trade , Pharmaceutical labolatory , precision stones ongeza na column yake kwenye database 
+
+implement kwenye category za capacity measures form yenye Brand Name 
+Manufacturers name 
+Model type
+Quantity 
+Serial No
+Material of construction
+Year of manufacture
+Units of measurement: Litre / cubic metre
+Nominal Capacity (L/ cubic metre)
+Maximum permissible error
+Temperature range
+Intended liquid
+☐ Petrol ☐ Kerosene
+☐ Diesel  ☐ Water
+Seal arrangement provided  Yes ☐  No ☐
+Adjustment mechanism provided  Yes ☐  No ☐
+Gauge glass / sight tube / sight glass provided Yes ☐  No ☐
+
+
+
+ongeza module kwenye side menu ambazo hazipo 	•	Pattern Approval Application
+	•	My Pattern Applications
+	•	Pattern Application Status
+	•	Pattern Details
+	•	Application Timeline
+	•	Billing & Payments
+	•	Approval & Certification
+	•	Notifications
+	•	Help & Guidelines
+	•	Support / Enquiries
+	•	Profile
+
+	condition ya fee kwenye weighing instrument mfumo utaangalia 
+
+
+	•	not exceeding 5kg — 7,000
+	•	exceeding 5kg but not exceeding 10kg — 7,000
+	•	exceeding 10kg but not exceeding 20kg — 7,000
+	•	exceeding 20kg but not exceeding 50kg — 10,000
+	•	exceeding 50kg but not exceeding 100kg — 20,000
+	•	exceeding 100kg but not exceeding 200kg — 30,000
+	•	exceeding 200kg but not exceeding 300kg — 40,000
+	•	exceeding 300kg but not exceeding 500kg — 50,000
+	•	exceeding 500kg but not exceeding 2000kg — 60,000
+	•	exceeding 2000kg but not exceeding 5000kg — 150,000
+	•	exceeding 5000kg but not exceeding 10000kg — 175,000
+	•	exceeding 10000kg but not exceeding 30000kg — 200,000
+	•	exceeding 30000kg but not exceeding 50000kg — 300,000
+	•	exceeding 50000kg but not exceeding 100000kg — 500,000
+	•	exceeding 100000kg but not exceeding 200000kg — 700,000
+	•	exceeding 200000kg — 800,000
+	In the Weighing Instrument module, the system shall determine the payable Pattern Approval fee by first evaluating the instrument’s maximum capacity in kilograms and matching it with the predefined weight-based fee table to obtain the base amount. Once the base amount is identified, the system shall assess the declared use of the weighing instrument. If the use is Normal Trade, the base amount shall remain unchanged. If the use is Pharmaceutical Laboratory, the system shall multiply the base amount by three (×3). If the use is Precision Stones, the system shall multiply the base amount by five (×5). After applying the use-based multiplier, the system shall then evaluate the instrument’s accuracy class to calculate the final payable amount. If the selected accuracy class is Roman Class I or Roman Class II, the amount obtained after the use-based calculation shall be multiplied by 7.5. If the selected accuracy class is Class III or Class IV, the amount obtained after the use-based calculation shall be multiplied by 5. The resulting value after applying both the use-based and accuracy-class multipliers shall be recorded as the total Pattern Approval 

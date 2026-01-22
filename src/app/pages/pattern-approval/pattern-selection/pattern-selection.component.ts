@@ -43,6 +43,7 @@ interface SelectedInstrument {
   
   // Weighing Scale Fields
   scale_type?: string; // 'mechanical' | 'digital'
+  instrument_use?: string;
   value_e?: string;
   value_d?: string;
   
@@ -75,10 +76,24 @@ interface SelectedInstrument {
   test_frequency?: string;
   test_connection_mode?: string;
   test_remarks?: string;
+  // Capacity Measure Fields
+  material_construction?: string;
+  year_manufacture?: string;
+  measurement_unit?: string; // 'Litre' | 'Cubic Metre'
+  nominal_capacity?: string;
+  max_permissible_error?: string;
+  temperature_range?: string;
+  intended_liquid?: string; // 'Petrol' | 'Kerosene' | 'Diesel' | 'Water'
+  has_seal_arrangement?: string; // 'Yes' | 'No'
+  has_adjustment_mechanism?: string; // 'Yes' | 'No'
+  has_gauge_glass?: string; // 'Yes' | 'No'
 
   serial_numbers?: string[]; // Array for dynamic serials
   manual_calibration_doc: File | null;
   specification_doc: File | null;
+  other_doc: File | null;
+  type_approval_doc: File | null;
+  calculated_fee?: number; // Store the calculated fee for this instrument
   [key: string]: any;
 }
 
@@ -93,7 +108,9 @@ export class PatternSelectionComponent implements OnInit {
   // Document Configuration
   instrumentDocuments = [
     { key: 'manual_calibration_doc', name: 'Manual Calibration Document', accept: '.pdf,.doc,.docx' },
-    { key: 'specification_doc', name: 'Specification of Instrument', accept: '.pdf,.doc,.docx' }
+    { key: 'specification_doc', name: 'Specification of Instrument', accept: '.pdf,.doc,.docx' },
+    { key: 'type_approval_doc', name: 'Type examination certificate (if available)', accept: '.pdf,.doc,.docx' },
+    { key: 'other_doc', name: 'Other Document', accept: '.pdf,.doc,.docx,.jpg,.jpeg,.png' }
   ];
 
   // Modal State
@@ -292,6 +309,58 @@ export class PatternSelectionComponent implements OnInit {
             { id: 'standard-weighbridge', category_id: 'weighbridge', name: 'Standard Weighbridge', code: 'W/B' }
         ];
         break;
+
+      case 'Capacity Measures':
+      case 'Capacity Measure':
+        this.instrumentCategories = [
+          {
+            id: 'proving-tank',
+            name: 'Proving Tank',
+            icon: 'assets/icons/proving-tank.svg',
+            description: 'Volumetric proving tanks',
+            expanded: true,
+            code: 'PT'
+          },
+          {
+            id: 'check-pump',
+            name: 'Check Pump',
+            icon: 'assets/icons/check-pump.svg',
+            description: 'Standard check pumps',
+            expanded: true,
+            code: 'CP'
+          },
+          {
+            id: 'measuring-cylinder',
+            name: 'Measuring Cylinders',
+            icon: 'assets/icons/measuring-cylinder.svg',
+            description: 'Graduated measuring cylinders',
+            expanded: true,
+            code: 'MC'
+          },
+          {
+            id: 'other-capacity-measure',
+            name: 'Other Capacity Measures',
+            icon: 'assets/icons/other-capacity.svg',
+            description: 'Other volumetric measures',
+            expanded: true,
+            code: 'OCM'
+          }
+        ];
+
+        // Pre-populate standard types
+        this.instrumentTypesByCategory['proving-tank'] = [
+            { id: 'standard-proving-tank', category_id: 'proving-tank', name: 'Proving Tank', code: 'PT' }
+        ];
+        this.instrumentTypesByCategory['check-pump'] = [
+            { id: 'standard-check-pump', category_id: 'check-pump', name: 'Check Pump', code: 'CP' }
+        ];
+        this.instrumentTypesByCategory['measuring-cylinder'] = [
+            { id: 'standard-measuring-cylinder', category_id: 'measuring-cylinder', name: 'Measuring Cylinder', code: 'MC' }
+        ];
+        this.instrumentTypesByCategory['other-capacity-measure'] = [
+            { id: 'standard-other-capacity', category_id: 'other-capacity-measure', name: 'Other Capacity Measure', code: 'OCM' }
+        ];
+        break;
       default:
         // Default behavior: load categories from the API
         this.patternApprovalService.getInstrumentCategories(this.selectedPatternTypeId).subscribe({
@@ -457,9 +526,23 @@ export class PatternSelectionComponent implements OnInit {
       test_connection_mode: '',
       test_remarks: '',
 
+      // Capacity Measure Fields
+      material_construction: '',
+      year_manufacture: '',
+      measurement_unit: '',
+      nominal_capacity: '',
+      max_permissible_error: '',
+      temperature_range: '',
+      intended_liquid: '', 
+      has_seal_arrangement: '',
+      has_adjustment_mechanism: '',
+      has_gauge_glass: '',
+
       serial_numbers: [''], // Start with one serial number field
       manual_calibration_doc: null,
-      specification_doc: null
+      other_doc: null,
+      specification_doc: null,
+      type_approval_doc: null
     };
   }
 
@@ -473,6 +556,18 @@ export class PatternSelectionComponent implements OnInit {
   isElectricalMeterCategory(): boolean {
     return this.selectedInstrumentType && 
            this.selectedInstrumentType.category_id.toString() === 'electrical-meter' ? true : false;
+  }
+
+  isCapacityMeasureCategory(): boolean {
+    return this.selectedPatternTypeName === 'Capacity Measure' || 
+           this.selectedPatternTypeName === 'Capacity Measures';
+  }
+
+  shouldShowDocument(docKey: string): boolean {
+    if (docKey === 'type_approval_doc') {
+      return this.isCapacityMeasureCategory();
+    }
+    return true;
   }
 
   calculateFee() {
@@ -497,8 +592,19 @@ export class PatternSelectionComponent implements OnInit {
         return;
     }
 
+    // Base calculation for other categories
     const multiplier = 5;
     
+    // Special handling for Weighing Instruments
+    if (this.selectedPatternTypeName && this.selectedPatternTypeName.toLowerCase().includes('weigh')) {
+          let total = this.selectedInstruments.reduce((sum, inst) => sum + (inst.calculated_fee || 0), 0);
+          if (this.currentInstrument) {
+               total += this.calculateWeighingInstrumentFee(this.currentInstrument);
+          }
+          this.applicationFee = total;
+          return;
+    }
+
     switch (categoryId) {
         case 'water-meter':
             this.feeBaseAmount = 10000;
@@ -517,6 +623,77 @@ export class PatternSelectionComponent implements OnInit {
     }
 
     this.applicationFee = this.feeBaseAmount * multiplier;
+  }
+
+  // --- Weighing Instrument Fee Logic ---
+  calculateWeighingInstrumentFee(instrument: SelectedInstrument): number {
+    if (!instrument.maximum_capacity) return 0;
+
+    // 1. Parse Maximum Capacity to kg
+    const capacityStr = instrument.maximum_capacity.toLowerCase();
+    let capacityValue = parseFloat(capacityStr.replace(/[^0-9.]/g, ''));
+    
+    // Simple unit conversion handling (assuming input might have 'g', 'kg', 'ton')
+    // Defaulting to kg if no unit found or if assumed input is in kg as per requirements
+    // Improving robustness: check for 'ton' or 't' -> * 1000, check for 'g' (and not kg) -> / 1000
+    if (capacityStr.includes('ton') || capacityStr.includes('tonne')) {
+        capacityValue *= 1000;
+    } else if (capacityStr.endsWith('g') && !capacityStr.endsWith('kg')) {
+        capacityValue /= 1000;
+    }
+    
+    if (isNaN(capacityValue)) return 0;
+
+    // 2. Determine Base Amount based on Capacity (Weight-based Fee Table)
+    let baseAmount = 0;
+    if (capacityValue <= 5) baseAmount = 7000;
+    else if (capacityValue <= 10) baseAmount = 7000;
+    else if (capacityValue <= 20) baseAmount = 7000; // 10-20
+    else if (capacityValue <= 50) baseAmount = 10000;
+    else if (capacityValue <= 100) baseAmount = 20000;
+    else if (capacityValue <= 200) baseAmount = 30000;
+    else if (capacityValue <= 300) baseAmount = 40000;
+    else if (capacityValue <= 500) baseAmount = 50000;
+    else if (capacityValue <= 2000) baseAmount = 60000;
+    else if (capacityValue <= 5000) baseAmount = 150000;
+    else if (capacityValue <= 10000) baseAmount = 175000;
+    else if (capacityValue <= 30000) baseAmount = 200000;
+    else if (capacityValue <= 50000) baseAmount = 300000;
+    else if (capacityValue <= 100000) baseAmount = 500000;
+    else if (capacityValue <= 200000) baseAmount = 700000;
+    else baseAmount = 800000; // Exceeding 200,000kg
+
+    // 3. Apply Usage Multiplier
+    let useMultiplier = 1;
+    const usage = instrument.instrument_use || 'Normal Trade';
+    
+    if (usage === 'Pharmaceutical Laboratory') {
+        useMultiplier = 3;
+    } else if (usage === 'Precision Stones') {
+        useMultiplier = 5;
+    }
+    // 'Normal Trade' stays 1
+
+    let feeAfterUse = baseAmount * useMultiplier;
+
+    // 4. Apply Accuracy Class Multiplier
+    let classMultiplier = 1;
+    const accuracyClass = (instrument.accuracy_class || '').toLowerCase();
+    
+    if (accuracyClass === 'i' || accuracyClass === 'ii') {
+        classMultiplier = 7.5;
+    } else if (accuracyClass === 'iii' || accuracyClass === 'iv') {
+        classMultiplier = 5;
+    }
+    // Fallback if class not selected yet (though valid form requires it) -> 1 or 0? 
+    // Assuming 5 as minimal safety or keeping as is if user hasn't selected? 
+    // Logic says "If selected...". If not selected, effective fee calculation might be partial.
+    // Let's enforce the rule: if data missing, default to minimal valid or handle as incomplete.
+    // Here we assume valid input flow.
+
+    const finalFee = feeAfterUse * classMultiplier;
+    
+    return finalFee;
   }
 
   onQuantityChange() {
@@ -657,6 +834,17 @@ export class PatternSelectionComponent implements OnInit {
                   this.currentInstrument.maximum_current && 
                   this.currentInstrument.minimum_current);
     }
+    else if (this.isCapacityMeasureCategory()) {
+         // Capacity Measure Requirements
+         return !!(this.currentInstrument.brand_name &&
+                   this.currentInstrument.make &&
+                   this.currentInstrument.quantity &&
+                   this.currentInstrument.measurement_unit &&
+                   this.currentInstrument.nominal_capacity &&
+                   this.currentInstrument.material_construction && 
+                   this.currentInstrument.serial_numbers && 
+                   this.currentInstrument.serial_numbers.length > 0);
+    }
 
     // Default basic check for other types
     return !!this.currentInstrument.serial_number; 
@@ -719,6 +907,27 @@ export class PatternSelectionComponent implements OnInit {
                isValid = true;
            }
         }
+    } else if (this.isCapacityMeasureCategory()) {
+        // Capacity Measure Validation
+        if (this.currentInstrument.brand_name &&
+            this.currentInstrument.make &&
+            this.currentInstrument.quantity &&
+            this.currentInstrument.measurement_unit &&
+            this.currentInstrument.nominal_capacity &&
+            this.currentInstrument.material_construction &&
+            this.currentInstrument.year_manufacture &&
+            this.currentInstrument.intended_liquid && 
+            this.currentInstrument.max_permissible_error &&
+            this.currentInstrument.temperature_range) {
+            
+            // Check serial numbers
+            const serials = this.currentInstrument.serial_numbers || [];
+            const allSerialsFilled = serials.every(s => s && s.trim().length > 0);
+            
+            if (allSerialsFilled && serials.length === this.currentInstrument.quantity) {
+                isValid = true;
+            }
+        }
     } else if (this.selectedPatternTypeName.toLowerCase().includes('weigh')) {
         // Weighing Instrument Validation
         if (this.currentInstrument.brand_name && 
@@ -758,13 +967,21 @@ export class PatternSelectionComponent implements OnInit {
 
     // All validation passed - show confirmation modal
     this.showSaveConfirmModal = true;
+
   }
 
   proceedWithSave() {
     if (!this.currentInstrument) return;
 
     // Validation already done in saveInstrumentDetails() - just save the instrument
-    this.selectedInstruments.push({ ...this.currentInstrument });
+    const instrumentToSave = { ...this.currentInstrument };
+    
+    // Calculate fee for Weighing Instruments
+    if (this.selectedPatternTypeName && this.selectedPatternTypeName.toLowerCase().includes('weigh')) {
+        instrumentToSave.calculated_fee = this.calculateWeighingInstrumentFee(instrumentToSave);
+    }
+    
+    this.selectedInstruments.push(instrumentToSave);
     
     // Clear current instrument
     this.currentInstrument = null;
@@ -783,6 +1000,49 @@ export class PatternSelectionComponent implements OnInit {
     this.selectedInstrumentType = null;
     this.attemptedSave = false; // Reset attemptedSave when cancelling
     this.calculateFee();
+  }
+
+  editInstrument(index: number) {
+    const instrument = this.selectedInstruments[index];
+    
+    // Find category to set selectedInstrumentType
+    let categoryId = '';
+    let foundType: InstrumentType | null = null;
+
+    // Search through all loaded categories
+    for (const catId of Object.keys(this.instrumentTypesByCategory)) {
+         const types = this.instrumentTypesByCategory[catId];
+         foundType = types.find(t => t.id === instrument.instrument_type_id) || null;
+         if (foundType) {
+             categoryId = catId;
+             break;
+         }
+    }
+
+    if (foundType) {
+        this.selectedInstrumentType = foundType;
+        
+        // Populate currentInstrument with a copy of the data
+        this.currentInstrument = { ...instrument };
+        
+        // Remove from list so it can be re-added (updated)
+        this.selectedInstruments.splice(index, 1);
+        
+        // Recalculate fee
+        this.calculateFee();
+        
+        // Show fuel pump form if applicable
+        if (this.isFuelPumpPattern() && foundType.name.toLowerCase().includes('standard')) {
+            this.showFuelPumpForm = true;
+        }
+
+        // Add scroll to top or form logic here if needed
+        window.scroll({ 
+          top: 0, 
+          left: 0, 
+          behavior: 'smooth' 
+        });
+    }
   }
 
   removeInstrument(index: number) {
@@ -882,10 +1142,48 @@ export class PatternSelectionComponent implements OnInit {
         test_voltage: instrument.test_voltage,
         test_frequency: instrument.test_frequency,
         test_connection_mode: instrument.test_connection_mode,
-        test_remarks: instrument.test_remarks
+        test_remarks: instrument.test_remarks,
+        
+        // Capacity Measure Fields
+        material_construction: instrument.material_construction,
+        year_manufacture: instrument.year_manufacture,
+        measurement_unit: instrument.measurement_unit,
+        nominal_capacity: instrument.nominal_capacity,
+        max_permissible_error: instrument.max_permissible_error,
+        temperature_range: instrument.temperature_range,
+        intended_liquid: instrument.intended_liquid,
+        has_seal_arrangement: instrument.has_seal_arrangement,
+        has_adjustment_mechanism: instrument.has_adjustment_mechanism,
+        has_gauge_glass: instrument.has_gauge_glass
       };
 
-      this.patternApprovalService.addInstrument(this.applicationId!, instrumentData).subscribe({
+      // Convert to FormData for file upload support
+      const formData = new FormData();
+      
+      // Append standard fields
+      Object.keys(instrumentData).forEach(key => {
+        // @ts-ignore
+        const value = instrumentData[key];
+        if (value !== null && value !== undefined) {
+             formData.append(key, value);
+        }
+      });
+
+      // Append Files
+      if (instrument.manual_calibration_doc) {
+        formData.append('manual_calibration_doc', instrument.manual_calibration_doc);
+      }
+      if (instrument.specification_doc) {
+        formData.append('specification_doc', instrument.specification_doc);
+      }
+      if (instrument.other_doc) {
+        formData.append('other_doc', instrument.other_doc);
+      }
+      if (instrument.type_approval_doc) {
+        formData.append('type_approval_doc', instrument.type_approval_doc);
+      }
+
+      this.patternApprovalService.addInstrument(this.applicationId!, formData).subscribe({
         next: (response: any) => {
           savedCount++;
           if (savedCount === this.selectedInstruments.length) {
@@ -952,10 +1250,22 @@ export class PatternSelectionComponent implements OnInit {
   }
 
   get selectedInstrumentCategories(): string {
-    if (!this.selectedInstruments || this.selectedInstruments.length === 0) {
+    const categories: string[] = [];
+    
+    // Add categories from already selected instruments
+    if (this.selectedInstruments && this.selectedInstruments.length > 0) {
+        this.selectedInstruments.forEach(i => categories.push(i.instrument_type_name));
+    }
+    
+    // Add category from current instrument draft
+    if (this.currentInstrument && this.currentInstrument.instrument_type_name) {
+        categories.push(this.currentInstrument.instrument_type_name);
+    }
+    
+    if (categories.length === 0) {
       return 'None';
     }
-    const categories = this.selectedInstruments.map(i => i.instrument_type_name);
+
     // Get unique categories
     const uniqueCategories = categories.filter((value, index, self) => self.indexOf(value) === index);
     return uniqueCategories.join(', ');

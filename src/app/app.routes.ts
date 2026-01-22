@@ -205,7 +205,26 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/pattern-approval/application/pattern-approval-application.component').then(m => m.PatternApprovalApplicationComponent),
         title: 'Application | Pattern Approval - WMA'
       },
-      // Future Pattern Approval routes will be added here
+      {
+        path: 'status',
+        loadComponent: () => import('./pages/pattern-approval/status/pattern-approval-status.component').then(m => m.PatternApprovalStatusComponent),
+        title: 'Status | Pattern Approval - WMA'
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./pages/pattern-approval/profile/pattern-profile.component').then(m => m.PatternProfileComponent),
+        title: 'Profile | Pattern Approval - WMA'
+      },
+      {
+        path: 'notifications',
+        loadComponent: () => import('./pages/pattern-approval/notifications-list/pattern-notifications.component').then(m => m.PatternNotificationsComponent),
+        title: 'Notifications | Pattern Approval - WMA'
+      },
+      {
+        path: 'support-help',
+        loadComponent: () => import('./pages/pattern-approval/support-help/pattern-support.component').then(m => m.PatternSupportComponent),
+        title: 'Support & Help | Pattern Approval - WMA'
+      },
     ]
   },
 

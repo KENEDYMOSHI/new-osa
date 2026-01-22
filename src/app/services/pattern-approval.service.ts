@@ -10,12 +10,17 @@ export class PatternApprovalService {
 
   constructor(private http: HttpClient) {}
 
-  private getHeaders(): HttpHeaders {
+  private getHeaders(isFormData: boolean = false): HttpHeaders {
     const token = localStorage.getItem('token');
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
+    let headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });
+
+    if (!isFormData) {
+      headers = headers.set('Content-Type', 'application/json');
+    }
+
+    return headers;
   }
 
   // Pattern Types
@@ -70,10 +75,11 @@ export class PatternApprovalService {
 
   // Instruments
   addInstrument(applicationId: number, data: any): Observable<any> {
+    const isFormData = data instanceof FormData;
     return this.http.post(
       `${this.apiUrl}/applications/${applicationId}/instruments`, 
       data, 
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders(isFormData) }
     );
   }
 

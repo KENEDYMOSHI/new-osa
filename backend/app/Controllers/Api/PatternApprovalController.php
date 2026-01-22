@@ -259,6 +259,17 @@ class PatternApprovalController extends BaseController
         }
     }
 
+
+
+    private function getInstrumentCategoryName($instrumentTypeId)
+    {
+        $type = $this->instrumentTypeModel->find($instrumentTypeId);
+        if (!$type) return null;
+        
+        $category = $this->instrumentCategoryModel->find($type['category_id']);
+        return $category ? $category['name'] : null;
+    }
+
     /**
      * Add instrument to application
      * POST /api/pattern-approval/applications/:id/instruments
@@ -284,37 +295,134 @@ class PatternApprovalController extends BaseController
             }
 
             $data = $this->request->getJSON(true);
+            if (empty($data)) {
+                $data = $this->request->getPost();
+            }
 
             if (!isset($data['instrument_type_id'])) {
                 return $this->fail('Instrument type is required', ResponseInterface::HTTP_BAD_REQUEST);
             }
 
-            // Check if instrument already exists
-            $existing = $this->db->table('pattern_application_instruments')
-                ->where('pattern_application_id', $id)
-                ->where('instrument_type_id', $data['instrument_type_id'])
-                ->get()
-                ->getRow();
-
-            if ($existing) {
-                return $this->fail('Instrument already added', ResponseInterface::HTTP_CONFLICT);
+            // Handle File Uploads
+            $docFields = ['manual_calibration_doc', 'specification_doc', 'other_doc', 'type_approval_doc'];
+            foreach ($docFields as $field) {
+                $filePath = $this->handleFileUpload($field);
+                if ($filePath) {
+                    $data[$field] = $filePath;
+                }
             }
 
-            // Prepare instrument data
-            $instrumentData = [
-                'pattern_application_id' => $id,
-                'instrument_type_id'     => $data['instrument_type_id'],
-                'brand_name'             => $data['brand_name'] ?? null,
-                'make'                   => $data['make'] ?? null,
-                'serial_number'          => $data['serial_number'] ?? null,
-                'maximum_capacity'       => $data['maximum_capacity'] ?? null,
-                'manual_calibration_doc' => $data['manual_calibration_doc'] ?? null,
-                'specification_doc'      => $data['specification_doc'] ?? null,
-                'created_at'             => date('Y-m-d H:i:s'),
-                'updated_at'             => date('Y-m-d H:i:s'),
-            ];
+            $categoryName = $this->getInstrumentCategoryName($data['instrument_type_id']);
+            $isWeighingInstrument = false;
+            $isCapacityMeasure = false;
+            
+            // Check if it is a weighing instrument based on category name or other logic
+            // Assuming 'Weighing Instrument' pattern type categories map to it
+            // Or simpler check: if extra fields 'scale_type' etc are present
+            
+            // Better check: Get pattern type name
+            $patternType = $this->patternTypeModel->find($application['pattern_type_id']);
+            if ($patternType) {
+                if (stripos($patternType['name'], 'Weighing') !== false) {
+                    $isWeighingInstrument = true;
+                } elseif (stripos($patternType['name'], 'Capacity Measure') !== false) {
+                    $isCapacityMeasure = true;
+                }
+            }
 
-            $this->db->table('pattern_application_instruments')->insert($instrumentData);
+            if ($isWeighingInstrument) {
+                 // Weighing Instrument Logic
+                 $weighingModel = new \App\Models\WeighingInstrumentModel();
+                 
+                // Prepare instrument data
+                $instrumentData = [
+                    'pattern_application_id' => $id,
+                    'instrument_type_id'     => $data['instrument_type_id'],
+                    'brand_name'             => $data['brand_name'] ?? null,
+                    'make'                   => $data['make'] ?? null,
+                    'quantity'               => $data['quantity'] ?? 1,
+                    // Handle serial numbers: Frontend sends 'serial_number' as a comma-separated string for Weighing Instruments
+                    'serial_numbers'         => $data['serial_number'] ?? ($data['serial_numbers'] ?? null),
+                    'accuracy_class'         => $data['accuracy_class'] ?? null,
+                    'maximum_capacity'       => $data['maximum_capacity'] ?? null,
+                    'manual_calibration_doc' => $data['manual_calibration_doc'] ?? null,
+                    'specification_doc'      => $data['specification_doc'] ?? null,
+                    'other_doc'              => $data['other_doc'] ?? null,
+                    'scale_type'             => $data['scale_type'] ?? null,
+                    'instrument_use'         => $data['instrument_use'] ?? null,
+                    'value_e'                => $data['value_e'] ?? null,
+                    'value_d'                => $data['value_d'] ?? null,
+                    'created_at'             => date('Y-m-d H:i:s'),
+                    'updated_at'             => date('Y-m-d H:i:s'),
+                ];
+                
+                $weighingModel->insert($instrumentData);
+
+            } elseif ($isCapacityMeasure) {
+                 // Capacity Measure Logic
+                 $capacityModel = new \App\Models\CapacityMeasureInstrumentModel();
+                 
+                 $instrumentData = [
+                    'pattern_application_id' => $id,
+                    'instrument_type_id'     => $data['instrument_type_id'],
+                    'brand_name'             => $data['brand_name'] ?? null,
+                    'manufacturer'           => $data['make'] ?? null, // Map make to manufacturer
+                    'meter_model'            => $data['meter_model'] ?? null,
+                    'quantity'               => $data['quantity'] ?? 1,
+                    'serial_numbers'         => isset($data['serial_numbers']) && is_array($data['serial_numbers']) 
+                                                ? implode(',', $data['serial_numbers']) 
+                                                : ($data['serial_numbers'] ?? null),
+                    
+                    // Capacity Measure fields
+                    'material_construction'    => $data['material_construction'] ?? null,
+                    'year_manufacture'         => $data['year_manufacture'] ?? null,
+                    'measurement_unit'         => $data['measurement_unit'] ?? null,
+                    'nominal_capacity'         => $data['nominal_capacity'] ?? null,
+                    'max_permissible_error'    => $data['max_permissible_error'] ?? null,
+                    'temperature_range'        => $data['temperature_range'] ?? null,
+                    'intended_liquid'          => $data['intended_liquid'] ?? null,
+                    'has_seal_arrangement'     => $data['has_seal_arrangement'] ?? null,
+                    'has_adjustment_mechanism' => $data['has_adjustment_mechanism'] ?? null,
+                    'has_gauge_glass'          => $data['has_gauge_glass'] ?? null,
+                    'other_doc'                => $data['other_doc'] ?? null,
+                    'type_approval_doc'        => $data['type_approval_doc'] ?? null,
+
+                    'created_at'             => date('Y-m-d H:i:s'),
+                    'updated_at'             => date('Y-m-d H:i:s'),
+                 ];
+
+                 $capacityModel->insert($instrumentData);
+
+            } else {
+                // Standard Instrument Logic
+                 // Check if instrument already exists
+                $existing = $this->db->table('pattern_application_instruments')
+                    ->where('pattern_application_id', $id)
+                    ->where('instrument_type_id', $data['instrument_type_id'])
+                    ->get()
+                    ->getRow();
+
+                if ($existing) {
+                    return $this->fail('Instrument already added', ResponseInterface::HTTP_CONFLICT);
+                }
+
+                // Prepare instrument data
+                $instrumentData = [
+                    'pattern_application_id' => $id,
+                    'instrument_type_id'     => $data['instrument_type_id'],
+                    'brand_name'             => $data['brand_name'] ?? null,
+                    'make'                   => $data['make'] ?? null,
+                    'serial_number'          => $data['serial_number'] ?? null,
+                    'maximum_capacity'       => $data['maximum_capacity'] ?? null,
+                    'manual_calibration_doc' => $data['manual_calibration_doc'] ?? null,
+                    'specification_doc'      => $data['specification_doc'] ?? null,
+                    'other_doc'              => $data['other_doc'] ?? null,
+                    'created_at'             => date('Y-m-d H:i:s'),
+                    'updated_at'             => date('Y-m-d H:i:s'),
+                ];
+
+                $this->db->table('pattern_application_instruments')->insert($instrumentData);
+            }
 
             $selectedInstruments = $this->patternApplicationModel->getSelectedInstruments($id);
 
@@ -351,8 +459,21 @@ class PatternApprovalController extends BaseController
             if ($application['user_id'] != $userId) {
                 return $this->fail('Unauthorized access', ResponseInterface::HTTP_FORBIDDEN);
             }
-
+            
+            // Try to remove from standard instruments
             $this->patternApplicationModel->removeInstrument($id, $instrumentTypeId);
+            
+            // Try to remove from weighing instruments
+            $weighingModel = new \App\Models\WeighingInstrumentModel();
+            $weighingModel->where('pattern_application_id', $id)
+                          ->where('instrument_type_id', $instrumentTypeId)
+                          ->delete();
+
+            // Try to remove from capacity measure instruments
+            $capacityModel = new \App\Models\CapacityMeasureInstrumentModel();
+            $capacityModel->where('pattern_application_id', $id)
+                          ->where('instrument_type_id', $instrumentTypeId)
+                          ->delete();
 
             $selectedInstruments = $this->patternApplicationModel->getSelectedInstruments($id);
 

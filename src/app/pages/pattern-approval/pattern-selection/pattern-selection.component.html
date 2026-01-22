@@ -208,7 +208,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <!-- GENERIC FORM (Non-Meter) -->
-              <ng-container *ngIf="!isFlowMeterCategory() && !isElectricalMeterCategory()">
+              <ng-container *ngIf="!isFlowMeterCategory() && !isElectricalMeterCategory() && !isCapacityMeasureCategory()">
                   <!-- Brand Name -->
                   <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Brand Name *</label>
@@ -244,6 +244,20 @@
                         </label>
                     </div>
                   </div>
+                  
+                  <!-- Uses of Weighing Instrument -->
+                   <div *ngIf="selectedPatternTypeName.toLowerCase().includes('weigh')">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Uses of Weighing Instrument *</label>
+                    <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm bg-white" 
+                            [(ngModel)]="currentInstrument.instrument_use" 
+                            (ngModelChange)="calculateFee()"
+                            [ngModelOptions]="{standalone: true}">
+                      <option value="" disabled selected>Select Use</option>
+                      <option value="Normal Trade">Normal Trade</option>
+                      <option value="Pharmaceutical Laboratory">Pharmaceutical Laboratory</option>
+                      <option value="Precision Stones">Precision Stones</option>
+                    </select>
+                  </div>
 
                   <!-- Digital Scale Additional Fields -->
                   <div *ngIf="selectedPatternTypeName.toLowerCase().includes('weigh') && currentInstrument.scale_type === 'digital'" class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 bg-orange-50/50 p-4 rounded-lg border border-orange-100">
@@ -270,6 +284,7 @@
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Accuracy Class *</label>
                     <select 
                       [(ngModel)]="currentInstrument.accuracy_class"
+                      (ngModelChange)="calculateFee()"
                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm bg-white">
                       <option value="" disabled selected>Select Accuracy Class</option>
                       <option value="i">I</option>
@@ -321,6 +336,7 @@
                     <input 
                       type="text" 
                       [(ngModel)]="currentInstrument.maximum_capacity"
+                      (ngModelChange)="calculateFee()"
                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F7941D] focus:border-transparent text-sm"
                       placeholder="e.g., 100kg">
                   </div>
@@ -668,6 +684,138 @@
 
               </ng-container>
 
+              <!-- CAPACITY MEASURE FORM -->
+              <ng-container *ngIf="isCapacityMeasureCategory()">
+                   <!-- Brand Name -->
+                   <div>
+                     <label class="block text-sm font-semibold text-gray-700 mb-2">Brand Name *</label>
+                     <input type="text" [(ngModel)]="currentInstrument.brand_name" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Enter brand name">
+                   </div>
+                   <!-- Manufacturer -->
+                   <div>
+                     <label class="block text-sm font-semibold text-gray-700 mb-2">Manufacturers Name (Make) *</label>
+                     <input type="text" [(ngModel)]="currentInstrument.make" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Enter manufacturer">
+                   </div>
+                   <!-- Model Type -->
+                   <div>
+                     <label class="block text-sm font-semibold text-gray-700 mb-2">Model Type</label>
+                     <input type="text" [(ngModel)]="currentInstrument.meter_model" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Enter model type">
+                   </div>
+                   <!-- Quantity -->
+                   <div>
+                     <label class="block text-sm font-semibold text-gray-700 mb-2">Quantity *</label>
+                     <input type="number" min="1" [(ngModel)]="currentInstrument.quantity" (input)="onQuantityChange()" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Enter quantity">
+                   </div>
+
+                   <!-- Dynamic Serial Numbers -->
+                   <div class="col-span-1 md:col-span-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                     <label class="block text-sm font-bold text-gray-700 mb-3">Serial Numbers ({{ currentInstrument.serial_numbers?.length || 0 }}) *</label>
+                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                         <div *ngFor="let sn of currentInstrument.serial_numbers; let i = index; trackBy: trackByIndex">
+                             <input type="text" [(ngModel)]="currentInstrument.serial_numbers![i]" class="w-full px-3 py-2 border border-gray-300 rounded text-sm" [placeholder]="'Serial No. ' + (i + 1)">
+                         </div>
+                     </div>
+                   </div>
+
+                   <!-- Material of Construction -->
+                   <div>
+                     <label class="block text-sm font-semibold text-gray-700 mb-2">Material of Construction *</label>
+                     <input type="text" [(ngModel)]="currentInstrument.material_construction" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="e.g. Mild Steel">
+                   </div>
+                   <!-- Year of Manufacture -->
+                   <div>
+                     <label class="block text-sm font-semibold text-gray-700 mb-2">Year of Manufacture *</label>
+                     <input type="text" [(ngModel)]="currentInstrument.year_manufacture" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="e.g. 2024">
+                   </div>
+
+                   <!-- Measurement Unit -->
+                   <div>
+                     <label class="block text-sm font-semibold text-gray-700 mb-2">Units of Measurement *</label>
+                     <select [(ngModel)]="currentInstrument.measurement_unit" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+                         <option value="">Select Unit</option>
+                         <option value="Litre">Litre</option>
+                         <option value="Cubic Metre">Cubic Metre</option>
+                     </select>
+                   </div>
+                   <!-- Nominal Capacity -->
+                   <div>
+                     <label class="block text-sm font-semibold text-gray-700 mb-2">Nominal Capacity (L / m³) *</label>
+                     <input type="text" [(ngModel)]="currentInstrument.nominal_capacity" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Enter capacity">
+                   </div>
+                   
+                   <!-- Max Permissible Error -->
+                   <div>
+                     <label class="block text-sm font-semibold text-gray-700 mb-2">Maximum Permissible Error *</label>
+                     <input type="text" [(ngModel)]="currentInstrument.max_permissible_error" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="e.g. +/- 0.5%">
+                   </div>
+                   <!-- Temperature Range -->
+                   <div>
+                     <label class="block text-sm font-semibold text-gray-700 mb-2">Temperature Range *</label>
+                     <input type="text" [(ngModel)]="currentInstrument.temperature_range" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="e.g. -10°C to 50°C">
+                   </div>
+                   
+                   <!-- Intended Liquid -->
+                   <div class="col-span-1 md:col-span-2 pt-2">
+                       <label class="block text-sm font-bold text-gray-700 mb-2">Intended Liquid *</label>
+                       <!-- Simple Text input for now to store as string easily, or implement checkboxes helper -->
+                       <!-- User requested checkboxes: Petrol, Kerosene, Diesel, Water -->
+                       <!-- I will simulate checkboxes using a temporary UI that updates the model string -->
+                       <div class="flex flex-wrap gap-4 bg-gray-50 p-3 rounded border border-gray-200">
+                           <label class="flex items-center space-x-2">
+                               <input type="radio" value="Petrol" name="intended_liquid" [(ngModel)]="currentInstrument.intended_liquid" class="text-[#F7941D] focus:ring-[#F7941D] rounded w-4 h-4">
+                               <span class="text-sm text-gray-700">Petrol</span>
+                           </label>
+                           <label class="flex items-center space-x-2">
+                               <input type="radio" value="Kerosene" name="intended_liquid" [(ngModel)]="currentInstrument.intended_liquid" class="text-[#F7941D] focus:ring-[#F7941D] rounded w-4 h-4">
+                               <span class="text-sm text-gray-700">Kerosene</span>
+                           </label>
+                           <label class="flex items-center space-x-2">
+                               <input type="radio" value="Diesel" name="intended_liquid" [(ngModel)]="currentInstrument.intended_liquid" class="text-[#F7941D] focus:ring-[#F7941D] rounded w-4 h-4">
+                               <span class="text-sm text-gray-700">Diesel</span>
+                           </label>
+                           <label class="flex items-center space-x-2">
+                               <input type="radio" value="Water" name="intended_liquid" [(ngModel)]="currentInstrument.intended_liquid" class="text-[#F7941D] focus:ring-[#F7941D] rounded w-4 h-4">
+                               <span class="text-sm text-gray-700">Water</span>
+                           </label>
+                       </div>
+                   </div>
+
+                   <!-- Yes/No Questions -->
+                   <!-- Seal Arrangement -->
+                   <div class="col-span-1 md:col-span-2 pt-2">
+                      <div class="flex items-center justify-between bg-white p-3 border rounded-lg">
+                          <label class="text-sm font-semibold text-gray-700">Seal mechanism provided</label>
+                          <div class="flex items-center space-x-4">
+                              <label class="flex items-center"><input type="radio" value="Yes" name="seal_arr" [(ngModel)]="currentInstrument.has_seal_arrangement" class="mr-2 text-[#F7941D] focus:ring-[#F7941D]">Yes</label>
+                              <label class="flex items-center"><input type="radio" value="No" name="seal_arr" [(ngModel)]="currentInstrument.has_seal_arrangement" class="mr-2 text-[#F7941D] focus:ring-[#F7941D]">No</label>
+                          </div>
+                      </div>
+                   </div>
+
+                   <!-- Adjustment Mechanism -->
+                   <div class="col-span-1 md:col-span-2">
+                      <div class="flex items-center justify-between bg-white p-3 border rounded-lg">
+                          <label class="text-sm font-semibold text-gray-700">Adjustment mechanism provided</label>
+                          <div class="flex items-center space-x-4">
+                              <label class="flex items-center"><input type="radio" value="Yes" name="adj_mech" [(ngModel)]="currentInstrument.has_adjustment_mechanism" class="mr-2 text-[#F7941D] focus:ring-[#F7941D]">Yes</label>
+                              <label class="flex items-center"><input type="radio" value="No" name="adj_mech" [(ngModel)]="currentInstrument.has_adjustment_mechanism" class="mr-2 text-[#F7941D] focus:ring-[#F7941D]">No</label>
+                          </div>
+                      </div>
+                   </div>
+
+                   <!-- Gauge Glass -->
+                   <div class="col-span-1 md:col-span-2">
+                      <div class="flex items-center justify-between bg-white p-3 border rounded-lg">
+                          <label class="text-sm font-semibold text-gray-700">Gauge glass / sight tube / sight glass provided</label>
+                          <div class="flex items-center space-x-4">
+                              <label class="flex items-center"><input type="radio" value="Yes" name="gauge_glass" [(ngModel)]="currentInstrument.has_gauge_glass" class="mr-2 text-[#F7941D] focus:ring-[#F7941D]">Yes</label>
+                              <label class="flex items-center"><input type="radio" value="No" name="gauge_glass" [(ngModel)]="currentInstrument.has_gauge_glass" class="mr-2 text-[#F7941D] focus:ring-[#F7941D]">No</label>
+                          </div>
+                      </div>
+                   </div>
+              </ng-container>
+
+
               <!-- Required Documents Table -->
               <div class="col-span-1 md:col-span-2 mt-4">
                 <h4 class="text-sm font-bold text-gray-800 mb-3">Required Attachments</h4>
@@ -681,7 +829,8 @@
                       </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                      <tr *ngFor="let doc of instrumentDocuments; let i = index">
+                      <ng-container *ngFor="let doc of instrumentDocuments; let i = index">
+                      <tr *ngIf="shouldShowDocument(doc.key)">
                         <td class="px-6 py-4 whitespace-nowrap">
                           <div class="text-sm font-medium text-gray-900">{{ doc.name }}</div>
                           <div *ngIf="currentInstrument[doc.key]" class="text-xs text-green-600 mt-1 flex items-center">
@@ -743,6 +892,7 @@
                           </div>
                         </td>
                       </tr>
+                      </ng-container>
                     </tbody>
                   </table>
                 </div>
@@ -874,49 +1024,247 @@
       <div class="space-y-4">
         <div *ngFor="let instrument of selectedInstruments; let i = index" 
              class="border border-gray-200 rounded-lg p-4 bg-gray-50">
-          <div class="flex justify-between items-start">
+            <div class="flex justify-between items-start">
             <div class="flex-1">
-              <h4 class="font-bold text-gray-900">{{ instrument.instrument_type_name }} ({{ instrument.instrument_type_code }})</h4>
-              <div class="grid grid-cols-2 gap-3 mt-3 text-sm">
-                <div>
-                  <span class="text-gray-600 font-medium">Brand:</span>
-                  <span class="text-gray-900 ml-2">{{ instrument.brand_name }}</span>
+              <div class="flex items-center justify-between mb-4">
+                  <h4 class="font-bold text-lg text-gray-900">{{ instrument.instrument_type_name }} <span class="text-gray-500 font-normal">({{ instrument.instrument_type_code }})</span></h4>
+                  <span class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    Qty: {{ instrument.quantity || 1 }}
+                  </span>
+                  <span class="px-3 py-1 ml-2 rounded-full text-xs font-medium bg-green-100 text-green-800" *ngIf="instrument.calculated_fee">
+                    Fee: {{ instrument.calculated_fee | number }} TZS
+                  </span>
+              </div>
+              
+              <!-- General Info -->
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4 text-sm mb-4">
+                <div *ngIf="instrument.brand_name">
+                  <span class="block text-gray-500 text-xs uppercase tracking-wider font-semibold">Brand</span>
+                  <span class="text-gray-900 font-medium">{{ instrument.brand_name }}</span>
                 </div>
-                <div>
-                  <span class="text-gray-600 font-medium">Make:</span>
-                  <span class="text-gray-900 ml-2">{{ instrument.make }}</span>
+                <div *ngIf="instrument.make">
+                  <span class="block text-gray-500 text-xs uppercase tracking-wider font-semibold">Make/Manufacturer</span>
+                  <span class="text-gray-900 font-medium">{{ instrument.make }}</span>
                 </div>
-                <div>
-                  <span class="text-gray-600 font-medium">Serial Number:</span>
-                  <span class="text-gray-900 ml-2">{{ instrument.serial_number }}</span>
+                <div *ngIf="instrument.meter_model">
+                    <span class="block text-gray-500 text-xs uppercase tracking-wider font-semibold">Model</span>
+                    <span class="text-gray-900 font-medium">{{ instrument.meter_model }}</span>
                 </div>
-                <div>
-                  <span class="text-gray-600 font-medium">Max Capacity:</span>
-                  <span class="text-gray-900 ml-2">{{ instrument.maximum_capacity }}</span>
+                <div *ngIf="instrument.serial_number">
+                  <span class="block text-gray-500 text-xs uppercase tracking-wider font-semibold">Serial Number</span>
+                  <span class="text-gray-900 font-medium break-all">{{ instrument.serial_number }}</span>
+                </div>
+                <div *ngIf="instrument.serial_numbers && instrument.serial_numbers.length > 0">
+                    <span class="block text-gray-500 text-xs uppercase tracking-wider font-semibold">Serial Numbers</span>
+                    <div class="text-gray-900 font-medium max-h-20 overflow-y-auto text-xs bg-gray-100 p-2 rounded">
+                        {{ instrument.serial_numbers.join(', ') }}
+                    </div>
                 </div>
               </div>
-              <div class="mt-2 flex space-x-4 text-xs">
-                <span *ngIf="instrument.manual_calibration_doc" class="text-green-600 flex items-center">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  Manual Calibration Uploaded
-                </span>
-                <span *ngIf="instrument.specification_doc" class="text-green-600 flex items-center">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  Specification Uploaded
-                </span>
+
+              <!-- Weighing Instrument Specifics -->
+               <div *ngIf="instrument.maximum_capacity || instrument.accuracy_class" class="border-t border-gray-200 pt-3 mb-4">
+                  <h5 class="text-xs font-bold text-gray-400 uppercase mb-3">Technical Specifications</h5>
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4 text-sm">
+                      <div *ngIf="instrument.scale_type">
+                          <span class="text-gray-500 mr-2">Scale Type:</span>
+                          <span class="font-medium capitalize">{{ instrument.scale_type }}</span>
+                      </div>
+                      <div *ngIf="instrument.maximum_capacity">
+                          <span class="text-gray-500 mr-2">Max Capacity:</span>
+                          <span class="font-medium">{{ instrument.maximum_capacity }}</span>
+                      </div>
+                      <div *ngIf="instrument.accuracy_class">
+                          <span class="text-gray-500 mr-2">Accuracy Class:</span>
+                          <span class="font-medium uppercase">{{ instrument.accuracy_class }}</span>
+                      </div>
+                       <div *ngIf="instrument.value_e">
+                          <span class="text-gray-500 mr-2">Value (e):</span>
+                          <span class="font-medium">{{ instrument.value_e }}</span>
+                      </div>
+                       <div *ngIf="instrument.value_d">
+                          <span class="text-gray-500 mr-2">Value (d):</span>
+                          <span class="font-medium">{{ instrument.value_d }}</span>
+                      </div>
+                      <div *ngIf="instrument.instrument_use">
+                          <span class="text-gray-500 mr-2">Usage:</span>
+                          <span class="font-medium">{{ instrument.instrument_use }}</span>
+                      </div>
+                  </div>
+               </div>
+
+               <!-- Meter Specifics -->
+               <div *ngIf="instrument.nominal_flow_rate || instrument.nominal_voltage" class="border-t border-gray-200 pt-3 mb-4">
+                  <h5 class="text-xs font-bold text-gray-400 uppercase mb-3">Technical Specifications</h5>
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-2 text-sm">
+                      <!-- Flow Meter -->
+                      <div *ngIf="instrument.nominal_flow_rate">
+                          <span class="text-gray-500 block text-xs">Nominal Flow Rate (Q3)</span>
+                          <span class="font-medium">{{ instrument.nominal_flow_rate }}</span>
+                      </div>
+                      <div *ngIf="instrument.meter_class">
+                          <span class="text-gray-500 block text-xs">Meter Class</span>
+                          <span class="font-medium">{{ instrument.meter_class }}</span>
+                      </div>
+                      <div *ngIf="instrument.meter_size_dn">
+                          <span class="text-gray-500 block text-xs">Meter Size (DN)</span>
+                          <span class="font-medium">{{ instrument.meter_size_dn }}</span>
+                      </div>
+                      <div *ngIf="instrument.diameter">
+                          <span class="text-gray-500 block text-xs">Diameter</span>
+                          <span class="font-medium">{{ instrument.diameter }}</span>
+                      </div>
+                      <div *ngIf="instrument.ratio">
+                          <span class="text-gray-500 block text-xs">Ratio</span>
+                          <span class="font-medium">{{ instrument.ratio }}</span>
+                      </div>
+                      <div *ngIf="instrument.max_admissible_pressure">
+                          <span class="text-gray-500 block text-xs">Max Pressure</span>
+                          <span class="font-medium">{{ instrument.max_admissible_pressure }}</span>
+                      </div>
+                      <div *ngIf="instrument.max_temperature">
+                          <span class="text-gray-500 block text-xs">Max Temp</span>
+                          <span class="font-medium">{{ instrument.max_temperature }}°C</span>
+                      </div>
+                      <div *ngIf="instrument.position_hv_type">
+                          <span class="text-gray-500 block text-xs">Position</span>
+                          <span class="font-medium uppercase">{{ instrument.position_hv_type }}</span>
+                      </div>
+                       <div *ngIf="instrument.flow_direction_type">
+                          <span class="text-gray-500 block text-xs">Flow Direction</span>
+                          <span class="font-medium capitalize">{{ instrument.flow_direction_type?.replace('_', ' ') }}</span>
+                      </div>
+
+                      <!-- Electrical Meter -->
+                      <div *ngIf="instrument.meter_type">
+                          <span class="text-gray-500 block text-xs">Meter Type</span>
+                          <span class="font-medium capitalize">{{ instrument.meter_type }}</span>
+                      </div>
+                      <div *ngIf="instrument.nominal_voltage">
+                          <span class="text-gray-500 block text-xs">Voltage</span>
+                          <span class="font-medium">{{ instrument.nominal_voltage }} V</span>
+                      </div>
+                      <div *ngIf="instrument.nominal_frequency">
+                          <span class="text-gray-500 block text-xs">Frequency</span>
+                          <span class="font-medium">{{ instrument.nominal_frequency }} Hz</span>
+                      </div>
+                      <div *ngIf="instrument.maximum_current">
+                          <span class="text-gray-500 block text-xs">Max Current</span>
+                          <span class="font-medium">{{ instrument.maximum_current }} A</span>
+                      </div>
+                      <div *ngIf="instrument.minimum_current">
+                          <span class="text-gray-500 block text-xs">Min Current</span>
+                          <span class="font-medium">{{ instrument.minimum_current }} A</span>
+                      </div>
+                      <div *ngIf="instrument.connection_type">
+                          <span class="text-gray-500 block text-xs">Connection</span>
+                          <span class="font-medium uppercase">{{ instrument.connection_type }}</span>
+                      </div>
+                       <div *ngIf="instrument.environment">
+                          <span class="text-gray-500 block text-xs">Environment</span>
+                          <span class="font-medium capitalize">{{ instrument.environment }}</span>
+                      </div>
+                       <div *ngIf="instrument.ip_rating">
+                          <span class="text-gray-500 block text-xs">IP Rating</span>
+                          <span class="font-medium">{{ instrument.ip_rating }}</span>
+                      </div>
+                  </div>
+               </div>
+
+               <!-- Capacity Measure Specifics -->
+               <div *ngIf="instrument.material_construction || instrument.nominal_capacity" class="border-t border-gray-200 pt-3 mb-4">
+                  <h5 class="text-xs font-bold text-gray-400 uppercase mb-3">Technical Specifications</h5>
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-2 text-sm">
+                      <div *ngIf="instrument.material_construction">
+                          <span class="text-gray-500 block text-xs">Material</span>
+                          <span class="font-medium">{{ instrument.material_construction }}</span>
+                      </div>
+                       <div *ngIf="instrument.nominal_capacity">
+                          <span class="text-gray-500 block text-xs">Capacity</span>
+                          <span class="font-medium">{{ instrument.nominal_capacity }} {{ instrument.measurement_unit }}</span>
+                      </div>
+                       <div *ngIf="instrument.year_manufacture">
+                          <span class="text-gray-500 block text-xs">Year</span>
+                          <span class="font-medium">{{ instrument.year_manufacture }}</span>
+                      </div>
+                      <div *ngIf="instrument.max_permissible_error">
+                          <span class="text-gray-500 block text-xs">Max Error</span>
+                          <span class="font-medium">{{ instrument.max_permissible_error }}</span>
+                      </div>
+                      <div *ngIf="instrument.temperature_range">
+                          <span class="text-gray-500 block text-xs">Temp Range</span>
+                          <span class="font-medium">{{ instrument.temperature_range }}</span>
+                      </div>
+                      <div *ngIf="instrument.intended_liquid">
+                          <span class="text-gray-500 block text-xs">Liquid</span>
+                          <span class="font-medium">{{ instrument.intended_liquid }}</span>
+                      </div>
+                  </div>
+               </div>
+
+              <!-- Documents -->
+              <div class="border-t border-gray-200 pt-3 mb-2">
+                 <h5 class="text-xs font-bold text-gray-400 uppercase mb-2">Attached Documents</h5>
+                 <div class="flex flex-wrap gap-3">
+                    <span *ngIf="instrument.manual_calibration_doc" 
+                          (click)="openPreview(instrument.manual_calibration_doc, 'Manual Calibration Document')"
+                          class="inline-flex items-center px-2.5 py-1.5 rounded-md text-xs font-medium bg-green-100 text-green-800 cursor-pointer hover:bg-green-200 transition-colors"
+                          title="Click to view">
+                        <svg class="mr-1.5 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Manual Calibration
+                    </span>
+                     <span *ngIf="instrument.specification_doc" 
+                           (click)="openPreview(instrument.specification_doc, 'Specification Document')"
+                           class="inline-flex items-center px-2.5 py-1.5 rounded-md text-xs font-medium bg-green-100 text-green-800 cursor-pointer hover:bg-green-200 transition-colors"
+                           title="Click to view">
+                        <svg class="mr-1.5 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Specifications
+                    </span>
+                     <span *ngIf="instrument.type_approval_doc" 
+                           (click)="openPreview(instrument.type_approval_doc, 'Type Approval Certificate')"
+                           class="inline-flex items-center px-2.5 py-1.5 rounded-md text-xs font-medium bg-green-100 text-green-800 cursor-pointer hover:bg-green-200 transition-colors"
+                           title="Click to view">
+                        <svg class="mr-1.5 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Type Approval
+                    </span>
+                     <span *ngIf="instrument.other_doc" 
+                           (click)="openPreview(instrument.other_doc, 'Other Document')"
+                           class="inline-flex items-center px-2.5 py-1.5 rounded-md text-xs font-medium bg-green-100 text-green-800 cursor-pointer hover:bg-green-200 transition-colors"
+                           title="Click to view">
+                        <svg class="mr-1.5 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Other Doc
+                    </span>
+                 </div>
               </div>
             </div>
-            <button 
-              (click)="removeInstrument(i)"
-              class="ml-4 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-              </svg>
-            </button>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col space-y-2 ml-4">
+                <button 
+                (click)="editInstrument(i)"
+                class="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
+                title="Edit Instrument">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+              </button>
+              <button 
+                (click)="removeInstrument(i)"
+                class="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-200"
+                title="Remove Instrument">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1061,8 +1409,9 @@
 
       <!-- Content -->
       <div class="bg-white h-[70vh]">
-        <div *ngIf="previewFileUrl; else noPreview" class="h-full w-full">
-            <iframe [src]="previewFileUrl" class="w-full h-full border-0" title="Document Preview"></iframe>
+        <div *ngIf="previewFileUrl; else noPreview" class="h-full w-full flex items-center justify-center bg-gray-100">
+            <iframe *ngIf="previewFile?.type === 'application/pdf'" [src]="previewFileUrl" class="w-full h-full border-0" title="Document Preview"></iframe>
+            <img *ngIf="previewFile?.type?.startsWith('image/')" [src]="previewFileUrl" class="max-w-full max-h-full object-contain" alt="Document Preview">
         </div>
         <ng-template #noPreview>
             <div class="flex flex-col items-center justify-center h-full text-gray-500">
