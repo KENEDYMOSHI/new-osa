@@ -18,7 +18,7 @@ class CapacityMeasureInstrumentModel extends Model
         'material_construction', 'year_manufacture', 'measurement_unit', 
         'nominal_capacity', 'max_permissible_error', 'temperature_range', 
         'intended_liquid', 'has_seal_arrangement', 'has_adjustment_mechanism', 'has_gauge_glass',
-        'other_doc', 'type_approval_doc'
+        'other_doc', 'type_approval_doc', 'application_fee', 'pattern_fee'
     ];
 
     // Dates

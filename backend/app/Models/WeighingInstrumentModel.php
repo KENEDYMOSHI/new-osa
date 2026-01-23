@@ -27,7 +27,9 @@ class WeighingInstrumentModel extends Model
         'scale_type',
         'instrument_use',
         'value_e',
-        'value_d'
+        'value_d',
+        'application_fee',
+        'pattern_fee'
     ];
 
     // Dates

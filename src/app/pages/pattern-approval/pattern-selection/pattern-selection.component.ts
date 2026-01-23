@@ -107,10 +107,10 @@ interface SelectedInstrument {
 export class PatternSelectionComponent implements OnInit {
   // Document Configuration
   instrumentDocuments = [
-    { key: 'manual_calibration_doc', name: 'Manual Calibration Document', accept: '.pdf,.doc,.docx' },
-    { key: 'specification_doc', name: 'Specification of Instrument', accept: '.pdf,.doc,.docx' },
-    { key: 'type_approval_doc', name: 'Type examination certificate (if available)', accept: '.pdf,.doc,.docx' },
-    { key: 'other_doc', name: 'Other Document', accept: '.pdf,.doc,.docx,.jpg,.jpeg,.png' }
+    { key: 'manual_calibration_doc', name: 'Manual Calibration Document *', accept: '.pdf,.jpg,.jpeg,.png' },
+    { key: 'specification_doc', name: 'Specification of Instrument *', accept: '.pdf,.jpg,.jpeg,.png' },
+    { key: 'type_approval_doc', name: 'Type examination certificate (Optional)', accept: '.pdf,.jpg,.jpeg,.png' },
+    { key: 'other_doc', name: 'Other Document (Optional)', accept: '.pdf,.jpg,.jpeg,.png' }
   ];
 
   // Modal State
@@ -484,7 +484,7 @@ export class PatternSelectionComponent implements OnInit {
       serial_number: '',
       maximum_capacity: '',
       // Meter Fields Initialization
-      quantity: 1,
+      quantity: undefined,
       nominal_flow_rate: '',
       meter_class: '',
       ratio: '',
@@ -760,10 +760,16 @@ export class PatternSelectionComponent implements OnInit {
     this.previewFile = file;
     this.previewTitle = title;
     
+    // Handle different file types
     if (file.type === 'application/pdf') {
       const url = URL.createObjectURL(file);
       this.previewFileUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    } else if (file.type.startsWith('image/')) {
+      // Handle images (jpg, jpeg, png, etc.)
+      const url = URL.createObjectURL(file);
+      this.previewFileUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
     } else {
+      // For Word documents and other unsupported types, show "Preview not available"
       this.previewFileUrl = null;
     }
     this.showPreviewModal = true;
@@ -859,7 +865,7 @@ export class PatternSelectionComponent implements OnInit {
     if (this.isFlowMeterCategory()) {
         // Flow Meter Validation
         if (this.currentInstrument.brand_name && 
-            this.currentInstrument.quantity && 
+            this.currentInstrument.quantity != null && this.currentInstrument.quantity > 0 && 
             this.currentInstrument.nominal_flow_rate && 
             this.currentInstrument.meter_class && 
             this.currentInstrument.max_temperature && 
@@ -869,20 +875,14 @@ export class PatternSelectionComponent implements OnInit {
             this.currentInstrument.sealing_mechanism_type &&
             this.currentInstrument.flow_direction_type) {
             
-            // Check serial numbers
-            const serials = this.currentInstrument.serial_numbers || [];
-            const allSerialsFilled = serials.every(s => s && s.trim().length > 0);
-            
-            if (allSerialsFilled && serials.length === this.currentInstrument.quantity) {
-                isValid = true;
-            }
+            isValid = true;
         }
     } else if (this.isElectricalMeterCategory()) {
         // Electrical Meter Validation
         if (this.currentInstrument.brand_name &&
             this.currentInstrument.make && 
             this.currentInstrument.meter_model &&
-            this.currentInstrument.quantity &&
+            this.currentInstrument.quantity != null && this.currentInstrument.quantity > 0 &&
             this.currentInstrument.meter_type &&
             this.currentInstrument.accuracy_class &&
             this.currentInstrument.nominal_voltage &&
@@ -899,19 +899,13 @@ export class PatternSelectionComponent implements OnInit {
             this.currentInstrument.temperature_upper &&
             this.currentInstrument.humidity_class) {
 
-           // Check serial numbers
-           const serials = this.currentInstrument.serial_numbers || [];
-           const allSerialsFilled = serials.every(s => s && s.trim().length > 0);
-           
-           if (allSerialsFilled && serials.length === this.currentInstrument.quantity) {
-               isValid = true;
-           }
+           isValid = true;
         }
     } else if (this.isCapacityMeasureCategory()) {
         // Capacity Measure Validation
         if (this.currentInstrument.brand_name &&
             this.currentInstrument.make &&
-            this.currentInstrument.quantity &&
+            this.currentInstrument.quantity != null && this.currentInstrument.quantity > 0 &&
             this.currentInstrument.measurement_unit &&
             this.currentInstrument.nominal_capacity &&
             this.currentInstrument.material_construction &&
@@ -932,7 +926,7 @@ export class PatternSelectionComponent implements OnInit {
         // Weighing Instrument Validation
         if (this.currentInstrument.brand_name && 
             this.currentInstrument.make && 
-            this.currentInstrument.quantity && 
+            this.currentInstrument.quantity != null && this.currentInstrument.quantity > 0 && 
             this.currentInstrument.accuracy_class &&
             this.currentInstrument.maximum_capacity &&
             this.currentInstrument.manual_calibration_doc &&
@@ -1052,6 +1046,9 @@ export class PatternSelectionComponent implements OnInit {
     this.calculateFee();
   }
 
+  // Submission State
+  isSubmitted = false;
+
   submitApplication() {
     if (!this.selectedPatternTypeId) {
       this.errorMessage = 'Please select a pattern type';
@@ -1088,9 +1085,23 @@ export class PatternSelectionComponent implements OnInit {
   saveInstruments() {
     if (!this.applicationId) return;
 
+    // Determine if it's a weighing instrument application (fee per instrument)
+    const isWeighing = this.selectedPatternTypeName && this.selectedPatternTypeName.toLowerCase().includes('weigh');
+
     // Save each instrument
     let savedCount = 0;
-    this.selectedInstruments.forEach((instrument) => {
+    this.selectedInstruments.forEach((instrument, index) => {
+      
+      // Calculate fee logic:
+      // For Weighing: use the instrument's calculated fee
+      // For Others (Meters): Fee is global (per application). Assign total fee to the first instrument, 0 for others.
+      let feeToSave = 0;
+      if (isWeighing) {
+          feeToSave = instrument.calculated_fee || 0;
+      } else {
+          feeToSave = (index === 0) ? this.applicationFee : 0;
+      }
+
       const instrumentData = {
         instrument_type_id: instrument.instrument_type_id,
         brand_name: instrument.brand_name,
@@ -1101,6 +1112,10 @@ export class PatternSelectionComponent implements OnInit {
             : instrument.serial_number,
         maximum_capacity: instrument.maximum_capacity,
         
+        // Fee
+        application_fee: feeToSave,
+        pattern_fee: feeToSave,
+
         // Meter Specific Fields
         quantity: instrument.quantity,
         nominal_flow_rate: instrument.nominal_flow_rate,
@@ -1188,11 +1203,13 @@ export class PatternSelectionComponent implements OnInit {
           savedCount++;
           if (savedCount === this.selectedInstruments.length) {
             this.isSaving = false;
+            this.isSubmitted = true;
             this.successMessage = 'Application submitted successfully!';
-            // Reset form
-            setTimeout(() => {
-              this.resetForm();
-            }, 2000);
+            
+            // REMOVED AUTO RESET
+            // setTimeout(() => {
+            //   this.resetForm();
+            // }, 2000);
           }
         },
         error: (error) => {
@@ -1204,6 +1221,10 @@ export class PatternSelectionComponent implements OnInit {
     });
   }
 
+  startNewApplication() {
+    this.resetForm();
+  }
+
   resetForm() {
     this.selectedPatternTypeId = null;
     this.instrumentCategories = [];
@@ -1211,6 +1232,7 @@ export class PatternSelectionComponent implements OnInit {
     this.currentInstrument = null;
     this.applicationId = null;
     this.showFuelPumpForm = false;
+    this.isSubmitted = false;
     this.successMessage = '';
     this.errorMessage = '';
   }

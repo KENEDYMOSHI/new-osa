@@ -570,4 +570,73 @@ ongeza module kwenye side menu ambazo hazipo 	•	Pattern Approval Application
 	•	exceeding 50000kg but not exceeding 100000kg — 500,000
 	•	exceeding 100000kg but not exceeding 200000kg — 700,000
 	•	exceeding 200000kg — 800,000
-	In the Weighing Instrument module, the system shall determine the payable Pattern Approval fee by first evaluating the instrument’s maximum capacity in kilograms and matching it with the predefined weight-based fee table to obtain the base amount. Once the base amount is identified, the system shall assess the declared use of the weighing instrument. If the use is Normal Trade, the base amount shall remain unchanged. If the use is Pharmaceutical Laboratory, the system shall multiply the base amount by three (×3). If the use is Precision Stones, the system shall multiply the base amount by five (×5). After applying the use-based multiplier, the system shall then evaluate the instrument’s accuracy class to calculate the final payable amount. If the selected accuracy class is Roman Class I or Roman Class II, the amount obtained after the use-based calculation shall be multiplied by 7.5. If the selected accuracy class is Class III or Class IV, the amount obtained after the use-based calculation shall be multiplied by 5. The resulting value after applying both the use-based and accuracy-class multipliers shall be recorded as the total Pattern Approval 
+	In the Weighing Instrument module, the system shall determine the payable Pattern Approval fee by first evaluating the instrument’s maximum capacity in kilograms and matching it with the predefined weight-based fee table to obtain the base amount. Once the base amount is identified, the system shall assess the declared use of the weighing instrument. If the use is Normal Trade, the base amount shall remain unchanged. If the use is Pharmaceutical Laboratory, the system shall multiply the base amount by three (×3). If the use is Precision Stones, the system shall multiply the base amount by five (×5). After applying the use-based multiplier, the system shall then evaluate the instrument’s accuracy class to calculate the final payable amount. If the selected accuracy class is Roman Class I or Roman Class II, the amount obtained after the use-based calculation shall be multiplied by 7.5. If the selected accuracy class is Class III or Class IV, the amount obtained after the use-based calculation shall be multiplied by 5. The resulting value after applying both the use-based and accuracy-class multipliers shall be recorded as the total Pattern Approval
+	
+
+	Kwenye mfumo wa licence aplication kwenye module ya request for form D impliment kwa kutumia sample ya hiyo form utaanda na customer/ 🏢 Company Information
+Company Name:
+ABC Corporation
+Registration Number:
+REG-2023-001234
+Business License:
+BL-2023-567890
+Plot/House Number:
+Plot 123, Uhuru Street
+Postal Code:
+11101
+Address:
+P.O. Box 12345, Dar es Salaam
+📜 Certification Details
+I hereby certify that the under-mentioned liquid measuring pump:
+
+Erected
+Adjusted
+Repaired
+Pump Name *
+Fuel Dispenser Unit A1
+Serial Number *
+FD-2024-8901
+Product *
+Petrol
+Sticker Number *
+ST-2025-456
+Seal Number *
+WMA-2025-001
+Type of Pump *
+MC
+No. of Nozzles *
+4
+Pump Status *
+Verified
+Inspection Report *
+All nozzles calibrated and verified
+Verification Date *
+
+20/05/2025
+Next Verification Date *
+
+20/05/2026
+📅 Inspection Schedule
+Start Date
+
+23/01/2026
+Start Time
+
+08:00
+End Date
+
+24/01/2026
+End Time
+
+17:00
+✅ Final Certification
+I further certify that the above pump was fully tested against approved stamped measures and found correct within the permitted limits of error before sealing.
+
+License Number
+Enter license number
+Certificate of Authorization No.
+Enter certificate number
+Name(s) of User(s)
+Enter names of users for trade purposes
+I/We, being the user(s) for trade purposes of the liquid measuring pump described above, which has been sealed/re-sealed by the pump mechanic, request the Inspector of Weights and Measures that arrangements may be made for its verification.
+tengeneza form ila hii imekaa kwenye pump tu inatakiwa ya kazi zote tumia sample ya maneno hayo 

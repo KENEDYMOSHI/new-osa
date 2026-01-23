@@ -211,56 +211,63 @@ class AuthController extends ResourceController
 
         $data = $this->request->getJSON(true);
 
-        // Authenticate using Shield
-        $credentials = [
-            'email'    => $data['email'],
-            'password' => $data['password']
-        ];
-
-        $auth = service('auth');
-        if ($auth->attempt($credentials)) {
-            // Get user directly from UserModel instead of $auth->user()
-            // because Shield's user() method may return null in API context
-            $users = model(UserModel::class);
-            $user = $users->findByCredentials(['email' => $data['email']]);
-            
-            // Check if user object is null
-            if (!$user) {
-                log_message('error', 'Auth: attempt() succeeded but could not find user for email: ' . $data['email']);
-                return $this->failServerError('Authentication succeeded but user data could not be retrieved');
-            }
-
-            // Generate JWT
-            $key = getenv('JWT_SECRET') ?: 'your_secret_key_here';
-            $payload = [
-                'iss' => 'localhost',
-                'aud' => 'localhost',
-                'iat' => time(),
-                'exp' => time() + 3600, // 1 hour
-                'uid' => $user->id,
-                'email' => $user->email
-            ];
-
-            $token = JWT::encode($payload, $key, 'HS256');
-
-            // Get user_type from database
-            $db = \Config\Database::connect();
-            $userRecord = $db->table('users')->where('id', $user->id)->get()->getRow();
-            $userType = $userRecord->user_type ?? 'practitioner';
-
-            return $this->respond([
-                'message' => 'Login successful',
-                'token' => $token,
-                'user' => [
-                    'id' => $user->id,
-                    'username' => $user->username,
-                    'email' => $user->email,
-                    'user_type' => $userType
-                ]
-            ]);
-        } else {
+        // Find user by email
+        $users = model(UserModel::class);
+        $user = $users->findByCredentials(['email' => $data['email']]);
+        
+        if (!$user) {
             return $this->failUnauthorized('Invalid login credentials');
         }
+
+        // CRITICAL FIX: Manually verify password instead of using Shield's attempt()
+        // Shield's attempt() was accepting any password in API context
+        $db = \Config\Database::connect();
+        $identity = $db->table('auth_identities')
+            ->where('user_id', $user->id)
+            ->where('type', 'email_password')
+            ->get()
+            ->getRow();
+
+        if (!$identity) {
+            log_message('error', 'No password identity found for user: ' . $user->id);
+            return $this->failUnauthorized('Invalid login credentials');
+        }
+
+        // Verify password using password_verify (bcrypt)
+        if (!password_verify($data['password'], $identity->secret2)) {
+            log_message('info', 'Failed login attempt for email: ' . $data['email']);
+            return $this->failUnauthorized('Invalid login credentials');
+        }
+
+        // Password is correct - generate JWT
+        $key = getenv('JWT_SECRET') ?: 'your_secret_key_here';
+        $payload = [
+            'iss' => 'localhost',
+            'aud' => 'localhost',
+            'iat' => time(),
+            'exp' => time() + 3600, // 1 hour
+            'uid' => $user->id,
+            'email' => $user->email
+        ];
+
+        $token = JWT::encode($payload, $key, 'HS256');
+
+        // Get user_type from database
+        $userRecord = $db->table('users')->where('id', $user->id)->get()->getRow();
+        $userType = $userRecord->user_type ?? 'practitioner';
+
+        log_message('info', 'Successful login for email: ' . $data['email']);
+
+        return $this->respond([
+            'message' => 'Login successful',
+            'token' => $token,
+            'user' => [
+                'id' => $user->id,
+                'username' => $user->username,
+                'email' => $user->email,
+                'user_type' => $userType
+            ]
+        ]);
     }
 
     public function me()

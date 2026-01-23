@@ -51,6 +51,11 @@ export const routes: Routes = [
         title: 'My Applications | WMA Portal'
       },
       {
+        path: 'request-form-d',
+        loadComponent: () => import('./pages/request-form-d/request-form-d.component').then(m => m.RequestFormDComponent),
+        title: 'Request Form D | WMA Portal'
+      },
+      {
         path: 'Initial-Application',
         loadComponent: () => import('./pages/license-application/license-application.component').then(m => m.LicenseApplicationComponent),
         title: 'License Application | WMA Portal'
@@ -70,7 +75,16 @@ export const routes: Routes = [
         component:BlankComponent,
         title:'Angular Blank Dashboard | TailAdmin - Angular Admin Dashboard Template'
       },
-      // support tickets
+      {
+        path: 'activities-requests',
+        loadComponent: () => import('./pages/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
+        title: 'Activities Requests | Coming Soon'
+      },
+      {
+        path: 'request-token-approve',
+        loadComponent: () => import('./pages/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent),
+        title: 'Request Token Approval | Coming Soon'
+      },
       {
         path:'invoice',
         component:InvoicesComponent,

@@ -1606,7 +1606,6 @@ class LicenseController extends ResourceController
         }
 
         $appModel = new LicenseApplicationModel();
-        $billModel = new \App\Models\LicenseBillModel();
 
         // Verify application belongs to user
         $application = $appModel->where('id', $applicationId)
@@ -1617,13 +1616,32 @@ class LicenseController extends ResourceController
             return $this->failNotFound('Application not found');
         }
 
-        // Check payment status
-        if (!$billModel->isPaymentCompleted($applicationId)) {
-            $bill = $billModel->getBillByApplicationId($applicationId);
+        // Check payment status from osabill table (FIXED)
+        $db = \Config\Database::connect();
+        $bill = $db->table('osabill')
+                   ->where('bill_id', $applicationId)
+                   ->get()
+                   ->getRow();
+
+        if (!$bill) {
+            return $this->respond([
+                'status' => 402,
+                'error' => 'No bill found for this application',
+                'message' => 'Please generate a bill first'
+            ], 402);
+        }
+
+        // Check if payment is completed (case-insensitive)
+        $paymentStatus = strtolower(trim($bill->payment_status ?? ''));
+        if ($paymentStatus !== 'paid') {
             return $this->respond([
                 'status' => 402,
                 'error' => 'Payment must be completed before viewing license',
-                'bill' => $bill,
+                'bill' => [
+                    'control_number' => $bill->control_number,
+                    'amount' => $bill->amount,
+                    'payment_status' => $bill->payment_status
+                ],
                 'message' => 'Please complete payment to view your license'
             ], 402);
         }
@@ -1638,7 +1656,7 @@ class LicenseController extends ResourceController
         if (!$license) {
             // Create license if it doesn't exist
             // Assuming payment just completed or checking now
-            $paymentDate = date('Y-m-d'); // Should ideally come from bill payment time
+            $paymentDate = $bill->payment_date ?? date('Y-m-d');
             $license = $licenseModel->createLicense($applicationId, $paymentDate);
             
             if (!$license) {
@@ -1794,8 +1812,16 @@ class LicenseController extends ResourceController
         
         // Fetch all submitted or approved licenses for this user
         $builder = $db->table('license_applications');
-        $builder->select('license_applications.id, license_applications.updated_at, license_applications.status, license_application_items.license_type');
+        $builder->select('
+            license_applications.id, 
+            license_applications.updated_at, 
+            license_applications.status, 
+            license_application_items.license_type,
+            license_application_items.selected_instruments,
+            licenses.license_number
+        ');
         $builder->join('license_application_items', 'license_application_items.application_id = license_applications.id');
+        $builder->join('licenses', 'licenses.application_id = license_applications.id', 'left'); // Left join as license might not be generated
         $builder->where('license_applications.user_id', $user->id);
         
         // Include ALL statuses that should restrict re-application:
@@ -1831,6 +1857,8 @@ class LicenseController extends ResourceController
             $availableDate = null;
             $restrictionType = null; // 'approved_1yr' or 'pending'
 
+            $instruments = json_decode($app['selected_instruments'] ?? '[]', true);
+
             if ($isApproved) {
                 // 1-Year Restriction Logic for Approved Licenses
                 $approvalDate = new \DateTime($app['updated_at']);
@@ -1850,26 +1878,19 @@ class LicenseController extends ResourceController
                 $restrictionType = 'pending';
             }
             
-            if ($isRestricted && $isApproved) {
-                $result[] = [
-                    'license_type' => $app['license_type'],
-                    'status' => $app['status'],
-                    'restriction_type' => $restrictionType, // 'approved_1yr' or 'pending'
-                    'ceo_approved_at' => $isApproved ? $app['updated_at'] : null,
-                    'is_restricted' => true,
-                    'days_remaining' => $daysRemaining,
-                    'available_date' => $availableDate
-                ];
-            } else if (!$isApproved) {
-                // Return for "Applied" status check but NOT restricted (Red)
-                // This helps frontend know it's in progress but show it as Green
-                $result[] = [
-                    'license_type' => $app['license_type'],
-                    'status' => $app['status'],
-                    'is_restricted' => false,
-                    'restriction_type' => 'pending'
-                ];
-            }
+            // Allow returning details even if restricted, so frontend can show them
+            $result[] = [
+                'license_type' => $app['license_type'],
+                'status' => $app['status'],
+                'restriction_type' => $restrictionType,
+                'ceo_approved_at' => $isApproved ? $app['updated_at'] : null,
+                'is_restricted' => $isRestricted ?? false,
+                'days_remaining' => $daysRemaining,
+                'available_date' => $availableDate,
+                // New Fields
+                'license_number' => $app['license_number'],
+                'instruments' => $instruments
+            ];
         }
         
         return $this->respond($result);

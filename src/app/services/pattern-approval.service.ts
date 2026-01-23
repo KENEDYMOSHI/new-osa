@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { AuthService } from '../core/services/auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -8,10 +9,10 @@ import { Observable } from 'rxjs';
 export class PatternApprovalService {
   private apiUrl = 'http://localhost:8080/api/pattern-approval';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authService: AuthService) {}
 
   private getHeaders(isFormData: boolean = false): HttpHeaders {
-    const token = localStorage.getItem('token');
+    const token = this.authService.getToken();
     let headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });

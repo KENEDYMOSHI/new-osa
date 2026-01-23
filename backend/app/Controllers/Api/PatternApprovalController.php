@@ -322,11 +322,15 @@ class PatternApprovalController extends BaseController
             
             // Better check: Get pattern type name
             $patternType = $this->patternTypeModel->find($application['pattern_type_id']);
+            $isMeterInstrument = false; // Initialize
+
             if ($patternType) {
                 if (stripos($patternType['name'], 'Weighing') !== false) {
                     $isWeighingInstrument = true;
                 } elseif (stripos($patternType['name'], 'Capacity Measure') !== false) {
                     $isCapacityMeasure = true;
+                } elseif (stripos($patternType['name'], 'Meter') !== false) {
+                    $isMeterInstrument = true;
                 }
             }
 
@@ -341,8 +345,7 @@ class PatternApprovalController extends BaseController
                     'brand_name'             => $data['brand_name'] ?? null,
                     'make'                   => $data['make'] ?? null,
                     'quantity'               => $data['quantity'] ?? 1,
-                    // Handle serial numbers: Frontend sends 'serial_number' as a comma-separated string for Weighing Instruments
-                    'serial_numbers'         => $data['serial_number'] ?? ($data['serial_numbers'] ?? null),
+                    'serial_numbers'         => $data['serial_number'] ?? null,
                     'accuracy_class'         => $data['accuracy_class'] ?? null,
                     'maximum_capacity'       => $data['maximum_capacity'] ?? null,
                     'manual_calibration_doc' => $data['manual_calibration_doc'] ?? null,
@@ -352,6 +355,8 @@ class PatternApprovalController extends BaseController
                     'instrument_use'         => $data['instrument_use'] ?? null,
                     'value_e'                => $data['value_e'] ?? null,
                     'value_d'                => $data['value_d'] ?? null,
+                    'application_fee'        => $data['application_fee'] ?? 0.00,
+                    'pattern_fee'            => $data['pattern_fee'] ?? 0.00,
                     'created_at'             => date('Y-m-d H:i:s'),
                     'updated_at'             => date('Y-m-d H:i:s'),
                 ];
@@ -366,14 +371,13 @@ class PatternApprovalController extends BaseController
                     'pattern_application_id' => $id,
                     'instrument_type_id'     => $data['instrument_type_id'],
                     'brand_name'             => $data['brand_name'] ?? null,
-                    'manufacturer'           => $data['make'] ?? null, // Map make to manufacturer
+                    'manufacturer'           => $data['make'] ?? null, 
                     'meter_model'            => $data['meter_model'] ?? null,
                     'quantity'               => $data['quantity'] ?? 1,
                     'serial_numbers'         => isset($data['serial_numbers']) && is_array($data['serial_numbers']) 
                                                 ? implode(',', $data['serial_numbers']) 
                                                 : ($data['serial_numbers'] ?? null),
                     
-                    // Capacity Measure fields
                     'material_construction'    => $data['material_construction'] ?? null,
                     'year_manufacture'         => $data['year_manufacture'] ?? null,
                     'measurement_unit'         => $data['measurement_unit'] ?? null,
@@ -386,12 +390,79 @@ class PatternApprovalController extends BaseController
                     'has_gauge_glass'          => $data['has_gauge_glass'] ?? null,
                     'other_doc'                => $data['other_doc'] ?? null,
                     'type_approval_doc'        => $data['type_approval_doc'] ?? null,
+                    'application_fee'          => $data['application_fee'] ?? 0.00,
+                    'pattern_fee'              => $data['pattern_fee'] ?? 0.00,
 
                     'created_at'             => date('Y-m-d H:i:s'),
                     'updated_at'             => date('Y-m-d H:i:s'),
                  ];
 
                  $capacityModel->insert($instrumentData);
+
+            } elseif ($isMeterInstrument) {
+                // Meter Instrument Logic (Flow Meters, etc)
+                // Direct DB insert as no model exists yet
+                
+                $instrumentData = [
+                    'application_id'         => $id, // Uses application_id not pattern_application_id
+                    'instrument_type_id'     => $data['instrument_type_id'],
+                    'brand_name'             => $data['brand_name'] ?? null,
+                    'manufacturer'           => $data['make'] ?? null,
+                    'meter_model'            => $data['meter_model'] ?? null,
+                    'quantity'               => $data['quantity'] ?? 1,
+                    'serial_numbers'         => $data['serial_number'] ?? null,
+                    'application_fee'        => $data['application_fee'] ?? 0.00,
+
+                    // Meter Specifics
+                    'nominal_flow_rate'       => $data['nominal_flow_rate'] ?? null,
+                    'meter_class'             => $data['meter_class'] ?? null,
+                    'ratio'                   => $data['ratio'] ?? null,
+                    'max_admissible_pressure' => $data['max_admissible_pressure'] ?? null,
+                    'max_temperature'         => $data['max_temperature'] ?? null,
+                    'meter_size_dn'           => $data['meter_size_dn'] ?? null,
+                    'diameter'                => $data['diameter'] ?? null,
+                    'position_hv_type'        => $data['position_hv_type'] ?? null,
+                    'sealing_mechanism_type'  => $data['sealing_mechanism_type'] ?? null,
+                    'flow_direction_type'     => $data['flow_direction_type'] ?? null,
+                    
+                    // Electrical
+                    'meter_type'              => $data['meter_type'] ?? null,
+                    'nominal_voltage'         => $data['nominal_voltage'] ?? null,
+                    'nominal_frequency'       => $data['nominal_frequency'] ?? null,
+                    'maximum_current'         => $data['maximum_current'] ?? null,
+                    'transitional_current'    => $data['transitional_current'] ?? null,
+                    'minimum_current'         => $data['minimum_current'] ?? null,
+                    'starting_current'        => $data['starting_current'] ?? null,
+                    'connection_type'         => $data['connection_type'] ?? null,
+                    'connection_mode'         => $data['connection_mode'] ?? null,
+                    'alternative_connection_mode' => $data['alternative_connection_mode'] ?? null,
+                    'energy_flow_direction'   => $data['energy_flow_direction'] ?? null,
+                    'meter_constant'          => $data['meter_constant'] ?? null,
+                    'clock_frequency'         => $data['clock_frequency'] ?? null,
+                    'environment'             => $data['environment'] ?? null,
+                    'ip_rating'               => $data['ip_rating'] ?? null,
+                    'terminal_arrangement'    => $data['terminal_arrangement'] ?? null,
+                    'insulation_protection_class' => $data['insulation_protection_class'] ?? null,
+                    'temperature_lower'       => $data['temperature_lower'] ?? null,
+                    'temperature_upper'       => $data['temperature_upper'] ?? null,
+                    'humidity_class'          => $data['humidity_class'] ?? null,
+                    'hardware_version'        => $data['hardware_version'] ?? null,
+                    'software_version'        => $data['software_version'] ?? null,
+                    'remarks'                 => $data['remarks'] ?? null,
+                    'test_voltage'            => $data['test_voltage'] ?? null,
+                    'test_frequency'          => $data['test_frequency'] ?? null,
+                    'test_connection_mode'    => $data['test_connection_mode'] ?? null,
+                    'test_remarks'            => $data['test_remarks'] ?? null,
+
+                    'other_doc'              => $data['other_doc'] ?? null,
+                    'application_fee'        => $data['application_fee'] ?? 0.00,
+                    'pattern_fee'            => $data['pattern_fee'] ?? 0.00,
+                    
+                    'created_at'             => date('Y-m-d H:i:s'),
+                    'updated_at'             => date('Y-m-d H:i:s'),
+                ];
+                
+                $this->db->table('meter_instruments')->insert($instrumentData);
 
             } else {
                 // Standard Instrument Logic
@@ -417,6 +488,7 @@ class PatternApprovalController extends BaseController
                     'manual_calibration_doc' => $data['manual_calibration_doc'] ?? null,
                     'specification_doc'      => $data['specification_doc'] ?? null,
                     'other_doc'              => $data['other_doc'] ?? null,
+                    'application_fee'        => $data['application_fee'] ?? 0.00,
                     'created_at'             => date('Y-m-d H:i:s'),
                     'updated_at'             => date('Y-m-d H:i:s'),
                 ];
@@ -434,6 +506,17 @@ class PatternApprovalController extends BaseController
         } catch (\Exception $e) {
             return $this->fail($e->getMessage(), ResponseInterface::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private function handleFileUpload($field)
+    {
+        $file = $this->request->getFile($field);
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            $newName = $file->getRandomName();
+            $file->move(WRITEPATH . 'uploads', $newName);
+            return 'uploads/' . $newName;
+        }
+        return null;
     }
 
     /**

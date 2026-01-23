@@ -46,7 +46,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->post('auth/register', 'AuthController::register');
     $routes->post('auth/check-phone', 'AuthController::checkPhone');
     $routes->post('auth/login', 'AuthController::login');
-    $routes->get('auth/me', 'AuthController::me');
+    $routes->get('auth/me', 'AuthController::me', ['filter' => 'auth']);
     $routes->post('auth/update-personal', 'AuthController::updatePersonalProfile');
     $routes->post('auth/update-business', 'AuthController::updateBusinessProfile');
     $routes->post('auth/change-password', 'AuthController::changePassword');
@@ -128,7 +128,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->get('support-details', 'OsaSupportController::getDetails');
 
     // Pattern Approval Module
-    $routes->group('pattern-approval', function($routes) {
+    $routes->group('pattern-approval', ['filter' => 'auth'], function($routes) {
         $routes->get('pattern-types', 'PatternApprovalController::getPatternTypes');
         $routes->get('instrument-categories', 'PatternApprovalController::getInstrumentCategories');
         $routes->get('instrument-types/(:segment)', 'PatternApprovalController::getInstrumentTypesByCategory/$1');
