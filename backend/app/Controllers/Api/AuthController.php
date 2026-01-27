@@ -405,6 +405,7 @@ class AuthController extends ResourceController
             'postal_code'   => $data['postalCode'] ?? ($existing->postal_code ?? null),
             'bus_street'    => $data['street'] ?? ($existing->bus_street ?? null),
             'tin'           => $data['tin'] ?? ($existing->tin ?? null),
+            'seal_number'   => $data['sealNumber'] ?? ($existing->seal_number ?? null),
         ];
 
         // Remove null values if you don't want to overwrite with null (optional, depending on requirement)

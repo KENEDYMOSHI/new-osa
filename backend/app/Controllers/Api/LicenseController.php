@@ -998,6 +998,13 @@ class LicenseController extends ResourceController
 
         $data = [];
         foreach ($bills as $bill) {
+            // Determine fee type: use fee_type if available, otherwise map from bill_type
+            $feeType = $bill['fee_type'];
+            if (empty($feeType) || $feeType === 'N/A') {
+                // Map bill_type (1 = Application Fee, 2 = License Fee)
+                $feeType = ($bill['bill_type'] == 1) ? 'Application Fee' : 'License Fee';
+            }
+            
             $data[] = [
                 'id' => $bill['id'],
                 'billId' => $bill['bill_id'],
@@ -1008,7 +1015,7 @@ class LicenseController extends ResourceController
                 'date' => $bill['created_at'],
                 'licenseType' => $bill['bill_description'],
                 'billType' => $bill['bill_type'], // Keep for backward compatibility
-                'feeType' => $bill['fee_type'] ?? 'N/A' // Add fee_type from database
+                'feeType' => $feeType // Properly mapped fee type
             ];
         }
 
@@ -1029,6 +1036,7 @@ class LicenseController extends ResourceController
             license_bill.amount as license_fee_amount, 
             license_bill.control_number as license_control_number, 
             license_bill.payment_status as license_payment_status,
+            license_bill.created_at as license_issue_date,
             app_fee_bill.amount as application_fee_amount, 
             app_fee_bill.control_number as application_control_number,
             app_fee_bill.payment_status as application_payment_status,
@@ -1096,15 +1104,27 @@ class LicenseController extends ResourceController
             
             $status = $app['status'];
             
-            // Get interview result not just for display but logic
+            // Get interview result and application type for logic
             $interviewResult = $app['interview_result'] ?? null;
+            $applicationType = $app['application_type'] ?? 'New';
+            $isRenewal = strcasecmp($applicationType, 'Renewal') === 0;
             
-            // Show advanced stages (DTS & CEO) only if stage is beyond Surveillance (3+)
-            // This happens after applicant submits the License Application Module
-            $showAdvancedStages = ($currentStage >= 3);
+            // Show advanced stages (DTS & CEO) based on application type:
+            // - For RENEWAL: Show after Surveillance approval (no exam required)
+            // - For NEW: Show after Surveillance approval AND exam marks are saved
+            $showAdvancedStages = false;
+            
+            if ($isRenewal) {
+                // RENEWAL: Show DTS/CEO after Surveillance approval
+                $showAdvancedStages = ($currentStage >= 3) || ($status === 'Approved_Surveillance');
+            } else {
+                // NEW: Show DTS/CEO after Surveillance approval AND exam marks exist
+                $hasExamMarks = !empty($interviewResult); // Exam marks have been saved
+                $showAdvancedStages = ($currentStage >= 3) || (($status === 'Approved_Surveillance') && $hasExamMarks);
+            }
             
             // Applicant Action: Fill License Application Module
-            // Unlocked when Surveillance Approves (and implicity Exam Passed)
+            // Unlocked when Surveillance Approves (and implicitly Exam Passed for NEW)
             $canFillLicenseApp = ($status === 'Approved_Surveillance');
 
             // Base steps (always shown): Regional Manager and Surveillance
@@ -1208,6 +1228,26 @@ class LicenseController extends ResourceController
                 $billStatus = null;
             }
 
+            // Calculate license expiry (1 year from issue date)
+            $issueDate = $app['license_issue_date'] ?? null;
+            $isExpired = false;
+            $daysUntilExpiry = null;
+            $expiryDate = null;
+            
+            if ($issueDate && $app['license_control_number']) {
+                $expiryDate = date('Y-m-d', strtotime($issueDate . ' +1 year'));
+                $today = date('Y-m-d');
+                $isExpired = ($today > $expiryDate);
+                
+                if (!$isExpired) {
+                    $diff = strtotime($expiryDate) - strtotime($today);
+                    $daysUntilExpiry = floor($diff / (60 * 60 * 24));
+                }
+            }
+            
+            // Determine comprehensive license status
+            $licenseStatus = $this->determineLicenseStatus($app, $isExpired);
+
             $data[] = [
                 'id' => $controlNumber ? $controlNumber : 'APP-' . substr($app['id'], 0, 8),
                 'original_id' => $app['id'],
@@ -1220,6 +1260,7 @@ class LicenseController extends ResourceController
                 'applicationFee' => $applicationFee,
                 'applicationFeeText' => $applicationFeeText, // For UI display
                 'nationality' => $nationality,
+                'application_type' => $app['application_type'] ?? 'New', // Add application type for frontend logic
                 'progress' => $progress,
                 'steps' => $steps,
                 'interview' => [
@@ -1236,11 +1277,45 @@ class LicenseController extends ResourceController
                 'control_number' => $controlNumber,
                 // Explicitly return license specific bill details for "Request Control Number" logic
                 'licenseControlNumber' => $app['license_control_number'] ?? null,
-                'licensePaymentStatus' => $app['license_payment_status'] ?? null
+                'licensePaymentStatus' => $app['license_payment_status'] ?? null,
+                // License expiry information
+                'licenseIssueDate' => $issueDate,
+                'licenseExpiryDate' => $expiryDate,
+                'isExpired' => $isExpired,
+                'daysUntilExpiry' => $daysUntilExpiry,
+                'licenseStatus' => $licenseStatus
             ];
         }
 
         return $this->respond($data);
+    }
+
+    /**
+     * Determine comprehensive license status for display
+     */
+    private function determineLicenseStatus($app, $isExpired) {
+        // If license exists and is expired
+        if ($app['license_control_number'] && $isExpired) {
+            return 'License Expired';
+        }
+        
+        // If license exists and is valid
+        if ($app['license_control_number'] && !$isExpired) {
+            return 'License Issued & Valid';
+        }
+        
+        // If under review (any approval stage)
+        $reviewStatuses = ['Pending', 'Approved_Manager', 'Approved_Surveillance', 'Approved_Exams', 'Approved_DTS'];
+        if (in_array($app['status'], $reviewStatuses)) {
+            return 'Under Review';
+        }
+        
+        // If CEO approved but license not yet generated
+        if ($app['status'] === 'Approved_CEO' && !$app['license_control_number']) {
+            return 'Approved - Pending License';
+        }
+        
+        return 'Application In Progress';
     }
 
     private function numberToWords($number) {

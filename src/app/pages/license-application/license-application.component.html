@@ -659,23 +659,39 @@
       <div class="p-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div *ngFor="let license of licenseTypes" 
-               [class]="'border rounded-lg p-4 transition-all ' + 
-                        (license.isRestricted ? 'border-red-300 bg-red-50 opacity-75 cursor-not-allowed' : 
+               [class]="'border rounded-lg p-4 transition-all relative ' + 
+                        (license.licenseStatus === 'License Issued & Valid' ? 'border-green-300 bg-green-50 opacity-75 cursor-not-allowed' : 
+                         license.isExpired ? 'border-red-300 bg-red-50 opacity-60 cursor-not-allowed' : 
+                         license.isRestricted ? 'border-red-300 bg-red-50 opacity-75 cursor-not-allowed' : 
                          license.selected ? 'border-[#F59E0B] bg-orange-50 ring-1 ring-[#F59E0B]' : 
                          license.submitted ? 'border-green-200 bg-green-50' : 
                          'border-gray-200') + 
-                        (!license.submitted && !license.isRestricted ? ' cursor-pointer hover:border-orange-200' : '')"
-               (click)="toggleLicense(license)">
-            <div class="flex items-start justify-between mb-2">
+                        (!license.submitted && !license.isRestricted && !license.isExpired && license.licenseStatus !== 'License Issued & Valid' ? ' cursor-pointer hover:border-orange-200' : '')"
+               (click)="!license.isExpired && !license.isRestricted && license.licenseStatus !== 'License Issued & Valid' ? toggleLicense(license) : null">
+            
+            <!-- Status Badge (Top Right) -->
+            <div *ngIf="license.licenseStatus" 
+                 class="absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-semibold"
+                 [ngClass]="{
+                   'bg-green-100 text-green-700': license.licenseStatus === 'License Issued & Valid',
+                   'bg-red-100 text-red-700': license.licenseStatus === 'License Expired',
+                   'bg-orange-100 text-orange-700': license.licenseStatus === 'Under Review',
+                   'bg-blue-100 text-blue-700': license.licenseStatus === 'Approved - Pending License',
+                   'bg-gray-100 text-gray-700': license.licenseStatus === 'Application In Progress'
+                 }">
+              {{ license.licenseStatus }}
+            </div>
+
+            <div class="flex items-start justify-between mb-2 mt-6">
               <h4 class="font-bold text-gray-800">{{ license.name }}</h4>
               
               <!-- Checkbox for selectable licenses -->
-              <ng-container *ngIf="!license.submitted && !license.isRestricted">
+              <ng-container *ngIf="!license.submitted && !license.isRestricted && !license.isExpired && license.licenseStatus !== 'License Issued & Valid'">
                 <input type="checkbox" [checked]="license.selected" class="h-5 w-5 text-[#F59E0B] rounded border-gray-300 focus:ring-[#F59E0B] pointer-events-none">
               </ng-container>
               
-              <!-- Checkmark for submitted licenses -->
-              <ng-container *ngIf="license.submitted && !license.isRestricted">
+              <!-- Checkmark for issued/submitted licenses -->
+              <ng-container *ngIf="(license.submitted && !license.isRestricted) || license.licenseStatus === 'License Issued & Valid'">
                 <div class="bg-green-100 text-green-600 rounded-full p-1">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -683,8 +699,8 @@
                 </div>
               </ng-container>
 
-              <!-- Lock icon for restricted licenses -->
-              <ng-container *ngIf="license.isRestricted">
+              <!-- Lock icon for restricted/expired licenses -->
+              <ng-container *ngIf="license.isRestricted || license.isExpired">
                 <div class="bg-red-100 text-red-600 rounded-full p-1">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
@@ -694,31 +710,62 @@
 
             </div>
             <p class="text-sm text-gray-600 mb-3 min-h-[40px]">{{ license.description }}</p>
-                        <!-- Restriction Notice -->
-              <div *ngIf="license.isRestricted" class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <div class="flex items-start">
-                  <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                    </svg>
-                  </div>
-                  <div class="ml-3">
-                    <ng-container *ngIf="license.restrictionType === 'pending'; else approvedRestriction">
-                        <h3 class="text-sm font-medium text-red-800">Application In Progress</h3>
-                        <div class="mt-2 text-sm text-red-700">
-                          <p>You already have a pending application for this license.</p>
-                        </div>
-                    </ng-container>
-                    <ng-template #approvedRestriction>
-                        <h3 class="text-sm font-medium text-red-800">Already Applied</h3>
-                        <div class="mt-2 text-sm text-red-700">
-                          <p class="mb-1">Available after {{ formatDate(license.availableDate) }}</p>
-                          <p class="font-semibold">{{ license.daysRemaining }} days remaining</p>
-                        </div>
-                    </ng-template>
+            
+            <!-- Expiry Warning (if close to expiry) -->
+            <div *ngIf="license.daysUntilExpiry !== null && license.daysUntilExpiry !== undefined && license.daysUntilExpiry <= 30 && !license.isExpired" 
+                 class="mb-3 p-2 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+              <div class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-yellow-600">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <p class="text-xs font-semibold text-yellow-800">
+                  Expires in {{ license.daysUntilExpiry }} days
+                </p>
+              </div>
+            </div>
+            <!-- Expired License Notice -->
+            <div *ngIf="license.isExpired" class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div class="flex items-start">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <h3 class="text-sm font-medium text-red-800">License Expired</h3>
+                  <div class="mt-2 text-sm text-red-700">
+                    <p>This license expired on {{ formatDate(license.licenseExpiryDate) }}.</p>
+                    <p class="mt-1 font-semibold">Please apply for renewal.</p>
                   </div>
                 </div>
-              </div>           <!-- Submitted Notice -->
+              </div>
+            </div>
+            
+            <!-- Restriction Notice -->
+            <div *ngIf="license.isRestricted && !license.isExpired" class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div class="flex items-start">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <ng-container *ngIf="license.restrictionType === 'pending'; else approvedRestriction">
+                      <h3 class="text-sm font-medium text-red-800">Application In Progress</h3>
+                      <div class="mt-2 text-sm text-red-700">
+                        <p>You already have a pending application for this license.</p>
+                      </div>
+                  </ng-container>
+                  <ng-template #approvedRestriction>
+                      <h3 class="text-sm font-medium text-red-800">Already Applied</h3>
+                      <div class="mt-2 text-sm text-red-700">
+                        <p class="mb-1">Available after {{ formatDate(license.availableDate) }}</p>
+                        <p class="font-semibold">{{ license.daysRemaining }} days remaining</p>
+                      </div>
+                  </ng-template>
+                </div>
+              </div>
+            </div>           <!-- Submitted Notice -->
             <div *ngIf="license.submitted && !license.isRestricted" class="mb-3 p-2 bg-green-100 border border-green-200 rounded-lg">
               <div class="flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-green-600">

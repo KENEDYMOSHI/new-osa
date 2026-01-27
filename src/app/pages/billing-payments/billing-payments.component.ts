@@ -56,18 +56,27 @@ export class BillingPaymentsComponent implements OnInit {
 
     this.licenseService.getUserBills(filters).subscribe({
       next: (data) => {
-        this.invoices = data.map((bill: any) => ({
-          id: bill.id,
-          billId: bill.billId,
-          controlNumber: bill.controlNumber,
-          amount: bill.amount,
-          paymentStatus: bill.paymentStatus,
-          billDescription: bill.billDescription,
-          date: new Date(bill.date).toLocaleDateString(),
-          licenseType: bill.licenseType,
-          billType: bill.billType, // 1 or 2
-          feeType: bill.feeType // Mapped from API response
-        }));
+        this.invoices = data.map((bill: any) => {
+          // Format date as dd/mm/yyyy
+          const date = new Date(bill.date);
+          const day = String(date.getDate()).padStart(2, '0');
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const year = date.getFullYear();
+          const formattedDate = `${day}/${month}/${year}`;
+          
+          return {
+            id: bill.id,
+            billId: bill.billId,
+            controlNumber: bill.controlNumber,
+            amount: bill.amount,
+            paymentStatus: bill.paymentStatus,
+            billDescription: bill.billDescription,
+            date: formattedDate,
+            licenseType: bill.licenseType,
+            billType: bill.billType, // 1 or 2
+            feeType: bill.feeType // Mapped from API response
+          };
+        });
         this.isLoading = false;
       },
       error: (error) => {

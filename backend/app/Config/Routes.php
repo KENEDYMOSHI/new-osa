@@ -151,6 +151,11 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
         $routes->post('upload-document', 'FuelPumpController::uploadDocument');
     });
 
+    // Form D Requests
+    $routes->post('form-d/submit', 'FormDController::create');
+    $routes->get('form-d/requests', 'FormDController::index');
+    $routes->get('form-d/user-requests/(:num)', 'FormDController::getUserRequests/$1');
+
     $routes->options('(:any)', static function () {
         return response()->setStatusCode(200);
     });

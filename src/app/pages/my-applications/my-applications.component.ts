@@ -244,6 +244,17 @@ export class MyApplicationsComponent implements OnInit {
     return s === 'paid' || s === 'completed' || s === 'success';
   }
 
+  // Helper method to determine if "Request Control Number" button should be shown
+  shouldShowRequestControlNumber(app: any): boolean {
+    // Don't show if control number already exists
+    if (app.licenseControlNumber) {
+      return false;
+    }
+
+    // Show button ONLY after CEO final approval for all application types
+    return app.status === 'Approved_CEO' || app.status === 'Approved';
+  }
+
   // Helper method to determine button state
   getLicenseButtonState(application: any): 'generate' | 'view-bill' | 'view-license' | 'none' {
     // This will be enhanced when we add payment status to the application object

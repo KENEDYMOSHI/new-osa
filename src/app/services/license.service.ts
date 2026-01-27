@@ -148,6 +148,16 @@ export class LicenseService {
     return this.http.get(`${this.apiUrl}/approved-licenses`, { headers: this.getHeaders() });
   }
 
+  submitFormD(data: any): Observable<any> {
+    const baseUrl = this.apiUrl.replace('/license', '');
+    return this.http.post(`${baseUrl}/form-d/submit`, data, { headers: this.getHeaders() });
+  }
+
+  getUserFormDRequests(userId: number | string): Observable<any> {
+    const baseUrl = this.apiUrl.replace('/license', '');
+    return this.http.get(`${baseUrl}/form-d/user-requests/${userId}`, { headers: this.getHeaders() });
+  }
+
   private getHeaders(): HttpHeaders {
     const token = this.authService.getToken();
     return new HttpHeaders({

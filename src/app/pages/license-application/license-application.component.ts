@@ -89,6 +89,12 @@ export class LicenseApplicationComponent implements OnInit {
     daysRemaining?: number;
     availableDate?: string;
     ceoApprovedAt?: string;
+    // License expiry and status properties
+    licenseIssueDate?: string;
+    licenseExpiryDate?: string;
+    isExpired?: boolean;
+    daysUntilExpiry?: number | null;
+    licenseStatus?: string;
   }[] = [];
 
   // Approved licenses with restriction info
@@ -844,6 +850,31 @@ export class LicenseApplicationComponent implements OnInit {
         }
         return;
     }
+    
+    
+    // Prevent selection if license is already issued and valid
+    if (license.licenseStatus === 'License Issued & Valid') {
+      Swal.fire({
+        icon: 'info',
+        title: 'License Already Issued',
+        html: `Your <strong>${license.name}</strong> license is already active and valid.<br><br>` +
+              `You cannot apply for this license again until it expires.`,
+        confirmButtonColor: '#F59E0B'
+      });
+      return;
+    }
+    // Prevent selection if license is expired
+    if (license.isExpired) {
+      Swal.fire({
+        icon: 'error',
+        title: 'License Expired',
+        html: `Your <strong>${license.name}</strong> license expired on <strong>${this.formatDate(license.licenseExpiryDate)}</strong>.<br><br>` +
+              `Please apply for license renewal to continue using this license class.`,
+        confirmButtonColor: '#F59E0B'
+      });
+      return;
+    }
+    
     // Prevent selection if restricted
     if ((license as any).isRestricted) {
       Swal.fire({

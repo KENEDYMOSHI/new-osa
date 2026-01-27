@@ -56,6 +56,11 @@ export const routes: Routes = [
         title: 'Request Form D | WMA Portal'
       },
       {
+        path: 'view-form-d-requests',
+        loadComponent: () => import('./pages/request-form-d-list/request-form-d-list.component').then(m => m.RequestFormDListComponent),
+        title: 'View Form D Requests | WMA Portal'
+      },
+      {
         path: 'Initial-Application',
         loadComponent: () => import('./pages/license-application/license-application.component').then(m => m.LicenseApplicationComponent),
         title: 'License Application | WMA Portal'

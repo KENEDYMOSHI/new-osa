@@ -11,7 +11,7 @@
   <!-- Header -->
   <div class="mb-8">
     <h1 class="text-2xl font-bold text-gray-800">Form D Request</h1>
-    <p class="text-gray-500 text-sm mt-1">Form of Certificate to be used by a Pump Mechanic after Sealing or Re-sealing (Regulation 12(d))</p>
+    <p class="text-gray-500 text-sm mt-1">{{ textConfig.headerSubtitle }}</p>
   </div>
 
   <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -186,9 +186,9 @@
         <!-- Instrument Details Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 bg-gray-50 rounded-xl border border-dashed border-gray-300">
              
-             <!-- Pump Name -->
+             <!-- Pump/Instrument Name -->
              <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1.5">Pump Name <span class="text-red-500">*</span></label>
+                <label class="block text-xs font-semibold text-gray-600 mb-1.5">{{ textConfig.certInstrumentName | titlecase }} Name <span class="text-red-500">*</span></label>
                 <input type="text" [(ngModel)]="formData.instrumentName" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
              </div>
 
@@ -205,32 +205,38 @@
              </div>
 
              <!-- Sticker Number -->
-             <div>
+             <div *ngIf="fieldConfig.showSticker">
                 <label class="block text-xs font-semibold text-gray-600 mb-1.5">Sticker Number <span class="text-red-500">*</span></label>
                 <input type="text" [(ngModel)]="formData.stickerNumber" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
              </div>
 
              <!-- Seal Number -->
-             <div>
+             <div *ngIf="fieldConfig.showSealNumber">
                 <label class="block text-xs font-semibold text-gray-600 mb-1.5">Seal Number <span class="text-red-500">*</span></label>
                 <input type="text" [(ngModel)]="formData.sealNumber" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
              </div>
 
-             <!-- Type of Pump -->
+             <!-- Type of Instrument -->
              <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1.5">Type of Pump <span class="text-red-500">*</span></label>
+                <label class="block text-xs font-semibold text-gray-600 mb-1.5">Type of {{ textConfig.certInstrumentName | titlecase }} <span class="text-red-500">*</span></label>
                 <input type="text" [(ngModel)]="formData.typeOfInstrument" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
              </div>
 
-             <!-- No. of Nozzles -->
-             <div>
+             <!-- No. of Nozzles (Pump Only) -->
+             <div *ngIf="fieldConfig.showNozzles">
                 <label class="block text-xs font-semibold text-gray-600 mb-1.5">No. of Nozzles <span class="text-red-500">*</span></label>
                 <input type="number" [(ngModel)]="formData.quantity" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
              </div>
 
-             <!-- Pump Status -->
+             <!-- Capacity (Tank Only) -->
+             <div *ngIf="fieldConfig.showCapacity">
+                <label class="block text-xs font-semibold text-gray-600 mb-1.5">Capacity (Litres) <span class="text-red-500">*</span></label>
+                <input type="number" [(ngModel)]="formData.capacity" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
+             </div>
+
+             <!-- Instrument Status -->
              <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1.5">Pump Status <span class="text-red-500">*</span></label>
+                <label class="block text-xs font-semibold text-gray-600 mb-1.5">{{ textConfig.certInstrumentName | titlecase }} Status <span class="text-red-500">*</span></label>
                 <select [(ngModel)]="formData.status" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
                     <option>Verified</option>
                     <option>Pending Verification</option>
@@ -266,29 +272,63 @@
           Inspection Schedule
         </h3>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-           <div class="grid grid-cols-2 gap-4">
-              <div>
-                  <label class="block text-xs font-semibold text-gray-600 mb-1.5">Start Date</label>
-                  <input type="date" [(ngModel)]="formData.startDate" class="w-full bg-gray-50 border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
-              </div>
-              <div>
-                  <label class="block text-xs font-semibold text-gray-600 mb-1.5">Start Time</label>
-                  <input type="time" [(ngModel)]="formData.startTime" class="w-full bg-gray-50 border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
-              </div>
-           </div>
-           
-           <div class="grid grid-cols-2 gap-4">
-              <div>
-                  <label class="block text-xs font-semibold text-gray-600 mb-1.5">End Date</label>
-                  <input type="date" [(ngModel)]="formData.endDate" class="w-full bg-gray-50 border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
-              </div>
-              <div>
-                  <label class="block text-xs font-semibold text-gray-600 mb-1.5">End Time</label>
-                  <input type="time" [(ngModel)]="formData.endTime" class="w-full bg-gray-50 border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
-              </div>
-           </div>
-        </div>
+           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-2 gap-4">
+               <!-- Start Date -->
+               <div>
+                   <label class="block text-xs font-semibold text-gray-600 mb-1.5">Start Date</label>
+                   <div class="relative">
+                       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                         </svg>
+                       </div>
+                       <input type="date" [(ngModel)]="formData.startDate" class="pl-10 w-full bg-white border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 block p-2.5 transition-shadow shadow-sm placeholder-gray-400" placeholder="dd/mm/yyyy">
+                   </div>
+               </div>
+               
+               <!-- Start Time -->
+               <div>
+                   <label class="block text-xs font-semibold text-gray-600 mb-1.5">Start Time</label>
+                   <div class="relative">
+                       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                         </svg>
+                       </div>
+                       <input type="time" [(ngModel)]="formData.startTime" class="pl-10 w-full bg-white border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 block p-2.5 transition-shadow shadow-sm">
+                   </div>
+               </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+               <!-- End Date -->
+               <div>
+                   <label class="block text-xs font-semibold text-gray-600 mb-1.5">End Date</label>
+                   <div class="relative">
+                       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                         </svg>
+                       </div>
+                       <input type="date" [(ngModel)]="formData.endDate" class="pl-10 w-full bg-white border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 block p-2.5 transition-shadow shadow-sm placeholder-gray-400" placeholder="dd/mm/yyyy">
+                   </div>
+               </div>
+               
+               <!-- End Time -->
+               <div>
+                   <label class="block text-xs font-semibold text-gray-600 mb-1.5">End Time</label>
+                   <div class="relative">
+                       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                         </svg>
+                       </div>
+                       <input type="time" [(ngModel)]="formData.endTime" class="pl-10 w-full bg-white border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 block p-2.5 transition-shadow shadow-sm">
+                   </div>
+               </div>
+            </div>
+         </div>
       </section>
 
       <!-- Final Certification -->
@@ -300,44 +340,91 @@
           Final Certification
         </h3>
         
-        <div class="p-6 bg-orange-50/50 rounded-xl border border-orange-100">
-             <div class="flex items-start mb-4">
-                <input id="declaration" type="checkbox" [(ngModel)]="formData.declaration" class="w-4 h-4 mt-1 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500">
-                <label for="declaration" class="ml-2 text-sm font-medium text-gray-900 leading-relaxed">
-                   I further certify that the above <span class="font-bold">pump</span> was fully tested against approved stamped measures and found correct within the permitted limits of error before sealing.
-                   <br>
-                   <span class="text-xs text-gray-500 mt-1 block">
-                     I/We, being the user(s) for trade purposes of the liquid measuring pump described above, which has been sealed/re-sealed by the pump mechanic, request the Inspector of Weights and Measures that arrangements may be made for its verification.
-                   </span>
-                </label>
+        <div class="p-8 bg-white rounded-xl border border-gray-200 text-gray-800 leading-relaxed font-serif text-sm">
+             
+             <!-- Mechanic Certification -->
+             <div class="mb-6">
+                 <p class="mb-6">
+                     I further certify that the above <span class="font-bold">{{ textConfig.certInstrumentName }}</span> was fully tested against approved stamped measures and found correct within the permitted limits of error before sealing.
+                 </p>
+                 
+                 <!-- Row 1: License, Practitioner, Phone -->
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                     <div class="flex items-end gap-2">
+                         <span class="whitespace-nowrap font-bold text-gray-600 text-xs">License Number:</span>
+                         <div class="flex-grow border-b border-gray-300 px-2 py-1 text-sm font-bold text-gray-800 bg-gray-50">
+                             {{ formData.licenseNumber || '---' }}
+                         </div>
+                     </div>
+                     <div class="flex items-end gap-2">
+                         <span class="whitespace-nowrap font-bold text-gray-600 text-xs">Practitioner Name:</span>
+                         <div class="flex-grow border-b border-gray-300 px-2 py-1 text-sm font-bold text-gray-800 bg-gray-50">
+                             {{ formData.accountName || '---' }}
+                         </div>
+                     </div>
+                     <div class="flex items-end gap-2">
+                         <span class="whitespace-nowrap font-bold text-gray-600 text-xs">Phone Number:</span>
+                         <div class="flex-grow border-b border-gray-300 px-2 py-1 text-sm font-bold text-gray-800 bg-gray-50">
+                             {{ userProfilePhone || '---' }}
+                         </div>
+                     </div>
+                 </div>
+
+                 <!-- Row 2: Cert No -->
+                 <div class="flex flex-wrap items-end gap-6 mb-2">
+                     <div class="flex-grow flex items-end gap-2">
+                         <span class="whitespace-nowrap font-bold">Certificate of Authorization No:</span>
+                         <input type="text" [(ngModel)]="formData.certAuthNumber" class="flex-grow border-0 border-b-2 border-dotted border-gray-400 focus:border-orange-500 focus:border-solid focus:ring-0 px-2 py-1 text-sm font-bold bg-orange-50/30 transition-all placeholder-gray-300" placeholder="Enter No.">
+                     </div>
+                 </div>
              </div>
 
-             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <div>
-                   <label class="block text-xs font-semibold text-gray-600 mb-1.5">License Number</label>
-                   <input type="text" [(ngModel)]="formData.licenseNumber" placeholder="Enter license number" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
-                </div>
-                <div>
-                   <label class="block text-xs font-semibold text-gray-600 mb-1.5">Certificate of Authorization No.</label>
-                   <input type="text" [(ngModel)]="formData.certAuthNumber" placeholder="Enter certificate number" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
-                </div>
-                <div class="md:col-span-2">
-                   <label class="block text-xs font-semibold text-gray-600 mb-1.5">Name(s) of User(s)</label>
-                   <input type="text" [(ngModel)]="formData.userNames" placeholder="Enter names of users for trade purposes" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
-                </div>
+             <!-- User Declaration -->
+             <div class="mt-8 border-t border-gray-100 pt-6">
+                 <div class="flex flex-wrap items-end gap-2 mb-2">
+                     <span class="font-bold">I / We</span>
+                     <input type="text" [(ngModel)]="formData.declarantName" class="flex-grow border-0 border-b-2 border-dotted border-gray-400 focus:border-orange-500 focus:border-solid focus:ring-0 px-2 py-1 text-sm font-bold bg-orange-50/30 transition-all placeholder-gray-300" placeholder="Enter Full Name">
+                 </div>
+
+                 <p class="mt-2 text-justify">
+                     Being the user(s) for trade purposes of the <span class="font-bold border-b border-gray-300 px-1">{{ textConfig.certUserDescription }}</span> described above, which has been <span class="font-bold border-b border-gray-300 px-1">{{ textConfig.certActionContext }}</span> by the <span class="font-bold border-b border-gray-300 px-1">{{ textConfig.certMechanicTitle }}</span>, request the Inspector of Weights and Measures that arrangements may be made for its verification.
+                 </p>
+
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                     <!-- Date -->
+                     <div class="flex items-center gap-2">
+                         <span class="font-bold w-12">Date:</span>
+                         <input type="date" [(ngModel)]="formData.declarantDate" class="min-w-[130px] border-0 border-b-2 border-dotted border-gray-400 focus:border-orange-500 focus:border-solid focus:ring-0 px-2 py-1 text-sm bg-orange-50/30 transition-all text-gray-700">
+                     </div>
+
+                     <!-- User Signature / Details -->
+                     <div class="space-y-4">
+                         <div class="flex items-center gap-2">
+                             <span class="font-bold w-28">Designation:</span>
+                             <input type="text" [(ngModel)]="formData.declarantDesignation" class="flex-grow border-0 border-b-2 border-dotted border-gray-400 focus:border-orange-500 focus:border-solid focus:ring-0 px-2 py-1 text-sm bg-orange-50/30 transition-all placeholder-gray-300" placeholder="Enter Designation">
+                         </div>
+                         <div class="flex items-center gap-2">
+                             <span class="font-bold w-28">Phone Number:</span>
+                             <input type="tel" [(ngModel)]="formData.declarantPhone" maxlength="10" class="flex-grow border-0 border-b-2 border-dotted border-gray-400 focus:border-orange-500 focus:border-solid focus:ring-0 px-2 py-1 text-sm bg-orange-50/30 transition-all placeholder-gray-300" placeholder="e.g. 0xxxxxxxxx" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)">
+                         </div>
+                     </div>
+                 </div>
+                 
+                 <p class="mt-8 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-t-2 border-gray-100 pt-4 text-center">
+                    ORIGINAL: To be forwarded to the Regional Manager, Weights and Measures Agency.
+                 </p>
+             </div>
+             
+             <!-- Hidden Checkbox for Logic (Auto-checked or implied by filling form) -->
+             <div class="mt-4 opacity-0 h-0 overflow-hidden">
+                <input id="declaration" type="checkbox" [(ngModel)]="formData.declaration" [checked]="true" (init)="formData.declaration = true">
              </div>
         </div>
       </section>
 
       <!-- Actions -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-         <button (click)="printForm()" class="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
-            </svg>
-            Print Form
-         </button>
-         <button (click)="submitForm()" [disabled]="loading || !formData.declaration" class="px-6 py-2.5 bg-[#F59E0B] hover:bg-[#D97706] text-white font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+         <button (click)="submitForm()" [disabled]="loading" class="px-6 py-2.5 bg-[#F59E0B] hover:bg-[#D97706] text-white font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
             <svg *ngIf="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>

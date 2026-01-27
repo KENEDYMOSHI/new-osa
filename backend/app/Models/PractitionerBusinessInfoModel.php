@@ -23,7 +23,8 @@ class PractitionerBusinessInfoModel extends Model
         'bus_district',
         'bus_ward',
         'postal_code',
-        'bus_street'
+        'bus_street',
+        'seal_number'
     ];
 
     protected $useTimestamps = true;

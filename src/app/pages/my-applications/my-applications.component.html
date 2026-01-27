@@ -194,7 +194,7 @@
               <!-- Action Buttons -->
               <div class="flex items-center shrink-0 gap-2">
                   <!-- Case 1: Approved, No Data -> Request Control Number -->
-                  <button *ngIf="(app.status === 'Approved' || app.status === 'Approved_CEO' || app.status === 'Approved_Surveillance' || app.status === 'Approved_Exams') && !app.licenseControlNumber"
+                  <button *ngIf="shouldShowRequestControlNumber(app)"
                           (click)="generateFee(app)"
                           [disabled]="generatingFeeFor === app.id"
                           [ngClass]="{'opacity-75 cursor-wait': generatingFeeFor === app.id}"

@@ -121,7 +121,8 @@ export class ProfileComponent implements OnInit {
           district: data.businessInfo.bus_district,
           town: data.businessInfo.bus_town,
           postalCode: data.businessInfo.postal_code,
-          street: data.businessInfo.bus_street
+          street: data.businessInfo.bus_street,
+          sealNumber: data.businessInfo.seal_number
         };
       }
 

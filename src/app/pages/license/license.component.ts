@@ -705,4 +705,44 @@ export class LicenseComponent {
       }
     });
   }
+
+  // Helper Methods for License Status and Expiry
+  
+  /**
+   * Check if a license is expired based on expiry date
+   */
+  isLicenseExpired(license: any): boolean {
+    if (!license.licenseExpiryDate) return false;
+    const today = new Date();
+    const expiryDate = new Date(license.licenseExpiryDate);
+    return today > expiryDate;
+  }
+
+  /**
+   * Get status badge color based on license status
+   */
+  getStatusColor(status: string): string {
+    const statusColors: { [key: string]: string } = {
+      'License Issued & Valid': 'green',
+      'License Expired': 'red',
+      'Under Review': 'orange',
+      'Approved - Pending License': 'blue',
+      'Application In Progress': 'gray'
+    };
+    return statusColors[status] || 'gray';
+  }
+
+  /**
+   * Check if a license card should be selectable
+   */
+  isCardSelectable(license: any): boolean {
+    // Don't allow selection of expired licenses
+    if (license.isExpired) return false;
+    
+    // Don't allow selection if already has pending application
+    if (license.status === 'Application In Progress') return false;
+    
+    return true;
+  }
 }
+
