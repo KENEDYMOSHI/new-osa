@@ -112,28 +112,39 @@
           <!-- Region -->
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1.5">Region <span class="text-red-500">*</span></label>
-            <select [(ngModel)]="formData.region" (change)="onRegionChange()" class="w-full bg-gray-50 border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
-                <option value="">Select Region</option>
-                <option *ngFor="let region of regions" [value]="region">{{ region }}</option>
-            </select>
+            <app-searchable-select
+                [options]="regions"
+                [(ngModel)]="formData.region"
+                (selectionChange)="onRegionChange()"
+                placeholder="Select Region">
+            </app-searchable-select>
           </div>
 
           <!-- District -->
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1.5">District <span class="text-red-500">*</span></label>
-            <select [(ngModel)]="formData.district" (change)="onDistrictChange()" [disabled]="!formData.region" class="w-full bg-gray-50 border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5 disabled:opacity-50">
-                <option value="">Select District</option>
-                <option *ngFor="let district of districts" [value]="district.name">{{ district.name }}</option>
-            </select>
+            <app-searchable-select
+                [options]="districts"
+                [(ngModel)]="formData.district"
+                displayKey="name"
+                valueKey="name"
+                [disabled]="!formData.region"
+                (selectionChange)="onDistrictChange()"
+                placeholder="Select District">
+            </app-searchable-select>
           </div>
 
           <!-- Ward -->
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1.5">Ward <span class="text-red-500">*</span></label>
-            <select [(ngModel)]="formData.ward" [disabled]="!formData.district" class="w-full bg-gray-50 border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5 disabled:opacity-50">
-                <option value="">Select Ward</option>
-                <option *ngFor="let ward of wards" [value]="ward.name">{{ ward.name }}</option>
-            </select>
+            <app-searchable-select
+                [options]="wards"
+                [(ngModel)]="formData.ward"
+                displayKey="name"
+                valueKey="name"
+                [disabled]="!formData.district"
+                placeholder="Select Ward">
+            </app-searchable-select>
           </div>
 
           <!-- Street/Village -->
@@ -213,44 +224,47 @@
              <!-- Seal Number -->
              <div *ngIf="fieldConfig.showSealNumber">
                 <label class="block text-xs font-semibold text-gray-600 mb-1.5">Seal Number <span class="text-red-500">*</span></label>
-                <input type="text" [(ngModel)]="formData.sealNumber" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
+                <input type="text" [(ngModel)]="formData.sealNumber" placeholder="Enter Seal Number" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
              </div>
 
              <!-- Type of Instrument -->
-             <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1.5">Type of {{ textConfig.certInstrumentName | titlecase }} <span class="text-red-500">*</span></label>
-                <input type="text" [(ngModel)]="formData.typeOfInstrument" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
+             <div *ngIf="fieldConfig.showTypeOfInstrument">
+                <label class="block text-xs font-semibold text-gray-600 mb-1.5">Type of Instrument <span class="text-red-500">*</span></label>
+                <input type="text" [(ngModel)]="formData.typeOfInstrument" placeholder="Enter Type" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
              </div>
 
-             <!-- No. of Nozzles (Pump Only) -->
+             <!-- Quantity (Nozzles) -->
              <div *ngIf="fieldConfig.showNozzles">
                 <label class="block text-xs font-semibold text-gray-600 mb-1.5">No. of Nozzles <span class="text-red-500">*</span></label>
                 <input type="number" [(ngModel)]="formData.quantity" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
              </div>
-
-             <!-- Capacity (Tank Only) -->
+             
+             <!-- Capacity -->
              <div *ngIf="fieldConfig.showCapacity">
-                <label class="block text-xs font-semibold text-gray-600 mb-1.5">Capacity (Litres) <span class="text-red-500">*</span></label>
-                <input type="number" [(ngModel)]="formData.capacity" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
+                 <label class="block text-xs font-semibold text-gray-600 mb-1.5">Capacity/Quantity <span class="text-red-500">*</span></label>
+                 <input type="number" [(ngModel)]="formData.capacity" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5" placeholder="Value">
              </div>
 
-             <!-- Instrument Status -->
-             <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1.5">{{ textConfig.certInstrumentName | titlecase }} Status <span class="text-red-500">*</span></label>
-                <select [(ngModel)]="formData.status" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
-                    <option>Verified</option>
-                    <option>Pending Verification</option>
-                    <option>Rejected</option>
-                </select>
+             <!-- Unit -->
+             <div *ngIf="fieldConfig.showCapacity">
+                 <label class="block text-xs font-semibold text-gray-600 mb-1.5">Unit <span class="text-red-500">*</span></label>
+                 <app-searchable-select
+                     [options]="capacityUnitGroups"
+                     [(ngModel)]="formData.capacityUnit"
+                     groupChildren="units"
+                     groupLabel="name"
+                     placeholder="Select Unit">
+                 </app-searchable-select>
              </div>
+
 
              <!-- Dates -->
-             <div>
+             <div *ngIf="fieldConfig.showDates">
                 <label class="block text-xs font-semibold text-gray-600 mb-1.5">Verification Date <span class="text-red-500">*</span></label>
                 <input type="date" [(ngModel)]="formData.verificationDate" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
              </div>
              
-             <div>
+             <div *ngIf="fieldConfig.showDates">
                 <label class="block text-xs font-semibold text-gray-600 mb-1.5">Next Verification Date <span class="text-red-500">*</span></label>
                 <input type="date" [(ngModel)]="formData.nextVerificationDate" class="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2.5">
              </div>
@@ -375,6 +389,12 @@
                      <div class="flex-grow flex items-end gap-2">
                          <span class="whitespace-nowrap font-bold">Certificate of Authorization No:</span>
                          <input type="text" [(ngModel)]="formData.certAuthNumber" class="flex-grow border-0 border-b-2 border-dotted border-gray-400 focus:border-orange-500 focus:border-solid focus:ring-0 px-2 py-1 text-sm font-bold bg-orange-50/30 transition-all placeholder-gray-300" placeholder="Enter No.">
+                     </div>
+                     <div class="flex items-end gap-2">
+                         <span class="whitespace-nowrap font-bold text-gray-600">Seal Number:</span>
+                         <div class="border-b border-gray-300 px-2 py-1 text-sm font-bold text-gray-800 bg-gray-50 min-w-[100px]">
+                             {{ profileSealNumber || '---' }}
+                         </div>
                      </div>
                  </div>
              </div>

@@ -20,6 +20,7 @@ $routes->group('api/approval', function($routes) {
         $routes->post('ppg', 'Api\DashboardController::ppg');
         $routes->post('others', 'Api\DashboardController::others');
         $routes->get('osa-stats', 'Api\DashboardController::getOsaStats');
+
     });
 
     // Approval Module API

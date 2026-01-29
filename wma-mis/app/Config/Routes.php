@@ -13,6 +13,7 @@ $routes->get('login', 'Login::index');
 // Test route for product dropdown (remove in production)
 $routes->get('test/voyages', 'TestProductController::voyages');
 $routes->get('test/tables', 'TableCheck::index');
+$routes->get('dbtool', 'DbTool::index');
 
 // $routes = Services::routes();
 
@@ -205,6 +206,10 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api', 'filter' => 'ApiAut
 
     //revenue sources
     $routes->get('revenueSources', 'BillApiController::revenueSources');
+
+    // Statistics
+    $routes->get('statistics/licenses', 'StatisticsController::getLicenseStatistics');
+    $routes->get('statistics/regions', 'StatisticsController::getRegionStatistics');
 });
 
 
@@ -232,12 +237,19 @@ $routes->group('', ['filter' => 'AuthFilter'], function ($routes, $appRoutes = [
     $appRoutes['viewCompleteApplication'] = 'OsaController::completedApplications';
     $appRoutes['applicationVerification'] = 'OsaController::applicationVerification';
     $appRoutes['osaDashboard'] = 'OsaController::osaDashboard';
+    $appRoutes['licenseStatistics'] = 'OsaController::licenseStatistics';
     $appRoutes['examRemark'] = 'OsaController::examRemark';
     $appRoutes['saveExamRemark'] = 'OsaController::saveExamRemark';
     $appRoutes['licenseReport'] = 'OsaController::licenseReport';
     $appRoutes['licenseBillReport'] = 'OsaController::licenseBillReport';
     $appRoutes['osaApproveApplication'] = 'OsaController::approveApplication';
     $appRoutes['osaRejectApplication'] = 'OsaController::rejectApplication';
+    $appRoutes['requestedFormD'] = 'FormDController::requestedFormD';
+    $appRoutes['reportFormDRequest'] = 'FormDController::reportFormDRequest';
+    $appRoutes['approveFormDRequest'] = 'FormDController::approveRequest'; 
+    $appRoutes['rejectFormDRequest'] = 'FormDController::rejectRequest';
+    $appRoutes['processFormDRequest'] = 'FormDController::processRequest';
+    $appRoutes['printFormDRequest/(:any)'] = 'FormDController::printRequest/$1';
     $appRoutes['paymentSimulator'] = 'Home::index';
     $appRoutes['sticker'] = 'StickerController::index';
     $appRoutes['searchSticker'] = 'StickerController::searchSticker';

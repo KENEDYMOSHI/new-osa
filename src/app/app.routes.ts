@@ -180,6 +180,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/license-application/document-viewer/document-viewer.component').then(m => m.DocumentViewerComponent),
         title: 'View Document | WMA Portal'
       },
+      {
+        path: 'license-statistics',
+        loadComponent: () => import('./pages/dashboard/license-statistics/license-statistics.component').then(m => m.LicenseStatisticsComponent),
+        title: 'License Statistics | WMA Portal'
+      },
     ]
   },
   {

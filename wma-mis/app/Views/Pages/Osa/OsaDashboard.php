@@ -178,18 +178,26 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach ($dashboard_stats['license_stats'] as $license): ?>
+                                        <?php 
+                                        // Show Top 4 Licenses to match height with Regions
+                                        $topLicenses = array_slice($dashboard_stats['license_stats'], 0, 4);
+                                        foreach ($topLicenses as $license): 
+                                            // Color Logic based on Popularity/Percent
+                                            $colorState = 'success';
+                                            if($license['percent'] < 20) $colorState = 'warning'; 
+                                            if($license['percent'] >= 20 && $license['percent'] < 50) $colorState = 'primary'; 
+                                        ?>
                                             <tr>
                                                 <td><?= $license['name'] ?></td>
                                                 <td class="text-center">
-                                                    <span class="badge bg-<?= $license['color'] ?>"><?= $license['count'] ?></span>
+                                                    <span class="badge badge-<?= $colorState ?>"><?= $license['count'] ?></span>
                                                 </td>
                                                 <td class="align-middle">
                                                     <div class="progress progress-xs">
-                                                        <div class="progress-bar bg-<?= $license['color'] ?>" style="width: <?= $license['percent'] ?>%"></div>
+                                                        <div class="progress-bar bg-<?= $colorState ?>" style="width: <?= $license['percent'] ?>%"></div>
                                                     </div>
                                                 </td>
-                                                <td class="text-center"><span class="badge bg-<?= $license['color'] ?>"><?= $license['percent'] ?>%</span></td>
+                                                <td class="text-center"><span class="badge badge-<?= $colorState ?>"><?= $license['percent'] ?>%</span></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -197,7 +205,7 @@
                             </div>
                             
                             <div class="mt-3 text-center">
-                                <a href="#" class="text-muted text-sm">View All Licenses <i class="fas fa-arrow-right ml-1"></i></a>
+                                <a href="<?= base_url('licenseStatistics?modal=licenses') ?>" class="text-muted text-sm">View All Licenses <i class="fas fa-arrow-right ml-1"></i></a>
                             </div>
                         </div>
 
@@ -208,7 +216,11 @@
                             </p>
 
                             <ul class="products-list product-list-in-card pl-2 pr-2">
-                                <?php foreach ($dashboard_stats['regions'] as $region): ?>
+                                <?php 
+                                // Show Top 4 Regions
+                                $topRegions = array_slice($dashboard_stats['regions'], 0, 4);
+                                foreach ($topRegions as $region): 
+                                ?>
                                     <li class="item">
                                         <div class="product-img">
                                             <div class="d-flex justify-content-center align-items-center bg-light rounded-circle" style="width: 45px; height: 45px;">
@@ -232,7 +244,7 @@
                             </ul>
                             
                             <div class="mt-3 text-center">
-                                <a href="#" class="text-muted text-sm">View All Regions <i class="fas fa-arrow-right ml-1"></i></a>
+                                <a href="<?= base_url('licenseStatistics?modal=regions') ?>" class="text-muted text-sm">View All Regions <i class="fas fa-arrow-right ml-1"></i></a>
                             </div>
 
                         </div>
@@ -245,7 +257,7 @@
                     <div class="row">
                         <div class="col-sm-3 col-6">
                             <div class="description-block border-right">
-                                <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> 17%</span>
+                                <!-- <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> 17%</span> -->
                                 <h5 class="description-header">TZS <?= number_format($dashboard_stats['financials']['total_amount']) ?></h5>
                                 <span class="description-text">TOTAL AMOUNT</span>
                             </div>
@@ -254,7 +266,7 @@
                         <!-- /.col -->
                         <div class="col-sm-2 col-6">
                             <div class="description-block border-right">
-                                <span class="description-percentage text-warning"><i class="fas fa-caret-left"></i> 0%</span>
+                                <!-- <span class="description-percentage text-warning"><i class="fas fa-caret-left"></i> 0%</span> -->
                                 <h5 class="description-header">TZS <?= number_format($dashboard_stats['financials']['application_fee']) ?></h5>
                                 <span class="description-text">APPLICATION FEE</span>
                             </div>
@@ -263,7 +275,7 @@
                         <!-- /.col -->
                         <div class="col-sm-2 col-6">
                             <div class="description-block border-right">
-                                <span class="description-percentage text-warning"><i class="fas fa-caret-left"></i> 0%</span>
+                                <!-- <span class="description-percentage text-warning"><i class="fas fa-caret-left"></i> 0%</span> -->
                                 <h5 class="description-header">TZS <?= number_format($dashboard_stats['financials']['license_fee']) ?></h5>
                                 <span class="description-text">LICENSE FEE</span>
                             </div>
@@ -272,8 +284,8 @@
                         <!-- /.col -->
                         <div class="col-sm-2 col-6">
                             <div class="description-block border-right">
-                                <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> 20%</span>
-                                <h5 class="description-header">TZS <?= number_format($dashboard_stats['financials']['paid_fee']) ?></h5>
+                                <!-- <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> 20%</span> -->
+                                <h5 class="description-header text-success">TZS <?= number_format($dashboard_stats['financials']['paid_fee']) ?></h5>
                                 <span class="description-text">PAID FEE</span>
                             </div>
                             <!-- /.description-block -->
@@ -281,8 +293,8 @@
                         <!-- /.col -->
                         <div class="col-sm-3 col-6">
                             <div class="description-block">
-                                <span class="description-percentage text-danger"><i class="fas fa-caret-down"></i> 18%</span>
-                                <h5 class="description-header">TZS <?= number_format($dashboard_stats['financials']['pending_fee']) ?></h5>
+                                <!-- <span class="description-percentage text-danger"><i class="fas fa-caret-down"></i> 18%</span> -->
+                                <h5 class="description-header text-danger">TZS <?= number_format($dashboard_stats['financials']['pending_fee']) ?></h5>
                                 <span class="description-text">PENDING FEE</span>
                             </div>
                             <!-- /.description-block -->

@@ -115,6 +115,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a href="<?= base_url() ?>licenseStatistics" class="nav-link">
+                                <i class="fal fa-chart-pie nav-icon"></i>
+                                <p>License Statistics</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="<?= base_url() ?>initialApplicationApproval" class="nav-link">
                                 <i class="fal fa-file-check nav-icon"></i>
                                 <p>Initial Application Approval</p>
@@ -155,6 +161,29 @@
                                 <i class="fal fa-cog nav-icon"></i>
                                 <p>License Setting</p>
                             </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="fal fa-file-invoice nav-icon"></i>
+                                <p>
+                                    Form D
+                                    <i class="right fal fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="<?= base_url() ?>requestedFormD" class="nav-link">
+                                        <i class="fal fa-file-invoice nav-icon"></i>
+                                        <p>Requested Form D</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="<?= base_url() ?>reportFormDRequest" class="nav-link">
+                                        <i class="fal fa-file-chart-pie nav-icon"></i>
+                                        <p>Report Form D Request</p>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                 </li>

@@ -204,7 +204,7 @@ import { AppModalComponent } from '../../components/app-modal/app-modal.componen
                          <div class="flex items-end gap-2">
                              <span class="whitespace-nowrap w-40">By me and sealed with my seal No.</span>
                              <div class="flex-grow border-b border-dotted border-black px-2 pb-0.5 font-bold">
-                                 {{ selectedRequest.seal_number || '---' }}
+                                 {{ sealNumber || selectedRequest.seal_number || '---' }}
                              </div>
                          </div>
                          
@@ -461,6 +461,7 @@ export class RequestFormDListComponent implements OnInit {
   };
 
   companyName: string = '';
+  sealNumber: string = '';
 
   constructor(
     private licenseService: LicenseService,
@@ -477,6 +478,9 @@ export class RequestFormDListComponent implements OnInit {
             // Extract company name from profile
             if (profile.businessInfo && profile.businessInfo.company_name) {
                 this.companyName = profile.businessInfo.company_name;
+            }
+            if (profile.businessInfo && profile.businessInfo.seal_number) {
+                this.sealNumber = profile.businessInfo.seal_number;
             }
             
             // Assuming profile has user.id or id

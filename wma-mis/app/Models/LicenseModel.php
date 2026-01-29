@@ -592,10 +592,14 @@ class LicenseModel extends Model
     /**
      * Get OSA Dashboard Statistics from API
      */
-    public function getDashboardStats()
+    public function getDashboardStats($year = null)
     {
         $apiUrl = 'http://localhost:8080/api/approval/dashboard/osa-stats';
         $apiKey = 'osa_approval_api_key_12345'; // TODO: Move to .env
+        
+        if ($year) {
+            $apiUrl .= '?year=' . $year;
+        }
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $apiUrl);

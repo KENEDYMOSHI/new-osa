@@ -125,7 +125,7 @@ class DashboardController extends BaseController
 
     /**
      * Get comprehensive OSA dashboard statistics
-     * GET /api/dashboard/osa-stats
+     * GET /api/dashboard/osa-stats?year=2024
      */
     public function getOsaStats()
     {
@@ -135,11 +135,17 @@ class DashboardController extends BaseController
                 return $this->failUnauthorized('Invalid API key');
             }
 
+            $year = $this->request->getVar('year') ?? date('Y');
+
+            // Connect to OSA database
+            $osa = \Config\Database::connect('osa');
+
             // Get application statistics
-            $totalApplications = $this->db->table('license_applications')->countAllResults();
+            $totalApplications = $osa->table('license_applications')->where('YEAR(created_at)', $year)->countAllResults();
             
             // Count by approval status (all 4 stages approved = Approved)
-            $approvedApplications = $this->db->table('license_applications')
+            $approvedApplications = $osa->table('license_applications')
+                ->where('YEAR(created_at)', $year)
                 ->where('status_stage_1', 'Approved')
                 ->where('status_stage_2', 'Approved')
                 ->where('status_stage_3', 'Approved')
@@ -147,7 +153,8 @@ class DashboardController extends BaseController
                 ->countAllResults();
 
             // Rejected: At least one stage is rejected
-            $rejectedApplications = $this->db->table('license_applications')
+            $rejectedApplications = $osa->table('license_applications')
+                ->where('YEAR(created_at)', $year)
                 ->groupStart()
                     ->where('status_stage_1', 'Rejected')
                     ->orWhere('status_stage_2', 'Rejected')
@@ -161,24 +168,26 @@ class DashboardController extends BaseController
             $pendingApplications = $totalApplications - $approvedApplications - $rejectedApplications;
 
             // Get active licenses (for now, count all approved applications)
-            // TODO: Once valid_to dates are set, filter by valid_to >= current date
             $activeLicenses = $approvedApplications;
 
-            // Get expired licenses (for now, 0 since valid_to dates are not set)
-            // TODO: Once valid_to dates are set, count where valid_to < current date
+            // Get expired licenses
             $expiredLicenses = 0;
 
             // Get license type statistics
-            $licenseStats = $this->getLicenseTypeStatistics($totalApplications);
+            $licenseStats = $this->getLicenseTypeStatistics($totalApplications, $year);
 
             // Get regional statistics
-            $regionalStats = $this->getRegionalStatistics();
+            $regionalStatsData = $this->getRegionalStatistics($year);
+            $regionalStats = $regionalStatsData['top']; // Backward compatibility
+            $allRegions = $regionalStatsData['all'];
 
             // Get financial statistics
-            $financialStats = $this->getFinancialStatistics();
+            $financialStats = $this->getFinancialStatistics($year);
 
-            // Get monthly data for chart
-            $monthlyData = $this->getMonthlyApplicationData();
+            // Get monthly data for chart (Current Year vs Previous Year)
+            $monthlyData = $this->getMonthlyApplicationData($year);
+            // Also get previous year for comparison
+            $previousYearData = $this->getMonthlyApplicationData($year - 1);
 
             $response = [
                 'total_applications' => $totalApplications,
@@ -189,50 +198,80 @@ class DashboardController extends BaseController
                 'expired_licenses' => $expiredLicenses,
                 'license_stats' => $licenseStats,
                 'regions' => $regionalStats,
+                'all_regions' => $allRegions, // New field
                 'financials' => $financialStats,
-                'monthly_data' => $monthlyData
+                'monthly_data' => $monthlyData,
+                'previous_year_monthly_data' => $previousYearData, // New field
+                'selected_year' => $year
             ];
 
             return $this->respond($response);
 
         } catch (\Exception $e) {
             log_message('error', 'Dashboard API Error: ' . $e->getMessage());
-            return $this->failServerError('Failed to fetch dashboard statistics');
+            return $this->failServerError('Failed to fetch dashboard statistics: ' . $e->getMessage());
         }
     }
 
     /**
      * Get license type statistics from license_application_items
      */
-    private function getLicenseTypeStatistics($total)
+    private function getLicenseTypeStatistics($total, $year)
     {
-        // Query license_application_items to get actual license types applied for
-        $licenseTypes = $this->db->table('license_application_items')
-            ->select('license_type, COUNT(*) as count')
-            ->groupBy('license_type')
-            ->orderBy('count', 'DESC')
+        // Connect to OSA database where license data resides
+        $osa = \Config\Database::connect('osa');
+
+        // 1. Get ALL License Types
+        $allTypes = $osa->table('license_types')->select('id, name')->orderBy('name', 'ASC')->get()->getResultArray();
+
+        // 2. Get Stats for the Year
+        $statsRaw = $osa->table('license_application_items lai')
+            ->select('lai.license_type, COUNT(*) as count')
+            ->join('license_applications la', 'lai.application_id = la.id', 'inner')
+            ->where('YEAR(la.created_at)', $year)
+            ->groupBy('lai.license_type')
             ->get()
             ->getResultArray();
+
+        // Type Logic: Verify if license_type in items is ID or Name.
+        // If it's ID, map by ID. If Name, map by Name.
+        // Given previous joins on ID, assume ID.
+        $statsMap = [];
+        foreach ($statsRaw as $row) {
+            $statsMap[$row['license_type']] = $row['count'];
+        }
 
         $stats = [];
         $colors = ['info', 'primary', 'success', 'warning', 'danger'];
         $colorIndex = 0;
         
-        // Calculate total for percentage
-        $totalItems = array_sum(array_column($licenseTypes, 'count'));
+        $totalItems = $total > 0 ? $total : 1; 
 
-        foreach ($licenseTypes as $type) {
-            $count = $type['count'];
+        foreach ($allTypes as $type) {
+            $id = $type['id'];
+            // Also check if Name works (fallback)
+            $count = 0;
+            if (isset($statsMap[$id])) {
+                $count = $statsMap[$id];
+            } elseif (isset($statsMap[$type['name']])) {
+                $count = $statsMap[$type['name']];
+            }
+            
             $percent = $totalItems > 0 ? round(($count / $totalItems) * 100) : 0;
             
             $stats[] = [
-                'name' => $type['license_type'] ?? 'Unknown',
+                'name' => $type['name'],
                 'count' => $count,
                 'percent' => $percent,
                 'color' => $colors[$colorIndex % count($colors)]
             ];
             $colorIndex++;
         }
+        
+        // Sort by count DESC
+        usort($stats, function($a, $b) {
+            return $b['count'] <=> $a['count'];
+        });
 
         return $stats;
     }
@@ -240,79 +279,137 @@ class DashboardController extends BaseController
     /**
      * Get regional statistics
      */
-    private function getRegionalStatistics()
+    private function getRegionalStatistics($year)
     {
-        // Join through users table to connect license_applications with practitioner_personal_infos
-        // license_applications.user_id -> users.id -> users.uuid -> practitioner_personal_infos.user_uuid
-        $regions = $this->db->table('license_applications la')
-            ->select('ppi.region, COUNT(*) as count')
-            ->join('users u', 'la.user_id = u.id', 'left')
-            ->join('practitioner_personal_infos ppi', 'u.uuid = ppi.user_uuid', 'left')
-            ->where('ppi.region IS NOT NULL')
-            ->groupBy('ppi.region')
-            ->orderBy('count', 'DESC')
-            ->limit(4)
+        // 1. Get ALL Regions (from district table in DEFAULT DB)
+        $allRegionsRaw = $this->db->table('district')
+            ->select('region')
+            ->distinct()
+            ->where('region IS NOT NULL')
+            ->where('region !=', '')
+            ->orderBy('region', 'ASC')
+            ->get()
+            ->getResultArray();
+        
+        $allRegionsList = array_column($allRegionsRaw, 'region');
+
+        // 2. Get Application Counts per User from OSA DB
+        $osa = \Config\Database::connect('osa');
+        $userAppCounts = $osa->table('license_applications')
+            ->select('user_id, COUNT(*) as count')
+            ->where('YEAR(created_at)', $year)
+            ->groupBy('user_id')
             ->get()
             ->getResultArray();
 
-        $total = array_sum(array_column($regions, 'count'));
+        $statsMap = []; // Region -> Count
+        
+        if (!empty($userAppCounts)) {
+            // Extract User IDs to fetch regions
+            $userIds = array_column($userAppCounts, 'user_id');
+            
+            // 3. Fetch Regions for these Users from DEFAULT DB
+            // Join users -> ppi to get region
+            $userRegions = $this->db->table('users u')
+                ->select('u.id, ppi.region')
+                ->join('practitioner_personal_infos ppi', 'u.uuid = ppi.user_uuid', 'left')
+                ->whereIn('u.id', $userIds)
+                ->where('ppi.region IS NOT NULL')
+                ->get()
+                ->getResultArray();
+            
+            // Map UserID -> Region
+            $userRegionMap = [];
+            foreach ($userRegions as $ur) {
+                $userRegionMap[$ur['id']] = strtoupper($ur['region']);
+            }
+            
+            // 4. Aggregate Counts by Region
+            foreach ($userAppCounts as $row) {
+                $userId = $row['user_id'];
+                $count = $row['count'];
+                
+                if (isset($userRegionMap[$userId])) {
+                    $region = $userRegionMap[$userId];
+                    if (!isset($statsMap[$region])) {
+                        $statsMap[$region] = 0;
+                    }
+                    $statsMap[$region] += $count;
+                }
+            }
+        }
+
+        $total = 0;
+        foreach($statsMap as $c) $total += $c;
+        
         $stats = [];
         $colors = ['primary', 'danger', 'success', 'warning'];
         $colorIndex = 0;
 
-        foreach ($regions as $region) {
-            $count = $region['count'];
+        foreach ($allRegionsList as $regionName) {
+            $count = isset($statsMap[strtoupper($regionName)]) ? $statsMap[strtoupper($regionName)] : 0;
             $percent = $total > 0 ? round(($count / $total) * 100) : 0;
             
             $stats[] = [
-                'name' => $region['region'] ?? 'Unknown',
+                'name' => $regionName,
                 'count' => $count,
                 'percent' => $percent,
                 'color' => $colors[$colorIndex % count($colors)]
             ];
             $colorIndex++;
         }
+        
+        // Sort by Count DESC
+        usort($stats, function($a, $b) {
+            return $b['count'] <=> $a['count'];
+        });
 
-        // If no regions found, return empty array instead of placeholder data
-        return $stats;
+        // Return Top 5 and All
+        return [
+            'top' => array_slice($stats, 0, 5),
+            'all' => $stats
+        ];
     }
 
     /**
-     * Get financial statistics from license_application_items
+     * Get financial statistics from osabill
      */
-    private function getFinancialStatistics()
+    private function getFinancialStatistics($year)
     {
-        // Get actual application fees from license_application_items
-        $applicationFeeData = $this->db->table('license_application_items')
-            ->selectSum('application_fee')
+        // Connect to OSA database
+        $osa = \Config\Database::connect('osa');
+
+        // Fetch all bills for the year
+        $bills = $osa->table('osabill')
+            ->select('amount, fee_type, payment_status')
+            ->where('YEAR(created_at)', $year)
             ->get()
-            ->getRow();
-        $applicationFee = $applicationFeeData->application_fee ?? 0;
+            ->getResultArray();
 
-        // Get actual license fees from license_application_items
-        $licenseFeeData = $this->db->table('license_application_items')
-            ->selectSum('fee')
-            ->get()
-            ->getRow();
-        $licenseFee = $licenseFeeData->fee ?? 0;
+        $totalAmount = 0;
+        $applicationFee = 0;
+        $licenseFee = 0;
+        $paidFee = 0;
 
-        // Total amount is sum of application fees and license fees
-        $totalAmount = $applicationFee + $licenseFee;
+        foreach ($bills as $bill) {
+            $amount = (float) $bill['amount'];
+            $type = $bill['fee_type'];
+            $status = trim($bill['payment_status']); // Trim because sample had "Paid "
 
-        // Paid fee (from approved applications)
-        // Join with license_applications to get only approved items
-        $paidFeeData = $this->db->table('license_application_items lai')
-            ->select('SUM(lai.fee + lai.application_fee) as total_paid')
-            ->join('license_applications la', 'lai.application_id = la.id', 'inner')
-            ->where('la.status_stage_1', 'Approved')
-            ->where('la.status_stage_2', 'Approved')
-            ->where('la.status_stage_3', 'Approved')
-            ->where('la.status_stage_4', 'Approved')
-            ->get()
-            ->getRow();
-        $paidFee = $paidFeeData->total_paid ?? 0;
+            $totalAmount += $amount;
 
-        // Pending fee (total - paid)
+            if (stripos($type, 'Application') !== false) {
+                $applicationFee += $amount;
+            } elseif (stripos($type, 'License') !== false) {
+                $licenseFee += $amount;
+            }
+
+            if (stripos($status, 'Paid') !== false) {
+                $paidFee += $amount;
+            }
+        }
+
+        // Pending fee
         $pendingFee = $totalAmount - $paidFee;
 
         return [
@@ -327,14 +424,14 @@ class DashboardController extends BaseController
     /**
      * Get monthly application data for chart
      */
-    private function getMonthlyApplicationData()
+    private function getMonthlyApplicationData($year)
     {
-        $currentYear = date('Y');
         $monthlyData = [];
+        $osa = \Config\Database::connect('osa');
 
         for ($month = 1; $month <= 12; $month++) {
-            $count = $this->db->table('license_applications')
-                ->where('YEAR(created_at)', $currentYear)
+            $count = $osa->table('license_applications')
+                ->where('YEAR(created_at)', $year)
                 ->where('MONTH(created_at)', $month)
                 ->countAllResults();
 
@@ -346,4 +443,6 @@ class DashboardController extends BaseController
 
         return $monthlyData;
     }
+    
+
 }

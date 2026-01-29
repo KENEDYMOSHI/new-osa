@@ -473,4 +473,61 @@ public function rejectApplication()
 
 
 
+
+    public function licenseStatistics()
+    {
+        // Get Filter Year (default to current year)
+        $filterYear = $this->request->getVar('year') ? $this->request->getVar('year') : date('Y');
+        
+        // Fetch all statistics from the shared Backend API (Same source as Dashboard)
+        $stats = $this->licenseModel->getDashboardStats($filterYear);
+        
+        // Prepare Data for View
+        $data['page'] = [
+            'title' => 'License Statistics',
+            'heading' => 'License Statistics (' . $filterYear . ')',
+        ];
+
+        $data['user'] = $this->user;
+        
+        // Use data from API
+        $data['dashboard_stats'] = $stats; // Pass full object just in case view needs it
+        
+        $data['licenseStats'] = $stats['license_stats'] ?? [];
+        $data['regionStats'] = $stats['regions'] ?? [];
+        $data['allRegions'] = $stats['all_regions'] ?? ($stats['regions'] ?? []);
+        
+        // Map Monthly Stats for Chart
+        // API returns [{month: 1, count: 10}, ...]
+        $monthlyStats = [
+            'labels' => ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+            'currentYear' => array_fill(0, 12, 0),
+            'lastYear' => array_fill(0, 12, 0)
+        ];
+
+        if (isset($stats['monthly_data']) && is_array($stats['monthly_data'])) {
+            foreach ($stats['monthly_data'] as $row) {
+                if (isset($row['month'])) {
+                    $monthlyStats['currentYear'][(int)$row['month'] - 1] = (int)$row['count'];
+                }
+            }
+        }
+        
+        if (isset($stats['previous_year_monthly_data']) && is_array($stats['previous_year_monthly_data'])) {
+            foreach ($stats['previous_year_monthly_data'] as $row) {
+                if (isset($row['month'])) {
+                    $monthlyStats['lastYear'][(int)$row['month'] - 1] = (int)$row['count'];
+                }
+            }
+        }
+        
+        $data['monthlyStats'] = $monthlyStats;
+        $data['years'] = ['current' => $filterYear, 'last' => $filterYear - 1];
+        $data['selectedYear'] = $filterYear;
+        
+        // Financials (if the view uses them separately, though they are in dashboard_stats too)
+        $data['financials'] = $stats['financials'] ?? [];
+
+        return view('Pages/Osa/LicenseStatistics', $data);
+    }
 }

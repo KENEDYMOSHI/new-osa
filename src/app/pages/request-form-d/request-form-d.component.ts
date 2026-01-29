@@ -1,16 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router'; // Import Router
 import { LicenseService } from '../../services/license.service';
 import { LocationService, District, Ward } from '../../services/location.service';
 import { AuthService } from '../../core/services/auth.service';
 import Swal from 'sweetalert2';
 
+import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
+
 @Component({
   selector: 'app-request-form-d',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, SearchableSelectComponent],
   templateUrl: './request-form-d.component.html',
 })
 export class RequestFormDComponent implements OnInit {
@@ -20,6 +22,7 @@ export class RequestFormDComponent implements OnInit {
   selectedLicense: any = null;
   userProfileName: string = ''; // Store logged-in user name
   userProfilePhone: string = ''; // Store logged-in user phone
+  profileSealNumber: string = ''; // Store seal number from profile
   userId: any = null; // Store user ID
 
   // Location Data
@@ -49,7 +52,8 @@ export class RequestFormDComponent implements OnInit {
     sealNumber: '',
     typeOfInstrument: '', 
     quantity: '', 
-    capacity: '', // For Tanks
+    capacity: '', // For Tanks/Pumps
+    capacityUnit: 'Litres', // Default unit
     status: '', 
     inspectionReport: '',
     verificationDate: '',
@@ -84,20 +88,39 @@ export class RequestFormDComponent implements OnInit {
   // Field Visibility Configuration
   fieldConfig: any = {
       showNozzles: true,
-      showSealNumber: true,
-      showCapacity: false,
-      showSticker: true
+      showSealNumber: false, // Hidden as per request
+      showCapacity: true, // Show for Class D now
+      showSticker: true,
+      showTypeOfInstrument: false, // Hidden as per request
+      showDates: false // Hidden as per request
   };
 
   // Time Slots for Inspection Schedule
   timeSlots: string[] = [];
 
   loading: boolean = false;
+  
+  // Available Units
+  capacityUnitGroups: { name: string, units: string[] }[] = [
+    {
+      name: 'Volume / Capacity',
+      units: ['Cubic meter (m³)', 'Liter (L)', 'Milliliter (mL)', 'Cubic centimeter (cm³)', 'Gallon (gal)', 'Quart (qt)', 'Pint (pt)']
+    },
+    {
+      name: 'Length / Distance',
+      units: ['Meter (m)', 'Kilometer (km)', 'Centimeter (cm)', 'Millimeter (mm)', 'Micrometer (µm)', 'Mile (mi)', 'Yard (yd)', 'Foot (ft)', 'Inch (in)']
+    },
+    {
+      name: 'Mass / Weight',
+      units: ['Kilogram (kg)', 'Gram (g)', 'Milligram (mg)', 'Tonne (t)', 'Pound (lb)', 'Ounce (oz)']
+    }
+  ];
 
   constructor(
       private licenseService: LicenseService,
       private locationService: LocationService,
-      private authService: AuthService
+      private authService: AuthService,
+      private router: Router // Inject Router
   ) { 
       this.generateTimeSlots();
   }
@@ -150,8 +173,11 @@ export class RequestFormDComponent implements OnInit {
                                       userProp.mobile || 
                                       businessInfo.company_phone ||
                                       '---';
+
+              // Get Seal Number from Business Info
+              this.profileSealNumber = businessInfo.seal_number || '---';
               
-              console.log('User Profile Loaded:', this.userProfileName, this.userProfilePhone);
+              console.log('User Profile Loaded:', this.userProfileName, this.userProfilePhone, this.profileSealNumber);
               
               if (this.selectedLicense) {
                   // Update current form data if license is already selected
@@ -228,9 +254,11 @@ export class RequestFormDComponent implements OnInit {
           };
           this.fieldConfig = {
               showNozzles: true,
-              showSealNumber: true,
-              showCapacity: false,
-              showSticker: true
+              showSealNumber: false, // Hidden
+              showCapacity: true, // Show Capacity for Class D
+              showSticker: true,
+              showTypeOfInstrument: false, // Hidden
+              showDates: false // Hidden
           };
       } else if (type.includes('tank') || type.includes('construction') || type.includes('calibration')) {
           // Tank Constructor
@@ -243,9 +271,11 @@ export class RequestFormDComponent implements OnInit {
           };
           this.fieldConfig = {
               showNozzles: false,
-              showSealNumber: false, // Tanks might not use seal numbers in the same way, or user didn't specify
+              showSealNumber: false,
               showCapacity: true,
-              showSticker: true // Keeping sticker for now unless specified
+              showSticker: true,
+              showTypeOfInstrument: false,
+              showDates: false 
           };
       } else {
           // Fallback
@@ -260,7 +290,9 @@ export class RequestFormDComponent implements OnInit {
               showNozzles: true,
               showSealNumber: true,
               showCapacity: true,
-              showSticker: true
+              showSticker: true,
+              showTypeOfInstrument: true,
+              showDates: true
           };
       }
   }
@@ -287,10 +319,10 @@ export class RequestFormDComponent implements OnInit {
   validateForm(): boolean {
     const requiredFields = [
       'companyName', 'region', 'district', 'ward', 'street', 
-      'instrumentName', 'serialNumber', 'product', 'typeOfInstrument', 'status',
-      'verificationDate', 'nextVerificationDate', 'inspectionReport', 
-      'certAuthNumber', 'declarantName', 'certificationAction'
+      'instrumentName', 'serialNumber', 'product', 
+      'inspectionReport', 'certAuthNumber', 'declarantName', 'certificationAction'
     ];
+    // Removed: 'typeOfInstrument', 'verificationDate', 'nextVerificationDate'
 
     for (const field of requiredFields) {
       if (!this.formData[field]) {
@@ -300,25 +332,36 @@ export class RequestFormDComponent implements OnInit {
     
     // Conditional checks
     if (this.fieldConfig.showSticker && !this.formData.stickerNumber) return false;
-    if (this.fieldConfig.showSealNumber && !this.formData.sealNumber) return false;
+    // Removed sealNumber validation here as it's checked separately (profile check)
+    // if (this.fieldConfig.showSealNumber && !this.formData.sealNumber) return false;
     if (this.fieldConfig.showNozzles && !this.formData.quantity) return false;
     if (this.fieldConfig.showCapacity && !this.formData.capacity) return false;
-    
-    // Validate Phone Number Length (Must be exactly 10 digits)
-    if (this.formData.declarantPhone && this.formData.declarantPhone.length !== 10) {
-        Swal.fire({
-            title: 'Invalid Phone Number',
-            text: 'Phone number must be exactly 10 digits.',
-            icon: 'warning',
-            confirmButtonColor: '#F59E0B'
-        });
-        return false;
+    if (this.fieldConfig.showTypeOfInstrument && !this.formData.typeOfInstrument) return false;
+    if (this.fieldConfig.showDates) {
+        if (!this.formData.verificationDate || !this.formData.nextVerificationDate) return false;
     }
 
     return true;
   }
 
   submitForm() {
+    if (!this.profileSealNumber || this.profileSealNumber === '---') {
+        Swal.fire({
+            title: 'Missing Seal Number',
+            text: 'You cannot submit Form D without a Seal Number. Please update your Seal Number in the Profile section under Company Information.',
+            icon: 'error',
+            confirmButtonText: 'Go to Profile',
+            confirmButtonColor: '#F59E0B',
+            showCancelButton: true,
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                 this.router.navigate(['/profile']);
+            }
+        });
+        return;
+    }
+
     if (!this.validateForm()) {
         Swal.fire({
             title: 'Incomplete Form',

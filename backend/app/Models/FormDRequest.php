@@ -34,6 +34,7 @@ class FormDRequest extends Model
         'type_of_instrument',
         'quantity',
         'capacity',
+        'capacity_unit',
         'status',
         'verification_date',
         'next_verification_date',
