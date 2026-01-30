@@ -420,12 +420,13 @@ public function approveApplication()
         return redirect()->back()->with('error', 'Unauthorized access');
     }
 
-    $updated = $this->licenseModel->updateApplicationStatus($applicationId, 'Approved', $stage, $comment);
+    $result = $this->licenseModel->updateApplicationStatus($applicationId, 'Approved', $stage, $comment);
 
-    if ($updated) {
+    if ($result === true) {
         return redirect()->back()->with('success', 'Application approved successfully');
     } else {
-        return redirect()->back()->with('error', 'Failed to approve application');
+        $errorMsg = is_string($result) ? $result : 'Failed to approve application';
+        return redirect()->back()->with('error', $errorMsg);
     }
 }
 
@@ -461,12 +462,13 @@ public function rejectApplication()
         return redirect()->back()->with('error', 'Unauthorized access');
     }
 
-    $updated = $this->licenseModel->updateApplicationStatus($applicationId, 'Rejected', $stage, $comment);
+    $result = $this->licenseModel->updateApplicationStatus($applicationId, 'Rejected', $stage, $comment);
 
-    if ($updated) {
+    if ($result === true) {
         return redirect()->back()->with('success', 'Application rejected successfully');
     } else {
-        return redirect()->back()->with('error', 'Failed to reject application');
+        $errorMsg = is_string($result) ? $result : 'Failed to reject application';
+        return redirect()->back()->with('error', $errorMsg);
     }
 }
 

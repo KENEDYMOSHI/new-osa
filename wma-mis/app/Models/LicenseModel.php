@@ -585,7 +585,12 @@ class LicenseModel extends Model
             return true;
         } else {
             log_message('error', 'Failed to update application status via API. HTTP Code: ' . $httpCode . ' Response: ' . $response);
-            return false;
+            
+            // Try to extract error message from response
+            $responseObj = json_decode($response);
+            $errorMessage = $responseObj->messages->error ?? $responseObj->message ?? 'Failed to update status';
+            
+            return $errorMessage;
         }
     }
 

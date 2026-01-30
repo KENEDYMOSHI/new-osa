@@ -484,6 +484,89 @@ class AuthController extends ResourceController
         return $this->respond(['message' => 'Password changed successfully']);
     }
 
+    public function uploadPicture()
+    {
+        $user = $this->getUserFromToken();
+
+        if (!$user) {
+            return $this->failUnauthorized('User not found or invalid token');
+        }
+
+        // Get UUID
+        $db = \Config\Database::connect();
+        $userRecord = $db->table('users')->where('id', $user->id)->get()->getRow();
+        $uuid = $userRecord->uuid;
+
+        // Validate file upload
+        $file = $this->request->getFile('picture');
+        
+        if (!$file) {
+            return $this->failValidationErrors(['picture' => 'No file uploaded']);
+        }
+
+        if (!$file->isValid()) {
+            return $this->failValidationErrors(['picture' => 'Invalid file upload']);
+        }
+
+        // Validate file type
+        $validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (!in_array($file->getMimeType(), $validTypes)) {
+            return $this->failValidationErrors(['picture' => 'Only JPEG and PNG images are allowed']);
+        }
+
+        // Validate file size (max 2MB)
+        $maxSize = 2 * 1024 * 1024; // 2MB
+        if ($file->getSize() > $maxSize) {
+            return $this->failValidationErrors(['picture' => 'File size must be less than 2MB']);
+        }
+
+        try {
+            // Create upload directory if it doesn't exist
+            $uploadPath = FCPATH . 'uploads/pictures/';
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0777, true);
+            }
+
+            // Generate unique filename
+            $newName = $uuid . '_' . time() . '.' . $file->getExtension();
+            
+            // Move file to upload directory
+            $file->move($uploadPath, $newName);
+
+            // Update database
+            $photoUrl = base_url('uploads/pictures/' . $newName);
+            
+            $personalInfoModel = new \App\Models\PractitionerPersonalInfoModel();
+            $existing = $personalInfoModel->where('user_uuid', $uuid)->first();
+
+            if ($existing) {
+                // Delete old photo if exists
+                if (!empty($existing->picture)) {
+                    $oldPhotoPath = str_replace(base_url(), FCPATH, $existing->picture);
+                    if (file_exists($oldPhotoPath)) {
+                        unlink($oldPhotoPath);
+                    }
+                }
+                
+                // Update the picture field
+                $db->table('practitioner_personal_infos')
+                   ->where('id', $existing->id)
+                   ->update(['picture' => $photoUrl]);
+            } else {
+                return $this->failNotFound('Personal info not found');
+            }
+
+            return $this->respond([
+                'message' => 'Profile picture uploaded successfully',
+                'picture_url' => $photoUrl
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Upload picture error: ' . $e->getMessage());
+            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+            return $this->failServerError('Failed to upload photo: ' . $e->getMessage());
+        }
+    }
+
     public function forgotPassword()
     {
         $rules = [

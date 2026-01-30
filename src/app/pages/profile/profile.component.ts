@@ -106,7 +106,8 @@ export class ProfileComponent implements OnInit {
           town: data.personalInfo.town,
           street: data.personalInfo.street,
           phone: data.personalInfo.phone || '',
-          email: data.user.email // Ensure email is available here
+          email: data.user.email, // Ensure email is available here
+          picture: data.personalInfo.picture || null
         };
       }
 
@@ -402,5 +403,82 @@ export class ProfileComponent implements OnInit {
     today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
     
     return expiryDate < today;
+  }
+
+  // Trigger file input programmatically
+  triggerFileInput() {
+    const fileInput = document.getElementById('passportPhoto') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
+  // Profile Picture Upload
+  onPassportPhotoSelected(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type)) {
+      Swal.fire({
+        title: 'Invalid File Type',
+        text: 'Please upload a JPEG or PNG image.',
+        icon: 'error',
+        confirmButtonColor: '#F59E0B'
+      });
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSize) {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      Swal.fire({
+        title: 'File Too Large',
+        html: `Your file size is <strong>${fileSizeMB} MB</strong>.<br>Please upload an image smaller than <strong>2 MB</strong>.`,
+        icon: 'error',
+        confirmButtonColor: '#F59E0B'
+      });
+      return;
+    }
+
+    // Show loading
+    Swal.fire({
+      title: 'Uploading Photo...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Create FormData
+    const formData = new FormData();
+    formData.append('picture', file);
+
+    // Upload to backend
+    this.authService.uploadPicture(formData).subscribe({
+      next: (response: any) => {
+        Swal.close();
+        this.personalInfo.picture = response.picture_url;
+        Swal.fire({
+          title: 'Success!',
+          text: 'Profile picture uploaded successfully.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      },
+      error: (err: any) => {
+        Swal.close();
+        console.error('Failed to upload profile picture:', err);
+        Swal.fire({
+          title: 'Upload Failed',
+          text: err.error?.message || 'Failed to upload profile picture. Please try again.',
+          icon: 'error',
+          confirmButtonColor: '#F59E0B'
+        });
+      }
+    });
   }
 }

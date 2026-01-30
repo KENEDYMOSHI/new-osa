@@ -51,6 +51,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->post('auth/update-personal', 'AuthController::updatePersonalProfile');
     $routes->post('auth/update-business', 'AuthController::updateBusinessProfile');
     $routes->post('auth/change-password', 'AuthController::changePassword');
+    $routes->post('auth/upload-picture', 'AuthController::uploadPicture');
     $routes->post('auth/forgot-password', 'AuthController::forgotPassword');
     $routes->post('auth/verify-otp', 'AuthController::verifyResetOtp');
     $routes->post('auth/reset-password', 'AuthController::resetPassword');

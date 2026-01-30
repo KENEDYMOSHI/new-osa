@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { userTypeGuard } from './core/guards/user-type.guard';
+import { passportPhotoGuard } from './core/guards/passport-photo.guard';
 import { EcommerceComponent } from './pages/dashboard/ecommerce/ecommerce.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ProfileComponent } from './pages/profile/profile.component';
@@ -63,6 +64,7 @@ export const routes: Routes = [
       {
         path: 'Initial-Application',
         loadComponent: () => import('./pages/license-application/license-application.component').then(m => m.LicenseApplicationComponent),
+        canActivate: [passportPhotoGuard],
         title: 'License Application | WMA Portal'
       },
       {
@@ -184,6 +186,11 @@ export const routes: Routes = [
         path: 'license-statistics',
         loadComponent: () => import('./pages/dashboard/license-statistics/license-statistics.component').then(m => m.LicenseStatisticsComponent),
         title: 'License Statistics | WMA Portal'
+      },
+      {
+        path: 'view-license-details',
+        loadComponent: () => import('./pages/view-license-details/view-license-details.component').then(m => m.ViewLicenseDetailsComponent),
+        title: 'View License Details | WMA Portal' // Added route for View License Details
       },
     ]
   },

@@ -136,6 +136,10 @@ export class LicenseService {
     return this.http.get(`${this.apiUrl}/view/${applicationId}`, { headers: this.getHeaders() });
   }
 
+  viewID(applicationId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/view-id/${applicationId}`, { headers: this.getHeaders() });
+  }
+
   getApplicationDetails(applicationId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/details/${applicationId}`, { headers: this.getHeaders() });
   }

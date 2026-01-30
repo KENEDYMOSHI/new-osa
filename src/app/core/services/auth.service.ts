@@ -108,6 +108,15 @@ export class AuthService {
     this.router.navigate(['/signin']);
   }
 
+  uploadPicture(formData: FormData): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/upload-picture`, formData, { headers: this.getHeaders() }).pipe(
+      tap(() => {
+        // Refresh profile after upload
+        this.getProfile().subscribe();
+      })
+    );
+  }
+
   public getHeaders(): HttpHeaders {
     const token = this.getToken();
     return new HttpHeaders({
