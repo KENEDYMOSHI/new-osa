@@ -208,6 +208,12 @@ export const routes: Routes = [
     title: 'Pattern Approval Registration | WMA Online Services Portal'
   },
 
+  {
+    path: 'requested-form-d',
+    loadComponent: () => import('./pages/requested-form-d-list/requested-form-d-list.component').then(m => m.RequestedFormDListComponent),
+    title: 'Requested Form D | WMA Portal' // Admin/Officer only ideally
+  },
+
   // Pattern Approval Module Routes
   {
     path: 'pattern-approval',

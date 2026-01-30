@@ -14,6 +14,7 @@ class FormDRequest extends Model
     protected $protectFields    = true;
     protected $allowedFields    = [
         'user_id',
+        'inspector_id', // Added
         'license_number',
         'practitioner_name',
         'practitioner_phone',
@@ -36,6 +37,9 @@ class FormDRequest extends Model
         'capacity',
         'capacity_unit',
         'status',
+        'rejection_reason', // Added
+        'approved_by',      // Added
+        'approved_at',      // Added
         'verification_date',
         'next_verification_date',
         'inspection_report',

@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms'; // Import FormsModule
 import { LicenseService } from '../../services/license.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AppModalComponent } from '../../components/app-modal/app-modal.component';
+// @ts-ignore
+import * as html2pdf from 'html2pdf.js';
 
 @Component({
   selector: 'app-request-form-d-list',
@@ -325,6 +327,27 @@ import { AppModalComponent } from '../../components/app-modal/app-modal.componen
                              Being the user(s) for trade purposes of the {{ textConfig.certUserDescription }} described above, which has been {{ textConfig.certActionContext }} by the {{ textConfig.certMechanicTitle }}, request the Inspector of Weights and Measures that arrangements may be made for its verification.
                          </p>
 
+                        <div class="mt-6 border-t border-dotted border-gray-400 pt-4" *ngIf="selectedRequest.status === 'Approved' || selectedRequest.status === 'Verified'">
+                             <div class="flex justify-between items-center">
+                                 <div>
+                                     <span class="block text-[10px] font-bold uppercase text-gray-500">Verified / Approved By:</span>
+                                     <div class="text-sm font-bold uppercase">
+                                         {{ selectedRequest.inspector_first_name }} {{ selectedRequest.inspector_last_name }}
+                                     </div>
+                                     <div class="text-[10px] text-gray-600">
+                                         Inspector of Weights and Measures
+                                     </div>
+                                 </div>
+                                 
+                                 <div class="text-right">
+                                     <span class="block text-[10px] font-bold uppercase text-gray-500">Date:</span>
+                                     <div class="text-sm font-bold">
+                                         {{ (selectedRequest.approved_at || selectedRequest.updated_at) | date:'dd MMM yyyy' }}
+                                     </div>
+                                 </div>
+                             </div>
+                        </div>
+
                          <div class="flex justify-between mt-4">
                              <div class="flex items-end gap-2 w-1/2">
                                  <span class="whitespace-nowrap">Date:</span>
@@ -337,6 +360,7 @@ import { AppModalComponent } from '../../components/app-modal/app-modal.componen
                      </div>
 
                      <!-- Initial Inspection Details (For Record Only - Below Certificate) -->
+                     <div class="html2pdf__page-break"></div>
                      <div class="mt-8 pt-8 border-t-2 border-dashed border-gray-300">
                          <h4 class="font-bold text-xs uppercase text-gray-500 mb-2">Additional Inspection Details</h4>
                          
@@ -387,62 +411,100 @@ import { AppModalComponent } from '../../components/app-modal/app-modal.componen
       <!-- Print Styles -->
       <style>
         @media print {
+            /* 1. Page Setup */
             @page {
-                size: auto;
-                margin: 0mm;
+                size: A4 portrait;
+                margin: 10mm;
             }
-            body {
+
+            /* 2. Global Reset */
+            html, body {
+                height: 100%;
+                width: 100%;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white;
+                overflow: visible !important;
+                -webkit-print-color-adjust: exact !important; /* Force colors/backgrounds */
+                print-color-adjust: exact !important;
+            }
+
+            /* 3. Hide EVERYTHING and reset positioning context */
+            body * {
                 visibility: hidden;
             }
-            /* Target AppModal Styles */
-            .modal-backdrop {
-                visibility: visible !important;
-                background: white !important;
-                position: fixed;
-                inset: 0;
-                z-index: 99999;
-                padding: 0 !important;
-                display: block !important;
-                width: 100% !important;
-                height: 100% !important;
-            }
-            .modal-content {
-                visibility: visible !important;
-                box-shadow: none !important;
-                border: none !important;
-                border-radius: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                max-width: none !important;
-                max-height: none !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                transform: none !important;
+            
+            /* Reset all layout containers that might trap our absolute position */
+            app-root, app-layout, .main-content, app-sidebar, nav, header, aside, div {
                 position: static !important;
-                overflow: visible !important; /* Allow printing overflow */
+                transform: none !important;
             }
-            .modal-header, .modal-footer, .btn-close-x {
-                display: none !important;
+
+            /* 4. Show Printable Area and its children */
+            #printableArea, #printableArea * {
+                visibility: visible;
             }
-            .modal-body {
-                padding: 20mm !important; /* Page padding for print */
-                overflow: visible !important;
-                display: block !important;
-                height: auto !important;
-            }
-            /* Inner Content */
+
+            /* 5. Position Printable Area */
             #printableArea {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                z-index: 2147483647 !important; /* Max z-index */
+                background: white !important;
+            }
+
+            /* 6. Clean up Modal Wrapper Influence */
+            app-modal, .modal-content, .modal-body, .modal-backdrop {
+                position: static !important;
+                overflow: visible !important;
                 padding: 0 !important;
                 margin: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
                 width: 100% !important;
+                height: auto !important;
+                background: transparent !important;
+                display: block !important;
             }
             
-            .print\\:hidden {
+            /* Hide Modal UI Elements */
+            app-modal .modal-header,
+            app-modal .modal-footer,
+            .btn-close, 
+            button,
+            .hidden-print {
                 display: none !important;
             }
-            /* Explicitly hide standard header classes */
-            header, nav, aside, .sidebar, .header, .tailadmin-header {
-                display: none !important;
+
+            /* 7. Content Fidelity - Restore original look */
+            /* We remove the aggressive font-size overrides and rely on the classes, 
+               but scale slightly if needed to fit. */
+            
+            /* Restore Layouts */
+            .flex { display: flex !important; }
+            .grid { display: grid !important; }
+            .items-center { align-items: center !important; }
+            .justify-between { justify-content: space-between !important; }
+            .justify-center { justify-content: center !important; }
+            .gap-2 { gap: 0.5rem !important; }
+            .gap-4 { gap: 1rem !important; }
+            
+            /* Ensure borders are visible */
+            .border-b { border-bottom-width: 1px !important; }
+            .border-dotted { border-style: dotted !important; }
+            .border-black { border-color: black !important; }
+            
+            /* Spacing adjustments for Print */
+            .mb-6 { margin-bottom: 5mm !important; }
+            .mt-6 { margin-top: 5mm !important; }
+            
+            /* Prevent Page Breaks only where critical */
+            .break-inside-avoid {
+                page-break-inside: avoid !important;
             }
         }
       </style>
@@ -613,6 +675,70 @@ export class RequestFormDListComponent implements OnInit {
   }
 
   printForm() {
-    window.print();
+    const originalElement = document.getElementById('printableArea');
+    if (!originalElement) {
+        console.error('Printable area not found');
+        return;
+    }
+
+    // 1. Clone the element
+    const clone = originalElement.cloneNode(true) as HTMLElement;
+    
+    // 2. Remove scroll restrictions from the clone to ensure full height is captured
+    clone.classList.remove('h-full', 'overflow-y-auto', 'overflow-x-auto');
+    clone.style.height = 'auto';
+    clone.style.overflow = 'visible';
+    clone.style.width = '100%'; // Ensure it fills the wrapper
+    
+    // 3. Create a wrapper that simulates an A4 paper width
+    const wrapper = document.createElement('div');
+    wrapper.id = 'pdf-gen-wrapper';
+    wrapper.style.position = 'fixed';
+    wrapper.style.top = '0';
+    wrapper.style.left = '0';
+    wrapper.style.zIndex = '9999'; // Must be visible for html2canvas to capture it cleanly
+    wrapper.style.width = '794px'; // Standard A4 width at 96 DPI
+    wrapper.style.minHeight = '1123px'; // Standard A4 height
+    wrapper.style.height = 'auto';
+    wrapper.style.backgroundColor = 'white';
+    wrapper.style.padding = '20px'; // Reduced padding for A4
+    wrapper.style.visibility = 'visible';
+    wrapper.style.overflow = 'visible';
+    
+    wrapper.appendChild(clone);
+    document.body.appendChild(wrapper);
+
+    // 4. Configure html2pdf to capture this A4-sized view
+    const opt = {
+      margin:       [5, 5, 5, 5], 
+      filename:     `Form_D_${this.selectedRequest.license_number || 'Request'}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { 
+          scale: 2, 
+          useCORS: true, 
+          logging: true, // Enable logging to see errors in console
+          scrollY: 0,
+          windowWidth: 794
+      },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak:    { mode: 'css', avoid: '.break-inside-avoid' }
+    };
+
+    // Check if html2pdf is a function or object with default
+    const api = html2pdf as any;
+    const worker = api.default ? api.default() : api();
+    
+    // Add a small delay to ensure DOM is fully rendered
+    setTimeout(() => {
+        worker.set(opt).from(wrapper).toPdf().get('pdf').then((pdf: any) => {
+           // Optional: Auto print? pdf.autoPrint();
+        }).save().then(() => {
+            // Cleanup
+            document.body.removeChild(wrapper);
+        }).catch((err: any) => {
+            console.error('PDF Generation Error:', err);
+            document.body.removeChild(wrapper);
+        });
+    }, 500); // 500ms delay
   }
 }

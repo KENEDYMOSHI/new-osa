@@ -59,6 +59,30 @@ export class PractitionerRegistrationFormComponent implements OnInit {
   showNationalityDropdown = false;
   nationalitySearchTerm = '';
 
+  // NIDA Verification State
+  nidaStatus: 'idle' | 'fetching_question' | 'question_ready' | 'verifying' | 'success' | 'error' = 'idle';
+  nidaQuestion: string = '';
+  nidaAnswer: string = '';
+  nidaErrorMessage: string = '';
+
+  // Multi-step Verification State
+  correctAnswersCount: number = 0;
+  totalRequiredAnswers: number = 5;
+  usedQuestionIndices: Set<number> = new Set();
+  answerHistory: ('correct' | 'incorrect')[] = [];
+  
+  // Mock Questions Pool
+  nidaQuestionsPool = [
+    'Taja wilaya ulipohitimu darasa la saba (Mention your primary school district)',
+    'Taja jina la shule yako ya msingi (Mention your primary school name)',
+    'Taja jina la pili la mama yako (Mention your mother\'s middle name)',
+    'Taja mwaka wa kuzaliwa (Mention your birth year)',
+    'Taja mkoa unaloishi sasa (Mention your current region)',
+    'Taja jina la mwanzo la baba yako (Mention your father\'s first name)',
+    'Taja namba ya simu iliyosajiliwa (Mention registered phone number)',
+    'Taja kata unayoishi (Mention your ward)'
+  ];
+
   constructor(
     private fb: FormBuilder, 
     private router: Router, 
@@ -157,33 +181,126 @@ export class PractitionerRegistrationFormComponent implements OnInit {
       
       if (this.isTanzanian) {
         identityControl?.setValidators([Validators.required, Validators.minLength(20), Validators.maxLength(20), Validators.pattern(/^[0-9]*$/)]);
-        // If switching to Tanzania, trigger validation to potentially auto-fill if value exists
         identityControl?.updateValueAndValidity();
       } else {
         identityControl?.setValidators([Validators.required]);
-        dobControl?.enable(); // Ensure it's enabled for non-citizens
+        dobControl?.enable(); 
       }
       identityControl?.updateValueAndValidity();
+      this.resetNidaVerification();
     });
 
     this.personalInfo.get('identityNumber')?.valueChanges.subscribe((value) => {
-      if (this.isTanzanian && value && value.length === 20) {
-        // Extract DOB from NIDA (YYYYMMDD)
-        const year = value.substring(0, 4);
-        const month = value.substring(4, 6);
-        const day = value.substring(6, 8);
-        
-        // Basic validation to check if it's a valid date structure
-        const dateString = `${year}-${month}-${day}`;
-        const date = new Date(dateString);
-        
-        if (!isNaN(date.getTime())) {
-             this.personalInfo.get('dateOfBirth')?.setValue(dateString);
-             // Optional: Disable DOB field for Tanzanians to enforce NIDA match
-             // this.personalInfo.get('dateOfBirth')?.disable(); 
+      if (this.isTanzanian) {
+        if (value && value.length === 20) {
+          // Trigger fetch question when 20 digits entered
+          if (this.nidaStatus === 'idle' || this.nidaStatus === 'error') {
+            this.fetchNidaQuestion();
+          }
+          
+          // Extract DOB logic
+          const year = value.substring(0, 4);
+          const month = value.substring(4, 6);
+          const day = value.substring(6, 8);
+          const dateString = `${year}-${month}-${day}`;
+          const date = new Date(dateString);
+          if (!isNaN(date.getTime())) {
+               this.personalInfo.get('dateOfBirth')?.setValue(dateString);
+          }
+        } else {
+          // Reset if user modifies input and not yet fully successful
+          if (this.nidaStatus !== 'success') {
+             this.resetNidaVerification();
+          }
         }
       }
     });
+  }
+
+  resetNidaVerification() {
+    this.nidaStatus = 'idle';
+    this.nidaQuestion = '';
+    this.nidaAnswer = '';
+    this.correctAnswersCount = 0;
+    this.answerHistory = [];
+    this.usedQuestionIndices.clear();
+  }
+
+  fetchNidaQuestion(): void {
+    this.nidaStatus = 'fetching_question';
+    this.nidaAnswer = ''; // Clear previous answer
+    
+    // Simulate API call to get security question
+    setTimeout(() => {
+      // Select a random question that hasn't been used yet
+      let availableIndices = [];
+      for(let i=0; i<this.nidaQuestionsPool.length; i++) {
+        if(!this.usedQuestionIndices.has(i)) {
+          availableIndices.push(i);
+        }
+      }
+
+      // If we ran out of questions (shouldn't happen with 5/8 logic, but for safety)
+      if (availableIndices.length === 0) {
+         this.usedQuestionIndices.clear(); // Reset simple logic
+         availableIndices = this.nidaQuestionsPool.map((_, i) => i);
+      }
+
+      const randomIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+      this.usedQuestionIndices.add(randomIndex);
+      this.nidaQuestion = this.nidaQuestionsPool[randomIndex];
+      
+      this.nidaStatus = 'question_ready';
+    }, 1500);
+  }
+
+  verifyNidaAnswer(): void {
+    if (!this.nidaAnswer.trim()) return;
+
+    this.nidaStatus = 'verifying';
+    
+    // Simulate API verification
+    setTimeout(() => {
+      // Mock Verification Logic
+      // For demonstration: If answer is 'wrong', mark as incorrect. Otherwise correct.
+      const isCorrect = this.nidaAnswer.toLowerCase() !== 'wrong';
+
+      if (isCorrect) {
+          this.correctAnswersCount++;
+          this.answerHistory.push('correct');
+      } else {
+          this.answerHistory.push('incorrect');
+      }
+
+      if (this.correctAnswersCount >= this.totalRequiredAnswers) {
+          // All questions answered
+          this.nidaStatus = 'success';
+          
+          // Auto-fill mock data
+          this.personalInfo.patchValue({
+            firstName: 'Juma',
+            secondName: 'Hamisi',
+            lastName: 'Bakari',
+            gender: 'Male',
+            region: 'Dar es Salaam',
+            district: 'Ilala',
+            ward: 'Upanga',
+            street: 'Barabara ya Umoja'
+          });
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'NIDA Verified',
+            text: 'Identity verified successfully! Details recovered.',
+            timer: 2000,
+            showConfirmButton: false
+          });
+      } else {
+          // Continue to next question regardless of correct/incorrect
+          this.fetchNidaQuestion();
+      }
+
+    }, 800); // reduced delay for better UX
   }
 
   get personalInfo() {

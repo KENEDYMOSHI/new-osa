@@ -158,6 +158,27 @@ export class LicenseService {
     return this.http.get(`${baseUrl}/form-d/user-requests/${userId}`, { headers: this.getHeaders() });
   }
 
+  // Form D Admin
+  getAllFormDRequests(): Observable<any> {
+    const baseUrl = this.apiUrl.replace('/license', '');
+    return this.http.get(`${baseUrl}/form-d/requests`, { headers: this.getHeaders() });
+  }
+
+  approveFormD(id: string | number, inspectorId: string | number): Observable<any> {
+      const baseUrl = this.apiUrl.replace('/license', '');
+      return this.http.post(`${baseUrl}/form-d/requests/${id}/approve`, { inspector_id: inspectorId }, { headers: this.getHeaders() });
+  }
+
+  rejectFormD(id: string | number, reason: string): Observable<any> {
+      const baseUrl = this.apiUrl.replace('/license', '');
+      return this.http.post(`${baseUrl}/form-d/requests/${id}/reject`, { reason: reason }, { headers: this.getHeaders() });
+  }
+
+  getInspectors(): Observable<any> {
+      const baseUrl = this.apiUrl.replace('/license', '');
+      return this.http.get(`${baseUrl}/form-d/inspectors`, { headers: this.getHeaders() });
+  }
+
   private getHeaders(): HttpHeaders {
     const token = this.authService.getToken();
     return new HttpHeaders({

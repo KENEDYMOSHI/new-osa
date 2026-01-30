@@ -20,7 +20,8 @@ export class DashboardComponent implements OnInit {
     total: 0,
     approved: 0,
     pending: 0,
-    inProgress: 0
+    inProgress: 0,
+    formDRequests: 0
   };
 
   // Recent Applications
@@ -110,6 +111,20 @@ export class DashboardComponent implements OnInit {
 
         // Generate notifications
         this.generateNotifications(applications);
+        
+        // Fetch Form D Requests count
+        this.authService.getProfile().subscribe(profile => {
+             const uid = profile.user?.id || profile.id;
+             if (uid) {
+                 this.licenseService.getUserFormDRequests(uid).subscribe({
+                     next: (reqs: any) => {
+                         this.stats.formDRequests = reqs.length;
+                     },
+                     error: (err) => console.error('Error fetching Form D stats', err)
+                 });
+             }
+        });
+
       },
       (error) => {
         console.error('Error loading dashboard data', error);

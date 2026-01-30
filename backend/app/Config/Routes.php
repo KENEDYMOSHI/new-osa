@@ -152,7 +152,12 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
         $routes->post('upload-document', 'FuelPumpController::uploadDocument');
     });
 
-    // Form D Requests
+    // Form D Requests - Admin/Officer
+    $routes->post('form-d/requests/(:num)/approve', 'FormDController::approve/$1');
+    $routes->post('form-d/requests/(:num)/reject', 'FormDController::reject/$1');
+    $routes->get('form-d/inspectors', 'FormDController::getInspectors');
+
+    // Form D Requests - Public/Applicant
     $routes->post('form-d/submit', 'FormDController::create');
     $routes->get('form-d/requests', 'FormDController::index');
     $routes->get('form-d/user-requests/(:num)', 'FormDController::getUserRequests/$1');

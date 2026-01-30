@@ -35,7 +35,7 @@ class FormDController extends BaseController
             'start_date' => $this->request->getGet('start_date'),
             'end_date' => $this->request->getGet('end_date'),
             'month' => $this->request->getGet('month'),
-            'status' => $this->request->getGet('status'),
+            'status' => $this->request->getGet('status') ?? 'Pending', // Default to Pending
             'applicant_name' => $this->request->getGet('applicant_name'),
             'license_number' => $this->request->getGet('license_number'),
             'seal_number' => $this->request->getGet('seal_number'),
@@ -53,16 +53,6 @@ class FormDController extends BaseController
             $request['print_token'] = $token;
         }
 
-        // Fetch Inspectors (Users with role 'officer' or specific group)
-        // Adjust logic based on actual role management. 
-        // Assuming getting all users for now or filtering by group if method exists.
-        // If Model has `getUsersByGroup` or similar, use it. 
-        // Fallback to fetching all for demo or specific query.
-        $db = \Config\Database::connect();
-        // Assuming auth_groups_users maps users to groups (standard CI Shield/MythAuth)
-        // Or a simple 'role' column in users table.
-        // Let's try to fetch users who might be inspectors.
-        // For safety, I'll fetch all users for the dropdown for now, or check if 'officer' group exists.
         $data['inspectors'] = $this->userModel->findAll(); 
 
         return view('Pages/Osa/RequestedFormD', $data);
@@ -76,6 +66,48 @@ class FormDController extends BaseController
         ];
 
         $data['user'] = auth()->user();
+
+         // Get Filters
+         $filters = [
+            'start_date' => $this->request->getGet('start_date'),
+            'end_date' => $this->request->getGet('end_date'),
+            'month' => $this->request->getGet('month'),
+            // For Report, we want processed statuses unless specific filter is applied
+            // But getRequests logic needs to handle 'processed' or array of statuses
+            // For now, let's fetch all via simple where logic if model doesn't support 'not Pending'
+            'status' => $this->request->getGet('status'), 
+            'applicant_name' => $this->request->getGet('applicant_name'),
+            'license_number' => $this->request->getGet('license_number'),
+        ];
+
+        // Custom fetching for reports (Approved or Rejected)
+        // Adjusting getRequests or doing manual query here
+        // Since getRequests filters by exact status if provided, we might need to modify model or do this:
+        
+        $builder = $this->formDModel->builder();
+        $builder->select('form_d_requests.*, vessel_discharge.users.first_name as inspector_first_name, vessel_discharge.users.last_name as inspector_last_name');
+        $builder->join('vessel_discharge.users', 'vessel_discharge.users.id = form_d_requests.inspector_id', 'left');
+        $builder->whereIn('form_d_requests.status', ['Approved', 'Rejected']);
+        
+        if (!empty($filters['start_date'])) $builder->where("DATE(form_d_requests.created_at) >=", $filters['start_date']);
+        if (!empty($filters['end_date'])) $builder->where("DATE(form_d_requests.created_at) <=", $filters['end_date']);
+        if (!empty($filters['applicant_name'])) {
+            $builder->groupStart()
+                ->like('form_d_requests.practitioner_name', $filters['applicant_name'])
+                ->orLike('form_d_requests.declarant_name', $filters['applicant_name'])
+                ->groupEnd();
+        }
+
+        $data['requests'] = $builder->orderBy('form_d_requests.updated_at', 'DESC')->get()->getResultArray();
+        
+        // Generate tokens for report view as well
+        $session = session();
+        foreach ($data['requests'] as &$request) {
+            $token = bin2hex(random_bytes(16));
+            $session->set('print_token_' . $request['id'], $token);
+            $request['print_token'] = $token;
+        }
+
         return view('Pages/Osa/ReportFormDRequest', $data);
     }
 

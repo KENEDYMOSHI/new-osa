@@ -40,7 +40,82 @@ class FormDController extends BaseController
     
     public function getUserRequests($userId)
     {
-        $requests = $this->model->where('user_id', $userId)->findAll();
+        $builder = $this->model->builder();
+        $builder->select('form_d_requests.*, vessel_discharge.users.first_name as inspector_first_name, vessel_discharge.users.last_name as inspector_last_name');
+        $builder->join('vessel_discharge.users', 'vessel_discharge.users.id = form_d_requests.inspector_id', 'left');
+        $builder->where('form_d_requests.user_id', $userId);
+        $builder->orderBy('form_d_requests.created_at', 'DESC');
+        
+        $requests = $builder->get()->getResultArray();
         return $this->respond($requests);
+    }
+
+    public function approve($id)
+    {
+        $data = $this->request->getJSON(true);
+        $inspectorId = $data['inspector_id'] ?? null;
+
+        if (!$inspectorId) {
+            return $this->failValidationError('Inspector ID is required for approval.');
+        }
+
+        $updateData = [
+            'status' => 'Approved',
+            'inspector_id' => $inspectorId,
+            'approved_by' => 1, // Placeholder: auth()->id() if available
+            'approved_at' => date('Y-m-d H:i:s'),
+            'rejection_reason' => null
+        ];
+
+        if ($this->model->update($id, $updateData)) {
+             return $this->respond(['status' => 'success', 'message' => 'Request approved successfully.']);
+        }
+
+        return $this->failServerError('Failed to approve request.');
+    }
+
+    public function reject($id)
+    {
+        $data = $this->request->getJSON(true);
+        $reason = $data['reason'] ?? null;
+
+        if (!$reason) {
+            return $this->failValidationError('Rejection reason is required.');
+        }
+
+        $updateData = [
+            'status' => 'Rejected',
+            'rejection_reason' => $reason,
+            'approved_by' => null,
+            'approved_at' => null,
+            'inspector_id' => null
+        ];
+
+        if ($this->model->update($id, $updateData)) {
+            return $this->respond(['status' => 'success', 'message' => 'Request rejected successfully.']);
+        }
+
+         return $this->failServerError('Failed to reject request.');
+    }
+
+    public function getInspectors()
+    {
+        // Placeholder mechanism to get inspectors. 
+        // Ideally: return $this->userModel->inGroup('inspector')->findAll();
+        // For now, returning a dummy list or querying users table if possible.
+        // Assuming there is a users table.
+        
+        $db = \Config\Database::connect();
+        try {
+            // Attempt to fetch users who might be inspectors. 
+            // If groups are used:
+            // $query = $db->table('users')->join('auth_groups_users', 'users.id = auth_groups_users.user_id')->where('group', 'inspector')->get();
+            // Fallback: return all users or just empty list to be populated by frontend mock if needed.
+             $query = $db->table('users')->select('id, username, email')->limit(50)->get();
+             return $this->respond($query->getResultArray());
+        } catch (\Exception $e) {
+            // If table doesn't exist or other error, return empty
+            return $this->respond([]);
+        }
     }
 }

@@ -18,7 +18,12 @@ class CreateFormDRequestsTable extends Migration
             'user_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
-                'null'       => true, // Make nullable in case of issues, but ideally should be linked
+                'null'       => true, 
+            ],
+            'inspector_id' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'null'       => true,
             ],
             'license_number' => [
                 'type'       => 'VARCHAR',
@@ -111,8 +116,21 @@ class CreateFormDRequestsTable extends Migration
             ],
             'status' => [
                 'type'       => 'ENUM',
-                'constraint' => ['Verified', 'Pending Verification', 'Rejected'],
+                'constraint' => ['Verified', 'Pending Verification', 'Rejected', 'Approved'],
                 'default'    => 'Pending Verification',
+            ],
+            'rejection_reason' => [
+                'type' => 'TEXT',
+                'null' => true,
+            ],
+            'approved_by' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'null'       => true,
+            ],
+            'approved_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
             ],
             'verification_date' => [
                 'type' => 'DATE',
