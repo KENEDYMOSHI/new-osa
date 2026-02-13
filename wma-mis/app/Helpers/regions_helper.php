@@ -150,6 +150,41 @@ function renderRegions()
     return $regions;
 }
 
+function getRegions()
+{
+    return [
+        'Arusha',
+        'Dodoma',
+        'Geita',
+        'Iringa',
+        'Kagera',
+        'Katavi',
+        'Kigoma',
+        'Kilimanjaro',
+        'Lindi',
+        'Manyara',
+        'Mara',
+        'Mbeya',
+        'Morogoro',
+        'Mtwara',
+        'Mwanza',
+        'Njombe',
+        'Pwani',
+        'Rukwa',
+        'Ruvuma',
+        'Shinyanga',
+        'Simiyu',
+        'Singida',
+        'Songwe',
+        'Tabora',
+        'Tanga',
+        'Ilala',
+        'Kinondoni',
+        'Temeke',
+        'Wma-ports-unit',
+    ];
+}
+
 
 
 function regionsAndDistricts($colSize ){

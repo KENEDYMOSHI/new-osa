@@ -1797,7 +1797,8 @@ class LicenseController extends ResourceController
         }
 
         // Get applicant personal info to retrieve ID document
-        $personalInfoModel = $this->db->table('practitioner_personal_infos');
+        $db = \Config\Database::connect();
+        $personalInfoModel = $db->table('practitioner_personal_infos');
         $personalInfo = $personalInfoModel->where('user_uuid', $user->uuid)->get()->getRow();
 
         if (!$personalInfo || empty($personalInfo->id_document)) {
@@ -1929,7 +1930,7 @@ class LicenseController extends ResourceController
 
         $db = \Config\Database::connect();
         
-        // Fetch all submitted or approved licenses for this user
+        // Fetch all submitted or approved licenses for this user with additional user info
         $builder = $db->table('license_applications');
         $builder->select('
             license_applications.id, 
@@ -1939,10 +1940,22 @@ class LicenseController extends ResourceController
             license_application_items.selected_instruments,
             licenses.license_number,
             licenses.issue_date,
-            licenses.expiry_date
+            licenses.expiry_date,
+            licenses.applicant_name,
+            licenses.company_name,
+            licenses.address,
+            licenses.region,
+            practitioner_personal_infos.first_name,
+            practitioner_personal_infos.last_name,
+            practitioner_personal_infos.phone,
+            practitioner_personal_infos.region as user_region,
+            practitioner_personal_infos.district,
+            practitioner_personal_infos.street
         ');
         $builder->join('license_application_items', 'license_application_items.application_id = license_applications.id');
         $builder->join('licenses', 'licenses.application_id = license_applications.id', 'left'); // Left join as license might not be generated
+        $builder->join('users', 'users.id = license_applications.user_id');
+        $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid', 'left');
         $builder->where('license_applications.user_id', $user->id);
         
         // Include ALL statuses that should restrict re-application:
@@ -1999,6 +2012,26 @@ class LicenseController extends ResourceController
                 $restrictionType = 'pending';
             }
             
+            // Construct full applicant name
+            $applicantName = $app['applicant_name'] ?? trim(($app['first_name'] ?? '') . ' ' . ($app['last_name'] ?? ''));
+            
+            // Construct address from available fields
+            if (!empty($app['address'])) {
+                // Use license address if available
+                $address = $app['address'];
+            } else {
+                // Construct from user's personal info
+                $addressParts = array_filter([
+                    $app['street'] ?? '',
+                    $app['district'] ?? '',
+                    $app['user_region'] ?? ''
+                ]);
+                $address = implode(', ', $addressParts);
+            }
+            
+            // Use license region if available, otherwise use user's region
+            $region = $app['region'] ?? $app['user_region'] ?? '';
+            
             // Allow returning details even if restricted, so frontend can show them
             $result[] = [
                 'id' => $app['id'], // Application ID for viewLicense API call
@@ -2009,12 +2042,19 @@ class LicenseController extends ResourceController
                 'is_restricted' => $isRestricted ?? false,
                 'days_remaining' => $daysRemaining,
                 'available_date' => $availableDate,
-                // New Fields
+                // License Fields
                 'license_number' => $app['license_number'],
                 'instruments' => $instruments,
-                'issue_date' => $app['issue_date'] ?? $app['updated_at'], // Use license issue_date or fallback to updated_at
-                'updated_at' => $app['updated_at'], // For backward compatibility
-                'expiry_date' => $app['expiry_date'] ?? null // Actual expiry from licenses table
+                'issue_date' => $app['issue_date'] ?? $app['updated_at'],
+                'updated_at' => $app['updated_at'],
+                'expiry_date' => $app['expiry_date'] ?? null,
+                // Additional User/License Info for ID Card
+                'applicant_name' => $applicantName,
+                'company_name' => $app['company_name'] ?? '',
+                'address' => $address,
+                'region' => $region,
+                'phone_number' => $app['phone'] ?? '',
+                'profile_picture' => null // Not available in current database schema
             ];
         }
         

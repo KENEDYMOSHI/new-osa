@@ -774,4 +774,35 @@ class ApprovalController extends BaseController
         
         return $this->respond($licenses);
     }
+    public function getTechniciansRegistry()
+    {
+        $requestKey = $this->request->getHeaderLine('X-API-KEY');
+        
+        if ($requestKey !== $this->apiKey) {
+            return $this->failUnauthorized('Invalid API Key');
+        }
+
+        $filters = [
+            'name' => $this->request->getVar('name'),
+            'technician_name' => $this->request->getVar('technician_name'),
+            'customer_name' => $this->request->getVar('customer_name'),
+            'license_number' => $this->request->getVar('license_number'),
+            'region' => $this->request->getVar('region'),
+            'district' => $this->request->getVar('district'),
+            'date' => $this->request->getVar('date'),
+            'year' => $this->request->getVar('year'),
+            'dateRange' => $this->request->getVar('dateRange'),
+        ];
+
+        $model = new \App\Models\TechniciansRegistryModel();
+        $data = $model->getAllRegistries($filters);
+
+        // Enhance data if needed (e.g., formatting dates)
+        foreach ($data as &$row) {
+            // Map status if needed, or format dates
+            $row['service_date_formatted'] = date('d-m-Y', strtotime($row['service_date']));
+        }
+
+        return $this->respond($data);
+    }
 }

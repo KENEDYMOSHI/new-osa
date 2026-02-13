@@ -207,7 +207,13 @@ class FormDController extends BaseController
             }
         }
 
-        $request = $this->formDModel->find($id);
+        // Use builder to join users table to get inspector name
+        $request = $this->formDModel->builder()
+            ->select('form_d_requests.*, vessel_discharge.users.first_name as inspector_first_name, vessel_discharge.users.last_name as inspector_last_name')
+            ->join('vessel_discharge.users', 'vessel_discharge.users.id = form_d_requests.inspector_id', 'left')
+            ->where('form_d_requests.id', $id)
+            ->get()
+            ->getRowArray();
         
         if (!$request) {
             return "Request not found";

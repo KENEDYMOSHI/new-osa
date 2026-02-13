@@ -62,6 +62,11 @@ export const routes: Routes = [
         title: 'View Form D Requests | WMA Portal'
       },
       {
+        path: 'technicians-customer-registry',
+        loadComponent: () => import('./pages/technicians-customer-registry/technicians-customer-registry.component').then(m => m.TechniciansCustomerRegistryComponent), // Restored component
+        title: 'Technicians Customer Registry | WMA Portal'
+      },
+      {
         path: 'Initial-Application',
         loadComponent: () => import('./pages/license-application/license-application.component').then(m => m.LicenseApplicationComponent),
         canActivate: [passportPhotoGuard],

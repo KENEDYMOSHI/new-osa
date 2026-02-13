@@ -244,6 +244,7 @@ $routes->group('', ['filter' => 'AuthFilter'], function ($routes, $appRoutes = [
     $appRoutes['licenseBillReport'] = 'OsaController::licenseBillReport';
     $appRoutes['osaApproveApplication'] = 'OsaController::approveApplication';
     $appRoutes['osaRejectApplication'] = 'OsaController::rejectApplication';
+    $appRoutes['serviceRecords'] = 'OsaController::serviceRecords';
     $appRoutes['requestedFormD'] = 'FormDController::requestedFormD';
     $appRoutes['reportFormDRequest'] = 'FormDController::reportFormDRequest';
     $appRoutes['approveFormDRequest'] = 'FormDController::approveRequest'; 

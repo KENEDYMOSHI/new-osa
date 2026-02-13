@@ -96,7 +96,14 @@
                             Analytics
                         </p>
                     </a>
-
+                </li>
+                <li class="nav-item ">
+                    <a href="<?= base_url() ?>serviceRecords" class="nav-link ">
+                        <i class="fal fa-users-cog nav-icon"></i>
+                        <p>
+                            Technicians' Registry
+                        </p>
+                    </a>
                 </li>
                 <li class="nav-item">
                     <a href="<?= base_url() ?>/fullReport" class="nav-link ">

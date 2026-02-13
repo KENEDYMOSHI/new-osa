@@ -163,6 +163,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a href="<?= base_url() ?>serviceRecords" class="nav-link">
+                                <i class="fal fa-users-cog nav-icon"></i>
+                                <p>Technicians' Registry</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="#" class="nav-link">
                                 <i class="fal fa-file-invoice nav-icon"></i>
                                 <p>

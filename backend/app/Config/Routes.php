@@ -69,6 +69,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->get('license/application/(:segment)/documents', 'LicenseController::getApplicationDocuments/$1');
     $routes->get('license/types', 'LicenseController::getLicenseTypes');
     $routes->get('license/approved-licenses', 'LicenseController::getApprovedLicenses');
+    $routes->get('license/view-id/(:segment)', 'LicenseController::viewID/$1');
     $routes->get('license/view-image/(:segment)', 'LicenseController::viewLicenseImage/$1');
     $routes->get('admin/applications', 'AdminController::getApplications');
     $routes->get('admin/applicants', 'AdminController::getApplicants');
@@ -96,6 +97,8 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->get('locations/districts/(:segment)', 'LocationController::getDistricts/$1');
     $routes->get('locations/wards/(:segment)', 'LocationController::getWards/$1');
     $routes->get('locations/postalcodes/(:segment)', 'LocationController::getPostalCodes/$1');
+
+
 
     $routes->options('auth/register', static function () {
         return response()->setStatusCode(200);
@@ -162,6 +165,15 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->post('form-d/submit', 'FormDController::create');
     $routes->get('form-d/requests', 'FormDController::index');
     $routes->get('form-d/user-requests/(:num)', 'FormDController::getUserRequests/$1');
+
+    // Technicians Customer Registry
+    $routes->group('technicians-registry', ['filter' => 'auth'], function($routes) {
+        $routes->get('profile', 'TechniciansCustomerRegistryController::getProfile');
+        $routes->get('', 'TechniciansCustomerRegistryController::index');
+        $routes->post('', 'TechniciansCustomerRegistryController::create');
+        $routes->put('(:num)', 'TechniciansCustomerRegistryController::update/$1');
+        $routes->delete('(:num)', 'TechniciansCustomerRegistryController::delete/$1');
+    });
 
     $routes->options('(:any)', static function () {
         return response()->setStatusCode(200);

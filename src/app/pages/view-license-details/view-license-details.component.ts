@@ -5,11 +5,12 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
 import { AppModalComponent } from '../../components/app-modal/app-modal.component';
+import { LicenseIdCardComponent } from '../../components/license-id-card/license-id-card.component';
 
 @Component({
   selector: 'app-view-license-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppModalComponent],
+  imports: [CommonModule, FormsModule, AppModalComponent, LicenseIdCardComponent],
   templateUrl: './view-license-details.component.html',
   styleUrls: ['./view-license-details.component.css']
 })
@@ -38,6 +39,10 @@ export class ViewLicenseDetailsComponent implements OnInit {
   showIDModal: boolean = false;
   idModalUrl: string | null = null;
   idModalName: string | null = null;
+
+  // License ID Card Modal
+  showLicenseCardModal: boolean = false;
+  selectedLicenseCardData: any = null;
 
   constructor(
     private licenseService: LicenseService,
@@ -217,6 +222,53 @@ export class ViewLicenseDetailsComponent implements OnInit {
     this.showIDModal = false;
     this.idModalUrl = null;
     this.idModalName = null;
+  }
+
+  // License ID Card Modal Methods
+  openLicenseCardModal(license: any) {
+    this.selectedLicenseCardData = {
+      licenseNumber: license.license_number,
+      applicantName: license.applicant_name,
+      licenseType: license.license_type,
+      issueDate: license.issue_date,
+      expiryDate: license.expiry_date,
+      profilePicture: this.getProfilePictureUrl(license.profile_picture),
+      userInitial: license.applicant_name?.charAt(0) || 'N',
+      companyName: license.company_name || '',
+      address: license.address || '',
+      phoneNumber: license.phone_number || '',
+      region: license.region || '',
+      instruments: license.instruments || [],
+      position: this.getPositionFromLicenseType(license.license_type)
+    };
+    this.showLicenseCardModal = true;
+  }
+
+  getProfilePictureUrl(path: string | null): string | null {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    return `http://localhost:8080/${cleanPath}`;
+  }
+
+  closeLicenseCardModal() {
+    this.showLicenseCardModal = false;
+    this.selectedLicenseCardData = null;
+  }
+
+  // Helper method to determine position based on license type
+  getPositionFromLicenseType(licenseType: string): string {
+    if (!licenseType) return 'CALIBRATION INSPECTOR';
+    
+    const type = licenseType.toUpperCase();
+    if (type.includes('CLASS A') || type.includes('SENIOR')) {
+      return 'SENIOR CALIBRATION INSPECTOR';
+    } else if (type.includes('CLASS B')) {
+      return 'CALIBRATION INSPECTOR';
+    } else if (type.includes('CLASS C')) {
+      return 'ASSISTANT CALIBRATION INSPECTOR';
+    }
+    return 'CALIBRATION INSPECTOR';
   }
   
   // Helper to check expiry

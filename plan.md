@@ -650,3 +650,23 @@ Enlarged media
 
 
 The OSA Dashboard is designed to display summary information only and should not perform heavy data processing. Therefore, the “View All Licenses” and “View All Regions” actions available on the Dashboard act purely as navigation links. When a user clicks either of these options, the system redirects the user to the “License Statistics” page within the OSA module, which serves as the main page for detailed analysis. The License Statistics page is responsible for retrieving all required data directly from the osa_app database and displaying all license types and all regions, including those with no applications (0 records), using appropriate LEFT JOIN logic. Depending on what the user selected on the Dashboard, the License Statistics page opens in the relevant context (licenses view or regions view) and presents full tables, charts (including pie charts), and filtering options such as month and financial year. In this design, the Dashboard remains a high-level summary and navigation layer, while License Statistics handles all detailed reporting and analytics.
+
+kwenye view ID Button design id kutokana na taarifa za leseni utaanza na mfano wa ID nilio wekan size hiyo hiyo kisha taarifa heading zitakua hivyo hivyo pamoja na logo zake kisha kwenye taarifa utaanza na lecense number kisha name of applicant kisha aina ya lesine kisha issue date na expire date kisha utaweka na picha utachukua kwenye profile na QR code design vizuri 
+
+Kwenye mfumo wa mfumo wa WMA-MIS kwenye module ya OSA ongeza module ya technicians customer registry ambayo itakua na filter ya Service Records
+T Filter Service Records
+Technician Name
+
+Year
+All Years
+
+Service Date
+Customer Name
+
+Customer Name
+License Number
+
+Customer Name
+License No.
+
+Date Range na kuonesha services record itakayo tengeneza API kutoka kwenye database ya osa_app kwenye table ya technicians_registry impliment bila kuharibu kitu tumia design ya hiyo pecture 

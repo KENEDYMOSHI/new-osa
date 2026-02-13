@@ -82,8 +82,8 @@ class Database extends Config
     public array $osa = [
         'DSN'          => '',
         'hostname'     => '127.0.0.1',
-        'username'     => 'root',
-        'password'     => '',
+        'username'     => 'maalim',
+        'password'     => 'maalim',
         'database'     => 'osa_app',
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
@@ -96,7 +96,8 @@ class Database extends Config
         'compress'     => false,
         'strictOn'     => false,
         'failover'     => [],
-        'port'         => 3306,
+        'port'         => 8889,
+        'socket'       => '/Applications/MAMP/tmp/mysql/mysql.sock',
         'numberNative' => false,
     ];
 

@@ -28,6 +28,11 @@ class AuthFilter implements FilterInterface
      */
     public function before(RequestInterface $request, $arguments = null)
     {
+        // Allow OPTIONS requests (CORS preflight) to pass without token
+        if (strtolower($request->getMethod()) === 'options') {
+            return;
+        }
+
         $header = $request->getHeaderLine('Authorization');
         
         if (empty($header)) {

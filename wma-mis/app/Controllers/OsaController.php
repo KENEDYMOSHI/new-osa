@@ -14,6 +14,9 @@ class OsaController extends BaseController
   private $licenseTypeModel;
   private $billModel; // Added property
   private $osabillModel;
+  private $serviceRecordsModel;
+  private $practitionerPersonalInfoModel;
+  private $practitionerBusinessInfoModel;
 
   public function __construct()
   {
@@ -26,6 +29,9 @@ class OsaController extends BaseController
           $this->licenseTypeModel   = new \App\Models\LicenseTypeModel();
           $this->billModel          = new \App\Models\BillModel(); // Injected BillModel
           $this->osabillModel       = new \App\Models\OsabillModel();
+          $this->serviceRecordsModel = new \App\Models\ServiceRecordsModel();
+          $this->practitionerPersonalInfoModel = new \App\Models\PractitionerPersonalInfoModel();
+          $this->practitionerBusinessInfoModel = new \App\Models\PractitionerBusinessInfoModel();
           $this->uniqueId        = auth()->user()->unique_id;
           $this->user = auth()->user();
   }
@@ -532,4 +538,123 @@ public function rejectApplication()
 
         return view('Pages/Osa/LicenseStatistics', $data);
     }
+
+    public function serviceRecords()
+    {
+        // Get filters from request
+        $filters = [
+            'technician_name' => $this->request->getVar('technician_name'),
+            'customer_name' => $this->request->getVar('customer_name'),
+            'license_number' => $this->request->getVar('license_number'),
+            'service_date' => $this->request->getVar('service_date'),
+            'year' => $this->request->getVar('year'),
+            'region' => $this->request->getVar('region'),
+            'date_from' => $this->request->getVar('date_from'),
+            'date_to' => $this->request->getVar('date_to'),
+            'instrument' => $this->request->getVar('instrument'),
+            'sticker_number' => $this->request->getVar('sticker_number'),
+        ];
+
+        // Determine User Role and Region
+        $userRole = 'other';
+        $userRegion = null;
+
+        if ($this->user->inGroup('manager')) {
+            $userRole = 'manager';
+            $userRegion = $this->user->region;
+        } elseif ($this->user->inGroup('ceo') || $this->user->inGroup('dts') || $this->user->inGroup('surveillance') || $this->user->inGroup('admin')) {
+            $userRole = 'admin'; // View all
+        }
+
+        // Get service records
+        $serviceRecords = $this->serviceRecordsModel->getServiceRecords($filters, $userRole, $userRegion);
+        
+        // Get available years for filter dropdown
+        $availableYears = $this->serviceRecordsModel->getAvailableYears();
+
+        // Get Technician Profile Logic
+        $technicianProfile = null;
+        $targetUserUuid = null;
+
+        // 1. If user is Admin/Manager and filtered by Technician Name
+        if ($userRole === 'admin' || $userRole === 'manager') {
+            if (!empty($filters['technician_name'])) {
+                // Try to find the technician from the first record (simplest way if name matches)
+                // Or query users table.
+                // Since getServiceRecords joins users, let's see if we have records
+                if (!empty($serviceRecords)) {
+                    // Check if all records belong to same user (or just take the first one if searching by specific name)
+                    // The filter logic in Model uses LIKE.
+                    // Ideally, we'd lookup user by name first.
+                    $db = \Config\Database::connect('osa'); // Access via OSA DB first to get ID
+                    
+                    // Actually, let's use the WMA DB users/personal_info standard models
+                    // We need to match the name filter to a UUID.
+                     $userBuilder = $db->table('users'); // This is OSA db users table? No, users is usually WMA DB?
+                     // Wait, ServiceRecordsModel joins 'users' in OSA DB?
+                     // Let's check ServiceRecordsModel (Step 595): 
+                     // $db = \Config\Database::connect('osa'); 
+                     // $builder->join('users', 'users.id = technicians_registry.user_id', 'left');
+                     // So 'users' table exists in 'osa' DB (mirrored?).
+                     
+                     // If we have records, we can grab the user_id from the first record
+                     $firstRecord = $serviceRecords[0];
+                     if (isset($firstRecord->user_id)) {
+                         // Get UUID from user_id in OSA DB
+                         $userRec = $db->table('users')->where('id', $firstRecord->user_id)->get()->getRow();
+                         if ($userRec) {
+                              // Now we need the UUID to fetch Profile from WMA DB models (Practitioner...)
+                              // Assuming OSA users table has uuid? 
+                              // Check getProfile in TechniciansCustomerRegistryController (Step 544): $userRecord->uuid
+                              if (isset($userRec->uuid)) {
+                                  $targetUserUuid = $userRec->uuid;
+                              }
+                         }
+                     }
+                }
+            }
+        } 
+        else {
+            // 2. If user is a Technician (not Admin/Manager), show THEIR profile
+            $targetUserUuid = $this->uniqueId;
+        }
+
+        if ($targetUserUuid) {
+            try {
+                $personalInfo = $this->practitionerPersonalInfoModel->where('user_uuid', $targetUserUuid)->first();
+                $businessInfo = $this->practitionerBusinessInfoModel->where('user_uuid', $targetUserUuid)->first();
+                
+                // If we found personal info, we can build the profile
+                if ($personalInfo) {
+                     $userObj = auth()->getProvider()->findById($personalInfo->user_id ?? 0); // fallback if needed
+                     
+                     $technicianProfile = [
+                        'name' => $personalInfo->first_name . ' ' . $personalInfo->last_name,
+                        'phone' => $personalInfo->phone,
+                        'company' => ($businessInfo) ? $businessInfo->company_name : 'N/A',
+                        'seal_number' => 'N/A' // Placeholder
+                    ];
+                }
+            } catch (\Exception $e) {
+                // Ignore
+            }
+        }
+        
+        // If still null (Admin viewing all, or technician not found), leave as null.
+
+        $data['page'] = [
+            'title' => 'Technicians Registry', // Renamed as requested
+            'heading' => 'Technicians Registry',
+        ];
+
+        $data['user'] = $this->user;
+        $data['serviceRecords'] = $serviceRecords;
+        $data['filters'] = $filters;
+        $data['availableYears'] = $availableYears;
+        $data['technicianProfile'] = $technicianProfile;
+
+        return view('Pages/Osa/ServiceRecords', $data);
+    }
+
+
 }

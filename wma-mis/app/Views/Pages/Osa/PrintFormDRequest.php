@@ -3,229 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form D Certificate - <?= esc($request['form_d_number'] ?? $request['id']) ?></title>
+    <title>Form D Request - Print</title>
     <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
         body {
             font-family: 'Times New Roman', Times, serif;
-            font-size: 14px;
-            line-height: 1.4;
-            color: #000;
             background: #fff;
-            padding: 30px;
             margin: 0;
+            padding: 0;
+            -webkit-print-color-adjust: exact;
+            color: #000;
         }
-
-        .container {
-            max-width: 800px;
+        .page-container {
+            width: 210mm;
+            height: 296mm; /* Force single page height approx */
+            padding: 15mm 20mm;
             margin: 0 auto;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .header h1 {
-            font-size: 16px;
-            font-weight: bold;
-            margin: 0 0 5px 0;
-            text-transform: uppercase;
-        }
-
-        .header p {
-            font-size: 13px;
-            margin: 0;
-            font-weight: bold;
-        }
-
-        .logo-container {
-            margin: 15px 0;
-            text-align: center;
-        }
-
-        .logo-container img {
-            height: 90px;
-        }
-
-        .form-title {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .form-title h2 {
-            font-size: 18px;
-            font-weight: bold;
-            text-decoration: underline;
-            margin: 0 0 5px 0;
-        }
-
-        .form-title p {
-            font-size: 13px;
-            font-weight: bold;
-            margin: 0;
-            text-transform: uppercase;
+            position: relative;
+            box-sizing: border-box;
+            background: white;
         }
         
-        .form-subtitle {
-            text-align: center;
-            font-size: 12px;
-            font-style: italic;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .row {
-            display: flex;
-            align-items: baseline;
-            margin-bottom: 15px;
-        }
-
-        .label {
-            font-weight: bold;
-            white-space: nowrap;
-            margin-right: 10px;
-        }
-
-        .value {
-            border-bottom: 1px dotted #000;
-            flex-grow: 1;
-            padding: 0 5px;
-            font-weight: bold;
-        }
+        .form-header { text-align: center; margin-bottom: 20px; }
+        .form-header h1 { font-size: 18px; font-weight: bold; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 0.5px; color: #000; }
+        .form-header p { font-size: 12px; font-weight: bold; margin: 0; color: #000; }
+        .wma-logo { height: 80px; margin: 10px auto; display: block; }
         
-        .value-inline {
+        .form-title-section { text-align: center; margin-bottom: 25px; }
+        .form-title-section h2 { font-size: 20px; font-weight: bold; text-decoration: underline; margin: 0 0 5px 0; color: #000; }
+        .form-title-section p { font-size: 13px; font-weight: bold; margin: 0; text-transform: uppercase; }
+        .form-subtitle { font-size: 12px; font-style: italic; font-weight: bold; margin-top: 5px; }
+
+        .form-row { display: flex; align-items: baseline; margin-bottom: 10px; font-size: 14px; flex-wrap: wrap; }
+        .form-label { font-weight: normal; margin-right: 10px; white-space: nowrap; }
+        .form-value { 
+            border-bottom: 1px dotted #000; 
+            font-weight: bold; 
+            padding: 0 5px; 
+            flex-grow: 1; 
+            min-width: 50px; 
+        }
+        .form-value-fixed {
             border-bottom: 1px dotted #000;
-            padding: 0 5px;
             font-weight: bold;
+            padding: 0 5px;
             display: inline-block;
-            min-width: 150px;
         }
 
-        .certify-text {
-            margin: 20px 0;
-            font-weight: normal;
-        }
-
-        .actions {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin: 20px 0;
-        }
-
-        .action-item {
-            display: flex;
-            align-items: center;
-            font-weight: bold;
-        }
+        .certify-text { margin: 20px 0; font-size: 14px; }
         
-        .check-icon {
-            margin-right: 5px;
-            font-size: 18px;
-            font-weight: bold;
-        }
+        .actions-group { display: flex; justify-content: center; gap: 40px; margin: 15px 0; font-weight: bold; font-size: 14px; }
+        .action-check { display: flex; align-items: center; }
+        .tick-mark { font-size: 20px; margin-right: 5px; min-width: 20px; line-height: 1; }
 
-        .info-grid {
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        
-        .info-row {
-            display: flex;
-            margin-bottom: 12px;
-            align-items: baseline;
-        }
-        
-        .col-half {
-            width: 50%;
-            display: flex;
-            align-items: baseline;
-        }
-        
-        .col-half .label {
-            width: 110px; /* Fixed width for labels alignment */
-        }
+        .footer-certify-text { margin: 20px 0; font-size: 13px; text-align: justify; line-height: 1.4; }
 
-        .footer-certify {
-            margin: 30px 0;
-            font-weight: bold;
+        .auth-section { margin-top: 25px; border-top: 1px dotted #ccc; padding-top: 15px; }
+        .auth-header { font-size: 12px; font-weight: bold; text-transform: uppercase; color: #333; margin-bottom: 10px; }
+        
+        .inspection-report { 
+            background: #fdfdfd; 
+            padding: 10px; 
+            margin-top: 20px; 
+            border: 1px solid #eee; 
             font-size: 13px;
-            text-align: justify;
+            page-break-inside: avoid;
         }
-        
-        .auth-row {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 40px;
-            align-items: baseline;
-        }
-
-        .signature-section {
-            margin-top: 40px;
-            display: flex;
-            align-items: baseline;
-        }
-
-        .signature-lines {
-            display: flex;
-            flex-grow: 1;
-            justify-content: space-between;
-            margin-left: 20px;
-        }
-        
-        .signature-line {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 45%;
-        }
-        
-        .dotted-line {
-            border-bottom: 1px dotted #000;
-            width: 100%;
-            height: 20px;
-            margin-bottom: 5px;
-        }
+        .inspection-report h5 { font-size: 12px; font-weight: bold; color: #000; margin: 0 0 5px 0; }
 
         @media print {
-            body { padding: 0; }
-            .container { width: 100%; max-width: 100%; }
+            .page-container {
+                width: 100%;
+                height: auto;
+                padding: 10mm;
+                margin: 0;
+            }
+            body { background: white; }
         }
+        
+        /* Utility for grid */
+        .row { display: flex; flex-wrap: wrap; margin-right: -15px; margin-left: -15px; }
+        .col-8 { flex: 0 0 66.66667%; max-width: 66.66667%; padding: 0 15px; }
+        .col-4 { flex: 0 0 33.33333%; max-width: 33.33333%; padding: 0 15px; text-align: right; }
+        .text-right { text-align: right; }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="page-container">
         <!-- Header -->
-        <div class="header">
+        <div class="form-header">
             <h1>WEIGHTS AND MEASURES AGENCY</h1>
             <p>P.O BOX 313 DAR ES SALAAM</p>
-        </div>
-
-        <!-- Logo -->
-        <div class="logo-container">
-            <img src="<?= base_url('assets/images/wma1.png') ?>" alt="WMA Logo">
+            <img src="<?= base_url('assets/images/wma1.png') ?>" alt="WMA Logo" class="wma-logo">
         </div>
 
         <!-- Form Title -->
-        <div class="form-title">
+        <div class="form-title-section">
             <h2>FORM D</h2>
             <p>FORM OF CERTIFICATE TO BE USED BY A PUMP MECHANIC</p>
             <p>AFTER SEALED/RE-SEALED</p>
             <div class="form-subtitle">(Made under Regulation 12(d))</div>
         </div>
 
-        <!-- Top Section -->
-        <div class="row">
-            <span class="label">Company employing mechanic:</span>
-            <span class="value"><?= esc($request['company_name'] ?? '') ?></span>
+        <!-- Practitioner Info -->
+        <div class="form-row">
+            <span class="form-label">Company employing mechanic:</span>
+            <span class="form-value"><?= strtoupper($request['company_name'] ?? '') ?></span>
         </div>
-
-        <div class="row">
-            <span class="label">License No:</span>
-            <span class="value" style="flex-grow: 0; min-width: 200px; margin-right: 20px;"><?= esc($request['license_number'] ?? '') ?></span>
+        <div class="form-row">
+            <span class="form-label">License No:</span>
+            <span class="form-value-fixed" style="width: 200px; margin-right: 20px;"><?= $request['license_number'] ?? '' ?></span>
             
-            <span class="label">Phone:</span>
-            <span class="value"><?= esc($request['practitioner_phone'] ?? 'N/A') ?></span>
+            <span class="form-label">Phone:</span>
+            <span class="form-value"><?= $request['practitioner_phone'] ?? '' ?></span>
         </div>
 
         <div class="certify-text">
@@ -233,107 +126,138 @@
         </div>
 
         <!-- Actions -->
-        <div class="actions">
-            <div class="action-item">
-                <span class="check-icon"><?= ($request['certification_action'] ?? '') == 'Erected' ? '✔' : '' ?></span> *Erected
+        <div class="actions-group">
+            <div class="action-check">
+                <span class="tick-mark"><?= ($request['certification_action'] ?? '') == 'Erected' ? '&#10004;' : '&nbsp;&nbsp;' ?></span> *Erected
             </div>
-            <div class="action-item">
-                <span class="check-icon"><?= ($request['certification_action'] ?? '') == 'Adjusted' ? '✔' : '' ?></span> Adjusted
+            <div class="action-check">
+                <span class="tick-mark"><?= ($request['certification_action'] ?? '') == 'Adjusted' ? '&#10004;' : '&nbsp;&nbsp;' ?></span> Adjusted
             </div>
-            <div class="action-item">
-                <span class="check-icon"><?= ($request['certification_action'] ?? '') == 'Repaired' ? '✔' : '' ?></span> Repaired
+            <div class="action-check">
+                <span class="tick-mark"><?= ($request['certification_action'] ?? '') == 'Repaired' ? '&#10004;' : '&nbsp;&nbsp;' ?></span>  Repaired
             </div>
         </div>
-        <div style="text-align: center; font-style: italic; font-size: 11px; margin-bottom: 20px;">(*Delete where not applicable)</div>
+        <div style="text-align: center; font-style: italic; font-size: 10px; margin-bottom: 15px;">(*Delete where not applicable)</div>
 
-        <!-- Details Grid -->
-        <div class="info-grid">
-            <div class="info-row">
-                <span class="label">By me and sealed with my seal No:</span>
-                <span class="value" style="flex-grow: 0; min-width: 100px;"><?= esc($request['inspector_id'] ?? '') ?></span>
-                <!-- Assuming inspector_id is seal number, or pull seal number if specific field exists -->
-            </div>
+        <!-- Details -->
+        <div class="form-row">
+            <span class="form-label">By me and sealed with my seal No:</span>
+            <span class="form-value" style="flex-grow: 0; min-width: 100px;"><?= $request['seal_number'] ?? '' ?></span>
+        </div>
+        
+        <div class="form-row">
+            <span class="form-label">Name of user of pump:</span>
+            <span class="form-value"><?= strtoupper($request['company_name'] ?? '') ?></span>
+        </div>
+
+        <div class="form-row">
+            <span class="form-label">Location:</span>
+            <?php $loc = implode(', ', array_filter([$request['region'] ?? '', $request['district'] ?? '', $request['ward'] ?? ''])); ?>
+            <span class="form-value"><?= $loc ?></span>
+        </div>
+
+        <div class="form-row">
+            <span class="form-label">Make and type of pump:</span>
+            <span class="form-value"><?= $request['instrument_name'] ?? '' ?> (<?= $request['type_of_instrument'] ?? '' ?>)</span>
+        </div>
+
+        <div class="form-row">
+            <span class="form-label" style="width: 80px;">Product:</span>
+            <span class="form-value" style="margin-right: 20px;"><?= $request['product'] ?? 'N/A' ?></span>
             
-            <div class="info-row">
-                <span class="label">Name of user of pump:</span>
-                <span class="value"><?= esc($request['company_name'] ?? '') ?></span> <!-- Using company name as user mainly -->
-            </div>
-
-            <div class="info-row">
-                <span class="label">Location:</span>
-                <?php 
-                    $location = implode(', ', array_filter([$request['region'] ?? '', $request['district'] ?? '', $request['ward'] ?? '', $request['street'] ?? '']));
-                ?>
-                <span class="value"><?= esc($location) ?></span>
-            </div>
-
-            <div class="info-row">
-                <span class="label">Make and type of pump:</span>
-                <span class="value"><?= esc($request['instrument_name'] ?? '') ?> (<?= esc($request['type_of_instrument'] ?? '') ?>)</span>
-            </div>
-
-            <div class="info-row">
-                <div class="col-half">
-                    <span class="label" style="width: 60px;">Product:</span>
-                    <span class="value" style="margin-right: 20px;"><?= esc($request['product'] ?? '') ?></span>
-                </div>
-                <div class="col-half">
-                    <span class="label">Capacity/Nozzles:</span>
-                    <span class="value"><?= esc($request['capacity'] ?? '') ?> <?= esc($request['capacity_unit'] ?? '') ?> / <?= esc($request['quantity'] ?? '') ?></span>
-                </div>
-            </div>
-
-            <div class="info-row">
-                <div class="col-half">
-                    <span class="label" style="width: 70px;">Serial No:</span>
-                    <span class="value" style="margin-right: 20px;"><?= esc($request['serial_number'] ?? '') ?></span>
-                </div>
-                <div class="col-half">
-                    <span class="label" style="width: 80px;">Sticker No:</span>
-                    <span class="value"><?= esc($request['sticker_number'] ?? '') ?></span>
-                </div>
-            </div>
-
-            <div class="info-row">
-                <span class="label">Date of sealing:</span>
-                <span class="value" style="flex-grow: 0; min-width: 200px;"><?= esc($request['verification_date'] ?? 'N/A') ?></span>
-            </div>
-
-            <div class="info-row">
-                <span class="label">Next Verification Date:</span>
-                <span class="value" style="flex-grow: 0; min-width: 200px;"><?= esc($request['next_verification_date'] ?? 'N/A') ?></span>
-            </div>
+            <span class="form-label">Capacity/Nozzles:</span>
+            <span class="form-value"><?= ($request['capacity'] ?? '') . ' ' . ($request['capacity_unit'] ?? '') ?></span>
         </div>
 
-        <!-- Footer Statement -->
-        <div class="footer-certify">
+        <div class="form-row">
+            <span class="form-label" style="width: 80px;">Serial No:</span>
+            <span class="form-value" style="margin-right: 20px;"><?= $request['serial_number'] ?? 'N/A' ?></span>
+            
+            <span class="form-label">Sticker No:</span>
+            <span class="form-value"><?= $request['sticker_number'] ?? 'N/A' ?></span>
+        </div>
+
+        <div class="form-row">
+            <span class="form-label" style="width: 120px;">Date of sealing:</span>
+            <span class="form-value"><?= isset($request['verification_date']) ? date('F d, Y', strtotime($request['verification_date'])) : '' ?></span>
+        </div>
+        
+        <div class="form-row">
+            <span class="form-label" style="width: 150px;">Next Verification Date:</span>
+            <span class="form-value"><?= isset($request['next_verification_date']) ? date('F d, Y', strtotime($request['next_verification_date'])) : '' ?></span>
+        </div>
+
+        <div class="footer-certify-text">
             I further certify that the above pump was fully tested against approved stamped measures and found correct within the permitted limits of error before sealed.
         </div>
 
-        <div class="auth-row">
-            <span class="label">Certificate of Authorization No:</span>
-            <span class="value" style="flex-grow: 0; min-width: 250px;"><?= esc($request['cert_auth_number'] ?? 'N/A') ?></span>
+        <div class="form-row" style="justify-content: flex-end;">
+            <span class="form-label">Certificate of Authorization No:</span>
+            <span class="form-value-fixed" style="width: 200px; text-align: center;"><?= $request['cert_auth_number'] ?? 'Quisquam ducimus te' ?></span> 
         </div>
 
-        <!-- Signatures -->
-        <div class="signature-section">
-            <span class="label">I / We</span>
-            <span class="value" style="width: 200px; flex-grow: 0;"><?= esc($request['declarant_name'] ?? '') ?></span>
-            
-            <div class="signature-lines">
-                <div class="signature-line">
-                    <div class="dotted-line"></div>
-                    <span style="font-size: 12px;">Signature</span>
+        <!-- Declarant -->
+        <div class="form-row" style="margin-top: 25px;">
+            <span class="form-label">I / We</span>
+            <span class="form-value-fixed" style="width: 250px;"><?= $request['declarant_name'] ?? 'Veniam nulla minim' ?></span>
+        </div>
+        <div class="form-row">
+            <span class="form-label">Designation:</span>
+            <span class="form-value" style="margin-right: 20px;"></span>
+            <span class="form-label">Phone Number:</span>
+            <span class="form-value">---</span>
+        </div>
+        <div style="font-size: 11px; margin-top: 5px; margin-bottom: 20px; line-height: 1.3;">
+            Being the user(s) for trade purposes of the liquid measuring pump described above, which has been sealed/re-sealed by the pump mechanic, request the Inspector of Weights and Measures that arrangements may be made for its verification.
+        </div>
+
+        <!-- Official Verification (Bottom) -->
+        <div class="auth-section">
+            <div class="row">
+                <div class="col-8">
+                    <div class="auth-header">VERIFIED / APPROVED BY:</div>
+                    <div style="font-weight: bold; font-size: 16px; text-transform: uppercase;">
+                        <?php if (($request['status'] ?? '') === 'Approved'): ?>
+                            <?= !empty($request['inspector_first_name']) ? esc($request['inspector_first_name'] . ' ' . $request['inspector_last_name']) : ($request['inspector_name'] ?? 'MUSHI KASSIM') ?>
+                        <?php else: ?>
+                            ______________________
+                        <?php endif; ?>
+                    </div>
+                    <div style="font-size: 12px; color: #000;">Inspector of Weights and Measures</div>
+                    
+                    <div class="form-row" style="margin-top: 10px;">
+                        <span class="form-label">Date:</span>
+                        <span class="form-value-fixed" style="width: 150px;">
+                            <?= (($request['status'] ?? '') === 'Approved' && isset($request['verification_date'])) ? date('d/m/Y', strtotime($request['verification_date'])) : '________________' ?>
+                        </span>
+                    </div>
                 </div>
-                <!-- Date from declarant date -->
-                <div class="signature-line">
-                     <div class="dotted-line" style="text-align: center; border-bottom: none; font-weight: bold;"><?= esc($request['declarant_date'] ?? '') ?></div>
-                     <span style="border-top: 1px dotted #000; width: 100%; text-align: center; font-size: 12px; padding-top: 2px;">Date</span>
+                <div class="col-4 text-right">
+                    <div class="auth-header">DATE:</div>
+                    <div style="font-weight: bold; font-size: 16px;"><?= date('d M Y') ?></div>
                 </div>
             </div>
         </div>
+        
+        <!-- Additional Inspection Details -->
+        <?php if(!empty($request['assignment_notes'])): ?>
+        <div class="inspection-report">
+            <div class="auth-header" style="color: #000;">ADDITIONAL INSPECTION DETAILS</div>
+            <h5>Inspection Report:</h5>
+            <div style="font-style: italic;">
+                <?= nl2br(esc($request['assignment_notes'])) ?>
+            </div>
+        </div>
+        <?php endif; ?>
 
     </div>
     
+    <script>
+        window.onload = function() {
+            setTimeout(function(){
+                window.print();
+            }, 500); 
+        };
+    </script>
 </body>
 </html>
