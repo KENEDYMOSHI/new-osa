@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class OsaSupportModel extends Model
 {
-    protected $DBGroup          = 'osa'; // Use the osa connection group defined in Database.php
+    // protected $DBGroup          = 'osa'; // Use default group
     protected $table            = 'osa_support_details';
     protected $primaryKey       = 'id';
     protected $returnType       = 'array';
