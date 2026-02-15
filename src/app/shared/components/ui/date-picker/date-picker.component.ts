@@ -1,7 +1,8 @@
-import { Component, forwardRef, Input, OnInit } from '@angular/core';
+import { Component, forwardRef, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DateUtils } from './date-picker.model';
 
 @Component({
   selector: 'app-date-picker',
@@ -22,6 +23,7 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
   @Input() label: string = '';
   @Input() required: boolean = false;
   @Input() selectionMode: 'single' | 'range' = 'single';
+  @Output() cleared = new EventEmitter<void>();
 
   isOpen: boolean = false;
   selectedDate: Date | null = null;
@@ -247,5 +249,31 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
 
   get currentMonthYear(): string {
     return `${this.monthNames[this.currentMonth.getMonth()]} ${this.currentMonth.getFullYear()}`;
+  }
+
+  /**
+   * Clear the current selection and notify parent
+   */
+  clearSelection(): void {
+    if (this.selectionMode === 'single') {
+      this.selectedDate = null;
+    } else {
+      this.startDate = null;
+      this.endDate = null;
+      this.hoverDate = null;
+    }
+    this.onChange(null);
+    this.cleared.emit();
+  }
+
+  /**
+   * Check if there is any selection
+   */
+  get hasSelection(): boolean {
+    if (this.selectionMode === 'single') {
+      return this.selectedDate !== null;
+    } else {
+      return this.startDate !== null || this.endDate !== null;
+    }
   }
 }

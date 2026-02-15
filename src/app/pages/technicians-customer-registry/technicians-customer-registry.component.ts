@@ -203,31 +203,36 @@ export class TechniciansCustomerRegistryComponent implements OnInit {
     }
   }
 
-  onSingleDateChange(dateStr: string) {
-    this.filters.singleDate = dateStr;
+  onSingleDateChange(dateStr: string | null) {
     if (dateStr) {
+      this.filters.singleDate = dateStr;
+      // Clear range automatically for mutual exclusivity
       this.filters.startDate = '';
       this.filters.endDate = '';
-      this.rangeValue = ''; // Clear range picker value
+      this.rangeValue = ''; // Reset component binding
+    } else {
+      // When cleared
+      this.filters.singleDate = '';
     }
     this.applyFilters();
   }
 
-  onDateRangeChange(rangeStr: string) {
-    const parts = rangeStr.split(' to ');
-    if (parts.length === 2) {
-      this.filters.startDate = parts[0];
-      this.filters.endDate = parts[1];
-      
-      this.filters.singleDate = ''; // Clear single date picker value
-      this.singleDateValue = '';
-      this.applyFilters();
+  onDateRangeChange(rangeStr: string | null) {
+    if (rangeStr && rangeStr.includes(' to ')) {
+      const parts = rangeStr.split(' to ');
+      if (parts.length === 2) {
+        this.filters.startDate = parts[0];
+        this.filters.endDate = parts[1];
+        // Clear single date automatically for mutual exclusivity
+        this.filters.singleDate = '';
+        this.singleDateValue = ''; // Reset component binding
+      }
     } else {
-      // If range is cleared or invalid, clear filters
+      // When cleared or invalid
       this.filters.startDate = '';
       this.filters.endDate = '';
-      this.applyFilters();
     }
+    this.applyFilters();
   }
   
   private formatDate(date: Date): string {
@@ -237,28 +242,22 @@ export class TechniciansCustomerRegistryComponent implements OnInit {
     return `${y}-${m}-${d}`;
   }
 
-  // Helper to clear filters
-  clearFilters() {
+  // Helper to clear all filters
+  clearAllFilters() {
     this.filters = {
-        keyword: '',
-        customerName: '',
-        instrument: '',
-        stickerNumber: '',
-        singleDate: '',
-        startDate: '',
-        endDate: '',
-        year: ''
+      keyword: '',
+      customerName: '',
+      instrument: '',
+      stickerNumber: '',
+      singleDate: '',
+      startDate: '',
+      endDate: '',
+      year: ''
     };
     
-    // Clear inputs
-    const inputs = ['singleDatePicker', 'dateRangePicker'] as const;
-    inputs.forEach(id => {
-        const el = document.getElementById(id) as HTMLInputElement;
-        if(el && (el as any)._flatpickr) {
-            (el as any)._flatpickr.clear();
-        }
-        if(el) el.value = '';
-    });
+    // Clear component bindings (this will trigger the components to update)
+    this.singleDateValue = '';
+    this.rangeValue = '';
     
     this.applyFilters();
   }
