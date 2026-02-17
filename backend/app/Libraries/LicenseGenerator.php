@@ -346,6 +346,32 @@ class LicenseGenerator
             $officerSign = $imageManager->read($ceoSignature);
             $officerSign->resize(250, 60);
             $canvas->place($officerSign, 'left', $signatureX, $signatureY);
+            
+            // Draw Line under signature
+            $lineY = $signatureY + 65;
+            $canvas->drawLine(function ($line) use ($signatureX, $lineY) {
+                $line->from($signatureX, $lineY);
+                $line->to($signatureX + 250, $lineY); // Match signature width
+                $line->color('#000000');
+                $line->width(1);
+            });
+            
+            // Draw Commissioner Name BELOW the line
+            $commissionerName = strtoupper($data->commissionerName ?? 'ALBAN M. KIHULLA');
+            $canvas->text($commissionerName, $signatureX + 125, $lineY + 25, function ($font) use ($fontSemiBold) {
+                $font->size(20);
+                $font->fileName($fontSemiBold);
+                $font->color('#333333');
+                $font->align('center'); // Center text relative to X
+            });
+            
+             // Draw Title
+            $canvas->text('COMMISSIONER FOR WEIGHTS AND MEASURES', $signatureX + 125, $lineY + 50, function ($font) use ($fontSemiBold) {
+                $font->size(14);
+                $font->fileName($fontSemiBold);
+                $font->color('#333333');
+                $font->align('center');
+            });
         }
 
 

@@ -236,7 +236,7 @@
            [staticBackdrop]="true"
            (close)="closeLicenseCardModal()">
     
-     <div body class="w-full h-full flex flex-col items-center justify-center bg-gray-50 p-6">
+     <div body class="w-full h-full flex flex-col items-center justify-start bg-gray-50 p-6 overflow-y-auto max-h-[70vh]">
          <app-license-id-card 
            *ngIf="selectedLicenseCardData"
            [licenseData]="selectedLicenseCardData">

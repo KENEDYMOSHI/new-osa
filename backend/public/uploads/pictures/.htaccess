@@ -1,0 +1,6 @@
+<IfModule mod_headers.c>
+    # Allow CORS for images from localhost:4200
+    Header set Access-Control-Allow-Origin "http://localhost:4200"
+    Header set Access-Control-Allow-Methods "GET, OPTIONS"
+    Header set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept"
+</IfModule>

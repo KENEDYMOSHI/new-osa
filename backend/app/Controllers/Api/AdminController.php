@@ -191,6 +191,21 @@ class AdminController extends ResourceController
         // Fallback to email if username is not available
         $approverName = $user->username ?? $user->email ?? 'Admin'; 
         
+        // Fetch Real Name from Vessel Discharge DB (WMA)
+        try {
+            $wmaDb = \Config\Database::connect('wma');
+            $userQuery = $wmaDb->table('users')->where('id', $user->id)->get()->getRow();
+            if ($userQuery) {
+                $realName = trim(($userQuery->first_name ?? '') . ' ' . ($userQuery->last_name ?? ''));
+                if (!empty($realName)) {
+                    $approverName = $realName;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Log error but continue with fallback
+            log_message('error', 'Failed to fetch approver name from WMA DB: ' . $e->getMessage());
+        }
+        
         $data["approver_stage_{$currentStage}"] = $approverName;
 
         $message = 'Application moved to next stage';
@@ -205,6 +220,22 @@ class AdminController extends ResourceController
             // Update application status first
             $model->update($id, $data);
 
+            // Create Application Review Record
+            $reviewModel = new \App\Models\ApplicationReviewModel();
+            $reviewData = [
+                'id' => \Ramsey\Uuid\Uuid::uuid4()->toString(),
+                'application_id' => $id,
+                'application_type' => 'License',
+                'approver_id' => $user->id,
+                'approver_name' => $approverName,
+                'approver_title' => 'Chief Executive Officer', // CEO Stage
+                'stage' => 'CEO',
+                'status' => 'Approved',
+                'comments' => 'Approved by CEO',
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            $reviewModel->insert($reviewData);
+
             // Create License using the LicenseModel (Single Source of Truth)
             // This will handle license number generation and insertion into 'licenses' table
             $licenseModel = new \App\Models\LicenseModel();
@@ -218,6 +249,29 @@ class AdminController extends ResourceController
         } else {
              // For non-final stages, just update the application
              $model->update($id, $data);
+
+             // Create Application Review Record for intermediate stages
+             $stages = [
+                 1 => 'Regional Manager',
+                 2 => 'Surveillance',
+                 3 => 'DTS',
+                 4 => 'CEO'
+             ];
+             
+             $reviewModel = new \App\Models\ApplicationReviewModel();
+             $reviewData = [
+                'id' => \Ramsey\Uuid\Uuid::uuid4()->toString(),
+                'application_id' => $id,
+                'application_type' => 'License',
+                'approver_id' => $user->id,
+                'approver_name' => $approverName,
+                'approver_title' => $stages[$nextStage] ?? 'Reviewer',
+                'stage' => $stages[$nextStage] ?? 'Stage ' . $nextStage,
+                'status' => 'Approved',
+                'comments' => 'Moved to next stage',
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            $reviewModel->insert($reviewData);
         }
         
         return $this->respond(['message' => $message, 'next_stage' => $nextStage]);

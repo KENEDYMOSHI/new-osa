@@ -29,7 +29,8 @@ class LicenseApplicationModel extends Model
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
 
-    // Validation
+    //
+    //  Validation
     protected $validationRules = [
         'id'                     => 'required|max_length[36]',
         'initial_application_id' => 'permit_empty|max_length[36]',

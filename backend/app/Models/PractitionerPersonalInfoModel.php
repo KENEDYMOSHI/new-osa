@@ -25,7 +25,8 @@ class PractitionerPersonalInfoModel extends Model
         'district',
         'town',
         'street',
-        'phone'
+        'phone',
+        'picture'
     ];
 
     protected $useTimestamps = true;

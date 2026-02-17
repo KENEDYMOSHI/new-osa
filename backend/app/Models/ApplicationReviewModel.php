@@ -12,6 +12,7 @@ class ApplicationReviewModel extends Model
     protected $returnType       = 'array';
     protected $allowedFields    = [
         'id', 'application_id', 'application_type', 'approver_id', 
+        'approver_name', 'approver_title',
         'stage', 'status', 'comments'
     ];
     protected $useTimestamps = true; // Use created_at only

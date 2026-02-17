@@ -341,6 +341,44 @@
         </table>
         <?php endif; ?>
 
+        <!-- Signature Section -->
+        <?php
+            // Find CEO Approval for Signature
+            $ceoName = 'ALBAN M. KIHULLA'; // Default/Fallback as requested
+            $ceoTitle = 'COMMISSIONER FOR WEIGHTS AND MEASURES';
+            
+            if (!empty($application->approvals)) {
+                foreach ($application->approvals as $approval) {
+                    // Check for CEO/Commissioner stage approval
+                    if (in_array($approval->stage ?? '', ['CEO', 'Commissioner', '4']) && ($approval->status ?? '') === 'Approved') {
+                        if (!empty($approval->approver_name) && $approval->approver_name !== 'Admin' && $approval->approver_name !== '-') {
+                            $ceoName = $approval->approver_name;
+                        }
+                        if (!empty($approval->approver_title)) {
+                            // Map 'Chief Executive Officer' to the formal 'Commissioner' title if needed, 
+                            // or use the stored title if it's already formal.
+                            if (stripos($approval->approver_title, 'Chief Executive') !== false) {
+                                $ceoTitle = 'COMMISSIONER FOR WEIGHTS AND MEASURES';
+                            } else {
+                                $ceoTitle = $approval->approver_title;
+                            }
+                        }
+                    }
+                }
+            }
+        ?>
+        <div class="signature-section" style="margin-top: 60px; margin-bottom: 30px; text-align: center; page-break-inside: avoid;">
+            <div style="display: inline-block; text-align: center; min-width: 300px;">
+                <div style="border-bottom: 1px solid #000; margin-bottom: 5px; width: 100%;"></div>
+                <div style="font-weight: bold; font-size: 14px; text-transform: uppercase;">
+                    <?= $ceoName ?>
+                </div>
+                <div style="font-size: 11px; font-weight: bold; color: #333; text-transform: uppercase;">
+                    <?= $ceoTitle ?>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Auto Print Script -->

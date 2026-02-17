@@ -1748,6 +1748,20 @@ class LicenseController extends ResourceController
         // Generate License Image
         $generator = new \App\Libraries\LicenseGenerator();
         
+        // Fetch CEO Name (Approver Stage 4) for this application
+        $db = \Config\Database::connect();
+        $builder = $db->table('license_applications');
+        $builder->select('practitioner_personal_infos.first_name, practitioner_personal_infos.last_name');
+        $builder->join('users', 'users.id = license_applications.approver_stage_4', 'left');
+        $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid', 'left');
+        $builder->where('license_applications.id', $applicationId);
+        $approver = $builder->get()->getRow();
+        
+        $commissionerName = 'Alban M. Kihulla'; // Default
+        if ($approver && (!empty($approver->first_name) || !empty($approver->last_name))) {
+            $commissionerName = trim(($approver->first_name ?? '') . ' ' . ($approver->last_name ?? ''));
+        }
+
         // Prepare data object for generator
         $licenseData = (object)[
             'licenseType' => $license['license_type'],
@@ -1757,7 +1771,8 @@ class LicenseController extends ResourceController
             'applicantName' => $license['applicant_name'],
             'company' => $license['company_name'],
             'address' => $license['address'],
-            'licenseToken' => $license['license_token']
+            'licenseToken' => $license['license_token'],
+            'commissionerName' => $commissionerName // Dynamic Name
         ];
         
         try {
@@ -1948,14 +1963,22 @@ class LicenseController extends ResourceController
             practitioner_personal_infos.first_name,
             practitioner_personal_infos.last_name,
             practitioner_personal_infos.phone,
+            practitioner_personal_infos.picture,
             practitioner_personal_infos.region as user_region,
             practitioner_personal_infos.district,
-            practitioner_personal_infos.street
+            practitioner_personal_infos.street,
+            approver_info.first_name as ceo_first_name,
+            approver_info.last_name as ceo_last_name
         ');
         $builder->join('license_application_items', 'license_application_items.application_id = license_applications.id');
         $builder->join('licenses', 'licenses.application_id = license_applications.id', 'left'); // Left join as license might not be generated
         $builder->join('users', 'users.id = license_applications.user_id');
         $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid', 'left');
+        
+        // Join for CEO Name (Approver Stage 4)
+        $builder->join('users as approver_user', 'approver_user.id = license_applications.approver_stage_4', 'left');
+        $builder->join('practitioner_personal_infos as approver_info', 'approver_info.user_uuid = approver_user.uuid', 'left');
+
         $builder->where('license_applications.user_id', $user->id);
         
         // Include ALL statuses that should restrict re-application:
@@ -2032,6 +2055,12 @@ class LicenseController extends ResourceController
             // Use license region if available, otherwise use user's region
             $region = $app['region'] ?? $app['user_region'] ?? '';
             
+            // Determine CEO/Commissioner Name
+            $commissionerName = null;
+            if (!empty($app['ceo_first_name']) || !empty($app['ceo_last_name'])) {
+                 $commissionerName = trim(($app['ceo_first_name'] ?? '') . ' ' . ($app['ceo_last_name'] ?? ''));
+            }
+            
             // Allow returning details even if restricted, so frontend can show them
             $result[] = [
                 'id' => $app['id'], // Application ID for viewLicense API call
@@ -2054,7 +2083,9 @@ class LicenseController extends ResourceController
                 'address' => $address,
                 'region' => $region,
                 'phone_number' => $app['phone'] ?? '',
-                'profile_picture' => null // Not available in current database schema
+                'profile_picture' => $app['picture'] ?? null,
+                'commissioner_name' => $commissionerName, // Dynamic Commissioner Name
+                'commissioner_signature' => null // Placeholder if we ever want dynamic signatures
             ];
         }
         
@@ -2137,11 +2168,167 @@ class LicenseController extends ResourceController
             }
         }
 
-        // 3. Serve the file
+        // 3. Serve the file with CORS headers
         $mime = mime_content_type($filepath);
-        header('Content-Type: ' . $mime);
-        header('Content-Length: ' . filesize($filepath));
-        readfile($filepath);
-        exit;
+        
+        return $this->response
+            ->setHeader('Access-Control-Allow-Origin', '*')
+            ->setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+            ->setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+            ->setHeader('Content-Type', $mime)
+            ->setHeader('Content-Length', filesize($filepath))
+            ->setBody(file_get_contents($filepath));
+    }
+
+    /**
+     * View Profile Picture with CORS headers
+     * GET /api/license/view-profile-picture/{filename}
+     */
+    public function viewProfilePicture($filename)
+    {
+        if (empty($filename)) {
+            return $this->failNotFound('Filename is required');
+        }
+
+        // Security: Prevent directory traversal
+        $filename = basename($filename);
+        
+        // Define path to pictures directory
+        $filepath = FCPATH . 'uploads/pictures/' . $filename;
+
+        // Check if file exists
+        if (!file_exists($filepath)) {
+            return $this->failNotFound('Profile picture not found');
+        }
+
+        // Serve the file with explicit CORS headers
+        $mime = mime_content_type($filepath);
+        
+        return $this->response
+            ->setHeader('Access-Control-Allow-Origin', '*')
+            ->setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+            ->setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+            ->setHeader('Content-Type', $mime)
+            ->setHeader('Content-Length', filesize($filepath))
+            ->setBody(file_get_contents($filepath));
+    }
+    
+    /**
+     * Download ID card for a license
+     * 
+     * @param string $licenseId
+     * @return void
+     */
+    public function downloadIDCard($licenseId)
+    {
+        try {
+            $db = \Config\Database::connect();
+            
+            // Fetch license data with all required information using joins
+            $builder = $db->table('license_applications');
+            $builder->select('
+                license_applications.id,
+                license_applications.status,
+                license_application_items.license_type,
+                licenses.license_number,
+                licenses.issue_date,
+                licenses.expiry_date,
+                licenses.applicant_name,
+                licenses.company_name,
+                licenses.address,
+                licenses.region,
+                practitioner_personal_infos.first_name,
+                practitioner_personal_infos.last_name,
+                practitioner_personal_infos.picture,
+                practitioner_personal_infos.region as user_region,
+                practitioner_personal_infos.district,
+                practitioner_personal_infos.street,
+                approver_info.first_name as ceo_first_name,
+                approver_info.last_name as ceo_last_name
+            ');
+            $builder->join('license_application_items', 'license_application_items.application_id = license_applications.id');
+            $builder->join('licenses', 'licenses.application_id = license_applications.id', 'left');
+            $builder->join('users', 'users.id = license_applications.user_id');
+            $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid', 'left');
+            $builder->join('users as approver_user', 'approver_user.id = license_applications.approver_stage_4', 'left');
+            $builder->join('practitioner_personal_infos as approver_info', 'approver_info.user_uuid = approver_user.uuid', 'left');
+            $builder->where('license_applications.id', $licenseId);
+            
+            $licenseData = $builder->get()->getRowArray();
+            
+            if (!$licenseData) {
+                return $this->failNotFound('License not found');
+            }
+            
+            // Construct full applicant name
+            $applicantName = $licenseData['applicant_name'] ?? trim(
+                ($licenseData['first_name'] ?? '') . ' ' . 
+                ($licenseData['last_name'] ?? '')
+            );
+            
+            // Construct address
+            if (!empty($licenseData['address'])) {
+                $address = $licenseData['address'];
+            } else {
+                $addressParts = array_filter([
+                    $licenseData['street'] ?? '',
+                    $licenseData['district'] ?? '',
+                    $licenseData['user_region'] ?? ''
+                ]);
+                $address = implode(', ', $addressParts);
+            }
+            
+            // Determine commissioner name
+            $commissionerName = 'Alban M. Kihulla'; // Default
+            if (!empty($licenseData['ceo_first_name']) || !empty($licenseData['ceo_last_name'])) {
+                $commissionerName = trim(
+                    ($licenseData['ceo_first_name'] ?? '') . ' ' . 
+                    ($licenseData['ceo_last_name'] ?? '')
+                );
+            }
+            
+            // Prepare data for ID card generator
+            $idCardData = [
+                'licenseNumber' => $licenseData['license_number'] ?? 'N/A',
+                'applicantName' => $applicantName,
+                'companyName' => $licenseData['company_name'] ?? 'N/A',
+                'licenseType' => $licenseData['license_type'] ?? 'N/A',
+                'position' => $this->getPositionFromLicenseType($licenseData['license_type'] ?? ''),
+                'issueDate' => $licenseData['issue_date'] ?? date('Y-m-d'),
+                'expiryDate' => $licenseData['expiry_date'] ?? date('Y-m-d', strtotime('+1 year')),
+                'profilePicture' => $licenseData['picture'] ?? null,
+                'commissionerName' => $commissionerName,
+            ];
+            
+            // Generate ID card
+            $generator = new \App\Libraries\IDCardGenerator($idCardData);
+            
+            // Output both sides
+            $generator->generateFront();
+            $generator->generateBack();
+            $generator->outputBothSides();
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Error generating ID card: ' . $e->getMessage());
+            return $this->fail('Error generating ID card: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Helper method to determine position based on license type
+     */
+    private function getPositionFromLicenseType($licenseType)
+    {
+        if (!$licenseType) return 'CALIBRATION INSPECTOR';
+        
+        $type = strtoupper($licenseType);
+        if (strpos($type, 'CLASS A') !== false || strpos($type, 'SENIOR') !== false) {
+            return 'SENIOR CALIBRATION INSPECTOR';
+        } elseif (strpos($type, 'CLASS B') !== false) {
+            return 'CALIBRATION INSPECTOR';
+        } elseif (strpos($type, 'CLASS C') !== false) {
+            return 'ASSISTANT CALIBRATION INSPECTOR';
+        }
+        return 'CALIBRATION INSPECTOR';
     }
 }

@@ -227,6 +227,7 @@ export class ViewLicenseDetailsComponent implements OnInit {
   // License ID Card Modal Methods
   openLicenseCardModal(license: any) {
     this.selectedLicenseCardData = {
+      applicationId: license.id || license.application_id, // Add the application ID
       licenseNumber: license.license_number,
       applicantName: license.applicant_name,
       licenseType: license.license_type,
@@ -239,7 +240,9 @@ export class ViewLicenseDetailsComponent implements OnInit {
       phoneNumber: license.phone_number || '',
       region: license.region || '',
       instruments: license.instruments || [],
-      position: this.getPositionFromLicenseType(license.license_type)
+      position: this.getPositionFromLicenseType(license.license_type),
+      commissionerName: license.commissioner_name || 'Alban M. Kihulla',
+      commissionerSignature: license.commissioner_signature || ''
     };
     this.showLicenseCardModal = true;
   }

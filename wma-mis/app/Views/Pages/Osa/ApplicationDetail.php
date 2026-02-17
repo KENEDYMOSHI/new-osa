@@ -961,80 +961,7 @@
                         <!-- Approvals -->
                         <!-- Approvals Tab (Reference Design: Clean Timeline) -->
                         <div class="tab-pane" id="approvals">
-                            <style>
-                                /* Clean Timeline CSS */
-                                .clean-timeline {
-                                    position: relative;
-                                    padding-left: 30px; /* Space for marker */
-                                    margin-left: 10px;
-                                    border-left: 1px solid #e3e6f0; /* Thin gray connector */
-                                }
-                                .ct-item {
-                                    position: relative;
-                                    margin-bottom: 2.5rem; /* Spacious */
-                                    padding-left: 15px;
-                                }
-                                .ct-marker {
-                                    position: absolute;
-                                    left: -36px; /* Align with border(-30px - 6px half width) */
-                                    top: 0;
-                                    width: 12px;
-                                    height: 12px;
-                                    border-radius: 50%;
-                                    background: #fff;
-                                    border: 2px solid #d1d3e2; /* Default Gray */
-                                    z-index: 2;
-                                }
-                                .ct-marker.active { border-color: #4e73df; } /* Blue for Active */
-                                .ct-marker.completed { border-color: #1cc88a; } /* Green for Done */
-                                .ct-marker.rejected { border-color: #e74a3b; } /* Red for Rejected */
-                                .ct-marker.review { border-color: #e74a3b; } /* Red ring style from image */
 
-                                .ct-header {
-                                    display: flex;
-                                    align-items: center;
-                                    flex-wrap: wrap;
-                                    margin-bottom: 0.5rem;
-                                    font-size: 1rem;
-                                    color: #333;
-                                }
-                                .ct-badge {
-                                    font-size: 0.75rem;
-                                    font-weight: 700;
-                                    padding: 0.25rem 0.6rem;
-                                    border-radius: 0.2rem;
-                                    margin-right: 0.8rem;
-                                    text-transform: uppercase;
-                                    letter-spacing: 0.5px;
-                                }
-                                .badge-review { background-color: #eaecf4; color: #5a5c69; }
-                                .badge-approve { background-color: #d1e7dd; color: #0f5132; } /* Soft Green */
-                                .badge-reject { background-color: #f8d7da; color: #842029; } /* Soft Red */
-                                
-                                .ct-meta {
-                                    font-size: 0.9rem;
-                                    color: #5a5c69;
-                                }
-                                .ct-meta strong { color: #2e344e; font-weight: 700; }
-                                .ct-meta .dot { margin: 0 0.5rem; color: #bdc3c7; }
-                                .ct-date { color: #858796; }
-
-                                .ct-content {
-                                    font-size: 0.95rem;
-                                    color: #2e344e;
-                                    line-height: 1.6;
-                                }
-                                .ct-content.pending { color: #858796; font-style: italic; }
-                                
-                                /* Action Form Inline */
-                                .action-box {
-                                    background: #f8f9fc;
-                                    border: 1px solid #e3e6f0;
-                                    border-radius: 0.35rem;
-                                    padding: 1.5rem;
-                                    margin-top: 1rem;
-                                }
-                            </style>
 
                             <!-- Flash Messages -->
                             <?php if (session()->getFlashdata('success')): ?>
@@ -1052,310 +979,102 @@
 
                             <h5 class="mb-5 text-gray-800 font-weight-bold ml-2">Application Timeline</h5>
 
-                            <div class="clean-timeline">
-                                <?php
-                                    // Helper Logic
-                                    $rmStatus = $application->region_manager_status ?? 'Pending';
-                                    $svStatus = $application->surveillance_status ?? 'Pending';
-                                    $dtsStatus = $application->dts_status ?? 'Pending';
-                                    $ceoStatus = $application->ceo_status ?? 'Pending';
-                                    $appStatus = $application->application_status ?? 'Pending';
-                                    
-                                    // Helpers for Data
-                                    $rmComment = ''; $svComment = ''; $dtsComment = ''; $ceoComment = '';
-                                    $rmDate = ''; $svDate = ''; $dtsDate = ''; $ceoDate = '';
-                                    $rmApprover = ''; $svApprover = ''; $dtsApprover = ''; $ceoApprover = '';
-                                    
-                                    if (!empty($application->approvals)) {
-                                        foreach ($application->approvals as $ap) {
-                                            $stageName = $ap->stage ?? '';
-                                            // Backend sends 'Manager'/'Surveillance', safely check both
-                                            if ($stageName == 'Manager' || $stageName == 1) { 
-                                                $rmComment = $ap->comment ?? ''; 
-                                                $rmDate = $ap->date ?? ($ap->created_at ?? ''); 
-                                                $rmApprover = $ap->approver ?? '';
-                                            }
-                                            if ($stageName == 'Surveillance' || $stageName == 2) { 
-                                                $svComment = $ap->comment ?? ''; 
-                                                $svDate = $ap->date ?? ($ap->created_at ?? ''); 
-                                                $svApprover = $ap->approver ?? '';
-                                            }
-                                            if ($stageName == 'DTS' || $stageName == 3) { 
-                                                $dtsComment = $ap->comment ?? ''; 
-                                                $dtsDate = $ap->date ?? ($ap->created_at ?? ''); 
-                                                $dtsApprover = $ap->approver ?? '';
-                                            }
-                                            if ($stageName == 'CEO' || $stageName == 4) { 
-                                                $ceoComment = $ap->comment ?? ''; 
-                                                $ceoDate = $ap->date ?? ($ap->created_at ?? ''); 
-                                                $ceoApprover = $ap->approver ?? '';
-                                            }
-                                        }
-                                    }
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead class="bg-primary text-white">
+                                        <tr>
+                                            <th>Stage</th>
+                                            <th>Status</th>
+                                            <th>Approver</th>
+                                            <th>Date</th>
+                                            <th>Comments</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php
+                                            // Define Stages
+                                            $stages = [
+                                                ['name' => 'Manager', 'label' => 'Regional Manager', 'status' => $application->region_manager_status ?? 'Pending'],
+                                                ['name' => 'Surveillance', 'label' => 'Surveillance Officer', 'status' => $application->surveillance_status ?? 'Pending'],
+                                                ['name' => 'DTS', 'label' => 'Director (DTS)', 'status' => $application->dts_status ?? 'Pending'],
+                                                ['name' => 'CEO', 'label' => 'Commissioner (CEO)', 'status' => $application->ceo_status ?? 'Pending']
+                                            ];
 
-                                    // 1. Region Manager State
-                                    $rmMarker = 'active'; // default ring
-                                    $rmBadgeClass = 'badge-review';
-                                    $rmBadgeText = 'REVIEW';
-                                    
-                                    if ($rmStatus == 'Approved') { 
-                                        $rmMarker = 'completed'; $rmBadgeClass = 'badge-approve'; $rmBadgeText = 'APPROVED'; 
-                                    } elseif ($rmStatus == 'Rejected') { 
-                                        $rmMarker = 'rejected'; $rmBadgeClass = 'badge-reject'; $rmBadgeText = 'REJECTED'; 
-                                    }
-                                ?>
+                                            $hasApprovals = false;
+                                            
+                                            // Helper to find approval data
+                                            $findApproval = function($stageName) use ($application) {
+                                                if (!empty($application->approvals)) {
+                                                    foreach ($application->approvals as $ap) {
+                                                        if (($ap->stage ?? '') == $stageName || ($ap->stage ?? '') == ($stageName == 'Manager' ? 1 : ($stageName == 'Surveillance' ? 2 : ($stageName == 'DTS' ? 3 : 4)))) {
+                                                            return $ap;
+                                                        }
+                                                    }
+                                                }
+                                                return null;
+                                            };
 
-                                <!-- 1. Region Manager Item -->
-                                <div class="ct-item">
-                                    <div class="ct-marker <?= $rmMarker ?>"></div>
-                                    <div class="ct-header">
-                                        <span class="ct-badge <?= $rmBadgeClass ?>"><?= $rmBadgeText ?></span>
-                                        <div class="ct-meta">
-                                            by <strong>Region Manager<?= $rmApprover ? ' - ' . $rmApprover : '' ?></strong> 
-                                            <?php if ($rmDate): ?>
-                                                <span class="dot">•</span> <span class="ct-date"><?= date('M d, Y', strtotime($rmDate)) ?></span>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="ct-content <?= ($rmStatus == 'Pending') ? 'pending' : '' ?>">
-                                        <?php if ($rmStatus == 'Pending'): ?>
-                                            <?php if ($user->inGroup('manager', 'admin', 'superadmin')): ?>
-                                                <!-- Action Form for Manager -->
-                                                 <div class="action-box">
-                                                    <h6 class="font-weight-bold text-primary mb-3">Action Required</h6>
-                                                    <p class="mb-3">Please review the application and provide your decision.</p>
-                                                    <button type="button" class="btn btn-primary btn-sm px-4" data-toggle="modal" data-target="#approveModal">Approve</button>
-                                                    <button type="button" class="btn btn-outline-danger btn-sm px-4" data-toggle="modal" data-target="#rejectModal">Reject</button>
-                                                 </div>
-                                            <?php else: ?>
-                                                Status: Pending Review
-                                            <?php endif; ?>
-                                        <?php else: ?>
-                                            <?= $rmComment ? $rmComment : 'No remarks provided.' ?>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-
-                                <?php
-                                    // 2. Surveillance State
-                                    $svMarker = ''; 
-                                    $svBadgeClass = 'badge-review';
-                                    $svBadgeText = 'PENDING';
-                                    
-                                    if ($rmStatus == 'Pending' || $rmStatus == 'Rejected') {
-                                        $svMarker = ''; // Default gray
-                                    } else {
-                                         if ($svStatus == 'Approved') { 
-                                            $svMarker = 'completed'; $svBadgeClass = 'badge-approve'; $svBadgeText = 'APPROVED'; 
-                                        } elseif ($svStatus == 'Rejected') { 
-                                            $svMarker = 'rejected'; $svBadgeClass = 'badge-reject'; $svBadgeText = 'REJECTED'; 
-                                        } elseif ($svStatus == 'Pending') {
-                                            $svMarker = 'active'; $svBadgeText = 'REVIEW';
-                                        }
-                                    }
-                                ?>
-
-                                <!-- 2. Surveillance Item -->
-                                <div class="ct-item">
-                                    <div class="ct-marker <?= $svMarker ?>"></div>
-                                    <div class="ct-header">
-                                        <span class="ct-badge <?= ($svStatus == 'Pending' && $rmStatus != 'Pending' && $rmStatus != 'Rejected') ? 'badge-review' : (($svStatus == 'Pending') ? 'badge-secondary' : $svBadgeClass) ?>">
-                                            <?= $svBadgeText ?>
-                                        </span>
-                                        <div class="ct-meta">
-                                            by <strong>Surveillance Officer<?= $svApprover ? ' - ' . $svApprover : '' ?></strong>
-                                             <?php if ($svDate): ?>
-                                                <span class="dot">•</span> <span class="ct-date"><?= date('M d, Y', strtotime($svDate)) ?></span>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="ct-content <?= ($svStatus == 'Pending') ? 'pending' : '' ?>">
-                                         <?php if ($rmStatus == 'Pending' || $rmStatus == 'Rejected'): ?>
-                                            Waiting for previous stage...
-                                         <?php elseif ($svStatus == 'Pending'): ?>
-                                             <?php if ($user->inGroup('surveillance', 'admin', 'superadmin')): ?>
-                                                 <!-- Action Form for Surveillance -->
-                                                  <div class="action-box">
-                                                    <h6 class="font-weight-bold text-primary mb-3">Action Required</h6>
-                                                    <p class="mb-3">Region Manager endorsed. Please verify details.</p>
-                                                    <button type="button" class="btn btn-primary btn-sm px-4" data-toggle="modal" data-target="#approveModal">Approve</button>
-                                                    <button type="button" class="btn btn-outline-danger btn-sm px-4" data-toggle="modal" data-target="#rejectModal">Reject</button>
-                                                 </div>
-                                             <?php else: ?>
-                                                Status: Pending Verification
-                                             <?php endif; ?>
-                                         <?php else: ?>
-                                            <?= $svComment ? $svComment : 'No remarks provided.' ?>
-                                         <?php endif; ?>
-                                    </div>
-                                </div>
-
-                                <!-- 3. Applicant Submission Item -->
-                                <?php
-                                    $appSubmitted = false;
-                                    $appMarker = '';
-                                    $appBadgeClass = 'badge-secondary';
-                                    $appBadgeText = 'WAITING';
-                                    
-                                    // Check if submitted (Status is NOT Pending, Approved_Manager, Approved_Surveillance)
-                                    // Actually, if status is 'Applicant_Submission' or it has moved PAST that.
-                                    // Statuses: Applicant_Submission, Approved_DTS, Approved_CEO, Verified, License_Generated
-                                    $submittedStatuses = ['Applicant_Submission', 'Approved_DTS', 'Approved_CEO', 'Approved', 'License_Generated', 'Completed'];
-                                    
-                                    if (in_array($appStatus, $submittedStatuses)) {
-                                        $appSubmitted = true;
-                                        $appMarker = 'completed';
-                                        $appBadgeClass = 'badge-approve';
-                                        $appBadgeText = 'SUBMITTED';
-                                    } elseif ($svStatus == 'Approved') {
-                                        $appMarker = 'active'; // Waiting for applicant
-                                        $appBadgeClass = 'badge-warning';
-                                        $appBadgeText = 'PENDING SUBMISSION';
-                                    }
-                                ?>
-                                <div class="ct-item">
-                                    <div class="ct-marker <?= $appMarker ?>"></div>
-                                    <div class="ct-header">
-                                        <span class="ct-badge <?= $appBadgeClass ?>"><?= $appBadgeText ?></span>
-                                        <div class="ct-meta">by <strong>Applicant</strong></div>
-                                    </div>
-                                    <div class="ct-content <?= (!$appSubmitted) ? 'pending' : '' ?>">
-                                        <?php if ($appSubmitted): ?>
-                                            Applicant has submitted the complete license application.
-                                        <?php elseif ($svStatus == 'Approved'): ?>
-                                            Waiting for applicant to fill particulars and submit.
-                                        <?php else: ?>
-                                            Waiting for surveillance approval...
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-
-                                <!-- 4. Technical Director (DTS) Item -->
-                                <?php if ($appSubmitted): ?>
-                                    <?php
-                                        $dtsMarker = '';
-                                        $dtsBadgeClass = 'badge-review';
-                                        $dtsBadgeText = 'PENDING';
-                                        
-                                        if ($dtsStatus == 'Approved') {
-                                            $dtsMarker = 'completed'; $dtsBadgeClass = 'badge-approve'; $dtsBadgeText = 'APPROVED';
-                                        } elseif ($dtsStatus == 'Rejected') {
-                                            $dtsMarker = 'rejected'; $dtsBadgeClass = 'badge-reject'; $dtsBadgeText = 'REJECTED';
-                                        } elseif ($dtsStatus == 'Pending') {
-                                            $dtsMarker = 'active'; $dtsBadgeText = 'REVIEW';
-                                        }
-                                    ?>
-                                    <div class="ct-item">
-                                        <div class="ct-marker <?= $dtsMarker ?>"></div>
-                                        <div class="ct-header">
-                                            <span class="ct-badge <?= ($dtsStatus == 'Pending') ? 'badge-review' : $dtsBadgeClass ?>"><?= $dtsBadgeText ?></span>
-                                            <div class="ct-meta">
-                                                by <strong>Technical Director<?= $dtsApprover ? ' - ' . $dtsApprover : '' ?></strong>
-                                                 <?php if ($dtsDate): ?>
-                                                    <span class="dot">•</span> <span class="ct-date"><?= date('M d, Y', strtotime($dtsDate)) ?></span>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                        <div class="ct-content <?= ($dtsStatus == 'Pending') ? 'pending' : '' ?>">
-                                            <?php if ($dtsStatus == 'Pending'): ?>
-                                                <?php if ($user->inGroup('dts', 'admin', 'superadmin')): ?>
-                                                     <div class="action-box">
-                                                        <h6 class="font-weight-bold text-primary mb-3">Action Required</h6>
-                                                        <p class="mb-3">Applicant submission received. Please endorse.</p>
-                                                        <button type="button" class="btn btn-primary btn-sm px-4" data-toggle="modal" data-target="#approveModal">Approve</button>
-                                                        <button type="button" class="btn btn-outline-danger btn-sm px-4" data-toggle="modal" data-target="#rejectModal">Reject</button>
-                                                     </div>
+                                            foreach ($stages as $stage):
+                                                $data = $findApproval($stage['name']);
+                                                $status = $stage['status'];
+                                                $badgeClass = ($status == 'Approved') ? 'success' : (($status == 'Rejected') ? 'danger' : 'warning');
+                                                $approverName = $data->approver ?? '-';
+                                                $approverTitle = $data->approver_title ?? '';
+                                                $approverId = $data->approver_id ?? '';
+                                                $date = isset($data->date) ? date('d M Y', strtotime($data->date)) : '-';
+                                                $comment = $data->comment ?? '-';
+                                        ?>
+                                        <tr>
+                                            <td class="font-weight-bold"><?= $stage['label'] ?></td>
+                                            <td><span class="badge badge-<?= $badgeClass ?>"><?= $status ?></span></td>
+                                            <td>
+                                                <?php if ($approverName !== '-'): ?>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="icon-circle bg-light text-primary mr-2" style="width: 24px; height: 24px; font-size: 10px;">
+                                                            <i class="fas fa-user"></i>
+                                                        </div>
+                                                        <div>
+                                                            <div class="font-weight-bold"><?= $approverName ?></div>
+                                                            <?php if ($approverId): ?>
+                                                                <small class="text-gray-500 d-block" style="line-height: 1.2; font-size: 0.75rem;">ID: <?= $approverId ?></small>
+                                                            <?php endif; ?>
+                                                            <?php if ($approverTitle): ?>
+                                                                <small class="text-muted d-block" style="line-height: 1.2;"><?= $approverTitle ?></small>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </div>
                                                 <?php else: ?>
-                                                    Status: Pending Review
+                                                    <span class="text-muted">-</span>
                                                 <?php endif; ?>
-                                            <?php else: ?>
-                                                <?= $dtsComment ? $dtsComment : 'No remarks provided.' ?>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-
-                                <!-- 5. CEO Item -->
-                                <?php if ($appSubmitted && ($dtsStatus == 'Approved' || $dtsStatus == 'Rejected')): ?>
-                                    <?php
-                                        $ceoMarker = '';
-                                        $ceoBadgeClass = 'badge-review';
-                                        $ceoBadgeText = 'PENDING';
-                                        
-                                        if ($dtsStatus == 'Rejected') {
-                                            $ceoMarker = ''; // Gray
-                                        } else {
-                                            if ($ceoStatus == 'Approved') {
-                                                $ceoMarker = 'completed'; $ceoBadgeClass = 'badge-approve'; $ceoBadgeText = 'APPROVED';
-                                            } elseif ($ceoStatus == 'Rejected') {
-                                                $ceoMarker = 'rejected'; $ceoBadgeClass = 'badge-reject'; $ceoBadgeText = 'REJECTED';
-                                            } elseif ($ceoStatus == 'Pending') {
-                                                $ceoMarker = 'active'; $ceoBadgeText = 'REVIEW';
-                                            }
-                                        }
-                                    ?>
-                                    <div class="ct-item">
-                                        <div class="ct-marker <?= $ceoMarker ?>"></div>
-                                        <div class="ct-header">
-                                            <span class="ct-badge <?= ($ceoStatus == 'Pending' && $dtsStatus != 'Rejected') ? 'badge-review' : (($ceoStatus == 'Pending') ? 'badge-secondary' : $ceoBadgeClass) ?>">
-                                                <?= $ceoBadgeText ?>
-                                            </span>
-                                            <div class="ct-meta">
-                                                by <strong>Chief Executive Officer<?= $ceoApprover ? ' - ' . $ceoApprover : '' ?></strong>
-                                                 <?php if ($ceoDate): ?>
-                                                    <span class="dot">•</span> <span class="ct-date"><?= date('M d, Y', strtotime($ceoDate)) ?></span>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                        <div class="ct-content <?= ($ceoStatus == 'Pending') ? 'pending' : '' ?>">
-                                            <?php if ($dtsStatus == 'Rejected'): ?>
-                                                Process terminated at Technical Director stage.
-                                            <?php elseif ($ceoStatus == 'Pending'): ?>
-                                                <?php if ($user->inGroup('ceo', 'admin', 'superadmin')): ?>
-                                                     <div class="action-box">
-                                                        <h6 class="font-weight-bold text-primary mb-3">Action Required</h6>
-                                                        <p class="mb-3">Technical Director endorsed. Final approval required.</p>
-                                                        <button type="button" class="btn btn-primary btn-sm px-4" data-toggle="modal" data-target="#approveModal">Approve</button>
-                                                        <button type="button" class="btn btn-outline-danger btn-sm px-4" data-toggle="modal" data-target="#rejectModal">Reject</button>
-                                                     </div>
+                                            </td>
+                                            <td><?= $date ?></td>
+                                            <td><?= $comment ?></td>
+                                            <td>
+                                                <?php 
+                                                    // Action Buttons Logic
+                                                    $showAction = false;
+                                                    if ($status == 'Pending') {
+                                                        if ($stage['name'] == 'Manager' && $user->inGroup('manager', 'admin', 'superadmin')) $showAction = true;
+                                                        elseif ($stage['name'] == 'Surveillance' && ($application->region_manager_status == 'Approved') && $user->inGroup('surveillance', 'admin', 'superadmin')) $showAction = true;
+                                                        elseif ($stage['name'] == 'DTS' && ($application->surveillance_status == 'Approved') && $user->inGroup('dts', 'admin', 'superadmin')) $showAction = true;
+                                                        elseif ($stage['name'] == 'CEO' && ($application->dts_status == 'Approved') && $user->inGroup('ceo', 'admin', 'superadmin')) $showAction = true;
+                                                    }
+                                                ?>
+                                                <?php if ($showAction): ?>
+                                                    <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#approveModal">Approve</button>
+                                                    <button type="button" class="btn btn-danger btn-xs" data-toggle="modal" data-target="#rejectModal">Reject</button>
                                                 <?php else: ?>
-                                                    Status: Pending Final Approval
+                                                    <span class="text-muted small">No Action</span>
                                                 <?php endif; ?>
-                                            <?php else: ?>
-                                                <?= $ceoComment ? $ceoComment : 'No remarks provided.' ?>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-
-                                <!-- 6. Final Item -->
-                                <div class="ct-item">
-                                    <div class="ct-marker <?= ($ceoStatus == 'Approved') ? 'completed' : (($rmStatus == 'Rejected' || $svStatus == 'Rejected' || $dtsStatus == 'Rejected' || $ceoStatus == 'Rejected') ? 'rejected' : '') ?>"></div>
-                                    <div class="ct-header">
-                                        <?php if ($ceoStatus == 'Approved'): ?>
-                                            <span class="ct-badge badge-approve">LICENSE GENERATED</span>
-                                        <?php elseif ($rmStatus == 'Rejected' || $svStatus == 'Rejected' || $dtsStatus == 'Rejected' || $ceoStatus == 'Rejected'): ?>
-                                            <span class="ct-badge badge-reject">TERMINATED</span>
-                                        <?php else: ?>
-                                            <span class="ct-badge badge-secondary">WAITING</span>
-                                        <?php endif; ?>
-
-                                        <div class="ct-meta">by <strong>System</strong></div>
-                                    </div>
-                                    <div class="ct-content">
-                                        <?php if ($ceoStatus == 'Approved'): ?>
-                                            License successfully generated and issued to applicant.
-                                        <?php elseif ($rmStatus == 'Rejected' || $svStatus == 'Rejected' || $dtsStatus == 'Rejected' || $ceoStatus == 'Rejected'): ?>
-                                            Application process terminated due to rejection.
-                                        <?php else: ?>
-                                            Workflow in progress.
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
                             </div>
+
+
 
                             <!-- Approve Modal (Restored for Comments) -->
                             <div class="modal fade" id="approveModal" tabindex="-1" role="dialog" aria-labelledby="approveModalLabel" aria-hidden="true">

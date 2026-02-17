@@ -283,6 +283,7 @@ class ApprovalController extends BaseController
         // 7. Get approval history
         $reviews = $db->table('application_reviews')
                       ->where('application_id', $id)
+                      ->orderBy('created_at', 'ASC') // Ensure we get the latest if multiple for same stage
                       ->get()->getResultArray();
         
         $reviewsByStage = [];
@@ -297,14 +298,62 @@ class ApprovalController extends BaseController
             $approverField = "approver_stage_{$stage}";
             $statusField = "status_stage_{$stage}";
             
-            if (isset($application->$approverField) && !empty($application->$approverField)) {
-                $review = $reviewsByStage[$stageName] ?? null;
+            // Check if there is data in the application table OR in the reviews table
+            $review = $reviewsByStage[$stageName] ?? null;
+            $hasAppField = isset($application->$approverField) && !empty($application->$approverField);
+            
+            if ($hasAppField || $review) {
+                
+                // Defaults from Application Table (Legacy/Fallback)
+                $approverName = $hasAppField ? $application->$approverField : '-';
+                $approverTitle = '';
+                $approverId = $hasAppField ? $application->$approverField : null;
+                $status = $hasAppField ? ($application->$statusField ?? 'Pending') : ($review['status'] ?? 'Pending');
+                
+                // Use date from review if available, else approximate from app update
+                $date = $review ? $review['created_at'] : ($application->updated_at ?? $application->created_at);
+                $comment = $review ? $review['comments'] : '';
+
+                // PREFER Review Table Data (Snapshot) if available
+                if ($review) {
+                    $approverName = $review['approver_name'] ?? $approverName;
+                    $approverTitle = $review['approver_title'] ?? $approverTitle;
+                    $approverId = $review['approver_id'] ?? $approverId;
+                } 
+                
+                // FINAL FALLBACK/REPAIR: Lookup in VESSEL_DISCHARGE users table if we have an ID
+                // This satisfies the requirement to "fix by taking id and name from vessel_discharge"
+                if (!empty($approverId) && is_numeric($approverId)) {
+                    $wmaDb = \Config\Database::connect('wma');
+                    $userQuery = $wmaDb->table('users')->where('id', $approverId)->get()->getRow();
+                    
+                    if ($userQuery) {
+                        $realName = trim(($userQuery->first_name ?? '') . ' ' . ($userQuery->last_name ?? ''));
+                        if (!empty($realName)) {
+                            $approverName = $realName;
+                        } elseif (!empty($userQuery->username)) {
+                            $approverName = $userQuery->username; // Fallback to username if name is empty
+                        }
+                        
+                        // Optional: Ensure title is set if missing
+                        if (empty($approverTitle)) {
+                             if ($stageName === 'Manager') $approverTitle = 'Regional Manager';
+                             elseif ($stageName === 'Surveillance') $approverTitle = 'Surveillance Officer';
+                             elseif ($stageName === 'DTS') $approverTitle = 'Director of Technical Services';
+                             elseif ($stageName === 'CEO') $approverTitle = 'Chief Executive Officer';
+                        }
+                    }
+                }
+
                 $approvalHistory[] = [
                     'stage' => $stageName,
-                    'approver' => $application->$approverField,
-                    'status' => $application->$statusField ?? 'Pending',
-                    'date' => $application->updated_at ?? $application->created_at,
-                    'comment' => $review ? $review['comments'] : ''
+                    'approver' => $approverName,
+                    'approver_title' => $approverTitle,
+                    'approver_id' => $approverId, 
+                    'status' => $status,
+                    'date' => $date, 
+                    'comment' => $comment,
+                    'review_date' => $date
                 ];
             }
         }
@@ -539,14 +588,52 @@ class ApprovalController extends BaseController
         }
 
         if ($numericStage > 0) {
-            $approverName = session()->get('username') ?? 'Admin'; 
-            $updateData["approver_stage_{$numericStage}"] = $approverName;
+            // FIX: Save User ID (INT) to license_applications table, not Username (String), 
+            // so joins work correctly in LicenseController and other places.
+            $approverId = session()->get('id');
+            // Ensure we have an ID
+            if (!$approverId) {
+                 // Fallback if session is empty (should not happen if logged in)
+                 $approverId = 0;
+            }
+
+            // "approver_stage_X" is historically mixed but LicenseController expects ID for the join.
+            $updateData["approver_stage_{$numericStage}"] = $approverId;
             
             $statusDecision = ($action === 'Pending') ? 'Pending' : (($action === 'Reject') ? 'Rejected' : 'Approved');
             $updateData["status_stage_{$numericStage}"] = $statusDecision;
             
-             // 4. Insert Review Comment
+             // 4. Insert Review Comment with Approver Details
             if (!empty($comment) || $statusDecision !== 'Pending') {
+                
+                // Fetch full name from VESSEL_DISCHARGE database (wma group)
+                // This is the source of truth for "users" in this system context
+                $wmaDb = \Config\Database::connect('wma');
+                $userQuery = $wmaDb->table('users')->where('id', $approverId)->get()->getRow();
+                
+                $approverFullName = 'Unknown Approver';
+                $approverTitle = $currentStage . ' Officer';
+                
+                if ($userQuery) {
+                    $approverFullName = trim(($userQuery->first_name ?? '') . ' ' . ($userQuery->last_name ?? ''));
+                    if (empty($approverFullName)) {
+                        $approverFullName = $userQuery->username ?? 'Unknown';
+                    }
+                    
+                    // Determine Title based on Group/Role in vessel_discharge DB if available
+                    // Or keep using the stage-based title fallback
+                    if ($currentStage === 'Manager') $approverTitle = 'Regional Manager';
+                    elseif ($currentStage === 'Surveillance') $approverTitle = 'Surveillance Officer';
+                    elseif ($currentStage === 'DTS') $approverTitle = 'Director of Technical Services';
+                    elseif ($currentStage === 'CEO') $approverTitle = 'Chief Executive Officer';
+                    
+                    // If the user table has a specific title field, we could use it:
+                    // $approverTitle = $userQuery->title ?? $approverTitle;
+                } else {
+                     // Fallback to session username if DB lookup fails
+                     $approverFullName = session()->get('username') ?? 'Admin';
+                }
+
                 $reviewData = [
                     'id' => $this->guidv4(),
                     'application_id' => $parentAppId,
@@ -554,6 +641,9 @@ class ApprovalController extends BaseController
                     'stage' => $currentStage,
                     'status' => $statusDecision,
                     'comments' => $comment,
+                    'approver_id' => $approverId,
+                    'approver_name' => $approverFullName,
+                    'approver_title' => $approverTitle,
                     'created_at' => date('Y-m-d H:i:s')
                 ];
                 $db->table('application_reviews')->insert($reviewData);
