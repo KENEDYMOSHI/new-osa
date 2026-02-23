@@ -1093,30 +1093,22 @@
                                         }
                                     }
 
-                                    // Gather returned documents with comments
+                                    // Collect ALL returned documents (attachments + qualifications)
                                     $returnedDocs = [];
-                                    if (!empty($application->attachments)) {
-                                        foreach ($application->attachments as $att) {
-                                            if (($att->status ?? '') === 'Returned' && !empty($att->rejection_reason)) {
-                                                $returnedDocs[] = [
-                                                    'name'   => $att->document_type ?? $att->document_name ?? $att->file_name ?? 'Document',
-                                                    'reason' => $att->rejection_reason,
-                                                ];
-                                            }
-                                        }
-                                    }
-                                    if (!empty($application->qualification_documents)) {
-                                        foreach ($application->qualification_documents as $att) {
-                                            if (($att->status ?? '') === 'Returned' && !empty($att->rejection_reason)) {
-                                                $returnedDocs[] = [
-                                                    'name'   => $att->document_type ?? $att->document_name ?? $att->file_name ?? 'Document',
-                                                    'reason' => $att->rejection_reason,
-                                                ];
-                                            }
+                                    $allDocs = array_merge(
+                                        is_array($application->attachments ?? null) ? $application->attachments : (is_array($application->attachments ?? null) ? [] : (array)($application->attachments ?? [])),
+                                        is_array($application->qualifications ?? null) ? $application->qualifications : []
+                                    );
+                                    foreach ($allDocs as $doc) {
+                                        if (($doc->status ?? '') === 'Returned' && !empty($doc->rejection_reason)) {
+                                            $returnedDocs[] = [
+                                                'name'   => $doc->document_type ?? $doc->type ?? $doc->document_name ?? $doc->file_name ?? 'Document',
+                                                'reason' => $doc->rejection_reason,
+                                            ];
                                         }
                                     }
                                     $hasReturnedDocs = !empty($returnedDocs);
-                                    $returnedDocsJson = htmlspecialchars(json_encode($returnedDocs), ENT_QUOTES);
+                                    $returnedDocsJson = json_encode($returnedDocs, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT);
 
                                     // 1. Region Manager State
                                     $rmMarker = 'active'; // default ring
@@ -1142,12 +1134,11 @@
                                             <?php endif; ?>
                                         </div>
                                         <?php if ($hasReturnedDocs): ?>
-                                        <button type="button" class="btn btn-outline-warning btn-xs ml-2 py-0 px-2"
-                                                onclick="showReturnComments(<?= $returnedDocsJson ?>)"
-                                                title="View return comments">
-                                            <i class="fas fa-comment-alt mr-1"></i>
-                                            <span class="badge badge-warning badge-pill" style="font-size:0.65rem"><?= count($returnedDocs) ?></span>
-                                            Return Comments
+                                        <button type="button" class="btn btn-outline-warning btn-xs ml-auto"
+                                                onclick="showReturnCommentsModal()"
+                                                title="View document return comments"
+                                                style="font-size:0.7rem; padding:2px 8px;">
+                                            <i class="fas fa-comment-alt mr-1"></i>Return Comments
                                         </button>
                                         <?php endif; ?>
                                     </div>
@@ -1203,15 +1194,6 @@
                                                 <span class="dot">•</span> <span class="ct-date"><?= date('M d, Y', strtotime($svDate)) ?></span>
                                             <?php endif; ?>
                                         </div>
-                                        <?php if ($hasReturnedDocs): ?>
-                                        <button type="button" class="btn btn-outline-warning btn-xs ml-2 py-0 px-2"
-                                                onclick="showReturnComments(<?= $returnedDocsJson ?>)"
-                                                title="View return comments">
-                                            <i class="fas fa-comment-alt mr-1"></i>
-                                            <span class="badge badge-warning badge-pill" style="font-size:0.65rem"><?= count($returnedDocs) ?></span>
-                                            Return Comments
-                                        </button>
-                                        <?php endif; ?>
                                     </div>
                                     
                                     <div class="ct-content <?= ($svStatus == 'Pending') ? 'pending' : '' ?>">
@@ -1292,24 +1274,15 @@
                                     ?>
                                     <div class="ct-item">
                                         <div class="ct-marker <?= $dtsMarker ?>"></div>
-                                         <div class="ct-header">
-                                             <span class="ct-badge <?= ($dtsStatus == 'Pending') ? 'badge-review' : $dtsBadgeClass ?>"><?= $dtsBadgeText ?></span>
-                                             <div class="ct-meta">
-                                                 by <strong>Technical Director<?= $dtsApprover ? ' - ' . $dtsApprover : '' ?></strong>
-                                                  <?php if ($dtsDate): ?>
-                                                     <span class="dot">&bull;</span> <span class="ct-date"><?= date('M d, Y', strtotime($dtsDate)) ?></span>
-                                                 <?php endif; ?>
-                                             </div>
-                                             <?php if ($hasReturnedDocs): ?>
-                                             <button type="button" class="btn btn-outline-warning btn-xs ml-2 py-0 px-2"
-                                                     onclick="showReturnComments(<?= $returnedDocsJson ?>)"
-                                                     title="View return comments">
-                                                 <i class="fas fa-comment-alt mr-1"></i>
-                                                 <span class="badge badge-warning badge-pill" style="font-size:0.65rem"><?= count($returnedDocs) ?></span>
-                                                 Return Comments
-                                             </button>
-                                             <?php endif; ?>
-                                         </div>
+                                        <div class="ct-header">
+                                            <span class="ct-badge <?= ($dtsStatus == 'Pending') ? 'badge-review' : $dtsBadgeClass ?>"><?= $dtsBadgeText ?></span>
+                                            <div class="ct-meta">
+                                                by <strong>Technical Director<?= $dtsApprover ? ' - ' . $dtsApprover : '' ?></strong>
+                                                 <?php if ($dtsDate): ?>
+                                                    <span class="dot">•</span> <span class="ct-date"><?= date('M d, Y', strtotime($dtsDate)) ?></span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
                                         <div class="ct-content <?= ($dtsStatus == 'Pending') ? 'pending' : '' ?>">
                                             <?php if ($dtsStatus == 'Pending'): ?>
                                                 <?php if ($user->inGroup('dts', 'admin', 'superadmin')): ?>
@@ -1350,26 +1323,17 @@
                                     ?>
                                     <div class="ct-item">
                                         <div class="ct-marker <?= $ceoMarker ?>"></div>
-                                         <div class="ct-header">
-                                             <span class="ct-badge <?= ($ceoStatus == 'Pending' && $dtsStatus != 'Rejected') ? 'badge-review' : (($ceoStatus == 'Pending') ? 'badge-secondary' : $ceoBadgeClass) ?>">
-                                                 <?= $ceoBadgeText ?>
-                                             </span>
-                                             <div class="ct-meta">
-                                                 by <strong>Chief Executive Officer<?= $ceoApprover ? ' - ' . $ceoApprover : '' ?></strong>
-                                                  <?php if ($ceoDate): ?>
-                                                     <span class="dot">&bull;</span> <span class="ct-date"><?= date('M d, Y', strtotime($ceoDate)) ?></span>
-                                                 <?php endif; ?>
-                                             </div>
-                                             <?php if ($hasReturnedDocs): ?>
-                                             <button type="button" class="btn btn-outline-warning btn-xs ml-2 py-0 px-2"
-                                                     onclick="showReturnComments(<?= $returnedDocsJson ?>)"
-                                                     title="View return comments">
-                                                 <i class="fas fa-comment-alt mr-1"></i>
-                                                 <span class="badge badge-warning badge-pill" style="font-size:0.65rem"><?= count($returnedDocs) ?></span>
-                                                 Return Comments
-                                             </button>
-                                             <?php endif; ?>
-                                         </div>
+                                        <div class="ct-header">
+                                            <span class="ct-badge <?= ($ceoStatus == 'Pending' && $dtsStatus != 'Rejected') ? 'badge-review' : (($ceoStatus == 'Pending') ? 'badge-secondary' : $ceoBadgeClass) ?>">
+                                                <?= $ceoBadgeText ?>
+                                            </span>
+                                            <div class="ct-meta">
+                                                by <strong>Chief Executive Officer<?= $ceoApprover ? ' - ' . $ceoApprover : '' ?></strong>
+                                                 <?php if ($ceoDate): ?>
+                                                    <span class="dot">•</span> <span class="ct-date"><?= date('M d, Y', strtotime($ceoDate)) ?></span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
                                         <div class="ct-content <?= ($ceoStatus == 'Pending') ? 'pending' : '' ?>">
                                             <?php if ($dtsStatus == 'Rejected'): ?>
                                                 Process terminated at Technical Director stage.
@@ -1511,30 +1475,6 @@
     </div>
 </div>
 
-<!-- Return Comments Viewer Modal (from Approval Timeline) -->
-<div class="modal fade" id="returnCommentsModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-md" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-warning">
-                <h5 class="modal-title font-weight-bold">
-                    <i class="fas fa-comment-alt mr-2"></i> Document Return Comments
-                </h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <div class="modal-body p-0">
-                <div id="returnCommentsList" class="list-group list-group-flush"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">
-                    <i class="fas fa-times mr-1"></i> Close
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Return Document Modal -->
 <div class="modal fade" id="returnDocumentModal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
@@ -1567,35 +1507,58 @@
     </div>
 </div>
 
+<!-- Return Comments View Modal (View returned docs + reasons) -->
+<div class="modal fade" id="returnCommentsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#fff3cd; border-bottom:2px solid #ffc107;">
+                <h5 class="modal-title text-dark">
+                    <i class="fas fa-comment-alt text-warning mr-2"></i>Document Return Comments
+                </h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" id="returnCommentsBody">
+                <!-- Populated by JS -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times mr-1"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-function showReturnComments(docs) {
-    const list = document.getElementById('returnCommentsList');
-    list.innerHTML = '';
+let currentDocId = null;
 
-    if (!docs || docs.length === 0) {
-        list.innerHTML = '<div class="list-group-item text-muted text-center py-4"><i class="fas fa-inbox fa-2x mb-2 d-block"></i>No return comments found.</div>';
+/* ---------- Return Comments Modal ---------- */
+const _returnedDocs = <?= $returnedDocsJson ?? '[]' ?>;
+
+function showReturnCommentsModal() {
+    const body = document.getElementById('returnCommentsBody');
+    if (!_returnedDocs || _returnedDocs.length === 0) {
+        body.innerHTML = '<p class="text-muted text-center py-3">No return comments found.</p>';
     } else {
-        docs.forEach(function(doc, idx) {
-            const item = document.createElement('div');
-            item.className = 'list-group-item list-group-item-action py-3';
-            item.innerHTML =
-                '<div class="d-flex align-items-start">' +
-                '  <div class="mr-3 mt-1"><span class="badge badge-warning badge-pill">' + (idx + 1) + '</span></div>' +
-                '  <div class="flex-grow-1">' +
-                '    <p class="mb-1 font-weight-bold text-dark"><i class="fas fa-file-alt mr-1 text-secondary"></i>' + (doc.name || 'Document') + '</p>' +
-                '    <div class="alert alert-warning mb-0 py-2 px-3" style="border-left: 4px solid #f0ad4e !important;">' +
-                '      <small><i class="fas fa-exclamation-circle mr-1"></i><strong>Reason:</strong> ' + (doc.reason || '-') + '</small>' +
-                '    </div>' +
-                '  </div>' +
-                '</div>';
-            list.appendChild(item);
+        let html = '<p class="text-muted mb-3">The following documents were returned to the applicant with comments:</p>';
+        html += '<div class="list-group">';
+        _returnedDocs.forEach(function(doc, i) {
+            html += `
+            <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 border-left-warning" style="border-left:4px solid #ffc107 !important;">
+                <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                    <h6 class="mb-0 font-weight-bold text-dark">
+                        <i class="fas fa-file-alt text-warning mr-2"></i>${doc.name}
+                    </h6>
+                    <span class="badge badge-warning badge-pill">RETURNED</span>
+                </div>
+                <p class="mb-0 text-secondary" style="font-size:0.9rem; white-space:pre-wrap;">${doc.reason}</p>
+            </div>`;
         });
+        html += '</div>';
+        body.innerHTML = html;
     }
-
     $('#returnCommentsModal').modal('show');
 }
-
-let currentDocId = null;
 
 function acceptDocument(docId) {
     if (!docId) return;
