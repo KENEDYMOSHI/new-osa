@@ -387,15 +387,6 @@
                                     background-color: #ffebec;
                                     border-color: #f5c6cb;
                                 }
-                                /* View Comment Box */
-                                .comment-box {
-                                    background: #f8f9fc;
-                                    border-left: 3px solid #1cc88a;
-                                    padding: 0.6rem 1rem;
-                                    border-radius: 0 0.25rem 0.25rem 0;
-                                    font-size: 0.9rem;
-                                    color: #2e344e;
-                                }
                             </style>
                             <div class="row">
                                 <?php if (!empty($application->attachments)): ?>
@@ -969,7 +960,51 @@
 
                         <!-- Approvals -->
                         <!-- Approvals Tab (Reference Design: Clean Timeline) -->
-                        <div class="tab-pane" id="approvals">
+                        
+<div class="tab-pane" id="approvals">
+    <?php
+        $returnedDocs = [];
+        if (!empty($application->attachments)) {
+            foreach ($application->attachments as $doc) {
+                if (isset($doc->status) && $doc->status == 'Returned') {
+                    $returnedDocs[] = $doc;
+                }
+            }
+        }
+    ?>
+    
+    <!-- Returned Docs Modal -->
+    <?php if (count($returnedDocs) > 0): ?>
+    <div class="modal fade" id="returnedDocsModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-exclamation-triangle mr-2"></i>Returned Documents</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body bg-light">
+                    <p class="text-muted mb-3">The following documents were returned for correction:</p>
+                    <ul class="list-group list-group-flush">
+                        <?php foreach ($returnedDocs as $rdoc): ?>
+                            <li class="list-group-item bg-transparent px-0 border-bottom-0 pb-0">
+                                <strong><i class="fas fa-file-alt text-danger mr-2"></i><?= htmlspecialchars($rdoc->document_type ?? $rdoc->original_name ?? 'Document') ?></strong>
+                                <div class="mt-2 p-3 rounded" style="background-color: #fdf5f5; border-left: 3px solid #e74a3b;">
+                                    <em class="text-danger">"<?= htmlspecialchars($rdoc->rejection_reason ?? 'No reason provided') ?>"</em>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
                             <style>
                                 /* Clean Timeline CSS */
                                 .clean-timeline {
@@ -1102,6 +1137,23 @@
                                         }
                                     }
 
+                                    // Collect ALL returned documents (attachments + qualifications)
+                                    $returnedDocs = [];
+                                    $allDocs = array_merge(
+                                        is_array($application->attachments ?? null) ? $application->attachments : (is_array($application->attachments ?? null) ? [] : (array)($application->attachments ?? [])),
+                                        is_array($application->qualifications ?? null) ? $application->qualifications : []
+                                    );
+                                    foreach ($allDocs as $doc) {
+                                        if (($doc->status ?? '') === 'Returned' && !empty($doc->rejection_reason)) {
+                                            $returnedDocs[] = [
+                                                'name'   => $doc->document_type ?? $doc->type ?? $doc->document_name ?? $doc->file_name ?? 'Document',
+                                                'reason' => $doc->rejection_reason,
+                                            ];
+                                        }
+                                    }
+                                    $hasReturnedDocs = !empty($returnedDocs);
+                                    $returnedDocsJson = json_encode($returnedDocs, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT);
+
                                     // 1. Region Manager State
                                     $rmMarker = 'active'; // default ring
                                     $rmBadgeClass = 'badge-review';
@@ -1123,8 +1175,14 @@
                                             by <strong>Region Manager<?= $rmApprover ? ' - ' . $rmApprover : '' ?></strong> 
                                             <?php if ($rmDate): ?>
                                                 <span class="dot">•</span> <span class="ct-date"><?= date('M d, Y', strtotime($rmDate)) ?></span>
+                                                <?php if (count($returnedDocs) > 0): ?>
+    <button type="button" class="btn btn-xs btn-outline-danger ml-2" data-toggle="modal" data-target="#returnedDocsModal" style="padding: 0.1rem 0.5rem; font-size: 0.75rem;">
+        <i class="fas fa-comment-dots mr-1"></i> View Comment
+    </button>
+<?php endif; ?>
                                             <?php endif; ?>
                                         </div>
+                                        
                                     </div>
                                     
                                     <div class="ct-content <?= ($rmStatus == 'Pending') ? 'pending' : '' ?>">
@@ -1141,15 +1199,7 @@
                                                 Status: Pending Review
                                             <?php endif; ?>
                                         <?php else: ?>
-                                            <button class="btn btn-outline-secondary btn-xs mt-1" type="button"
-                                                    data-toggle="collapse" data-target="#comment-rm" aria-expanded="false">
-                                                <i class="fas fa-comment-dots mr-1"></i> View Comment
-                                            </button>
-                                            <div class="collapse mt-2" id="comment-rm">
-                                                <div class="comment-box">
-                                                    <?= $rmComment ? htmlspecialchars($rmComment) : '<em class="text-muted">No remarks provided.</em>' ?>
-                                                </div>
-                                            </div>
+                                            <?= $rmComment ? $rmComment : 'No remarks provided.' ?>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -1184,6 +1234,11 @@
                                             by <strong>Surveillance Officer<?= $svApprover ? ' - ' . $svApprover : '' ?></strong>
                                              <?php if ($svDate): ?>
                                                 <span class="dot">•</span> <span class="ct-date"><?= date('M d, Y', strtotime($svDate)) ?></span>
+                                                <?php if (count($returnedDocs) > 0): ?>
+    <button type="button" class="btn btn-xs btn-outline-danger ml-2" data-toggle="modal" data-target="#returnedDocsModal" style="padding: 0.1rem 0.5rem; font-size: 0.75rem;">
+        <i class="fas fa-comment-dots mr-1"></i> View Comment
+    </button>
+<?php endif; ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -1204,57 +1259,10 @@
                                                 Status: Pending Verification
                                              <?php endif; ?>
                                          <?php else: ?>
-                                             <button class="btn btn-outline-secondary btn-xs mt-1" type="button"
-                                                     data-toggle="collapse" data-target="#comment-sv" aria-expanded="false">
-                                                 <i class="fas fa-comment-dots mr-1"></i> View Comment
-                                             </button>
-                                             <div class="collapse mt-2" id="comment-sv">
-                                                 <div class="comment-box">
-                                                     <?= $svComment ? htmlspecialchars($svComment) : '<em class="text-muted">No remarks provided.</em>' ?>
-                                                 </div>
-                                             </div>
+                                            <?= $svComment ? $svComment : 'No remarks provided.' ?>
                                          <?php endif; ?>
                                     </div>
                                 </div>
-
-
-                                <?php
-                                    // Extract returned documents
-                                    $returnedDocs = [];
-                                    if (!empty($application->attachments)) {
-                                        foreach ($application->attachments as $doc) {
-                                            if (isset($doc->status) && $doc->status == 'Returned') {
-                                                $returnedDocs[] = $doc;
-                                            }
-                                        }
-                                    }
-                                ?>
-                                <?php if (count($returnedDocs) > 0): ?>
-                                <!-- Returned Documents Item -->
-                                <div class="ct-item">
-                                    <div class="ct-marker rejected"></div>
-                                    <div class="ct-header">
-                                        <span class="ct-badge badge-reject">DOCUMENTS RETURNED</span>
-                                        <div class="ct-meta">
-                                            Return Action 
-                                        </div>
-                                    </div>
-                                    <div class="ct-content">
-                                        <div class="alert alert-danger mb-0" style="font-size: 0.9rem;">
-                                            <p class="mb-2"><i class="fas fa-exclamation-triangle mr-2"></i><strong>The following documents need correction:</strong></p>
-                                            <ul class="mb-0 pl-3">
-                                                <?php foreach ($returnedDocs as $rdoc): ?>
-                                                    <li class="mb-1">
-                                                        <strong><?= htmlspecialchars($rdoc->document_type ?? $rdoc->original_name ?? 'Document') ?></strong>
-                                                        <br>
-                                                        <em class="text-danger">"<?= htmlspecialchars($rdoc->rejection_reason ?? 'No reason provided') ?>"</em>
-                                                    </li>
-                                                <?php endforeach; ?>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <?php endif; ?>
 
                                 <!-- 3. Applicant Submission Item -->
                                 <?php
@@ -1319,6 +1327,11 @@
                                                 by <strong>Technical Director<?= $dtsApprover ? ' - ' . $dtsApprover : '' ?></strong>
                                                  <?php if ($dtsDate): ?>
                                                     <span class="dot">•</span> <span class="ct-date"><?= date('M d, Y', strtotime($dtsDate)) ?></span>
+                                                <?php if (count($returnedDocs) > 0): ?>
+    <button type="button" class="btn btn-xs btn-outline-danger ml-2" data-toggle="modal" data-target="#returnedDocsModal" style="padding: 0.1rem 0.5rem; font-size: 0.75rem;">
+        <i class="fas fa-comment-dots mr-1"></i> View Comment
+    </button>
+<?php endif; ?>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
@@ -1335,15 +1348,7 @@
                                                     Status: Pending Review
                                                 <?php endif; ?>
                                             <?php else: ?>
-                                                <button class="btn btn-outline-secondary btn-xs mt-1" type="button"
-                                                        data-toggle="collapse" data-target="#comment-dts" aria-expanded="false">
-                                                    <i class="fas fa-comment-dots mr-1"></i> View Comment
-                                                </button>
-                                                <div class="collapse mt-2" id="comment-dts">
-                                                    <div class="comment-box">
-                                                        <?= $dtsComment ? htmlspecialchars($dtsComment) : '<em class="text-muted">No remarks provided.</em>' ?>
-                                                    </div>
-                                                </div>
+                                                <?= $dtsComment ? $dtsComment : 'No remarks provided.' ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -1378,6 +1383,11 @@
                                                 by <strong>Chief Executive Officer<?= $ceoApprover ? ' - ' . $ceoApprover : '' ?></strong>
                                                  <?php if ($ceoDate): ?>
                                                     <span class="dot">•</span> <span class="ct-date"><?= date('M d, Y', strtotime($ceoDate)) ?></span>
+                                                <?php if (count($returnedDocs) > 0): ?>
+    <button type="button" class="btn btn-xs btn-outline-danger ml-2" data-toggle="modal" data-target="#returnedDocsModal" style="padding: 0.1rem 0.5rem; font-size: 0.75rem;">
+        <i class="fas fa-comment-dots mr-1"></i> View Comment
+    </button>
+<?php endif; ?>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
@@ -1396,15 +1406,7 @@
                                                     Status: Pending Final Approval
                                                 <?php endif; ?>
                                             <?php else: ?>
-                                                <button class="btn btn-outline-secondary btn-xs mt-1" type="button"
-                                                        data-toggle="collapse" data-target="#comment-ceo" aria-expanded="false">
-                                                    <i class="fas fa-comment-dots mr-1"></i> View Comment
-                                                </button>
-                                                <div class="collapse mt-2" id="comment-ceo">
-                                                    <div class="comment-box">
-                                                        <?= $ceoComment ? htmlspecialchars($ceoComment) : '<em class="text-muted">No remarks provided.</em>' ?>
-                                                    </div>
-                                                </div>
+                                                <?= $ceoComment ? $ceoComment : 'No remarks provided.' ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -1562,8 +1564,35 @@
     </div>
 </div>
 
+<!-- Return Comments View Modal (View returned docs + reasons) -->
+<div class="modal fade" id="returnCommentsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#fff3cd; border-bottom:2px solid #ffc107;">
+                <h5 class="modal-title text-dark">
+                    <i class="fas fa-comment-alt text-warning mr-2"></i>Document Return Comments
+                </h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" id="returnCommentsBody">
+                <!-- Populated by JS -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times mr-1"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 let currentDocId = null;
+
+/* ---------- Return Comments Modal ---------- */
+const _returnedDocs = <?= $returnedDocsJson ?? '[]' ?>;
+
+
 
 function acceptDocument(docId) {
     if (!docId) return;
