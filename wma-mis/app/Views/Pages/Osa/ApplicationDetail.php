@@ -1217,6 +1217,45 @@
                                     </div>
                                 </div>
 
+
+                                <?php
+                                    // Extract returned documents
+                                    $returnedDocs = [];
+                                    if (!empty($application->attachments)) {
+                                        foreach ($application->attachments as $doc) {
+                                            if (isset($doc->status) && $doc->status == 'Returned') {
+                                                $returnedDocs[] = $doc;
+                                            }
+                                        }
+                                    }
+                                ?>
+                                <?php if (count($returnedDocs) > 0): ?>
+                                <!-- Returned Documents Item -->
+                                <div class="ct-item">
+                                    <div class="ct-marker rejected"></div>
+                                    <div class="ct-header">
+                                        <span class="ct-badge badge-reject">DOCUMENTS RETURNED</span>
+                                        <div class="ct-meta">
+                                            Return Action 
+                                        </div>
+                                    </div>
+                                    <div class="ct-content">
+                                        <div class="alert alert-danger mb-0" style="font-size: 0.9rem;">
+                                            <p class="mb-2"><i class="fas fa-exclamation-triangle mr-2"></i><strong>The following documents need correction:</strong></p>
+                                            <ul class="mb-0 pl-3">
+                                                <?php foreach ($returnedDocs as $rdoc): ?>
+                                                    <li class="mb-1">
+                                                        <strong><?= htmlspecialchars($rdoc->document_type ?? $rdoc->original_name ?? 'Document') ?></strong>
+                                                        <br>
+                                                        <em class="text-danger">"<?= htmlspecialchars($rdoc->rejection_reason ?? 'No reason provided') ?>"</em>
+                                                    </li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+
                                 <!-- 3. Applicant Submission Item -->
                                 <?php
                                     $appSubmitted = false;
