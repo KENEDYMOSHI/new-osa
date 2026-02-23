@@ -387,6 +387,15 @@
                                     background-color: #ffebec;
                                     border-color: #f5c6cb;
                                 }
+                                /* View Comment Box */
+                                .comment-box {
+                                    background: #f8f9fc;
+                                    border-left: 3px solid #1cc88a;
+                                    padding: 0.6rem 1rem;
+                                    border-radius: 0 0.25rem 0.25rem 0;
+                                    font-size: 0.9rem;
+                                    color: #2e344e;
+                                }
                             </style>
                             <div class="row">
                                 <?php if (!empty($application->attachments)): ?>
@@ -1093,23 +1102,6 @@
                                         }
                                     }
 
-                                    // Collect ALL returned documents (attachments + qualifications)
-                                    $returnedDocs = [];
-                                    $allDocs = array_merge(
-                                        is_array($application->attachments ?? null) ? $application->attachments : (is_array($application->attachments ?? null) ? [] : (array)($application->attachments ?? [])),
-                                        is_array($application->qualifications ?? null) ? $application->qualifications : []
-                                    );
-                                    foreach ($allDocs as $doc) {
-                                        if (($doc->status ?? '') === 'Returned' && !empty($doc->rejection_reason)) {
-                                            $returnedDocs[] = [
-                                                'name'   => $doc->document_type ?? $doc->type ?? $doc->document_name ?? $doc->file_name ?? 'Document',
-                                                'reason' => $doc->rejection_reason,
-                                            ];
-                                        }
-                                    }
-                                    $hasReturnedDocs = !empty($returnedDocs);
-                                    $returnedDocsJson = json_encode($returnedDocs, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT);
-
                                     // 1. Region Manager State
                                     $rmMarker = 'active'; // default ring
                                     $rmBadgeClass = 'badge-review';
@@ -1133,14 +1125,6 @@
                                                 <span class="dot">•</span> <span class="ct-date"><?= date('M d, Y', strtotime($rmDate)) ?></span>
                                             <?php endif; ?>
                                         </div>
-                                        <?php if ($hasReturnedDocs): ?>
-                                        <button type="button" class="btn btn-outline-warning btn-xs ml-auto"
-                                                onclick="showReturnCommentsModal()"
-                                                title="View document return comments"
-                                                style="font-size:0.7rem; padding:2px 8px;">
-                                            <i class="fas fa-comment-alt mr-1"></i>Return Comments
-                                        </button>
-                                        <?php endif; ?>
                                     </div>
                                     
                                     <div class="ct-content <?= ($rmStatus == 'Pending') ? 'pending' : '' ?>">
@@ -1157,7 +1141,15 @@
                                                 Status: Pending Review
                                             <?php endif; ?>
                                         <?php else: ?>
-                                            <?= $rmComment ? $rmComment : 'No remarks provided.' ?>
+                                            <button class="btn btn-outline-secondary btn-xs mt-1" type="button"
+                                                    data-toggle="collapse" data-target="#comment-rm" aria-expanded="false">
+                                                <i class="fas fa-comment-dots mr-1"></i> View Comment
+                                            </button>
+                                            <div class="collapse mt-2" id="comment-rm">
+                                                <div class="comment-box">
+                                                    <?= $rmComment ? htmlspecialchars($rmComment) : '<em class="text-muted">No remarks provided.</em>' ?>
+                                                </div>
+                                            </div>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -1212,7 +1204,15 @@
                                                 Status: Pending Verification
                                              <?php endif; ?>
                                          <?php else: ?>
-                                            <?= $svComment ? $svComment : 'No remarks provided.' ?>
+                                             <button class="btn btn-outline-secondary btn-xs mt-1" type="button"
+                                                     data-toggle="collapse" data-target="#comment-sv" aria-expanded="false">
+                                                 <i class="fas fa-comment-dots mr-1"></i> View Comment
+                                             </button>
+                                             <div class="collapse mt-2" id="comment-sv">
+                                                 <div class="comment-box">
+                                                     <?= $svComment ? htmlspecialchars($svComment) : '<em class="text-muted">No remarks provided.</em>' ?>
+                                                 </div>
+                                             </div>
                                          <?php endif; ?>
                                     </div>
                                 </div>
@@ -1296,7 +1296,15 @@
                                                     Status: Pending Review
                                                 <?php endif; ?>
                                             <?php else: ?>
-                                                <?= $dtsComment ? $dtsComment : 'No remarks provided.' ?>
+                                                <button class="btn btn-outline-secondary btn-xs mt-1" type="button"
+                                                        data-toggle="collapse" data-target="#comment-dts" aria-expanded="false">
+                                                    <i class="fas fa-comment-dots mr-1"></i> View Comment
+                                                </button>
+                                                <div class="collapse mt-2" id="comment-dts">
+                                                    <div class="comment-box">
+                                                        <?= $dtsComment ? htmlspecialchars($dtsComment) : '<em class="text-muted">No remarks provided.</em>' ?>
+                                                    </div>
+                                                </div>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -1349,7 +1357,15 @@
                                                     Status: Pending Final Approval
                                                 <?php endif; ?>
                                             <?php else: ?>
-                                                <?= $ceoComment ? $ceoComment : 'No remarks provided.' ?>
+                                                <button class="btn btn-outline-secondary btn-xs mt-1" type="button"
+                                                        data-toggle="collapse" data-target="#comment-ceo" aria-expanded="false">
+                                                    <i class="fas fa-comment-dots mr-1"></i> View Comment
+                                                </button>
+                                                <div class="collapse mt-2" id="comment-ceo">
+                                                    <div class="comment-box">
+                                                        <?= $ceoComment ? htmlspecialchars($ceoComment) : '<em class="text-muted">No remarks provided.</em>' ?>
+                                                    </div>
+                                                </div>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -1507,58 +1523,8 @@
     </div>
 </div>
 
-<!-- Return Comments View Modal (View returned docs + reasons) -->
-<div class="modal fade" id="returnCommentsModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="background:#fff3cd; border-bottom:2px solid #ffc107;">
-                <h5 class="modal-title text-dark">
-                    <i class="fas fa-comment-alt text-warning mr-2"></i>Document Return Comments
-                </h5>
-                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-            </div>
-            <div class="modal-body" id="returnCommentsBody">
-                <!-- Populated by JS -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                    <i class="fas fa-times mr-1"></i>Close
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
 let currentDocId = null;
-
-/* ---------- Return Comments Modal ---------- */
-const _returnedDocs = <?= $returnedDocsJson ?? '[]' ?>;
-
-function showReturnCommentsModal() {
-    const body = document.getElementById('returnCommentsBody');
-    if (!_returnedDocs || _returnedDocs.length === 0) {
-        body.innerHTML = '<p class="text-muted text-center py-3">No return comments found.</p>';
-    } else {
-        let html = '<p class="text-muted mb-3">The following documents were returned to the applicant with comments:</p>';
-        html += '<div class="list-group">';
-        _returnedDocs.forEach(function(doc, i) {
-            html += `
-            <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 border-left-warning" style="border-left:4px solid #ffc107 !important;">
-                <div class="d-flex w-100 justify-content-between align-items-center mb-1">
-                    <h6 class="mb-0 font-weight-bold text-dark">
-                        <i class="fas fa-file-alt text-warning mr-2"></i>${doc.name}
-                    </h6>
-                    <span class="badge badge-warning badge-pill">RETURNED</span>
-                </div>
-                <p class="mb-0 text-secondary" style="font-size:0.9rem; white-space:pre-wrap;">${doc.reason}</p>
-            </div>`;
-        });
-        html += '</div>';
-        body.innerHTML = html;
-    }
-    $('#returnCommentsModal').modal('show');
-}
 
 function acceptDocument(docId) {
     if (!docId) return;
