@@ -142,40 +142,43 @@
       </div>
 
       <!-- Back Side -->
-      <div id="idCardBack" class="w-[320px] h-[200px] bg-white rounded-lg shadow-lg overflow-hidden border border-gray-300">
-         <div class="h-full flex flex-col items-center justify-center text-center border-4 border-[#f68d2b]/20 m-1 rounded-lg p-4">
-             <h3 class="text-xs font-bold text-gray-500 italic mb-2">This Identity Card is the property of</h3>
-             <h2 class="text-sm font-bold text-[#f68d2b] uppercase mb-4">Weights & Measures Agency</h2>
+      <div id="idCardBack" class="w-[320px] h-[200px] bg-white rounded-lg shadow-lg overflow-hidden border border-[#f68d2b]">
+         <div class="h-full flex flex-col items-center justify-between text-center border-4 border-[#f68d2b] m-1 rounded-lg py-2 px-3">
+             <div class="flex flex-col items-center w-full pt-1">
+                 <h3 class="text-[11px] font-bold text-gray-600 italic mb-1 leading-tight">This Identity Card is the property of</h3>
+                 <h2 class="text-[13px] font-bold text-black uppercase mb-2 leading-tight">Weights &amp; Measures Agency</h2>
+             </div>
              
-             <div class="text-[9px] font-medium text-gray-600 space-y-1 mb-4">
+             <div class="text-[9px] font-medium text-gray-700 space-y-0.5 mb-1.5 leading-tight">
                  <p>Vipimo House, Chief Chemist Street</p>
                  <p>P.O. Box 2014, Dodoma – Tanzania</p>
              </div>
 
-             <div class="text-[9px] text-gray-600 mb-2">
-                 <p>Tel: +255 22 220 3199 | Fax: +255 22 220 3200</p>
+             <div class="text-[9px] text-gray-700 mb-1.5 leading-tight">
+                 <p>Tel:+ 255 262 610 700 Phone: 0800 110097</p>
                  <p>Email: info@wma.go.tz | Website: www.wma.go.tz</p>
              </div>
 
              <!-- Commissioner Signature Section -->
-             <div class="mt-auto mb-2 flex flex-col items-center w-full">
+             <div class="mt-auto flex flex-col items-center w-full mb-1">
                 <!-- Signature Image -->
-                <div class="h-8 w-24 mb-1 relative">
-                    <img *ngIf="licenseData?.commissionerSignature" [src]="licenseData!.commissionerSignature" alt="Signature" class="w-full h-full object-contain" crossorigin="anonymous">
-                    <!-- Placeholder if needed, or keeping empty space -->
+                <div class="h-8 w-24 relative z-10 -mb-2 translate-y-2">
+                    <img *ngIf="licenseData?.commissionerSignature" [src]="licenseData!.commissionerSignature" alt="Signature" class="w-full h-full object-contain object-bottom mix-blend-multiply" crossorigin="anonymous">
                 </div>
                 
+                <!-- Separator Line -->
+                 <div class="border-b-[1.5px] border-[#1c355e] w-3/5 mx-auto mb-1 z-0 mt-1"></div>
+                 
                 <!-- Commissioner Name -->
-                 <div class="border-b border-black w-3/4 mx-auto mb-1"></div>
-                 <h3 class="text-[8px] font-bold text-black uppercase" style="font-family: 'Great Vibes', cursive, serif;">{{ licenseData?.commissionerName || 'Alban M. Kihulla' }}</h3>
+                 <h3 class="text-[8px] font-bold text-black uppercase tracking-wide">{{ licenseData?.commissionerName || 'ALBAN M. KIHULLA' }}</h3>
                  
                  <!-- Title -->
-                 <h4 class="text-[7px] font-bold text-[#2c3e50] uppercase tracking-wide bg-[#dadada] w-full py-0.5 mt-0.5">
-                     COMMISSIONER FOR WEIGHTS AND MEASURES
+                 <h4 class="text-[9px] font-extrabold text-black tracking-wide mt-1.5">
+                     Commissioner for Weights and Measures
                  </h4>
              </div>
              
-             <p class="text-[6px] text-gray-400 italic mt-1">If found please return to the above address</p>
+             <p class="text-[6px] text-gray-500 italic mt-1 pb-0.5">If found please return to the above address</p>
          </div>
       </div>
 

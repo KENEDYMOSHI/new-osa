@@ -88,38 +88,72 @@ class AuthController extends ResourceController
              return $this->failValidationErrors(['confirmPassword' => 'Passwords do not match']);
         }
 
-        // 1. Create User (Shield)
-        $users = model(UserModel::class);
+        // Determine User Type and Target Table
+        $userType = isset($data['registrationType']) && $data['registrationType'] === 'pattern_approval' 
+            ? 'pattern_approval' 
+            : (isset($data['registrationType']) && $data['registrationType'] === 'customer' ? 'customer' : 'practitioner');
+            
         $uuid = strtoupper(md5(uniqid(rand(), true))); // Uppercase 32 char hash
-
-        // Generate unique username by adding timestamp
         $baseUsername = $data['personalInfo']['firstName'] . ' ' . $data['personalInfo']['lastName'];
         $uniqueUsername = $baseUsername . '_' . time();
+        $db = \Config\Database::connect();
+
+        // === Auto-resolve collection_center from region name ===
+        $region = $data['personalInfo']['region'] ?? null;
+        $resolvedCenterNumber = null;
+        if ($region) {
+            $centerRow = $db->table('collectioncenter')
+                ->where('centerName', $region)
+                ->get()->getRow();
+            $resolvedCenterNumber = $centerRow->centerNumber ?? null;
+        }
         
-        $user = new \CodeIgniter\Shield\Entities\User([
-            'username' => $uniqueUsername,
-            'email'    => $data['contactSecurity']['email'],
-            'password' => $data['contactSecurity']['password'],
-        ]);
-
         try {
-            $users->save($user);
-            $user = $users->findById($users->getInsertID());
+            if ($userType == 'pattern_approval' || $userType == 'customer') {
+                // 1. Create User (Bypass Shield, Custom Tables)
+                $tableName = $userType == 'pattern_approval' ? 'pattern_users' : 'customer_users';
+                
+                $db->table($tableName)->insert([
+                    'uuid' => $uuid,
+                    'username' => $uniqueUsername,
+                    'email' => $data['contactSecurity']['email'],
+                    'password_hash' => password_hash($data['contactSecurity']['password'], PASSWORD_BCRYPT),
+                    'user_type' => $userType,
+                    'registration_type' => $userType,
+                    'phone_number' => $data['personalInfo']['phoneNumber'] ?? null,
+                    'region' => $region,
+                    'collection_center' => $resolvedCenterNumber,
+                    'active' => 1,
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
+                
+                $userId = $db->insertID();
+            } else {
+                // 1. Create User (Shield - License / Practitioner)
+                $users = model(UserModel::class);
+                $user = new \CodeIgniter\Shield\Entities\User([
+                    'username' => $uniqueUsername,
+                    'email'    => $data['contactSecurity']['email'],
+                    'password' => $data['contactSecurity']['password'],
+                ]);
+                
+                $users->save($user);
+                $user = $users->findById($users->getInsertID());
+                $userId = $user->id;
 
-            // Update UUID and user_type
-            $db = \Config\Database::connect();
-            $userType = isset($data['registrationType']) && $data['registrationType'] === 'pattern_approval' 
-                ? 'pattern_approval' 
-                : 'practitioner';
-            
-            $db->table('users')->where('id', $user->id)->update([
-                'uuid' => $uuid,
-                'user_type' => $userType
-            ]);
+                $db->table('license_users')->where('id', $user->id)->update([
+                    'uuid' => $uuid,
+                    'user_type' => $userType,
+                    'phone_number' => $data['personalInfo']['phoneNumber'] ?? null,
+                    'region' => $region,
+                    'collection_center' => $resolvedCenterNumber,
+                ]);
 
-            // Activate user immediately
-            $user->activate();
-            $users->save($user);
+                // Activate user immediately
+                $user->activate();
+                $users->save($user);
+            }
 
             // 2. Create Practitioner Personal Info
             $personalInfoModel = new \App\Models\PractitionerPersonalInfoModel();
@@ -164,9 +198,9 @@ class AuthController extends ResourceController
                 'aud' => 'localhost',
                 'iat' => time(),
                 'exp' => time() + 3600, // 1 hour
-                'uid' => $user->id,
+                'uid' => $userId,
                 'uuid' => $uuid,
-                'email' => $user->email
+                'email' => $data['contactSecurity']['email']
             ];
 
             $token = JWT::encode($payload, $key, 'HS256');
@@ -210,18 +244,70 @@ class AuthController extends ResourceController
         }
 
         $data = $this->request->getJSON(true);
+        $db = \Config\Database::connect();
+        $key = getenv('JWT_SECRET') ?: 'your_secret_key_here';
 
-        // Find user by email
+        // === Step 1: Check pattern_users and customer_users first (custom tables) ===
+        foreach (['pattern_users', 'customer_users'] as $tableName) {
+            $customUser = $db->table($tableName)
+                ->where('email', $data['email'])
+                ->get()->getRow();
+
+            if ($customUser) {
+                // Verify hashed password
+                if (!password_verify($data['password'], $customUser->password_hash)) {
+                    log_message('info', 'Failed login for ' . $tableName . ': ' . $data['email']);
+                    return $this->failUnauthorized('Invalid login credentials');
+                }
+
+                // ✅ Check if account is active
+                if ((int)$customUser->active === 0) {
+                    return $this->respond([
+                        'status'  => 403,
+                        'error'   => 'Account deactivated',
+                        'message' => 'Your account has been deactivated. Please reset your password to regain access.'
+                    ], 403);
+                }
+
+                // Generate JWT with the custom table's ID
+                $payload = [
+                    'iss'       => 'localhost',
+                    'aud'       => 'localhost',
+                    'iat'       => time(),
+                    'exp'       => time() + 3600,
+                    'uid'       => $customUser->id,
+                    'uuid'      => $customUser->uuid,
+                    'email'     => $customUser->email,
+                    'user_type' => $customUser->user_type,
+                    'table'     => $tableName
+                ];
+
+                $token = JWT::encode($payload, $key, 'HS256');
+
+                log_message('info', 'Successful login (' . $tableName . ') for: ' . $data['email']);
+
+                return $this->respond([
+                    'message' => 'Login successful',
+                    'token'   => $token,
+                    'user'    => [
+                        'id'        => $customUser->id,
+                        'username'  => $customUser->username,
+                        'email'     => $customUser->email,
+                        'user_type' => $customUser->user_type
+                    ]
+                ]);
+            }
+        }
+
+        // === Step 2: Fall back to license_users via Shield ===
         $users = model(UserModel::class);
         $user = $users->findByCredentials(['email' => $data['email']]);
-        
+
         if (!$user) {
             return $this->failUnauthorized('Invalid login credentials');
         }
 
         // CRITICAL FIX: Manually verify password instead of using Shield's attempt()
-        // Shield's attempt() was accepting any password in API context
-        $db = \Config\Database::connect();
         $identity = $db->table('auth_identities')
             ->where('user_id', $user->id)
             ->where('type', 'email_password')
@@ -239,32 +325,41 @@ class AuthController extends ResourceController
             return $this->failUnauthorized('Invalid login credentials');
         }
 
+        // ✅ Check if license_users account is active
+        $licenseUser = $db->table('license_users')->where('id', $user->id)->get()->getRow();
+        if ($licenseUser && (int)$licenseUser->active === 0) {
+            return $this->respond([
+                'status'  => 403,
+                'error'   => 'Account deactivated',
+                'message' => 'Your account has been deactivated. Please reset your password to regain access.'
+            ], 403);
+        }
+
         // Password is correct - generate JWT
-        $key = getenv('JWT_SECRET') ?: 'your_secret_key_here';
         $payload = [
-            'iss' => 'localhost',
-            'aud' => 'localhost',
-            'iat' => time(),
-            'exp' => time() + 3600, // 1 hour
-            'uid' => $user->id,
+            'iss'   => 'localhost',
+            'aud'   => 'localhost',
+            'iat'   => time(),
+            'exp'   => time() + 3600,
+            'uid'   => $user->id,
             'email' => $user->email
         ];
 
         $token = JWT::encode($payload, $key, 'HS256');
 
         // Get user_type from database
-        $userRecord = $db->table('users')->where('id', $user->id)->get()->getRow();
+        $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
         $userType = $userRecord->user_type ?? 'practitioner';
 
         log_message('info', 'Successful login for email: ' . $data['email']);
 
         return $this->respond([
             'message' => 'Login successful',
-            'token' => $token,
-            'user' => [
-                'id' => $user->id,
-                'username' => $user->username,
-                'email' => $user->email,
+            'token'   => $token,
+            'user'    => [
+                'id'        => $user->id,
+                'username'  => $user->username,
+                'email'     => $user->email,
                 'user_type' => $userType
             ]
         ]);
@@ -281,7 +376,7 @@ class AuthController extends ResourceController
 
             // Get UUID from users table
             $db = \Config\Database::connect();
-            $userRecord = $db->table('users')->where('id', $user->id)->get()->getRow();
+            $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
             
             if (!$userRecord) {
                 return $this->failNotFound('User record not found in database');
@@ -360,7 +455,7 @@ class AuthController extends ResourceController
 
         // Get UUID
         $db = \Config\Database::connect();
-        $userRecord = $db->table('users')->where('id', $user->id)->get()->getRow();
+        $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
         $uuid = $userRecord->uuid;
 
         $personalInfoModel = new \App\Models\PractitionerPersonalInfoModel();
@@ -387,7 +482,7 @@ class AuthController extends ResourceController
 
         // Get UUID
         $db = \Config\Database::connect();
-        $userRecord = $db->table('users')->where('id', $user->id)->get()->getRow();
+        $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
         $uuid = $userRecord->uuid;
 
         $businessInfoModel = new \App\Models\PractitionerBusinessInfoModel();
@@ -494,7 +589,7 @@ class AuthController extends ResourceController
 
         // Get UUID
         $db = \Config\Database::connect();
-        $userRecord = $db->table('users')->where('id', $user->id)->get()->getRow();
+        $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
         $uuid = $userRecord->uuid;
 
         // Validate file upload
@@ -597,7 +692,7 @@ class AuthController extends ResourceController
         // Handle $info as object (CodeIgniter Model return type)
         $uuid = is_array($info) ? $info['user_uuid'] : $info->user_uuid;
         
-        $userRecord = $db->table('users')->where('uuid', $uuid)->get()->getRow();
+        $userRecord = $db->table('license_users')->where('uuid', $uuid)->get()->getRow();
 
         if (!$userRecord) {
              return $this->failNotFound('Linked user account not found.');
@@ -702,14 +797,19 @@ class AuthController extends ResourceController
         ]);
         $usersModel->save($userEntity);
 
+        // ✅ Re-activate account on successful password reset
+        $db->table('license_users')->where('id', $user->id)->update([
+            'active'     => 1,
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+
         // Mark OTP as used
-        $db = \Config\Database::connect();
         $db->table('password_resets')
            ->where('user_id', $user->id)
            ->where('token', $otp)
            ->update(['used' => 1]);
 
-        return $this->respond(['message' => 'Password has been changed successfully']);
+        return $this->respond(['message' => 'Password has been changed successfully. Your account has been re-activated.']);
     }
 
     private function getUserByPhone($phone)
@@ -720,7 +820,7 @@ class AuthController extends ResourceController
 
         $db = \Config\Database::connect();
         $uuid = is_array($info) ? $info['user_uuid'] : $info->user_uuid;
-        return $db->table('users')->where('uuid', $uuid)->get()->getRow();
+        return $db->table('license_users')->where('uuid', $uuid)->get()->getRow();
     }
 
     private function validateOtp($userId, $otp)

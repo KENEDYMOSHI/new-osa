@@ -434,10 +434,33 @@ class Admin extends RegisterController
         $uniqueId = $this->uniqueId;
 
 
-        // $data['users'] = $this->userModel->findAll();
-        $data['users'] = $this->userModel->select('users.*,centerName')
-            ->join('collectioncenter', 'collectioncenter.centerNumber = users.collection_center')
+        // WMA-MIS Users (Practitioners/Admin) - From Default DB (vessel_discharge)
+        $data['users'] = $this->userModel->select('users.*, centerName')
+            ->join('collectioncenter', 'collectioncenter.centerNumber = users.collection_center', 'left')
+            ->where('user_type', 'practitioner')
             ->findAll();
+
+        // Connect to the OSA App database for other users
+        $osaDb = \Config\Database::connect('osa');
+
+        // OSA Users (License Applicants) - JOIN with personal info and auth_identities for full data
+        $data['osaUsers'] = $osaDb->table('license_users lu')
+            ->select('lu.id, lu.uuid, lu.username, lu.user_type, lu.phone_number, lu.region, lu.collection_center, lu.active,
+                      CONCAT(COALESCE(ppi.first_name,""), " ", COALESCE(ppi.last_name,"")) AS full_name,
+                      ai.secret AS email')
+            ->join('practitioner_personal_infos ppi', 'ppi.user_uuid = lu.uuid', 'left')
+            ->join('auth_identities ai', 'ai.user_id = lu.id AND ai.type = "email_password"', 'left')
+            ->get()->getResult();
+            
+        // Pattern Users - all data is already in pattern_users table
+        $data['patternUsers'] = $osaDb->table('pattern_users pu')
+            ->select('pu.*, pu.username AS full_name')
+            ->get()->getResult();
+            
+        // Customer Users - all data is already in customer_users table
+        $data['customerUsers'] = $osaDb->table('customer_users cu')
+            ->select('cu.*, cu.username AS full_name')
+            ->get()->getResult();
         $data['permissions'] = array_keys(setting('AuthGroups.permissions'));
         $data['groups'] = setting('AuthGroups.groups');
 
@@ -487,30 +510,222 @@ class Admin extends RegisterController
     }
 
 
-    public function ƒ($id)
+
+    public function activateAccount($id)
     {
-        $user = $this->userModel->where(['unique_id' => $id])->first();
-        $user->activate();
+        $osaDb = \Config\Database::connect('osa');
+
+        // Check OSA database tables first (license_users, pattern_users, customer_users)
+        $tables = ['license_users', 'pattern_users', 'customer_users'];
+        $found  = false;
+        foreach ($tables as $table) {
+            $count = $osaDb->table($table)->where('uuid', $id)->countAllResults();
+            if ($count > 0) {
+                $osaDb->table($table)->where('uuid', $id)->update([
+                    'active'     => 1,
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+                $found = true;
+                break;
+            }
+        }
+
+        if (!$found) {
+            // Fall back to WMA-MIS userModel (vessel_discharge.users)
+            $user = $this->userModel->where(['unique_id' => $id])->first();
+            if ($user) {
+                $user->activate();
+            }
+        }
+
         $this->session->setFlashdata('Success', 'Account Activated Successfully');
         return redirect()->to('/admin/users');
     }
+
     public function deactivateAccount($id)
     {
-        $user = $this->userModel->where(['unique_id' => $id])->first();
-        $user->deactivate();
+        $osaDb = \Config\Database::connect('osa');
+
+        // Check OSA database tables first
+        $tables = ['license_users', 'pattern_users', 'customer_users'];
+        $found  = false;
+        foreach ($tables as $table) {
+            $count = $osaDb->table($table)->where('uuid', $id)->countAllResults();
+            if ($count > 0) {
+                $osaDb->table($table)->where('uuid', $id)->update([
+                    'active'     => 0,
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+                $found = true;
+                break;
+            }
+        }
+
+        if (!$found) {
+            // Fall back to WMA-MIS userModel (vessel_discharge.users)
+            $user = $this->userModel->where(['unique_id' => $id])->first();
+            if ($user) {
+                $user->deactivate();
+            }
+        }
+
         $this->session->setFlashdata('Success', 'Account Deactivated Successfully');
         return redirect()->to('/admin/users');
     }
 
-    public function activateAccount($id)
+
+
+    // ====================================================
+    // OSA App User Edit Methods (operate on osa_app DB)
+    // ====================================================
+
+    /**
+     * GET /admin/editOsaUser/:uuid — Returns user data as JSON for the edit modal
+     */
+    public function editOsaUser($uuid)
     {
-        $user = $this->userModel->where(['unique_id' => $id])->first();
-        $user->activate();
-        $this->session->setFlashdata('Success', 'Account Activated Successfully');
-        return redirect()->to('/admin/users');
+        $osaDb = \Config\Database::connect('osa');
+        $user = $osaDb->table('license_users lu')
+            ->select('lu.id, lu.uuid, lu.username, lu.phone_number, lu.region, lu.active, ai.secret AS email,
+                      ppi.first_name, ppi.second_name, ppi.last_name, ppi.nationality, ppi.identity_number,
+                      ppi.gender, ppi.dob, ppi.district, ppi.ward, ppi.street, ppi.phone')
+            ->join('auth_identities ai', 'ai.user_id = lu.id AND ai.type = "email_password"', 'left')
+            ->join('practitioner_personal_infos ppi', 'ppi.user_uuid = lu.uuid', 'left')
+            ->where('lu.uuid', $uuid)
+            ->get()->getRow();
+
+        if (!$user) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'User not found']);
+        }
+        return $this->response->setJSON($user);
     }
 
+    /**
+     * POST /admin/saveOsaUser — Save edited OSA user fields
+     */
+    public function saveOsaUser()
+    {
+        $osaDb = \Config\Database::connect('osa');
+        $uuid  = $this->request->getPost('uuid');
+        $user  = $osaDb->table('license_users')->where('uuid', $uuid)->get()->getRow();
 
+        if (!$user) {
+            $this->session->setFlashdata('Error', 'User not found.');
+            return redirect()->to('/admin/users#osa-users');
+        }
+
+        // Update license_users (phone + region)
+        $osaDb->table('license_users')->where('uuid', $uuid)->update([
+            'phone_number' => $this->request->getPost('phone_number'),
+            'region'       => $this->request->getPost('region'),
+            'updated_at'   => date('Y-m-d H:i:s'),
+        ]);
+
+        // Update email in auth_identities
+        $newEmail = $this->request->getPost('email');
+        if ($newEmail) {
+            $osaDb->table('auth_identities')
+                ->where('user_id', $user->id)
+                ->where('type', 'email_password')
+                ->update(['secret' => $newEmail]);
+        }
+
+        // Update practitioner_personal_infos
+        $personalExists = $osaDb->table('practitioner_personal_infos')->where('user_uuid', $uuid)->countAllResults();
+        $personalData = [
+            'first_name'      => $this->request->getPost('first_name'),
+            'second_name'     => $this->request->getPost('second_name'),
+            'last_name'       => $this->request->getPost('last_name'),
+            'nationality'     => $this->request->getPost('nationality'),
+            'identity_number' => $this->request->getPost('identity_number'),
+            'gender'          => $this->request->getPost('gender'),
+            'dob'             => $this->request->getPost('dob') ?: null,
+            'region'          => $this->request->getPost('region'),
+            'district'        => $this->request->getPost('district'),
+            'ward'            => $this->request->getPost('ward'),
+            'street'          => $this->request->getPost('street'),
+            'phone'           => $this->request->getPost('phone_number'),
+            'updated_at'      => date('Y-m-d H:i:s'),
+        ];
+        if ($personalExists) {
+            $osaDb->table('practitioner_personal_infos')->where('user_uuid', $uuid)->update($personalData);
+        } else {
+            $personalData['user_uuid'] = $uuid;
+            $personalData['created_at'] = date('Y-m-d H:i:s');
+            $osaDb->table('practitioner_personal_infos')->insert($personalData);
+        }
+
+        $this->session->setFlashdata('Success', 'User updated successfully.');
+        return redirect()->to('/admin/users#osa-users');
+    }
+
+    /**
+     * GET /admin/editPatternUser/:uuid — Returns pattern user data as JSON
+     */
+    public function editPatternUser($uuid)
+    {
+        $osaDb = \Config\Database::connect('osa');
+        $user  = $osaDb->table('pattern_users')->where('uuid', $uuid)->get()->getRow();
+
+        if (!$user) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'User not found']);
+        }
+        return $this->response->setJSON($user);
+    }
+
+    /**
+     * POST /admin/savePatternUser — Save edited Pattern user fields
+     */
+    public function savePatternUser()
+    {
+        $osaDb = \Config\Database::connect('osa');
+        $uuid  = $this->request->getPost('uuid');
+
+        $osaDb->table('pattern_users')->where('uuid', $uuid)->update([
+            'username'     => $this->request->getPost('username'),
+            'email'        => $this->request->getPost('email'),
+            'phone_number' => $this->request->getPost('phone_number'),
+            'region'       => $this->request->getPost('region'),
+            'updated_at'   => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->session->setFlashdata('Success', 'Pattern user updated successfully.');
+        return redirect()->to('/admin/users#pattern-users');
+    }
+
+    /**
+     * GET /admin/editCustomerUser/:uuid — Returns customer user data as JSON
+     */
+    public function editCustomerUser($uuid)
+    {
+        $osaDb = \Config\Database::connect('osa');
+        $user  = $osaDb->table('customer_users')->where('uuid', $uuid)->get()->getRow();
+
+        if (!$user) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'User not found']);
+        }
+        return $this->response->setJSON($user);
+    }
+
+    /**
+     * POST /admin/saveCustomerUser — Save edited Customer user fields
+     */
+    public function saveCustomerUser()
+    {
+        $osaDb = \Config\Database::connect('osa');
+        $uuid  = $this->request->getPost('uuid');
+
+        $osaDb->table('customer_users')->where('uuid', $uuid)->update([
+            'username'     => $this->request->getPost('username'),
+            'email'        => $this->request->getPost('email'),
+            'phone_number' => $this->request->getPost('phone_number'),
+            'region'       => $this->request->getPost('region'),
+            'updated_at'   => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->session->setFlashdata('Success', 'Customer user updated successfully.');
+        return redirect()->to('/admin/users#customer-users');
+    }
 
     public function resetPassword()
     {

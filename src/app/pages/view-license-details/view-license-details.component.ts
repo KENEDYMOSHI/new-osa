@@ -39,6 +39,7 @@ export class ViewLicenseDetailsComponent implements OnInit {
   showIDModal: boolean = false;
   idModalUrl: string | null = null;
   idModalName: string | null = null;
+  idModalAppId: string | null = null;
 
   // License ID Card Modal
   showLicenseCardModal: boolean = false;
@@ -203,6 +204,7 @@ export class ViewLicenseDetailsComponent implements OnInit {
              this.idModalUrl = url;
              const license = this.licenses.find(l => l.id === applicationId);
              this.idModalName = res.applicant_name || license?.license_number || 'ID Document';
+             this.idModalAppId = applicationId;
              
              console.log('Opening ID Modal with URL:', this.idModalUrl);
              this.showIDModal = true;
@@ -222,6 +224,7 @@ export class ViewLicenseDetailsComponent implements OnInit {
     this.showIDModal = false;
     this.idModalUrl = null;
     this.idModalName = null;
+    this.idModalAppId = null;
   }
 
   // License ID Card Modal Methods
@@ -278,5 +281,26 @@ export class ViewLicenseDetailsComponent implements OnInit {
   isExpired(expiryDate: string): boolean {
       if (!expiryDate) return false;
       return new Date(expiryDate) < new Date();
+  }
+
+  // Helper method to force download of cross-origin files
+  downloadImage(type: 'license' | 'id', filename: string | null, idOrAppId: string | null) {
+      if (!idOrAppId) return;
+      
+      let downloadUrl = '';
+      if (type === 'license') {
+          downloadUrl = `http://localhost:8080/api/license/download-image/${encodeURIComponent(idOrAppId)}`;
+      } else if (type === 'id') {
+          downloadUrl = `http://localhost:8080/api/license/download-id/${encodeURIComponent(idOrAppId)}`;
+      }
+      
+      // Directly navigate to the download URL which forces a file download attachment
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.target = '_blank';
+      a.download = filename || 'document'; // Fallback if backend doesn't force
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
   }
 }

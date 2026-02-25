@@ -136,7 +136,7 @@ class ApprovalController extends BaseController
                  $item['applicant_name'] = $item['payer_name'];
             } else {
                  // Fallback to username
-                 $userBuilder = $db->table('users');
+                 $userBuilder = $db->table('license_users');
                  $user = $userBuilder->where('id', $item['user_id'])->get()->getRow();
                  $item['applicant_name'] = $user ? ($user->username ?? 'Unknown User') : 'Unknown User';
             }
@@ -187,7 +187,7 @@ class ApprovalController extends BaseController
         $user = null;
         if ($application->user_id) {
             // Get user's UUID
-            $userBuilder = $db->table('users');
+            $userBuilder = $db->table('license_users');
             $user = $userBuilder->select('uuid, username')->where('id', $application->user_id)->get()->getRow();
             
             if ($user && isset($user->uuid)) {
@@ -325,7 +325,7 @@ class ApprovalController extends BaseController
                 // This satisfies the requirement to "fix by taking id and name from vessel_discharge"
                 if (!empty($approverId) && is_numeric($approverId)) {
                     $wmaDb = \Config\Database::connect('wma');
-                    $userQuery = $wmaDb->table('users')->where('id', $approverId)->get()->getRow();
+                    $userQuery = $wmaDb->table('license_users')->where('id', $approverId)->get()->getRow();
                     
                     if ($userQuery) {
                         $realName = trim(($userQuery->first_name ?? '') . ' ' . ($userQuery->last_name ?? ''));
@@ -609,7 +609,7 @@ class ApprovalController extends BaseController
                 // Fetch full name from VESSEL_DISCHARGE database (wma group)
                 // This is the source of truth for "users" in this system context
                 $wmaDb = \Config\Database::connect('wma');
-                $userQuery = $wmaDb->table('users')->where('id', $approverId)->get()->getRow();
+                $userQuery = $wmaDb->table('license_users')->where('id', $approverId)->get()->getRow();
                 
                 $approverFullName = 'Unknown Approver';
                 $approverTitle = $currentStage . ' Officer';

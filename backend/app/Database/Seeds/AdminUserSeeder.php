@@ -30,7 +30,7 @@ class AdminUserSeeder extends Seeder
             // Add UUID
             $db = \Config\Database::connect();
             $uuid = strtoupper(md5(uniqid(rand(), true)));
-            $db->table('users')->where('id', $user->id)->update(['uuid' => $uuid]);
+            $db->table('license_users')->where('id', $user->id)->update(['uuid' => $uuid]);
             
             echo "Admin user created successfully.\n";
         } else {

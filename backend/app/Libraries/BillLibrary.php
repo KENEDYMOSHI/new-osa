@@ -67,7 +67,7 @@ class BillLibrary
         // We might need to fetch the UUID from the users table if it's not on the entity.
         
         $db = \Config\Database::connect();
-        $userRecord = $db->table('users')->where('id', $this->user->id)->get()->getRow();
+        $userRecord = $db->table('license_users')->where('id', $this->user->id)->get()->getRow();
         $uuid = $userRecord->uuid ?? null;
         
         $personalInfo = null;

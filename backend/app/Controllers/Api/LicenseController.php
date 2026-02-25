@@ -656,7 +656,7 @@ class LicenseController extends ResourceController
                 $appFee = 50000; // Default Citizen
                 
                 // Fetch Nationality for Fee Calculation
-                $userInfo = $db->table('users')->select('uuid')->where('id', $userId)->get()->getRow();
+                $userInfo = $db->table('license_users')->select('uuid')->where('id', $userId)->get()->getRow();
                 $nationality = 'Tanzanian';
                 if ($userInfo) {
                     $pInfo = $db->table('practitioner_personal_infos')->where('user_uuid', $userInfo->uuid)->get()->getRow();
@@ -1829,6 +1829,63 @@ class LicenseController extends ResourceController
     }
 
     /**
+     * Download ID document for an application
+     * GET /api/license/download-id/{applicationId}
+     */
+    public function downloadID($applicationId)
+    {
+        $user = $this->getUserFromToken();
+        if (!$user) {
+            return $this->failUnauthorized();
+        }
+
+        $appModel = new \App\Models\LicenseApplicationModel();
+
+        // Verify application belongs to user
+        $application = $appModel->where('id', $applicationId)
+                                ->where('user_id', $user->id)
+                                ->first();
+
+        if (!$application) {
+            return $this->failNotFound('Application not found');
+        }
+
+        // Get applicant personal info to retrieve ID document
+        $db = \Config\Database::connect();
+        $personalInfoModel = $db->table('practitioner_personal_infos');
+        $personalInfo = $personalInfoModel->where('user_uuid', $user->uuid)->get()->getRow();
+
+        if (!$personalInfo || empty($personalInfo->id_document)) {
+            return $this->failNotFound('ID document not found');
+        }
+
+        // The id_document is typically a relative path like 'uploads/id_documents/filename.pdf'
+        // or an absolute URL. We need the local file path.
+        $idUrl = $personalInfo->id_document;
+        
+        // Strip out the base url if it exists
+        $baseUrl = base_url();
+        if (strpos($idUrl, $baseUrl) === 0) {
+            $relativePath = substr($idUrl, strlen($baseUrl));
+        } else {
+            // Strip leading slash if any
+            $relativePath = ltrim($idUrl, '/');
+        }
+
+        $filepath = FCPATH . $relativePath;
+
+        if (!file_exists($filepath)) {
+            return $this->failNotFound('ID document file not found on server');
+        }
+
+        $applicantName = trim(($personalInfo->first_name ?? '') . ' ' . ($personalInfo->last_name ?? ''));
+        $extension = pathinfo($filepath, PATHINFO_EXTENSION);
+        $downloadFilename = 'ID_' . str_replace(' ', '_', $applicantName) . '.' . $extension;
+
+        return $this->response->download($filepath, null)->setFileName($downloadFilename);
+    }
+
+    /**
      * Helper method to generate control number
      */
     private function generateControlNumber()
@@ -2145,19 +2202,30 @@ class LicenseController extends ResourceController
             // Fetch Applicant Name and Company
             // Note: licenses table has applicant_name, company_name, address
             
+            // Fetch approver name (CEO)
+            $builder = $db->table('license_applications');
+            $builder->select('practitioner_personal_infos.first_name, practitioner_personal_infos.last_name');
+            $builder->join('users', 'users.id = license_applications.approver_stage_4', 'left');
+            $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid', 'left');
+            $builder->where('license_applications.id', $license->application_id);
+            $approver = $builder->get()->getRow();
+            
+            $commissionerName = 'Alban M. Kihulla'; // Default
+            if ($approver && (!empty($approver->first_name) || !empty($approver->last_name))) {
+                $commissionerName = trim(($approver->first_name ?? '') . ' ' . ($approver->last_name ?? ''));
+            }
+
             $genData = (object) [
                 'licenseNumber' => $license->license_number,
                 'licenseType' => $license->license_type,
                 'applicantName' => $license->applicant_name,
                 'company' => $license->company_name,
-                'address' => $license->postal_address // or region based on generator logic
+                'address' => $license->postal_address, // or region based on generator logic
+                'createdAt' => date('d M Y', strtotime($license->issue_date ?? $license->created_at)),
+                'expiryDate' => date('d M Y', strtotime($license->expiry_date)),
+                'licenseToken' => $license->license_token ?? '',
+                'commissionerName' => $commissionerName
             ];
-            
-            // If address is empty, try to fetch from user info (similar to how createLicense did it)
-            if (empty($genData->address) || empty($genData->applicantName)) {
-                 // Try to fetch from relation if needed, but 'licenses' table should have snapshot.
-                 // Let's rely on licenses table snapshot for consistency.
-            }
 
             $generator = new \App\Libraries\LicenseGenerator();
             $generatedUrl = $generator->generateLicense($genData); // This saves the file to certificates/md5.jpg
@@ -2175,9 +2243,41 @@ class LicenseController extends ResourceController
             ->setHeader('Access-Control-Allow-Origin', '*')
             ->setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
             ->setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+            ->setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Length')
             ->setHeader('Content-Type', $mime)
             ->setHeader('Content-Length', filesize($filepath))
+            ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
             ->setBody(file_get_contents($filepath));
+    }
+
+    /**
+     * Download License Image
+     * GET /api/license/download-image/{licenseNumber}
+     */
+    public function downloadLicense($licenseNumber)
+    {
+        if (empty($licenseNumber)) {
+            return $this->failNotFound('License number is required');
+        }
+
+        $licenseNumber = urldecode($licenseNumber);
+        $filename = md5($licenseNumber) . '.jpg';
+        $filepath = FCPATH . 'certificates/' . $filename;
+
+        // If it doesn't exist, we should theoretically generate it, 
+        // but since view is usually called first, it should be there.
+        // Let's just do a quick check and generate if missing.
+        if (!file_exists($filepath)) {
+            $this->viewLicenseImage($licenseNumber); // This will generate it
+        }
+        
+        if (!file_exists($filepath)) {
+            return $this->failNotFound('License file not found and could not be generated.');
+        }
+
+        $downloadFilename = 'License_' . str_replace('/', '-', $licenseNumber) . '.jpg';
+
+        return $this->response->download($filepath, null)->setFileName($downloadFilename);
     }
 
     /**

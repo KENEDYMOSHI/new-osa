@@ -70,7 +70,9 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->get('license/types', 'LicenseController::getLicenseTypes');
     $routes->get('license/approved-licenses', 'LicenseController::getApprovedLicenses');
     $routes->get('license/view-id/(:segment)', 'LicenseController::viewID/$1');
+    $routes->get('license/download-id/(:segment)', 'LicenseController::downloadID/$1');
     $routes->get('license/view-image/(:segment)', 'LicenseController::viewLicenseImage/$1');
+    $routes->get('license/download-image/(:segment)', 'LicenseController::downloadLicense/$1');
     $routes->get('license/view-profile-picture/(:segment)', 'LicenseController::viewProfilePicture/$1');
     $routes->get('license/download-id-card/(:segment)', 'LicenseController::downloadIDCard/$1');
     $routes->get('admin/applications', 'AdminController::getApplications');

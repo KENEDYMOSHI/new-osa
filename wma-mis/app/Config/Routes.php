@@ -869,6 +869,14 @@ $routes->group('admin', ['filter' => 'AdminFilter'], function ($routes, $adminRo
     $adminRoutes['activateAccount/(:any)'] = 'Admin::activateAccount/$1';
     $adminRoutes['deactivateAccount/(:any)'] = 'Admin::deactivateAccount/$1';
     $adminRoutes['getSingleUser'] = 'Admin::getSingleUser';
+
+    // OSA App user edit/save routes
+    $adminRoutes['editOsaUser/(:any)']      = 'Admin::editOsaUser/$1';
+    $adminRoutes['saveOsaUser']             = 'Admin::saveOsaUser';
+    $adminRoutes['editPatternUser/(:any)']  = 'Admin::editPatternUser/$1';
+    $adminRoutes['savePatternUser']         = 'Admin::savePatternUser';
+    $adminRoutes['editCustomerUser/(:any)'] = 'Admin::editCustomerUser/$1';
+    $adminRoutes['saveCustomerUser']        = 'Admin::saveCustomerUser';
     $adminRoutes['updateUser'] = 'Admin::updateUser';
     $adminRoutes['resetPassword'] = 'Admin::resetPassword';
     $adminRoutes['setting'] = 'SettingsController::index';

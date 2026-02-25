@@ -23,7 +23,7 @@ class TechniciansCustomerRegistryController extends ResourceController
 
         try {
             $db = \Config\Database::connect();
-            $userRecord = $db->table('users')->where('id', $user->id)->get()->getRow();
+            $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
             
             if (!$userRecord || !isset($userRecord->uuid)) {
                 return $this->failNotFound('User profile not found');

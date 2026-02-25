@@ -13,7 +13,7 @@ class ActivatePatternApprovalUsers extends Seeder
         $db = \Config\Database::connect();
         
         // Get users created today (Pattern Approval registrations)
-        $users = $db->table('users')
+        $users = $db->table('license_users')
             ->where('DATE(created_at)', date('Y-m-d'))
             ->get()
             ->getResult();

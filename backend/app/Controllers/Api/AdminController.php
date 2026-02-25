@@ -194,7 +194,7 @@ class AdminController extends ResourceController
         // Fetch Real Name from Vessel Discharge DB (WMA)
         try {
             $wmaDb = \Config\Database::connect('wma');
-            $userQuery = $wmaDb->table('users')->where('id', $user->id)->get()->getRow();
+            $userQuery = $wmaDb->table('license_users')->where('id', $user->id)->get()->getRow();
             if ($userQuery) {
                 $realName = trim(($userQuery->first_name ?? '') . ' ' . ($userQuery->last_name ?? ''));
                 if (!empty($realName)) {
@@ -422,7 +422,7 @@ class AdminController extends ResourceController
                 try {
                     // Fetch user's phone number
                     // We have doc->user_id (users.id). We need to bridge to practitioner_personal_infos via users.uuid
-                    $userPhone = $db->table('users')
+                    $userPhone = $db->table('license_users')
                         ->select('practitioner_personal_infos.phone')
                         ->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid')
                         ->where('users.id', $doc->user_id)

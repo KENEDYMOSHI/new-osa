@@ -109,9 +109,9 @@ class FormDController extends BaseController
         try {
             // Attempt to fetch users who might be inspectors. 
             // If groups are used:
-            // $query = $db->table('users')->join('auth_groups_users', 'users.id = auth_groups_users.user_id')->where('group', 'inspector')->get();
+            // $query = $db->table('license_users')->join('auth_groups_users', 'users.id = auth_groups_users.user_id')->where('group', 'inspector')->get();
             // Fallback: return all users or just empty list to be populated by frontend mock if needed.
-             $query = $db->table('users')->select('id, username, email')->limit(50)->get();
+             $query = $db->table('license_users')->select('id, username, email')->limit(50)->get();
              return $this->respond($query->getResultArray());
         } catch (\Exception $e) {
             // If table doesn't exist or other error, return empty

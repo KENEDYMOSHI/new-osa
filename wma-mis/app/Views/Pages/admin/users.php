@@ -131,10 +131,47 @@ $pageSession = \CodeIgniter\Config\Services::session();
                 <?= $pageSession->getFlashdata('error'); ?>
             </div>
         <?php endif; ?>
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">System Users</h3>
-                <!-- Button trigger modal -->
+        <div class="card card-primary card-outline card-outline-tabs">
+            <div class="card-header p-0 border-bottom-0">
+                <style>
+                    /* Enhance active tab visibility */
+                    .card-outline-tabs > .card-header a.nav-link.active {
+                        background-color: #28a745 !important;
+                        border-top: 3px solid #1e7e34 !important;
+                        color: #ffffff !important;
+                        font-weight: bold;
+                    }
+                    .card-outline-tabs > .card-header a.nav-link {
+                        color: #495057;
+                        transition: all 0.3s ease;
+                    }
+                    .card-outline-tabs > .card-header a.nav-link:hover {
+                        background-color: #e8f5e9;
+                        color: #28a745;
+                    }
+                </style>
+                <ul class="nav nav-tabs" id="users-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="wma-mis-users-tab" data-toggle="pill" href="#wma-mis-users" role="tab" aria-controls="wma-mis-users" aria-selected="true"><i class="fal fa-users-cog mr-1"></i> WMA-MIS Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="osa-users-tab" data-toggle="pill" href="#osa-users" role="tab" aria-controls="osa-users" aria-selected="false"><i class="fal fa-user-tie mr-1"></i> OSA Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="pattern-users-tab" data-toggle="pill" href="#pattern-users" role="tab" aria-controls="pattern-users" aria-selected="false"><i class="fal fa-balance-scale mr-1"></i> Pattern Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="customer-users-tab" data-toggle="pill" href="#customer-users" role="tab" aria-controls="customer-users" aria-selected="false"><i class="fal fa-users mr-1"></i> Customer Users</a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="card-body">
+                <div class="tab-content" id="users-tabsContent">
+                    <div class="tab-pane fade show active" id="wma-mis-users" role="tabpanel" aria-labelledby="wma-mis-users-tab">
+                        <div class="mb-3 mt-2" style="overflow: hidden;">
+                            <h3 class="card-title float-left mt-1">WMA-MIS Users</h3>
+                            <!-- Button trigger modal -->
                 <button type="button" class="btn btn-primary btn-sm" style="float: right;" data-toggle="modal" data-target="#addUserModal">
                     <i class="fas fa-plus"></i> Add User
                 </button>
@@ -265,7 +302,7 @@ $pageSession = \CodeIgniter\Config\Services::session();
                     //exit;
                     ?> -->
 
-            <div class="card-body">
+            <div class="mt-3 table-responsive">
 
                 <table id="usersTable" class="table table-sm table-bordered table-striped">
                     <thead>
@@ -282,7 +319,7 @@ $pageSession = \CodeIgniter\Config\Services::session();
                     <tbody>
                         <?php foreach ($users as $user) : ?>
                             <tr>
-                                <td><?= $user->first_name . ' ' . $user->last_name ?></td>
+                                <td><?= htmlspecialchars($user->username ?? '') ?></td>
                                 <td><?= $user->email ?></td>
                                 <td><?= $user->phone_number ?></td>
                                 <td><?= $user->centerName ?></td>
@@ -325,10 +362,329 @@ $pageSession = \CodeIgniter\Config\Services::session();
 
                  
                 </table>
-            </div>
+            </div> <!-- End of wma-mis table wrapper -->
+                    </div> <!-- End of wma-mis-users tab-pane -->
+                    
+                    <div class="tab-pane fade" id="osa-users" role="tabpanel" aria-labelledby="osa-users-tab">
+                        <div class="mb-3 mt-2" style="overflow: hidden;">
+                            <h3 class="card-title float-left mt-1">OSA Users</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="osaUsersTable" class="table table-sm table-bordered table-striped w-100">
+                                <thead>
+                                    <tr>
+                                       <th>Full Name</th>
+                                       
+                                       <th>Email</th>
+                                       <th>Phone Number</th>
+                                       <th>Region</th>
+                                       <th>Role</th>
+                                       <th>Status</th>
+                                       <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                <?php if (empty($osaUsers)): ?>
+                                    <tr>
+                                        <td colspan="7" class="text-center">No Data Available</td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($osaUsers as $user): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars(trim($user->full_name) ?: '—') ?></td>
+                                        
+                                        <td><?= htmlspecialchars($user->email ?? '—') ?></td>
+                                        <td><?= htmlspecialchars($user->phone_number ?? '—') ?></td>
+                                        <td><?= htmlspecialchars($user->region ?? '—') ?></td>
+                                        <td><span class="badge badge-pill badge-info">License Applicant</span></td>
+                                        <td>
+                                            <?php if ($user->active == 1): ?>
+                                                <span class="badge badge-pill bg-green">Active</span>
+                                            <?php else: ?>
+                                                <span class="badge badge-pill badge-danger">Inactive</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <a data-toggle="tooltip" data-placement="top" title="Edit User"
+                                               href="<?= base_url() ?>/admin/editOsaUser/<?= $user->uuid ?? $user->id ?>"
+                                               class="btn btn-primary btn-xs"><i class="fas fa-edit"></i></a>
+                                            <?php if ($user->active == 0): ?>
+                                                <a data-toggle="tooltip" data-placement="top" title="Activate"
+                                                   href="<?= base_url() ?>/admin/activateAccount/<?= $user->uuid ?? $user->id ?>"
+                                                   class="btn btn-danger btn-xs"><i class="fas fa-lock-alt"></i></a>
+                                            <?php elseif ($user->active == 1): ?>
+                                                <a data-toggle="tooltip" data-placement="top" title="Deactivate"
+                                                   href="<?= base_url() ?>/admin/deactivateAccount/<?= $user->uuid ?? $user->id ?>"
+                                                   class="btn btn-success btn-xs"><i class="fas fa-lock-open"></i></a>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="pattern-users" role="tabpanel" aria-labelledby="pattern-users-tab">
+                        <div class="mb-3 mt-2" style="overflow: hidden;">
+                            <h3 class="card-title float-left mt-1">Pattern Users</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="patternUsersTable" class="table table-sm table-bordered table-striped w-100">
+                                <thead>
+                                    <tr>
+                                       <th>Full Name</th>
+                                       
+                                       <th>Email</th>
+                                       <th>Phone Number</th>
+                                       <th>Region</th>
+                                       <th>Role</th>
+                                       <th>Status</th>
+                                       <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($patternUsers)): ?>
+                                        <tr><td colspan="7" class="text-center">No Data Available</td></tr>
+                                    <?php else: ?>
+                                        <?php foreach ($patternUsers as $user): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars(trim($user->full_name ?? $user->username) ?: '—') ?></td>
+                                            
+                                            <td><?= htmlspecialchars($user->email ?? '—') ?></td>
+                                            <td><?= htmlspecialchars($user->phone_number ?? '—') ?></td>
+                                            <td><?= htmlspecialchars($user->region ?? '—') ?></td>
+                                            <td><span class="badge badge-pill badge-warning">Pattern Applicant</span></td>
+                                            <td>
+                                                <?php if ($user->active == 1): ?>
+                                                    <span class="badge badge-pill bg-green">Active</span>
+                                                <?php else: ?>
+                                                    <span class="badge badge-pill badge-danger">Inactive</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <a data-toggle="tooltip" data-placement="top" title="Edit User"
+                                                   href="<?= base_url() ?>/admin/editPatternUser/<?= $user->uuid ?? $user->id ?>"
+                                                   class="btn btn-primary btn-xs"><i class="fas fa-edit"></i></a>
+                                                <?php if ($user->active == 0): ?>
+                                                    <a data-toggle="tooltip" title="Activate"
+                                                       href="<?= base_url() ?>/admin/activateAccount/<?= $user->uuid ?? $user->id ?>"
+                                                       class="btn btn-danger btn-xs"><i class="fas fa-lock-alt"></i></a>
+                                                <?php elseif ($user->active == 1): ?>
+                                                    <a data-toggle="tooltip" title="Deactivate"
+                                                       href="<?= base_url() ?>/admin/deactivateAccount/<?= $user->uuid ?? $user->id ?>"
+                                                       class="btn btn-success btn-xs"><i class="fas fa-lock-open"></i></a>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="customer-users" role="tabpanel" aria-labelledby="customer-users-tab">
+                        <div class="mb-3 mt-2" style="overflow: hidden;">
+                            <h3 class="card-title float-left mt-1">Customer Users</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="customerUsersTable" class="table table-sm table-bordered table-striped w-100">
+                                <thead>
+                                    <tr>
+                                       <th>Full Name</th>
+                                       
+                                       <th>Email</th>
+                                       <th>Phone Number</th>
+                                       <th>Region</th>
+                                       <th>Role</th>
+                                       <th>Status</th>
+                                       <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($customerUsers)): ?>
+                                        <tr><td colspan="7" class="text-center">No Data Available</td></tr>
+                                    <?php else: ?>
+                                        <?php foreach ($customerUsers as $user): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars(trim($user->full_name ?? $user->username) ?: '—') ?></td>
+                                            
+                                            <td><?= htmlspecialchars($user->email ?? '—') ?></td>
+                                            <td><?= htmlspecialchars($user->phone_number ?? '—') ?></td>
+                                            <td><?= htmlspecialchars($user->region ?? '—') ?></td>
+                                            <td><span class="badge badge-pill badge-secondary">Customer</span></td>
+                                            <td>
+                                                <?php if ($user->active == 1): ?>
+                                                    <span class="badge badge-pill bg-green">Active</span>
+                                                <?php else: ?>
+                                                    <span class="badge badge-pill badge-danger">Inactive</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <a data-toggle="tooltip" data-placement="top" title="Edit User"
+                                                   href="<?= base_url() ?>/admin/editCustomerUser/<?= $user->uuid ?? $user->id ?>"
+                                                   class="btn btn-primary btn-xs"><i class="fas fa-edit"></i></a>
+                                                <?php if ($user->active == 0): ?>
+                                                    <a data-toggle="tooltip" title="Activate"
+                                                       href="<?= base_url() ?>/admin/activateAccount/<?= $user->uuid ?? $user->id ?>"
+                                                       class="btn btn-danger btn-xs"><i class="fas fa-lock-alt"></i></a>
+                                                <?php elseif ($user->active == 1): ?>
+                                                    <a data-toggle="tooltip" title="Deactivate"
+                                                       href="<?= base_url() ?>/admin/deactivateAccount/<?= $user->uuid ?? $user->id ?>"
+                                                       class="btn btn-success btn-xs"><i class="fas fa-lock-open"></i></a>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div> <!-- End of tab-content -->
+            </div> <!-- End of new card-body -->
 
         </div>
-        <!-- /.card-header -->
+        <!-- /.card -->
+
+<!-- ================ Edit OSA/Pattern/Customer User Modal ================ -->
+<!-- ================ Edit OSA/Pattern/Customer User Modal ================ -->
+<div class="modal fade" id="osaEditModal" tabindex="-1" role="dialog" aria-labelledby="osaEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#1a8a5a;">
+                <h5 class="modal-title text-white" id="osaEditModalLabel">
+                    <i class="fas fa-user-edit mr-2"></i><span id="osaEditModalTitle">Edit User</span>
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <form id="osaEditUserForm" method="POST" action="">
+                <div class="modal-body">
+                    <input type="hidden" name="uuid" id="osaEditUuid">
+                    <input type="hidden" name="user_uuid" id="osaEditUserUuid">
+
+                    <h6 class="text-muted border-bottom pb-2 mb-3"><i class="fas fa-lock mr-1"></i> Account Information</h6>
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label>Email Address</label>
+                            <input type="email" name="email" id="osaEditEmail" class="form-control">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>Phone Number</label>
+                            <input type="text" name="phone_number" id="osaEditPhone" class="form-control">
+                        </div>
+                    </div>
+
+                    <h6 class="text-muted border-bottom pb-2 mb-3 mt-2"><i class="fas fa-id-card mr-1"></i> Personal Information</h6>
+                    <div class="row">
+                        <div class="col-md-4 form-group">
+                            <label>First Name</label>
+                            <input type="text" name="first_name" id="osaEditFirstName" class="form-control">
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label>Second Name</label>
+                            <input type="text" name="second_name" id="osaEditSecondName" class="form-control">
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label>Last Name</label>
+                            <input type="text" name="last_name" id="osaEditLastName" class="form-control">
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label>Nationality</label>
+                            <input type="text" name="nationality" id="osaEditNationality" class="form-control">
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label>ID Number</label>
+                            <input type="text" name="identity_number" id="osaEditIdNumber" class="form-control">
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label>Gender</label>
+                            <select name="gender" id="osaEditGender" class="form-control">
+                                <option value="">-- Select --</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label>Date of Birth</label>
+                            <input type="date" name="dob" id="osaEditDob" class="form-control">
+                        </div>
+                    </div>
+
+                    <h6 class="text-muted border-bottom pb-2 mb-3 mt-2"><i class="fas fa-map-marker-alt mr-1"></i> Address Information</h6>
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label>Region</label>
+                            <input type="text" name="region" id="osaEditRegion" class="form-control">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>District</label>
+                            <input type="text" name="district" id="osaEditDistrict" class="form-control">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>Ward</label>
+                            <input type="text" name="ward" id="osaEditWard" class="form-control">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>Street</label>
+                            <input type="text" name="street" id="osaEditStreet" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-save mr-1"></i>Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).on('click', 'a[href*="editOsaUser"], a[href*="editPatternUser"], a[href*="editCustomerUser"]', function(e) {
+    e.preventDefault();
+    var href = $(this).attr('href');
+    var isOsa     = href.includes('editOsaUser');
+    var isPattern = href.includes('editPatternUser');
+
+    var saveRoute = isOsa     ? '<?= base_url("admin/saveOsaUser") ?>'
+                  : isPattern ? '<?= base_url("admin/savePatternUser") ?>'
+                  : '<?= base_url("admin/saveCustomerUser") ?>';
+
+    var label = isOsa     ? 'Edit License Applicant'
+              : isPattern ? 'Edit Pattern Applicant'
+              : 'Edit Customer';
+
+    $('#osaEditModalTitle').text(label);
+    $('#osaEditUserForm').attr('action', saveRoute);
+    $('#osaEditUserForm')[0].reset();
+
+    $.get(href, function(data) {
+        $('#osaEditUuid').val(data.uuid || '');
+        $('#osaEditUserUuid').val(data.uuid || '');
+        $('#osaEditEmail').val(data.email || '');
+        $('#osaEditPhone').val(data.phone_number || data.phone || '');
+        // Personal info fields
+        $('#osaEditFirstName').val(data.first_name || '');
+        $('#osaEditSecondName').val(data.second_name || '');
+        $('#osaEditLastName').val(data.last_name || '');
+        $('#osaEditNationality').val(data.nationality || '');
+        $('#osaEditIdNumber').val(data.identity_number || '');
+        $('#osaEditGender').val(data.gender || '');
+        $('#osaEditDob').val(data.dob || '');
+        // Address fields
+        $('#osaEditRegion').val(data.region || '');
+        $('#osaEditDistrict').val(data.district || '');
+        $('#osaEditWard').val(data.ward || '');
+        $('#osaEditStreet').val(data.street || '');
+        $('#osaEditModal').modal('show');
+    }).fail(function() {
+        alert('Failed to load user data. Please try again.');
+    });
+});
+</script>
 
 
         <style>

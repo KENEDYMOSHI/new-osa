@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import html2canvas from 'html2canvas';
+import Swal from 'sweetalert2';
 
 interface LicenseCardData {
   licenseNumber: string;
@@ -57,7 +58,12 @@ export class LicenseIdCardComponent {
       
       if (!frontElement || !backElement) {
         console.error('ID card elements not found');
-        alert('Kuna tatizo wakati wa kupakua kitambulisho. Tafadhali jaribu tena.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Imeshindikana',
+          text: 'Kuna tatizo wakati wa kupakua kitambulisho. Tafadhali jaribu tena.',
+          confirmButtonColor: '#4f46e5'
+        });
         return;
       }
 
@@ -146,12 +152,24 @@ export class LicenseIdCardComponent {
       
       // Show success message
       setTimeout(() => {
-        alert('Kitambulisho kimepakuliwa! Angalia downloads folder yako.');
+        Swal.fire({
+          icon: 'success',
+          title: 'Imefanikiwa!',
+          text: 'Kitambulisho kimepakuliwa kikamilifu. Angalia downloads folder yako.',
+          confirmButtonColor: '#4f46e5',
+          confirmButtonText: 'Sawa'
+        });
       }, 1000);
 
     } catch (error) {
       console.error('❌ Error downloading ID card:', error);
-      alert('Kuna tatizo wakati wa kupakua kitambulisho. Tafadhali jaribu tena.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Kosa Limetokea',
+        text: 'Kuna tatizo wakati wa kupakua kitambulisho. Tafadhali jaribu tena.',
+        confirmButtonColor: '#4f46e5',
+        confirmButtonText: 'Sawa'
+      });
     }
   }
 
