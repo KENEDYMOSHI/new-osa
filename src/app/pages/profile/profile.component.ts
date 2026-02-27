@@ -88,7 +88,7 @@ export class ProfileComponent implements OnInit {
       console.log('Profile Data Fetched:', data);
       
       if (data.user) {
-        this.userInfo.name = data.user.username;
+        this.userInfo.name = data.user.username?.split('_')[0] || '';
         this.userInfo.email = data.user.email;
       }
 

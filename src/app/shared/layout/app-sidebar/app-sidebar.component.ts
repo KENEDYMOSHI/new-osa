@@ -59,6 +59,11 @@ export class AppSidebarComponent {
       path: "/activities-requests",
     },
     {
+      icon: `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
+      name: "View License Details",
+      path: "/view-license-details",
+    },
+    {
       icon: `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></svg>`,
       name: "Request Form D",
       subItems: [
@@ -170,38 +175,7 @@ export class AppSidebarComponent {
       }
     );
 
-    // Check for Approved Licenses to show "View License Details"
-    this.licenseService.getApprovedLicenses().subscribe(
-      (res: any) => {
-        const hasGeneratedLicense = res.some((lic: any) => lic.license_number);
-        if (hasGeneratedLicense) {
-           const licenseDetailsItem = {
-              icon: `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
-              name: "View License Details",
-              path: "/view-license-details",
-            };
-
-            // Add it after "My Applications" (index 3 in 0-indexed list approx) or where suitable
-            // Let's just push it or splice it appropriately.
-            // Current list order: Dashboard(0), Initial(1), Complete(2), MyApps(3), Billing(4)...
-            
-            // Insert after Billing & Payments (index 4)
-            // Or just append? User said "engeza" (add).
-            // Let's insert it after 'Billing & Payments' to group it with financial/status stuff.
-            
-            // Find index of Billing & Payments
-            const billingIndex = this.navItems.findIndex(i => i.path === '/billing-payments');
-            if (billingIndex !== -1) {
-                this.navItems.splice(billingIndex + 1, 0, licenseDetailsItem);
-            } else {
-                this.navItems.push(licenseDetailsItem);
-            }
-        }
-      },
-      (err) => {
-        console.error("Failed to check for approved licenses", err);
-      }
-    );
+    // License Details dynamic insertion removed, now static in navItems
   }
 
   ngOnDestroy() {

@@ -390,8 +390,15 @@
                             </style>
                             <div class="row">
                                 <?php if (!empty($application->attachments)): ?>
+                    <?php 
+                        $qualificationTypes = ['csee', 'acsee', 'psle', 'nti', 'degree', 'diploma', 'certificate'];
+                    ?>
                     <?php foreach ($application->attachments as $doc): ?>
-                        <?php if (!isset($doc->category) || $doc->category != 'qualification'): ?>
+                        <?php 
+                            $docType = strtolower($doc->document_type ?? '');
+                            $isQualification = (isset($doc->category) && $doc->category == 'qualification') || in_array($docType, $qualificationTypes);
+                        ?>
+                        <?php if (!$isQualification): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card border-0 shadow-sm h-100 hover-shadow transition <?= (isset($doc->status) && $doc->status == 'Returned') ? 'returned-document' : '' ?>">
                                 <div class="card-body p-4">
@@ -502,8 +509,15 @@
                              </style>
                              <div class="row">
                                 <?php if (!empty($application->attachments)): ?>
+                                    <?php 
+                                        $qualificationTypes = ['csee', 'acsee', 'psle', 'nti', 'degree', 'diploma', 'certificate'];
+                                    ?>
                                     <?php foreach ($application->attachments as $doc): ?>
-                                        <?php if (isset($doc->category) && $doc->category == 'qualification'): ?>
+                                        <?php 
+                                            $docType = strtolower($doc->document_type ?? '');
+                                            $isQualification = (isset($doc->category) && $doc->category == 'qualification') || in_array($docType, $qualificationTypes);
+                                        ?>
+                                        <?php if ($isQualification): ?>
                                         <div class="col-md-6 col-lg-4 mb-4">
                                              <div class="card hover-shadow mb-3 <?= (isset($doc->status) && $doc->status == 'Returned') ? 'returned-document' : '' ?>" 
                                       data-doc-id="<?= $doc->id ?? '' ?>">

@@ -256,6 +256,27 @@ class AuthController extends ResourceController
             if ($customUser) {
                 // Verify hashed password
                 if (!password_verify($data['password'], $customUser->password_hash)) {
+                    // Increment failed login attempts
+                    $newAttempts = ($customUser->failed_login_attempts ?? 0) + 1;
+                    $updateData = ['failed_login_attempts' => $newAttempts];
+                    
+                    if ($newAttempts >= 5) {
+                        $updateData['active'] = 0;
+                    }
+
+                    $db->table($tableName)
+                       ->where('id', $customUser->id)
+                       ->update($updateData);
+
+                    if ($newAttempts >= 5) {
+                        log_message('info', 'Account deactivated due to too many failed logins for ' . $tableName . ': ' . $data['email']);
+                        return $this->respond([
+                            'status'  => 403,
+                            'error'   => 'Account deactivated',
+                            'message' => 'Your account has been deactivated due to too many failed login attempts. Please reset your password to regain access.'
+                        ], 403);
+                    }
+
                     log_message('info', 'Failed login for ' . $tableName . ': ' . $data['email']);
                     return $this->failUnauthorized('Invalid login credentials');
                 }
@@ -285,6 +306,13 @@ class AuthController extends ResourceController
                 $token = JWT::encode($payload, $key, 'HS256');
 
                 log_message('info', 'Successful login (' . $tableName . ') for: ' . $data['email']);
+
+                // Reset failed login attempts on successful login
+                if (($customUser->failed_login_attempts ?? 0) > 0) {
+                     $db->table($tableName)
+                       ->where('id', $customUser->id)
+                       ->update(['failed_login_attempts' => 0]);
+                }
 
                 return $this->respond([
                     'message' => 'Login successful',
@@ -320,13 +348,35 @@ class AuthController extends ResourceController
         }
 
         // Verify password using password_verify (bcrypt)
+        $licenseUser = $db->table('license_users')->where('id', $user->id)->get()->getRow();
+        
         if (!password_verify($data['password'], $identity->secret2)) {
+            // Increment failed login attempts
+            $newAttempts = ($licenseUser->failed_login_attempts ?? 0) + 1;
+            $updateData = ['failed_login_attempts' => $newAttempts];
+            
+            if ($newAttempts >= 5) {
+                $updateData['active'] = 0;
+            }
+
+            $db->table('license_users')
+               ->where('id', $user->id)
+               ->update($updateData);
+
+            if ($newAttempts >= 5) {
+                log_message('info', 'Account deactivated due to too many failed logins for license_users: ' . $data['email']);
+                return $this->respond([
+                    'status'  => 403,
+                    'error'   => 'Account deactivated',
+                    'message' => 'Your account has been deactivated due to too many failed login attempts. Please reset your password to regain access.'
+                ], 403);
+            }
+
             log_message('info', 'Failed login attempt for email: ' . $data['email']);
             return $this->failUnauthorized('Invalid login credentials');
         }
 
         // ✅ Check if license_users account is active
-        $licenseUser = $db->table('license_users')->where('id', $user->id)->get()->getRow();
         if ($licenseUser && (int)$licenseUser->active === 0) {
             return $this->respond([
                 'status'  => 403,
@@ -352,6 +402,13 @@ class AuthController extends ResourceController
         $userType = $userRecord->user_type ?? 'practitioner';
 
         log_message('info', 'Successful login for email: ' . $data['email']);
+
+        // Reset failed login attempts on successful login
+        if ($licenseUser && ($licenseUser->failed_login_attempts ?? 0) > 0) {
+            $db->table('license_users')
+                ->where('id', $user->id)
+                ->update(['failed_login_attempts' => 0]);
+        }
 
         return $this->respond([
             'message' => 'Login successful',
@@ -797,7 +854,12 @@ class AuthController extends ResourceController
         ]);
         $usersModel->save($userEntity);
 
-        // ✅ Re-activate account on successful password reset
+        // ✅ Re-activate account on successful password reset and reset failed attempts
+        // We need to check which table the user belongs to and activate them accordingly
+        $db = \Config\Database::connect();
+        $db->table('license_users')->where('id', $user->id)->update(['active' => 1, 'failed_login_attempts' => 0]);
+        $db->table('pattern_users')->where('email', $user->email)->update(['active' => 1, 'failed_login_attempts' => 0]);
+        $db->table('customer_users')->where('email', $user->email)->update(['active' => 1, 'failed_login_attempts' => 0]);
         $db->table('license_users')->where('id', $user->id)->update([
             'active'     => 1,
             'updated_at' => date('Y-m-d H:i:s'),

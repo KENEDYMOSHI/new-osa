@@ -111,9 +111,9 @@ class ApprovalController extends BaseController
         $builder->join('interview_assessments', 'interview_assessments.application_id = license_applications.id', 'left');
 
         // Join Users and Personal/Business Info
-        $builder->join('users', 'users.id = license_applications.user_id', 'left');
-        $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid', 'left');
-        $builder->join('practitioner_business_infos', 'practitioner_business_infos.user_uuid = users.uuid', 'left');
+        $builder->join('license_users', 'license_users.id = license_applications.user_id', 'left');
+        $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = license_users.uuid', 'left');
+        $builder->join('practitioner_business_infos', 'practitioner_business_infos.user_uuid = license_users.uuid', 'left');
         
         $builder->orderBy('license_applications.created_at', 'DESC');
         

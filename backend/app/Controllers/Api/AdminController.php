@@ -19,9 +19,9 @@ class AdminController extends ResourceController
         $builder->select('license_applications.*, practitioner_personal_infos.first_name, practitioner_personal_infos.last_name, practitioner_personal_infos.phone, practitioner_personal_infos.identity_number, osabill.control_number, osabill.amount as bill_amount, (SELECT COUNT(*) FROM license_application_attachments WHERE license_application_attachments.application_id = license_applications.id) as attachment_count');
         
         // Join users to bridge ID and UUID
-        $builder->join('users', 'users.id = license_applications.user_id', 'left');
+        $builder->join('license_users', 'license_users.id = license_applications.user_id', 'left');
         // Join personal info using UUID from users table
-        $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid', 'left');
+        $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = license_users.uuid', 'left');
         
         // Join with osabill to get bill details. Use INNER JOIN to ensure we only get applications with bills.
         $builder->join('osabill', 'osabill.bill_id = license_applications.id', 'left');
@@ -56,11 +56,11 @@ class AdminController extends ResourceController
         $builder->select('license_applications.*, practitioner_personal_infos.first_name, practitioner_personal_infos.last_name, practitioner_personal_infos.phone, practitioner_personal_infos.identity_number, practitioner_personal_infos.nationality, practitioner_personal_infos.gender, practitioner_personal_infos.dob, practitioner_personal_infos.region, practitioner_personal_infos.district, practitioner_personal_infos.town, practitioner_personal_infos.street, practitioner_business_infos.company_name, osabill.control_number, osabill.amount as bill_amount');
         
         // Join users to bridge ID and UUID
-        $builder->join('users', 'users.id = license_applications.user_id', 'left');
+        $builder->join('license_users', 'license_users.id = license_applications.user_id', 'left');
         // Join personal info using UUID from users table
-        $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid', 'left');
+        $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = license_users.uuid', 'left');
         // Join business info using UUID from users table
-        $builder->join('practitioner_business_infos', 'practitioner_business_infos.user_uuid = users.uuid', 'left');
+        $builder->join('practitioner_business_infos', 'practitioner_business_infos.user_uuid = license_users.uuid', 'left');
         
         $builder->join('osabill', 'osabill.bill_id = license_applications.id', 'left'); // Changed to left join just in case, but inner is fine if we only want billed
         $builder->where('license_applications.id', $id);
@@ -424,8 +424,8 @@ class AdminController extends ResourceController
                     // We have doc->user_id (users.id). We need to bridge to practitioner_personal_infos via users.uuid
                     $userPhone = $db->table('license_users')
                         ->select('practitioner_personal_infos.phone')
-                        ->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid')
-                        ->where('users.id', $doc->user_id)
+                        ->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = license_users.uuid')
+                        ->where('license_users.id', $doc->user_id)
                         ->get()
                         ->getRow();
 

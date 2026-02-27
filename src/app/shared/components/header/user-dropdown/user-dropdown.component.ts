@@ -24,9 +24,9 @@ export class UserDropdownComponent implements OnInit {
     this.authService.getProfile().subscribe({
       next: (data) => {
         if (data.user) {
-          this.user.name = data.user.username;
+          this.user.name = data.user.username?.split('_')[0] || '';
           this.user.email = data.user.email;
-          this.user.initials = this.getInitials(data.user.username);
+          this.user.initials = this.getInitials(this.user.name);
         }
       },
       error: (err) => console.error('Failed to fetch user for dropdown', err)

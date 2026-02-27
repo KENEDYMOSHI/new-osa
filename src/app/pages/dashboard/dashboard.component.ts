@@ -43,7 +43,7 @@ export class DashboardComponent implements OnInit {
     // Get user info
     this.authService.currentUser$.subscribe(data => {
       if (data && data.user) {
-        this.userName = data.user.username;
+        this.userName = data.user.username?.split('_')[0] || '';
       } else if (data && data.personalInfo) {
         this.userName = `${data.personalInfo.first_name} ${data.personalInfo.last_name}`;
       }

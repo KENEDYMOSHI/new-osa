@@ -281,8 +281,9 @@ class DashboardController extends BaseController
      */
     private function getRegionalStatistics($year)
     {
+        $wmaDb = \Config\Database::connect('wma');
         // 1. Get ALL Regions (from district table in DEFAULT DB)
-        $allRegionsRaw = $this->db->table('district')
+        $allRegionsRaw = $wmaDb->table('district')
             ->select('region')
             ->distinct()
             ->where('region IS NOT NULL')
@@ -308,9 +309,9 @@ class DashboardController extends BaseController
             // Extract User IDs to fetch regions
             $userIds = array_column($userAppCounts, 'user_id');
             
-            // 3. Fetch Regions for these Users from DEFAULT DB
-            // Join users -> ppi to get region
-            $userRegions = $this->db->table('users u')
+            // 3. Fetch Regions for these Users from OSA DB
+            // Join license_users -> practitioner_personal_infos to get region
+            $userRegions = $osa->table('license_users u')
                 ->select('u.id, ppi.region')
                 ->join('practitioner_personal_infos ppi', 'u.uuid = ppi.user_uuid', 'left')
                 ->whereIn('u.id', $userIds)

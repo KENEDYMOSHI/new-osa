@@ -64,9 +64,10 @@ class StatisticsController extends BaseController
     {
         try {
             $builder = $this->db->table('license_applications');
-            $builder->select('users.region as region_name, count(license_applications.id) as count');
-            $builder->join('users', 'users.id = license_applications.user_id', 'left');
-            $builder->groupBy('users.region');
+            $builder->select('practitioner_personal_infos.region as region_name, count(license_applications.id) as count');
+            $builder->join('license_users', 'license_users.id = license_applications.user_id', 'left');
+            $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = license_users.uuid', 'left');
+            $builder->groupBy('practitioner_personal_infos.region');
             $builder->orderBy('count', 'DESC');
             
             $query = $builder->get();

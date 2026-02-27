@@ -60,7 +60,7 @@ export class ViewLicenseDetailsComponent implements OnInit {
     this.licenseService.getApprovedLicenses().subscribe(
       (res: any) => {
         // Filter to show only licenses that have actually been generated (have a license number)
-        this.licenses = res.filter((lic: any) => lic.license_number);
+        this.licenses = res.filter((lic: any) => lic?.license_number);
         this.filteredLicenses = [...this.licenses];
         this.extractFilterOptions();
         this.isLoading = false;

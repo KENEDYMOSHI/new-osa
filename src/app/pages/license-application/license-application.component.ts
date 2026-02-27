@@ -1075,7 +1075,9 @@ export class LicenseApplicationComponent implements OnInit {
               text: 'Your license application has been submitted successfully.',
               confirmButtonColor: '#F59E0B'
             }).then(() => {
-                this.router.navigate(['/dashboard']);
+                // Stay on the page or refresh state
+                // this.router.navigate(['/dashboard']);
+                this.loadUserDocuments(); // Reload to show new state
             });
         }
       },
@@ -1097,5 +1099,28 @@ export class LicenseApplicationComponent implements OnInit {
   closeInterviewModal() {
     this.showInterviewModal = false;
     this.selectedInterview = null;
+  }
+
+  printBill() {
+    const printContent = document.getElementById('billContent');
+    if (!printContent) return;
+    
+    const windowPrint = window.open('', '', 'left=0,top=0,width=800,height=900,toolbar=0,scrollbars=0,status=0');
+    if (windowPrint) {
+      windowPrint.document.write('<html><head><title>Government Bill</title>');
+      // Include Tailwind via CDN for print styling just in case, or inline styles
+      windowPrint.document.write('<script src="https://cdn.tailwindcss.com"></script>');
+      windowPrint.document.write('<style>@media print { body { -webkit-print-color-adjust: exact; } }</style>');
+      windowPrint.document.write('</head><body class="bg-white">');
+      windowPrint.document.write(printContent.innerHTML);
+      windowPrint.document.write('</body></html>');
+      windowPrint.document.close();
+      windowPrint.focus();
+      // Wait for Tailwind to process if using CDN, before printing
+      setTimeout(() => {
+        windowPrint.print();
+        windowPrint.close();
+      }, 500);
+    }
   }
 }

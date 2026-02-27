@@ -1060,8 +1060,8 @@ class LicenseController extends ResourceController
         $builder->join('osabill as app_fee_bill', '(app_fee_bill.bill_id = license_applications.id OR app_fee_bill.bill_id = license_applications.initial_application_id) AND app_fee_bill.bill_type = 1', 'left');
         
         // Join to get nationality
-        $builder->join('users', 'users.id = license_applications.user_id', 'left');
-        $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid', 'left');
+        $builder->join('license_users', 'license_users.id = license_applications.user_id', 'left');
+        $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = license_users.uuid', 'left');
         
         // Join to get interview result
         $builder->join('interview_assessments', 'interview_assessments.application_id = license_applications.id', 'left');
@@ -1752,8 +1752,8 @@ class LicenseController extends ResourceController
         $db = \Config\Database::connect();
         $builder = $db->table('license_applications');
         $builder->select('practitioner_personal_infos.first_name, practitioner_personal_infos.last_name');
-        $builder->join('users', 'users.id = license_applications.approver_stage_4', 'left');
-        $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid', 'left');
+        $builder->join('license_users', 'license_users.id = license_applications.approver_stage_4', 'left');
+        $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = license_users.uuid', 'left');
         $builder->where('license_applications.id', $applicationId);
         $approver = $builder->get()->getRow();
         
@@ -1911,8 +1911,8 @@ class LicenseController extends ResourceController
         // 1. Fetch Basic Application Data
         $appBuilder = $db->table('license_applications');
         $appBuilder->select('license_applications.*, practitioner_personal_infos.*, license_applications.id as app_id, license_applications.status as app_status, license_applications.created_at as app_date');
-        $appBuilder->join('users', 'users.id = license_applications.user_id');
-        $appBuilder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid', 'left');
+        $appBuilder->join('license_users', 'license_users.id = license_applications.user_id');
+        $appBuilder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = license_users.uuid', 'left');
         $appBuilder->where('license_applications.id', $applicationId);
         
         // Security: Ensure it belongs to the user
@@ -2027,13 +2027,13 @@ class LicenseController extends ResourceController
             approver_info.first_name as ceo_first_name,
             approver_info.last_name as ceo_last_name
         ');
-        $builder->join('license_application_items', 'license_application_items.application_id = license_applications.id');
+        $builder->join('license_application_items', 'license_application_items.application_id = license_applications.id', 'left');
         $builder->join('licenses', 'licenses.application_id = license_applications.id', 'left'); // Left join as license might not be generated
-        $builder->join('users', 'users.id = license_applications.user_id');
-        $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid', 'left');
+        $builder->join('license_users', 'license_users.id = license_applications.user_id', 'left');
+        $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = license_users.uuid', 'left');
         
         // Join for CEO Name (Approver Stage 4)
-        $builder->join('users as approver_user', 'approver_user.id = license_applications.approver_stage_4', 'left');
+        $builder->join('license_users as approver_user', 'approver_user.id = license_applications.approver_stage_4', 'left');
         $builder->join('practitioner_personal_infos as approver_info', 'approver_info.user_uuid = approver_user.uuid', 'left');
 
         $builder->where('license_applications.user_id', $user->id);
@@ -2205,8 +2205,8 @@ class LicenseController extends ResourceController
             // Fetch approver name (CEO)
             $builder = $db->table('license_applications');
             $builder->select('practitioner_personal_infos.first_name, practitioner_personal_infos.last_name');
-            $builder->join('users', 'users.id = license_applications.approver_stage_4', 'left');
-            $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid', 'left');
+            $builder->join('license_users', 'license_users.id = license_applications.approver_stage_4', 'left');
+            $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = license_users.uuid', 'left');
             $builder->where('license_applications.id', $license->application_id);
             $approver = $builder->get()->getRow();
             
@@ -2346,11 +2346,11 @@ class LicenseController extends ResourceController
                 approver_info.first_name as ceo_first_name,
                 approver_info.last_name as ceo_last_name
             ');
-            $builder->join('license_application_items', 'license_application_items.application_id = license_applications.id');
+            $builder->join('license_application_items', 'license_application_items.application_id = license_applications.id', 'left');
             $builder->join('licenses', 'licenses.application_id = license_applications.id', 'left');
-            $builder->join('users', 'users.id = license_applications.user_id');
-            $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = users.uuid', 'left');
-            $builder->join('users as approver_user', 'approver_user.id = license_applications.approver_stage_4', 'left');
+            $builder->join('license_users', 'license_users.id = license_applications.user_id', 'left');
+            $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = license_users.uuid', 'left');
+            $builder->join('license_users as approver_user', 'approver_user.id = license_applications.approver_stage_4', 'left');
             $builder->join('practitioner_personal_infos as approver_info', 'approver_info.user_uuid = approver_user.uuid', 'left');
             $builder->where('license_applications.id', $licenseId);
             

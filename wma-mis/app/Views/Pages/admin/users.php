@@ -565,6 +565,11 @@ $pageSession = \CodeIgniter\Config\Services::session();
                     <input type="hidden" name="uuid" id="osaEditUuid">
                     <input type="hidden" name="user_uuid" id="osaEditUserUuid">
 
+                    <div class="text-center mb-4">
+                        <img id="osaEditPassportPhoto" src="" alt="Passport Photo" class="img-thumbnail rounded-circle object-fit-cover shadow-sm" style="width: 120px; height: 120px; display: none;">
+                        <p id="osaEditNoPhoto" class="text-muted small mt-2 d-none"><i class="fas fa-user-circle fa-3x text-light"></i><br>No passport photo uploaded</p>
+                    </div>
+
                     <h6 class="text-muted border-bottom pb-2 mb-3"><i class="fas fa-lock mr-1"></i> Account Information</h6>
                     <div class="row">
                         <div class="col-md-6 form-group">
@@ -581,27 +586,27 @@ $pageSession = \CodeIgniter\Config\Services::session();
                     <div class="row">
                         <div class="col-md-4 form-group">
                             <label>First Name</label>
-                            <input type="text" name="first_name" id="osaEditFirstName" class="form-control">
+                            <input type="text" name="first_name" id="osaEditFirstName" class="form-control" readonly>
                         </div>
                         <div class="col-md-4 form-group">
                             <label>Second Name</label>
-                            <input type="text" name="second_name" id="osaEditSecondName" class="form-control">
+                            <input type="text" name="second_name" id="osaEditSecondName" class="form-control" readonly>
                         </div>
                         <div class="col-md-4 form-group">
                             <label>Last Name</label>
-                            <input type="text" name="last_name" id="osaEditLastName" class="form-control">
+                            <input type="text" name="last_name" id="osaEditLastName" class="form-control" readonly>
                         </div>
                         <div class="col-md-4 form-group">
                             <label>Nationality</label>
-                            <input type="text" name="nationality" id="osaEditNationality" class="form-control">
+                            <input type="text" name="nationality" id="osaEditNationality" class="form-control" readonly>
                         </div>
                         <div class="col-md-4 form-group">
                             <label>ID Number</label>
-                            <input type="text" name="identity_number" id="osaEditIdNumber" class="form-control">
+                            <input type="text" name="identity_number" id="osaEditIdNumber" class="form-control" readonly>
                         </div>
                         <div class="col-md-4 form-group">
                             <label>Gender</label>
-                            <select name="gender" id="osaEditGender" class="form-control">
+                            <select name="gender" id="osaEditGender" class="form-control" style="pointer-events: none; background-color: #e9ecef;" readonly tabindex="-1">
                                 <option value="">-- Select --</option>
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
@@ -609,7 +614,7 @@ $pageSession = \CodeIgniter\Config\Services::session();
                         </div>
                         <div class="col-md-4 form-group">
                             <label>Date of Birth</label>
-                            <input type="date" name="dob" id="osaEditDob" class="form-control">
+                            <input type="date" name="dob" id="osaEditDob" class="form-control" readonly>
                         </div>
                     </div>
 
@@ -617,18 +622,27 @@ $pageSession = \CodeIgniter\Config\Services::session();
                     <div class="row">
                         <div class="col-md-6 form-group">
                             <label>Region</label>
-                            <input type="text" name="region" id="osaEditRegion" class="form-control">
+                            <select name="region" id="osaEditRegion" class="form-control" onchange="getOsaDistricts(this.value)">
+                                <option value="">-- Select Region --</option>
+                                <?php foreach (getRegions() as $region): ?>
+                                    <option value="<?= htmlspecialchars($region) ?>"><?= htmlspecialchars($region) ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="col-md-6 form-group">
                             <label>District</label>
-                            <input type="text" name="district" id="osaEditDistrict" class="form-control">
+                            <select name="district" id="osaEditDistrict" class="form-control" onchange="getOsaWards(this.value)">
+                                <option value="">-- Select District --</option>
+                            </select>
                         </div>
                         <div class="col-md-6 form-group">
                             <label>Ward</label>
-                            <input type="text" name="ward" id="osaEditWard" class="form-control">
+                            <select name="ward" id="osaEditWard" class="form-control" onchange="getOsaStreets(this.value)">
+                                <option value="">-- Select Ward --</option>
+                            </select>
                         </div>
                         <div class="col-md-6 form-group">
-                            <label>Street</label>
+                            <label>Village/Street</label>
                             <input type="text" name="street" id="osaEditStreet" class="form-control">
                         </div>
                     </div>
@@ -676,14 +690,121 @@ $(document).on('click', 'a[href*="editOsaUser"], a[href*="editPatternUser"], a[h
         $('#osaEditDob').val(data.dob || '');
         // Address fields
         $('#osaEditRegion').val(data.region || '');
-        $('#osaEditDistrict').val(data.district || '');
-        $('#osaEditWard').val(data.ward || '');
+        
+        // Handle Passport/Profile Photo
+        if (data.picture) {
+            // In case the DB stores just the filename or partial path, we ensure it points to the backend
+            // Assuming the backend is usually at port 8080 or relative to base_url()
+            // Typical format is "uploads/profile_pictures/filename.jpg" mapped in CI4 backend
+            var backendUrl = '<?= rtrim(getenv('API_URL'), '/') ?>'; 
+            if (!backendUrl) { backendUrl = 'http://localhost:8080'; } // fallback
+            var picUrl = data.picture.startsWith('http') ? data.picture : backendUrl + '/' + data.picture;
+            
+            $('#osaEditPassportPhoto').attr('src', picUrl).show();
+            $('#osaEditNoPhoto').addClass('d-none');
+        } else {
+            $('#osaEditPassportPhoto').hide();
+            $('#osaEditNoPhoto').removeClass('d-none');
+        }
+
+        // Handle cascading pre-selection
+        if (data.region) {
+            getOsaDistricts(data.region, data.district, data.ward);
+        } else {
+            $('#osaEditDistrict').html('<option value="">-- Select District --</option>');
+            $('#osaEditWard').html('<option value="">-- Select Ward --</option>');
+        }
+        
         $('#osaEditStreet').val(data.street || '');
         $('#osaEditModal').modal('show');
     }).fail(function() {
         alert('Failed to load user data. Please try again.');
     });
 });
+
+function getOsaDistricts(region, selectedDistrict = null, selectedWard = null) {
+    var districtSelect = $('#osaEditDistrict');
+    var wardSelect = $('#osaEditWard');
+    
+    wardSelect.html('<option value="">-- Select Ward --</option>');
+    if (!region) {
+        districtSelect.html('<option value="">-- Select District --</option>');
+        return;
+    }
+
+    var appToken = $('.token').val() || '';
+    
+    $.ajax({
+        url: '<?= base_url() ?>/fetchDistricts',
+        type: 'POST',
+        data: JSON.stringify({ param: region }),
+        contentType: 'application/json;charset=utf-8',
+        headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRF-TOKEN": appToken
+        },
+        success: function(response) {
+            if (response.token) $('.token').val(response.token);
+            
+            var options = '<option value="">-- Select District --</option>';
+            if (response.dataList && response.dataList.length > 0) {
+                response.dataList.forEach(function(list) {
+                    var isSelected = (selectedDistrict && list.name === selectedDistrict) ? 'selected' : '';
+                    options += '<option value="' + list.name + '" ' + isSelected + '>' + list.name + '</option>';
+                });
+            }
+            districtSelect.html(options);
+            
+            if (selectedDistrict) {
+                getOsaWards(selectedDistrict, selectedWard);
+            }
+        },
+        error: function(err) {
+            console.error('Error fetching districts:', err);
+        }
+    });
+}
+
+function getOsaWards(district, selectedWard = null) {
+    var wardSelect = $('#osaEditWard');
+    if (!district) {
+        wardSelect.html('<option value="">-- Select Ward --</option>');
+        return;
+    }
+
+    var appToken = $('.token').val() || '';
+    
+    $.ajax({
+        url: '<?= base_url() ?>/fetchWards',
+        type: 'POST',
+        data: JSON.stringify({ param: district }),
+        contentType: 'application/json;charset=utf-8',
+        headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRF-TOKEN": appToken
+        },
+        success: function(response) {
+            if (response.token) $('.token').val(response.token);
+            
+            var options = '<option value="">-- Select Ward --</option>';
+            if (response.dataList && response.dataList.length > 0) {
+                response.dataList.forEach(function(list) {
+                    var isSelected = (selectedWard && list.name === selectedWard) ? 'selected' : '';
+                    options += '<option value="' + list.name + '" ' + isSelected + '>' + list.name + '</option>';
+                });
+            }
+            wardSelect.html(options);
+        },
+        error: function(err) {
+            console.error('Error fetching wards:', err);
+        }
+    });
+}
+
+function getOsaStreets(ward) {
+    // Village/Street is kept as a text input because street names are usually less standardized.
+    // If needed, postcodes could be fetched here, but osaEditStreet is just text.
+}
 </script>
 
 

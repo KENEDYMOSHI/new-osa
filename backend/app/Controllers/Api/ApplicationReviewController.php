@@ -46,9 +46,9 @@ class ApplicationReviewController extends BaseController
             // Note: User profile info is in practitioner_personal_info table linked via UUID
             // Note: Email is in auth_identities
             $builder->select('license_applications.*, p.first_name, p.last_name, auth_identities.secret as email, p.phone, i.license_type');
-            $builder->join('users', 'users.id = license_applications.user_id', 'left');
-            $builder->join('auth_identities', 'auth_identities.user_id = users.id AND auth_identities.type = "email_password"', 'left');
-            $builder->join('practitioner_personal_infos p', 'p.user_uuid = users.uuid', 'left');
+            $builder->join('license_users', 'license_users.id = license_applications.user_id', 'left');
+            $builder->join('auth_identities', 'auth_identities.user_id = license_users.id AND auth_identities.type = "email_password"', 'left');
+            $builder->join('practitioner_personal_infos p', 'p.user_uuid = license_users.uuid', 'left');
             $builder->join('license_application_items i', 'i.application_id = license_applications.id', 'left');
             
             // IMPORTANT: Filter by current user's applications only
@@ -138,9 +138,9 @@ class ApplicationReviewController extends BaseController
             $builder = $this->licenseModel->builder();
             // Note: User profile info is in practitioner_personal_info table linked via UUID
             $builder->select('license_applications.*, p.first_name, p.last_name, auth_identities.secret as email, p.phone, p.street as address, i.license_type');
-            $builder->join('users', 'users.id = license_applications.user_id', 'left');
-            $builder->join('auth_identities', 'auth_identities.user_id = users.id AND auth_identities.type = "email_password"', 'left');
-            $builder->join('practitioner_personal_infos p', 'p.user_uuid = users.uuid', 'left');
+            $builder->join('license_users', 'license_users.id = license_applications.user_id', 'left');
+            $builder->join('auth_identities', 'auth_identities.user_id = license_users.id AND auth_identities.type = "email_password"', 'left');
+            $builder->join('practitioner_personal_infos p', 'p.user_uuid = license_users.uuid', 'left');
             $builder->join('license_application_items i', 'i.application_id = license_applications.id', 'left');
             $builder->where('license_applications.id', $id);
             

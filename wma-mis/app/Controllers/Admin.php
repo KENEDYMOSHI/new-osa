@@ -588,7 +588,7 @@ class Admin extends RegisterController
         $user = $osaDb->table('license_users lu')
             ->select('lu.id, lu.uuid, lu.username, lu.phone_number, lu.region, lu.active, ai.secret AS email,
                       ppi.first_name, ppi.second_name, ppi.last_name, ppi.nationality, ppi.identity_number,
-                      ppi.gender, ppi.dob, ppi.district, ppi.ward, ppi.street, ppi.phone')
+                      ppi.gender, ppi.dob, ppi.district, ppi.ward, ppi.street, ppi.phone, ppi.picture')
             ->join('auth_identities ai', 'ai.user_id = lu.id AND ai.type = "email_password"', 'left')
             ->join('practitioner_personal_infos ppi', 'ppi.user_uuid = lu.uuid', 'left')
             ->where('lu.uuid', $uuid)
