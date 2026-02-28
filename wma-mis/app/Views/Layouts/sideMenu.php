@@ -896,6 +896,20 @@
                     </a>
                 </li>
 
+                <li class="nav-item">
+                    <a href="<?= base_url('notifications') ?>" class="nav-link <?= url_is('notifications') ? 'active' : '' ?>">
+                        <i class="fal fa-bell nav-icon"></i>
+                        <p>Notifications</p>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="<?= base_url('helpdesk') ?>" class="nav-link <?= url_is('helpdesk') ? 'active' : '' ?>">
+                        <i class="fal fa-headset nav-icon"></i>
+                        <p>Helpdesk</p>
+                    </a>
+                </li>
+
 
 
 

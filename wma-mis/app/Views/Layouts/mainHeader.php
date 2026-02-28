@@ -383,9 +383,30 @@
 
             <!-- Right navbar links -->
             <ul class="navbar-nav ml-auto">
-                <!-- Messages Dropdown Menu -->
-
                 <!-- Notifications Dropdown Menu -->
+                <li class="nav-item dropdown d-sm-inline-block mr-3" id="notification-dropdown-container">
+                    <a href="#" class="nav-link notification-toggle" data-toggle="dropdown" style="position: relative; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid transparent; background: #f8f9fa; color: #6b7280; transition: all 0.2s; margin-top: 5px;" onmouseover="this.style.backgroundColor='#fff'; this.style.borderColor='#e5e7eb'; this.style.boxShadow='0 1px 2px 0 rgba(0, 0, 0, 0.05)';" onmouseout="this.style.backgroundColor='#f8f9fa'; this.style.borderColor='transparent'; this.style.boxShadow='none';">
+                        <span id="unread-count-badge" style="display: none; position: absolute; top: -4px; right: -4px; height: 22px; min-width: 22px; align-items: center; justify-content: center; border-radius: 9999px; background: linear-gradient(to top right, #f43f5e, #fb7185); padding: 0 6px; font-size: 11px; font-weight: bold; color: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 2px solid white; line-height: 1;">0</span>
+                        
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 24px; height: 24px; transition: color 0.2s;" id="bell-icon">
+                            <path fill-rule="evenodd" d="M5.25 9a6.75 6.75 0 0 1 13.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 0 1-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 1 1-7.48 0 24.585 24.585 0 0 1-4.831-1.244.75.75 0 0 1-.298-1.205A8.217 8.217 0 0 0 5.25 9.75V9Zm4.502 8.9a2.25 2.25 0 1 0 4.496 0 25.057 25.057 0 0 1-4.496 0Z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" style="width: 350px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 0; min-width:350px; left: inherit; right: 0;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #f3f4f6;">
+                            <h5 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;">Notifications</h5>
+                            <span id="unread-count-text" style="display: none; background: #fee2e2; color: #b91c1c; font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 4px; border: 1px solid #fca5a5;">0 new</span>
+                        </div>
+                        <div id="notifications-list" style="max-height: 350px; overflow-y: auto;">
+                            <!-- Items go here -->
+                        </div>
+                        <div style="padding: 12px; border-top: 1px solid #f3f4f6; text-align: center;">
+                            <a href="<?= base_url('notifications') ?>" style="font-size: 14px; font-weight: 500; color: #e11d48; text-decoration: none;" onmouseover="this.style.color='#be123c';" onmouseout="this.style.color='#e11d48';">View All Notifications</a>
+                        </div>
+                    </div>
+                </li>
+
+                <!-- User Profile Dropdown Menu -->
                 <li class="nav-item dropdown d-sm-inline-block mr-4">
 
                     <a href="#" data-toggle="dropdown">
@@ -400,4 +421,120 @@
 
             </ul>
         </nav>
+        
+        <style>
+            @keyframes ring-bell {
+              0% { transform: rotate(0); }
+              15% { transform: rotate(15deg); }
+              30% { transform: rotate(-10deg); }
+              45% { transform: rotate(5deg); }
+              60% { transform: rotate(-5deg); }
+              75% { transform: rotate(2deg); }
+              100% { transform: rotate(0); }
+            }
+            @keyframes badge-bounce-in {
+              0% { transform: scale(0); opacity: 0; }
+              80% { transform: scale(1.1); opacity: 1; }
+              100% { transform: scale(1); opacity: 1; }
+            }
+            .notification-toggle:hover #bell-icon {
+              animation: ring-bell 1s ease-in-out;
+              transform-origin: top center;
+            }
+            .badge-animated {
+              animation: badge-bounce-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            }
+        </style>
+        
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var baseUrl = '<?= rtrim(base_url(), "/") ?>';
+                
+                function fetchNotifications() {
+                    fetch(baseUrl + '/osaNotificationsAjax')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (Array.isArray(data)) {
+                                updateNotificationUI(data);
+                            }
+                        })
+                        .catch(err => console.error('Failed to fetch notifications', err));
+                }
+                
+                function updateNotificationUI(notifications) {
+                    var unread = notifications.filter(function(n) { return !n.is_read; }).length;
+                    
+                    var badge = document.getElementById('unread-count-badge');
+                    var spanText = document.getElementById('unread-count-text');
+                    var bell = document.getElementById('bell-icon');
+                    var list = document.getElementById('notifications-list');
+                    
+                    if (unread > 0) {
+                        badge.style.display = 'flex';
+                        badge.classList.add('badge-animated');
+                        badge.textContent = unread > 99 ? '99+' : unread;
+                        spanText.style.display = 'block';
+                        spanText.textContent = unread + ' new';
+                        bell.style.color = '#1f2937'; // darker color for unread
+                    } else {
+                        badge.style.display = 'none';
+                        spanText.style.display = 'none';
+                        bell.style.color = '#6b7280';
+                    }
+                    
+                    // Render List
+                    if (notifications.length === 0) {
+                        list.innerHTML = '<div style="padding: 32px 16px; text-align: center; color: #6b7280; font-size: 14px;">No notifications yet</div>';
+                    } else {
+                        var html = '';
+                        notifications.forEach(function(notif) {
+                            var isUnread = !notif.is_read;
+                            var date = new Date(notif.created_at).toLocaleDateString();
+                            var bgClass = isUnread ? 'background-color: #eff6ff;' : 'background-color: transparent;';
+                            var unreadDot = isUnread ? '<span style="position: absolute; top: 0; right: 0; display: block; width: 10px; height: 10px; border-radius: 50%; background-color: #f97316; border: 1.5px solid white;"></span>' : '';
+                            
+                            var iconSvg = notif.type === 'document_returned'
+                                ? '<div style="color: #ef4444;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 24px; height: 24px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" /></svg></div>'
+                                : '<div style="color: #3b82f6;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 24px; height: 24px;"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg></div>';
+                                
+                            html += '<a href="#" class="notification-item" data-id="'+notif.id+'" style="display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #f3f4f6; text-decoration: none; color: inherit; transition: background-color 0.2s; ' + bgClass + '" onmouseover="this.style.backgroundColor=\'#f3f4f6\';" onmouseout="this.style.backgroundColor=\'' + (isUnread ? '#eff6ff' : 'transparent') + '\';">' +
+                                '<div style="position: relative; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background-color: #f3f4f6; flex-shrink: 0;">' +
+                                iconSvg + unreadDot +
+                                '</div>' +
+                                '<div style="flex: 1; min-width: 0;">' +
+                                '<p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 500; color: #1f2937;">' + notif.title + '</p>' +
+                                '<p style="margin: 0 0 4px 0; font-size: 12px; color: #6b7280; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">' + notif.message + '</p>' +
+                                '<p style="margin: 0; font-size: 11px; color: #9ca3af;">' + date + '</p>' +
+                                '</div>' +
+                                '</a>';
+                        });
+                        list.innerHTML = html;
+                        
+                        // Attach click handlers
+                        var items = list.querySelectorAll('.notification-item');
+                        items.forEach(function(item) {
+                            item.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                var id = this.getAttribute('data-id');
+                                var notif = notifications.find(n => n.id == id);
+                                if (notif && !notif.is_read) {
+                                    fetch(baseUrl + '/osaMarkNotificationRead/' + id, {method: 'POST'})
+                                        .then(() => {
+                                            fetchNotifications(); // Refresh
+                                        });
+                                }
+                                window.location.href = baseUrl + '/notifications';
+                            });
+                        });
+                    }
+                }
+                
+                // Fetch initially
+                fetchNotifications();
+                
+                // Fetch every 30 seconds
+                setInterval(fetchNotifications, 30000);
+            });
+        </script>
+        
         <?php $user = auth()->user() ?>

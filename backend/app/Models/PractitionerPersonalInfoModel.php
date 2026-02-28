@@ -23,6 +23,7 @@ class PractitionerPersonalInfoModel extends Model
         'dob',
         'region',
         'district',
+        'ward',
         'town',
         'street',
         'phone',

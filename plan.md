@@ -670,3 +670,26 @@ Customer Name
 License No.
 
 Date Range na kuonesha services record itakayo tengeneza API kutoka kwenye database ya osa_app kwenye table ya technicians_registry impliment bila kuharibu kitu tumia design ya hiyo pecture 
+
+
+impliment return mail kwenye WMA-MIS itakayokua inarudi mara baada tu ya applicant kuresbmitt document igenerate automatic mail itakayokua inaenda kwa mhusika alie return document iwe ni 	Regional Manager 
+	•	DTS
+	•	Surveillance Officer
+	•	CEO ambayo itakua inarud na kuonesha mail tamplate hii na kuna sehemu mfumo utachukua jina la mwombajia alie reapload na kuliweka hapo 
+
+Salamu.
+
+Tafadhali fahamu kuwa mwombaji {{applicant_name}} kutoka mkoa wa {{region_name}} amewasilisha tena nyaraka {{document_names}} baada ya kufanya marekebisho kama alivyoshauriwa hapo awali.
+
+Baada ya mapitio ya awali, imebainika kuwa hati hiyo imezingatia maelekezo yaliyotolewa na marekebisho yaliyohitajika yamefanyika ipasavyo.
+
+Hivyo, inawasilishwa kwako kwa ajili ya mapitio zaidi na hatua stahiki kulingana na utaratibu wa mfumo.
+
+Tafadhali endelea na hatua zinazofuata ipasavyo.
+
+Asante.
+
+
+
+
+

@@ -1,27 +1,44 @@
 <div class="relative">
+  <style>
+    @keyframes ring {
+      0% { transform: rotate(0); }
+      15% { transform: rotate(15deg); }
+      30% { transform: rotate(-10deg); }
+      45% { transform: rotate(5deg); }
+      60% { transform: rotate(-5deg); }
+      75% { transform: rotate(2deg); }
+      100% { transform: rotate(0); }
+    }
+    .hover-ring:hover {
+      animation: ring 1s ease-in-out;
+      transform-origin: top center;
+    }
+    @keyframes bounce-in {
+      0% { transform: scale(0); opacity: 0; }
+      80% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
   <button
-    class="relative flex items-center justify-center text-gray-500 transition-colors bg-white border border-gray-200 rounded-full dropdown-toggle hover:text-gray-700 h-11 w-11 hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+    class="relative flex items-center justify-center text-gray-500 transition-all bg-gray-50/80 border border-transparent rounded-full dropdown-toggle h-11 w-11 hover:bg-white hover:border-gray-200 hover:shadow-sm dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white group hover-ring"
     (click)="toggleDropdown()"
   >
     <span
-      class="absolute right-0 top-0.5 z-10 h-2 w-2 rounded-full bg-orange-400"
+      class="absolute -top-1 -right-1 z-10 flex h-[22px] min-w-[22px] items-center justify-center rounded-full bg-gradient-to-tr from-rose-500 to-red-400 px-1.5 text-[11px] font-bold text-white shadow-md border-[2px] border-white dark:border-gray-900 leading-none"
       [ngClass]="{ 'hidden': unreadCount === 0, 'flex': unreadCount > 0 }"
+      style="animation: bounce-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"
     >
-      <span class="absolute inline-flex w-full h-full bg-orange-400 rounded-full opacity-75 animate-ping"></span>
+      {{ unreadCount > 99 ? '99+' : unreadCount }}
     </span>
-    <svg
-      class="fill-current"
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      xmlns="http://www.w3.org/2000/svg"
+    
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      viewBox="0 0 24 24" 
+      fill="currentColor" 
+      class="w-[24px] h-[24px] transition-colors"
+      [ngClass]="{'text-gray-800 dark:text-white': unreadCount > 0}"
     >
-      <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
-        d="M10.75 2.29248C10.75 1.87827 10.4143 1.54248 10 1.54248C9.58583 1.54248 9.25004 1.87827 9.25004 2.29248V2.83613C6.08266 3.20733 3.62504 5.9004 3.62504 9.16748V14.4591H3.33337C2.91916 14.4591 2.58337 14.7949 2.58337 15.2091C2.58337 15.6234 2.91916 15.9591 3.33337 15.9591H4.37504H15.625H16.6667C17.0809 15.9591 17.4167 15.6234 17.4167 15.2091C17.4167 14.7949 17.0809 14.4591 16.6667 14.4591H16.375V9.16748C16.375 5.9004 13.9174 3.20733 10.75 2.83613V2.29248ZM14.875 14.4591V9.16748C14.875 6.47509 12.6924 4.29248 10 4.29248C7.30765 4.29248 5.12504 6.47509 5.12504 9.16748V14.4591H14.875ZM8.00004 17.7085C8.00004 18.1228 8.33583 18.4585 8.75004 18.4585H11.25C11.6643 18.4585 12 18.1228 12 17.7085C12 17.2943 11.6643 16.9585 11.25 16.9585H8.75004C8.33583 16.9585 8.00004 17.2943 8.00004 17.7085Z"
-        fill="currentColor"
-      />
+      <path fill-rule="evenodd" d="M5.25 9a6.75 6.75 0 0 1 13.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 0 1-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 1 1-7.48 0 24.585 24.585 0 0 1-4.831-1.244.75.75 0 0 1-.298-1.205A8.217 8.217 0 0 0 5.25 9.75V9Zm4.502 8.9a2.25 2.25 0 1 0 4.496 0 25.057 25.057 0 0 1-4.496 0Z" clip-rule="evenodd" />
     </svg>
   </button>
   <app-dropdown

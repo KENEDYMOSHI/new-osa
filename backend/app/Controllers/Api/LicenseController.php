@@ -153,8 +153,13 @@ class LicenseController extends ResourceController
                         return $this->failServerError('Failed to update record: ' . json_encode($attachmentModel->errors()));
                     }
 
-                    // Send Notification for Re-upload
+                    // Send Notification for Re-upload (App Notification)
                     $this->sendReuploadNotification($currentApp, $user, $docType);
+                    
+                    // Send Email to the specific officer who returned it
+                    if (!empty($existingDoc->returned_by)) {
+                        $this->sendResubmissionEmail($currentApp, $user, $docType, $existingDoc->returned_by);
+                    }
 
                     return $this->respondCreated([
                         'message' => 'File re-uploaded successfully',
@@ -249,6 +254,83 @@ class LicenseController extends ResourceController
             ];
             
             $db->table('notifications')->insert($notifData);
+        }
+    }
+
+    /**
+     * Helper to send notification (in-app + email) when a returned document is re-uploaded
+     */
+    private function sendResubmissionEmail($currentApp, $user, $docType, $returnedById) {
+        if (!$currentApp || !$returnedById) return;
+
+        $db = \Config\Database::connect();
+        
+        // 1. Get Applicant Details (Name and Region)
+        $personalInfo = $db->table('practitioner_personal_infos')->where('user_uuid', $user->uuid)->get()->getRow();
+        $applicantName = $personalInfo ? ($personalInfo->first_name . ' ' . $personalInfo->last_name) : 'Applicant';
+        $regionName = $personalInfo ? ($personalInfo->region ?? 'Tanzania') : 'Tanzania';
+
+        // 2. Compose the Swahili message
+        $subject = 'Nyaraka Zilizorekebishwa (Document Resubmitted)';
+        
+        $htmlMessage = "Salamu.<br><br>";
+        $htmlMessage .= "Tafadhali fahamu kuwa mwombaji <b>{$applicantName}</b> kutoka mkoa wa <b>{$regionName}</b> amewasilisha tena nyaraka <b>{$docType}</b> baada ya kufanya marekebisho kama alivyoshauriwa hapo awali.<br><br>";
+        $htmlMessage .= "Baada ya mapitio ya awali, imebainika kuwa hati hiyo imezingatia maelekezo yaliyotolewa na marekebisho yaliyohitajika yamefanyika ipasavyo.<br><br>";
+        $htmlMessage .= "Hivyo, inawasilishwa kwako kwa ajili ya mapitio zaidi na hatua stahiki kulingana na utaratibu wa mfumo.<br><br>";
+        $htmlMessage .= "Tafadhali endelea na hatua zinazofuata ipasavyo.<br><br>";
+        $htmlMessage .= "Asante.";
+        
+        $plainMessage = strip_tags(str_replace('<br>', "\n", $htmlMessage));
+
+        // 3. ALWAYS insert the in-app notification into the database
+        $notifData = [
+            'id'               => md5(uniqid(rand(), true)),
+            'user_id'          => $returnedById, 
+            'title'            => $subject,
+            'message'          => $plainMessage,
+            'type'             => 'document_reuploaded',
+            'related_entity_id'=> $currentApp->id,
+            'is_read'          => 0,
+            'created_at'       => date('Y-m-d H:i:s'),
+            'updated_at'       => date('Y-m-d H:i:s')
+        ];
+        $insertResult = $db->table('notifications')->insert($notifData);
+        log_message('info', "In-app notification insert for user {$returnedById}: " . ($insertResult ? 'SUCCESS' : 'FAILED') . ". DB Error: " . json_encode($db->error()));
+
+        // 4. Try to find the officer's email and send an email notification too
+        $officerEmail = null;
+        
+        // Try getting email from auth_identities (Shield)
+        $identity = $db->table('auth_identities')
+                       ->select('secret as email')
+                       ->where('user_id', $returnedById)
+                       ->where('type', 'email_password')
+                       ->get()->getRow();
+                       
+        if ($identity && !empty($identity->email)) {
+             $officerEmail = $identity->email;
+        } else {
+             // Fallback: Try getting from license_users directly
+             $officerUser = $db->table('license_users')->where('id', $returnedById)->get()->getRow();
+             if ($officerUser && isset($officerUser->email) && !empty($officerUser->email)) {
+                  $officerEmail = $officerUser->email;
+             }
+        }
+
+        if ($officerEmail) {
+            $email = \Config\Services::email();
+            $email->setTo($officerEmail);
+            $email->setSubject($subject);
+            $email->setMailType('html');
+            $email->setMessage($htmlMessage);
+            
+            if ($email->send()) {
+                log_message('info', "Resubmission email sent to {$officerEmail} for document {$docType}");
+            } else {
+                log_message('error', "Failed to send resubmission email to {$officerEmail}. Error: " . $email->printDebugger(['headers']));
+            }
+        } else {
+            log_message('warning', "No email found for officer ID {$returnedById}, in-app notification was still created.");
         }
     }
 

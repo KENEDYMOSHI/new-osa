@@ -5,82 +5,123 @@
     :root {
         --sidebar-bg: #1e1e2d;
         --sidebar-hover: #2b2b40;
-        --accent-color: #6366f1; /* Indigo/Purple */
+        --accent-color: #007bff; /* AdminLTE Primary Blue */
         --text-muted: #9ca3af;
         --border-color: #e5e7eb;
     }
 
-    .notifications-page {
+    .notifications-card {
         display: flex;
-        height: calc(100vh - 57px); /* Adjust based on navbar height */
-        background-color: #f3f4f6;
+        min-height: calc(100vh - 180px); /* Adjust for header/footer and padding */
+        background-color: #fff;
+        border-radius: 4px;
+        box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
         overflow: hidden;
     }
 
     /* Sidebar Styles */
     .n-sidebar {
         width: 250px;
-        background-color: var(--sidebar-bg);
-        color: #ffffff;
-        padding: 1.5rem 1rem;
+        background-color: #f4f6f9; /* AdminLTE standard light gray */
+        border-right: 1px solid #e5e7eb;
+        color: #374151;
+        padding: 1.5rem 0.5rem; /* Remove side padding so tabs can stretch */
         display: flex;
         flex-direction: column;
-        flex-shrink: 0;
     }
 
-    .compose-btn {
-        background-color: var(--accent-color);
-        color: white;
-        border: none;
-        border-radius: 6px;
-        padding: 0.75rem 1rem;
-        font-weight: 500;
+    /* Filter Pills */
+    .pill-filters {
+        display: flex;
+        background-color: #f1f5f9; /* Light gray container */
+        border-radius: 8px;
+        padding: 0.25rem;
+        margin-bottom: 1.5rem;
+        align-items: center;
         width: 100%;
+        gap: 0.1rem; /* Tiny bit of space between them */
+    }
+    
+    .filter-pill {
+        flex: 1;
         text-align: center;
-        margin-bottom: 2rem;
-        transition: background-color 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-    }
-
-    .compose-btn:hover {
-        background-color: #4f46e5;
-        color: white;
-        text-decoration: none;
-    }
-
-    .nav-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.75rem 1rem;
-        color: #9ca3af;
-        text-decoration: none;
+        color: #475569;
+        padding: 0.4rem 0.1rem;
         border-radius: 6px;
-        margin-bottom: 0.25rem;
+        font-size: 0.7rem; /* Smaller font to fit */
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .filter-pill:hover {
+        color: #0f172a;
+        text-decoration: none;
+        background-color: rgba(255,255,255,0.4);
+    }
+    
+    .filter-pill.active {
+        background-color: #ffffff; /* White active background */
+        color: #0f172a;
+        font-weight: 700;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Subtle lift */
+    }
+
+    .new-badge {
+        display: inline-block;
+        background-color: #ffedd5; /* Light orange bg */
+        color: #c2410c; /* Dark orange text */
+        padding: 0.2rem 0.6rem;
+        border-radius: 9999px; /* Fully rounded */
+        font-weight: 800;
+        font-size: 0.7rem; /* Smaller font */
+        margin-bottom: 0.75rem;
+        align-self: flex-end; /* Push to the right */
+    }
+
+    .nav-item-list {
+        display: flex;
+        align-items: center;
+        padding: 0.6rem 2.5rem; /* Increased side padding for a wider tab */
+        margin: 0.15rem 1rem; /* Added margin back so it doesn't touch the very edges of the container but is wide */
+        color: #4b5563;
+        text-decoration: none;
+        border-radius: 50px; /* Fully rounded / pill shape */
+        font-size: 0.85rem; /* Punguza font further */
+        font-weight: 500;
         transition: all 0.2s;
     }
 
-    .nav-item:hover {
-        background-color: var(--sidebar-hover);
-        color: white;
+    .nav-item-list:hover {
+        background-color: #e9ecef; /* Hover gray */
+        color: #111827;
         text-decoration: none;
     }
 
-    .nav-item.active {
-        background-color: #3f3f5a; /* Slightly lighter than bg */
-        color: white; /* Active text color */
-        border-right: 3px solid var(--accent-color); /* Or background styling */
-         /* Actually design shows full highlight usually, let's stick to simple background */
-         background-color: var(--accent-color);
+    .nav-item-list.active {
+        background-color: #2b3945; /* Dark slate background from image */
+        color: #ffffff;
     }
     
-    .nav-item i {
-        width: 20px;
-        margin-right: 10px;
+    .nav-item-list i {
+        width: 24px;
+        font-size: 1.1rem;
+        margin-right: 12px; /* Space between icon and text */
         text-align: center;
+        color: #64748b; /* Slightly muted icon color like in screenshot */
+    }
+    
+    .nav-item-list.active i {
+        color: #ffffff; /* White icon when active */
+    }
+
+    .nav-item-list div {
+        display: flex;
+        align-items: center;
+        flex: 1; /* Push badge to the right if exists */
     }
 
     .badge-count {
@@ -89,6 +130,7 @@
         font-size: 0.75rem;
         padding: 0.1rem 0.4rem;
         border-radius: 9999px;
+        margin-left: auto; /* Push to right Edge of the shrunk container */
     }
 
     /* Main Content Styles */
@@ -187,8 +229,7 @@
     }
 
     .n-item.unread {
-        background-color: #fff; /* or keep white? usually unread is highlighted */
-        background-color: #fefffe; /* slightly distinct maybe? */
+        background-color: #fefffe; 
     }
     
     .n-item.unread .n-title {
@@ -283,144 +324,259 @@
     }
 </style>
 
-<div class="notifications-page">
-    <!-- Sidebar -->
-    <div class="n-sidebar">
-        <a href="#" class="compose-btn">
-            <i class="fas fa-plus"></i> Compose New
-        </a>
-        
-        <nav>
-            <a href="#" class="nav-item active">
-                <div><i class="fas fa-inbox"></i> Inbox</div>
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Notifications</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="<?= base_url('dashboard') ?>">Home</a></li>
+                    <li class="breadcrumb-item active">Notifications</li>
+                </ol>
+            </div>
+        </div>
+    </div><!-- /.container-fluid -->
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="notifications-card">
+            <!-- Sidebar -->
+            <div class="n-sidebar" style="align-items: center;">
                 <?php 
+                    $totalCount = count($notifications);
                     $unreadCount = count(array_filter($notifications, function($n) { return !$n->is_read; }));
-                    if($unreadCount > 0): 
+                    $readCount = $totalCount - $unreadCount;
+                    // Add starred count logic similarly if needed, for now hardcoding to 0
+                    $starredCount = 0; 
                 ?>
-                    <span class="badge-count"><?= $unreadCount ?></span>
-                <?php endif; ?>
-            </a>
-            <a href="#" class="nav-item">
-                <div><i class="fas fa-star"></i> Starred</div>
-                <span class="badge-count" style="background:#6b7280; display:none;">0</span>
-            </a>
-            <a href="#" class="nav-item">
-                <div><i class="far fa-envelope"></i> Unread</div>
-                <?php if($unreadCount > 0): ?>
-                    <span class="badge-count"><?= $unreadCount ?></span>
-                <?php endif; ?>
-            </a>
-            <a href="#" class="nav-item">
-                <div><i class="fas fa-paper-plane"></i> Sent</div>
-            </a>
-            <a href="#" class="nav-item">
-                <div><i class="fas fa-archive"></i> Archived</div>
-            </a>
-            <a href="#" class="nav-item">
-                <div><i class="fas fa-trash"></i> Trash</div>
-            </a>
-        </nav>
-    </div>
-
-    <!-- Main Content -->
-    <div class="n-content">
-        <!-- Header -->
-        <div class="n-header">
-            <div>
-                <h2>Notifications</h2>
-                <p>Stay updated with your application status</p>
-            </div>
-            <div class="d-flex gap-2">
-                 <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search notifications...">
+                <div class="new-badge">
+                    <?= $unreadCount ?> new
                 </div>
-                <button class="toolbar-btn" onclick="location.reload()" title="Refresh">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-                 <button class="toolbar-btn">
-                    <i class="fas fa-ellipsis-v"></i>
-                </button>
+                <div class="pill-filters" style="width: 100%;">
+                    <a href="#" class="filter-pill active" onclick="filterByPill('all', this); return false;">All (<?= $totalCount ?>)</a>
+                    <a href="#" class="filter-pill" onclick="filterByPill('unread', this); return false;">Unread (<?= $unreadCount ?>)</a>
+                    <a href="#" class="filter-pill" onclick="filterByPill('read', this); return false;">Read (<?= $readCount ?>)</a>
+                    <a href="#" class="filter-pill" onclick="filterByPill('starred', this); return false;">Starred (<?= $starredCount ?>)</a>
+                </div>
+                
+                <nav>
+                    <a href="#" class="nav-item-list active">
+                        <div><i class="fas fa-inbox"></i> Inbox</div>
+                        <?php 
+                            $unreadCount = count(array_filter($notifications, function($n) { return !$n->is_read; }));
+                            if($unreadCount > 0): 
+                        ?>
+                            <span class="badge-count"><?= $unreadCount ?></span>
+                        <?php endif; ?>
+                    </a>
+                    <a href="#" class="nav-item-list">
+                        <div><i class="fas fa-star"></i> Starred</div>
+                        <span class="badge-count" style="background:#6b7280; display:none;">0</span>
+                    </a>
+                    <a href="#" class="nav-item-list">
+                        <div><i class="far fa-envelope"></i> Unread</div>
+                        <?php if($unreadCount > 0): ?>
+                            <span class="badge-count"><?= $unreadCount ?></span>
+                        <?php endif; ?>
+                    </a>
+                    <a href="#" class="nav-item-list">
+                        <div><i class="fas fa-paper-plane"></i> Sent</div>
+                    </a>
+                    <a href="#" class="nav-item-list">
+                        <div><i class="fas fa-archive"></i> Archived</div>
+                    </a>
+                    <a href="#" class="nav-item-list">
+                        <div><i class="fas fa-trash"></i> Trash</div>
+                    </a>
+                </nav>
             </div>
-        </div>
 
-        <!-- Toolbar -->
-        <div class="toolbar">
-            <input type="checkbox" class="n-check" title="Select All">
-            <button class="toolbar-btn" onclick="location.reload()">
-                <i class="fas fa-redo-alt"></i>
-            </button>
-            <button class="toolbar-btn">
-                <i class="fas fa-ellipsis-h"></i>
-            </button>
-        </div>
-
-        <!-- Notifications List -->
-        <div class="n-list">
-            <?php if (!empty($notifications)): ?>
-                <?php foreach ($notifications as $notif): ?>
-                    <div class="n-item <?= !$notif->is_read ? 'unread' : '' ?>" onclick="viewNotification('<?= $notif->id ?? '' ?>')">
-                        <input type="checkbox" class="n-check" onclick="event.stopPropagation()">
-                        <i class="far fa-star n-star" onclick="event.stopPropagation(); this.classList.toggle('fas'); this.classList.toggle('far'); this.classList.toggle('starred');"></i>
-                        
-                        <!-- Avatar based on type -->
-                        <div class="n-avatar <?php 
-                            if ($notif->type === 'document_returned') echo 'alert';
-                            elseif ($notif->type === 'application_approved') echo 'success';
-                            else echo 'system';
-                        ?>">
-                            <?php 
-                                if ($notif->type === 'document_returned') echo '<i class="fas fa-exclamation"></i>';
-                                elseif ($notif->type === 'application_approved') echo '<i class="fas fa-check"></i>';
-                                else echo '<i class="fas fa-bell"></i>';
-                            ?>
+            <!-- Main Content -->
+            <div class="n-content">
+                <!-- Header -->
+                <div class="n-header">
+                    <div>
+                        <h2>Inbox</h2>
+                        <p>Stay updated with your application status</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                         <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Search notifications...">
                         </div>
+                        <button class="toolbar-btn" onclick="location.reload()" title="Refresh">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                         <button class="toolbar-btn">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                    </div>
+                </div>
 
-                        <div class="n-details">
-                            <div class="n-header-row">
-                                <span class="n-title">
-                                    <?php 
-                                        // Sender Name Simulation
-                                        echo 'WMA System'; 
-                                    ?>
-                                </span>
-                                <span class="n-date"><?= date('M d, Y', strtotime($notif->created_at)) ?></span>
+                <!-- Toolbar -->
+                <div class="toolbar">
+                    <input type="checkbox" class="n-check" title="Select All">
+                    <button class="toolbar-btn" onclick="location.reload()">
+                        <i class="fas fa-redo-alt"></i>
+                    </button>
+                    <button class="toolbar-btn">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                </div>
+
+                <!-- Notifications List -->
+                <div class="n-list" id="notifications-list-container">
+                    <?php foreach ($notifications as $notif): ?>
+                        <div class="n-item <?= !$notif->is_read ? 'unread' : '' ?>" onclick="viewNotification('<?= $notif->id ?? '' ?>')">
+                            <input type="checkbox" class="n-check" onclick="event.stopPropagation()">
+                            <i class="far fa-star n-star" onclick="event.stopPropagation(); this.classList.toggle('fas'); this.classList.toggle('far'); this.classList.toggle('starred'); filterDynamic();"></i>
+                            
+                            <!-- Avatar based on type -->
+                            <div class="n-avatar <?php 
+                                if ($notif->type === 'document_returned') echo 'alert';
+                                elseif ($notif->type === 'application_approved') echo 'success';
+                                else echo 'system';
+                            ?>">
+                                <?php 
+                                    if ($notif->type === 'document_returned') echo '<i class="fas fa-exclamation"></i>';
+                                    elseif ($notif->type === 'application_approved') echo '<i class="fas fa-check"></i>';
+                                    else echo '<i class="fas fa-bell"></i>';
+                                ?>
                             </div>
-                            <div class="n-header-row" style="margin:0;">
-                                <div class="d-flex align-items-center" style="width: 100%; overflow:hidden;">
-                                    <strong class="mr-2" style="white-space:nowrap;"><?= esc($notif->title) ?></strong> 
-                                    <span class="n-preview">- <?= esc($notif->message) ?></span>
+
+                            <div class="n-details">
+                                <div class="n-header-row">
+                                    <span class="n-title">
+                                        <?php 
+                                            echo 'WMA System'; 
+                                        ?>
+                                    </span>
+                                    <span class="n-date"><?= date('M d, Y', strtotime($notif->created_at)) ?></span>
+                                </div>
+                                <div class="n-header-row" style="margin:0;">
+                                    <div class="d-flex align-items-center" style="width: 100%; overflow:hidden;">
+                                        <strong class="mr-2" style="white-space:nowrap;"><?= esc($notif->title) ?></strong> 
+                                        <span class="n-preview">- <?= esc($notif->message) ?></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    <?php endforeach; ?>
+                    
+                    <div class="n-empty" id="n-empty-state" style="display: <?= empty($notifications) ? 'flex' : 'none' ?>;">
+                        <i class="far fa-bell-slash"></i>
+                        <p>No notifications found</p>
                     </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="n-empty">
-                    <i class="far fa-bell-slash"></i>
-                    <p>No notifications found</p>
                 </div>
-            <?php endif; ?>
+            </div>
         </div>
     </div>
-</div>
+</section>
 
 <script>
     function viewNotification(id) {
-        // Handle click action - maybe expand or go to detail
-        // For now, if related_entity_id exists logic from previous
-        // We'll just alert standard behavior for design demo
-        // console.log("Clicked notification " + id);
+        // Handle click action
     }
     
-    // Search filter
-    document.querySelector('.search-box input').addEventListener('keyup', function(e) {
-        const term = e.target.value.toLowerCase();
-        document.querySelectorAll('.n-item').forEach(item => {
-            const text = item.innerText.toLowerCase();
-            item.style.display = text.includes(term) ? 'flex' : 'none';
+    const tabs = document.querySelectorAll('.nav-item-list');
+    const pills = document.querySelectorAll('.filter-pill');
+    const headerTitle = document.querySelector('.n-header h2');
+    const emptyState = document.getElementById('n-empty-state');
+    const nItems = document.querySelectorAll('.n-item');
+    let currentFilter = 'inbox';
+
+    // Pill Switching Logic
+    function filterByPill(type, element) {
+        // Update active pill styling
+        pills.forEach(p => p.classList.remove('active'));
+        if (element) {
+            element.classList.add('active');
+        }
+        
+        // Remove active class from nav tabs to avoid confusion
+        tabs.forEach(t => t.classList.remove('active'));
+        
+        if (type === 'all') {
+            currentFilter = 'inbox';
+            headerTitle.innerText = 'All Notifications';
+        } else if (type === 'read') {
+            currentFilter = 'read';
+            headerTitle.innerText = 'Read Notifications';
+        } else {
+            currentFilter = type;
+            headerTitle.innerText = type.charAt(0).toUpperCase() + type.slice(1) + ' Notifications';
+        }
+        filterDynamic();
+    }
+
+    // Sidebar Tab Switching Logic
+    tabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Remove active style from pills
+            pills.forEach(p => p.classList.remove('active'));
+            
+            // Update active styling
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Update title
+            const tabName = tab.querySelector('div').innerText.trim();
+            headerTitle.innerText = tabName;
+            
+            // Filter list
+            currentFilter = tabName.toLowerCase();
+            filterDynamic();
         });
     });
+
+    function filterDynamic() {
+        let visibleCount = 0;
+        
+        nItems.forEach(item => {
+            let show = false;
+            
+            if (currentFilter === 'inbox') { show = true; } // Shows all
+            else if (currentFilter === 'starred') { show = item.querySelector('.n-star.starred') !== null; }
+            else if (currentFilter === 'unread') { show = item.classList.contains('unread'); }
+            else if (currentFilter === 'read') { show = !item.classList.contains('unread'); }
+            else if (['sent', 'archived', 'trash'].includes(currentFilter)) { show = false; }
+            
+            item.style.display = show ? 'flex' : 'none';
+            if(show) visibleCount++;
+        });
+        
+        // Search filter overrides
+        const searchTerm = document.querySelector('.search-box input').value.toLowerCase();
+        if (searchTerm) {
+            visibleCount = 0;
+            nItems.forEach(item => {
+                if(item.style.display === 'flex') {
+                    if(!item.innerText.toLowerCase().includes(searchTerm)) {
+                        item.style.display = 'none';
+                    } else {
+                        visibleCount++;
+                    }
+                }
+            });
+        }
+        
+        if(emptyState) {
+            emptyState.style.display = visibleCount === 0 ? 'flex' : 'none';
+            if(visibleCount === 0) {
+                 emptyState.querySelector('p').innerText = 'No ' + currentFilter + ' notifications found';
+            }
+        }
+    }
+    
+    // Search input event
+    document.querySelector('.search-box input').addEventListener('keyup', filterDynamic);
 </script>
 
 <?= $this->endSection(); ?>

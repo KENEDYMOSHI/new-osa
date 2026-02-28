@@ -8,25 +8,19 @@ class UserNotificationsController extends BaseController
 {
     public function index()
     {
-        $token = session()->get('token');
-        
-        // Fetch notifications from backend API
-        $url = 'http://localhost:8080/api/notifications'; // Using the backend route we found earlier
-        
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Bearer ' . $token,
-            'Content-Type: application/json'
-        ]);
-        
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        
+        $userId = auth()->user()->id ?? null;
+
         $notifications = [];
-        if ($httpCode === 200) {
-            $notifications = json_decode($response);
+
+        if ($userId) {
+            // Query the osa_app notifications table directly; this is the backend DB
+            $db = \Config\Database::connect('osa');
+            $notifications = $db->table('notifications')
+                ->where('user_id', $userId)
+                ->orderBy('created_at', 'DESC')
+                ->limit(50)
+                ->get()
+                ->getResult();
         }
 
         $data = [
@@ -38,4 +32,44 @@ class UserNotificationsController extends BaseController
 
         return view('Pages/Osa/Notifications', $data);
     }
+
+    public function getNotificationsAjax()
+    {
+        $userId = auth()->user()->id ?? null;
+
+        if (!$userId) {
+            return $this->response->setJSON([]);
+        }
+
+        $db = \Config\Database::connect('osa');
+        $notifications = $db->table('notifications')
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'DESC')
+            ->limit(50)
+            ->get()
+            ->getResultArray();
+
+        return $this->response->setContentType('application/json')->setBody(json_encode($notifications));
+    }
+
+    public function markNotificationRead($id)
+    {
+        $userId = auth()->user()->id ?? null;
+
+        if (!$userId) {
+            return $this->response->setJSON(['success' => false, 'error' => 'Not authenticated']);
+        }
+
+        $db = \Config\Database::connect('osa');
+        $db->table('notifications')
+            ->where('id', $id)
+            ->where('user_id', $userId)
+            ->update([
+                'is_read' => 1,
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
+
+        return $this->response->setJSON(['success' => true]);
+    }
 }
+

@@ -344,12 +344,12 @@ class AdminController extends ResourceController
 
     public function returnDocument()
     {
-        // Skip authentication in development mode
-        if (ENVIRONMENT !== 'development') {
-            $user = $this->getUserFromToken();
-            if (!$user) {
-                return $this->failUnauthorized('Invalid or expired token. Please login again.');
-            }
+        // Always try to get user from token (for returned_by tracking)
+        $user = $this->getUserFromToken();
+        
+        // Only enforce auth in non-development environments
+        if (ENVIRONMENT !== 'development' && !$user) {
+            return $this->failUnauthorized('Invalid or expired token. Please login again.');
         }
 
         $json = $this->request->getJSON();
@@ -373,9 +373,13 @@ class AdminController extends ResourceController
                 return $this->failNotFound('Document not found');
             }
             
+            $returnedById = ($user && isset($user->id)) ? $user->id : (($user && isset($user->uid)) ? $user->uid : null);
+            log_message('info', 'returnDocument: returning officer ID = ' . $returnedById);
+
             $data = [
                 'status' => 'Returned',
                 'rejection_reason' => $rejectionReason,
+                'returned_by' => $returnedById,
                 'updated_at' => date('Y-m-d H:i:s')
             ];
 

@@ -232,6 +232,9 @@ $routes->group('', ['filter' => 'AuthFilter'], function ($routes, $appRoutes = [
     $appRoutes['initialApplicationApproval'] = 'OsaController::index';
     $appRoutes['api/applications'] = 'OsaController::getApplicationsApi';
     $appRoutes['api/application/(:any)'] = 'OsaController::getApplicationDetailsApi/$1';
+    $appRoutes['notifications'] = 'UserNotificationsController::index';
+    $appRoutes['osaNotificationsAjax'] = 'UserNotificationsController::getNotificationsAjax';
+    $appRoutes['osaMarkNotificationRead/(:any)'] = 'UserNotificationsController::markNotificationRead/$1';
     $appRoutes['viewApplication/(:any)'] = 'OsaController::viewApplication/$1';
     $appRoutes['viewCompletedApplication/(:any)'] = 'OsaController::viewCompletedApplication/$1';
     $appRoutes['viewCompleteApplication'] = 'OsaController::completedApplications';
