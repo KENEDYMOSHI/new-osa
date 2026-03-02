@@ -166,7 +166,7 @@ class WmaNotificationsController extends BaseController
             . "Hivyo, inawasilishwa kwako kwa ajili ya mapitio zaidi na hatua stahiki "
             . "kulingana na utaratibu wa mfumo.\n"
             . "Tafadhali endelea na hatua zinazofuata ipasavyo.\n\nAsante.\n\n"
-            . "Maombi Na.: <strong>{$controlNumber}</strong>";
+            . "Maombi Na.: <strong>" . ($requestNumber ?? $controlNumber) . "</strong>";
 
         $this->notifModel->notify(
             $wmaUserId,

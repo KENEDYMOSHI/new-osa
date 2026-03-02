@@ -372,7 +372,7 @@ class LicenseController extends ResourceController
                 <p>Tafadhali endelea na hatua zinazofuata ipasavyo.</p>
                 <br>
                 <p style="color: #6b7280; font-size: 13px;">
-                    Nambari ya Maombi: <strong>' . htmlspecialchars($controlNumber) . '</strong><br>
+                    Nambari ya Maombi: <strong>' . htmlspecialchars($requestNumber ?? $controlNumber) . '</strong><br>
                     Tarehe: <strong>' . date('d M Y, H:i') . '</strong>
                 </p>
             </div>
