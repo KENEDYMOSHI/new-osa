@@ -14,7 +14,7 @@ class LicenseApplicationModel extends Model
     protected $protectFields    = true;
     protected $allowedFields    = [
         'id', 'initial_application_id', 'user_id', 'license_number', 'control_number',
-        'status', 'workflow_stage', 'valid_from', 'valid_to',
+        'request_number', 'status', 'workflow_stage', 'valid_from', 'valid_to',
         'application_type', 'total_amount', 'previous_licenses', 'qualifications', 'experiences', 'tools',
         'approval_stage', 'current_stage',
         'approver_stage_1', 'status_stage_1',

@@ -19,6 +19,7 @@ class WmaNotificationModel extends Model
         'message',
         'type',
         'related_entity_id',
+        'request_number',
         'is_read',
     ];
 
@@ -29,7 +30,7 @@ class WmaNotificationModel extends Model
     /**
      * Insert a notification for a single user.
      */
-    public function notify(int $userId, string $title, string $message, string $type = 'info', ?string $relatedEntityId = null): bool
+    public function notify(int $userId, string $title, string $message, string $type = 'info', ?string $relatedEntityId = null, ?string $requestNumber = null): bool
     {
         return $this->insert([
             'user_id'           => $userId,
@@ -37,6 +38,7 @@ class WmaNotificationModel extends Model
             'message'           => $message,
             'type'              => $type,
             'related_entity_id' => $relatedEntityId,
+            'request_number'    => $requestNumber,
             'is_read'           => 0,
         ]) !== false;
     }
@@ -44,10 +46,10 @@ class WmaNotificationModel extends Model
     /**
      * Insert a notification for multiple users (e.g. all surveillance officers).
      */
-    public function notifyMany(array $userIds, string $title, string $message, string $type = 'info', ?string $relatedEntityId = null): void
+    public function notifyMany(array $userIds, string $title, string $message, string $type = 'info', ?string $relatedEntityId = null, ?string $requestNumber = null): void
     {
         foreach ($userIds as $userId) {
-            $this->notify((int) $userId, $title, $message, $type, $relatedEntityId);
+            $this->notify((int) $userId, $title, $message, $type, $relatedEntityId, $requestNumber);
         }
     }
 
