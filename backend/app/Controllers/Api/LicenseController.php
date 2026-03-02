@@ -257,6 +257,26 @@ class LicenseController extends ResourceController
     }
 
     /**
+     * Generate a unique request number in the format: OSA/REQ/YYYY/MM/NN
+     * where NN is a zero-padded sequential count for the current month.
+     */
+    private function generateRequestNumber($db): string
+    {
+        $year  = date('Y');
+        $month = date('m');
+
+        // Count existing applications created this month to determine the next sequence
+        $count = $db->table('license_applications')
+                    ->where("YEAR(created_at)", $year)
+                    ->where("MONTH(created_at)", $month)
+                    ->countAllResults();
+
+        $sequence = str_pad($count + 1, 2, '0', STR_PAD_LEFT);
+
+        return "OSA/REQ/{$year}/{$month}/{$sequence}";
+    }
+
+    /**
      * Helper to send notification when document is re-uploaded
      */
     private function sendReuploadNotification($currentApp, $user, $docType) {
@@ -914,6 +934,7 @@ class LicenseController extends ResourceController
                         'approval_stage' => 'Manager', // Start flow
                         'application_type' => $applicationType,
                         'total_amount' => $appFee,
+                        'request_number' => $this->generateRequestNumber($db),
                         'created_at' => date('Y-m-d H:i:s'),
                         'updated_at' => date('Y-m-d H:i:s')
                      ];
