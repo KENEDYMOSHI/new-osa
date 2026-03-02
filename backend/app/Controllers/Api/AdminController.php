@@ -344,17 +344,20 @@ class AdminController extends ResourceController
 
     public function returnDocument()
     {
-        // Always try to get user from token (for returned_by tracking)
+        // Allow BOTH Bearer token (for future/testing) AND X-API-KEY (server-to-server from WMA-MIS)
         $user = $this->getUserFromToken();
-        
-        // Only enforce auth in non-development environments
-        if (ENVIRONMENT !== 'development' && !$user) {
+        $apiKey = $this->request->getHeaderLine('X-API-KEY');
+        $validApiKey = 'wma_internal_notif_key_9x2z'; // Same key used for webhook
+
+        if (!$user && $apiKey !== $validApiKey) {
             return $this->failUnauthorized('Invalid or expired token. Please login again.');
         }
 
         $json = $this->request->getJSON();
         $documentId = $json->document_id ?? null;
         $rejectionReason = $json->rejection_reason ?? null;
+        // If coming via API key, the WMA-MIS user ID is passed in the payload
+        $payloadUserId = $json->returned_by_user_id ?? null;
 
         if (!$documentId || !$rejectionReason) {
             return $this->fail('Document ID and rejection reason are required');
@@ -373,7 +376,17 @@ class AdminController extends ResourceController
                 return $this->failNotFound('Document not found');
             }
             
-            $returnedById = ($user && isset($user->id)) ? $user->id : (($user && isset($user->uid)) ? $user->uid : null);
+            // Determine who returned it
+            $returnedById = null;
+            if ($user && isset($user->id)) {
+                $returnedById = $user->id;
+            } elseif ($user && isset($user->uid)) {
+                $returnedById = $user->uid;
+            } else {
+                // Used API Key - trust the payload's user ID
+                $returnedById = $payloadUserId;
+            }
+            
             log_message('info', 'returnDocument: returning officer ID = ' . $returnedById);
 
             $data = [

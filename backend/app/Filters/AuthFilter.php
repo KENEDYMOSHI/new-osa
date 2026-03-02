@@ -34,8 +34,17 @@ class AuthFilter implements FilterInterface
         }
 
         $header = $request->getHeaderLine('Authorization');
+        $apiKey = $request->getHeaderLine('X-API-KEY');
+        $validApiKey = 'wma_internal_notif_key_9x2z'; // Used by WMA-MIS
+
+        // If a valid API key is present, let the request through without a Bearer token
+        if ($apiKey === $validApiKey) {
+            return;
+        }
         
         if (empty($header)) {
+            // Log for debugging
+            log_message('error', 'Admin: No Authorization header found. X-API-KEY was: ' . ($apiKey ?: 'none'));
             return Services::response()
                 ->setJSON(['status' => 401, 'error' => 'Unauthorized', 'message' => 'Token Required'])
                 ->setStatusCode(ResponseInterface::HTTP_UNAUTHORIZED);

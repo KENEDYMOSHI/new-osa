@@ -7,7 +7,7 @@ use CodeIgniter\Controller;
 class DocumentController extends Controller
 {
     private $backendApiUrl = 'http://localhost:8080/api/document';
-    private $apiKey = 'osa_approval_api_key_12345';
+    private $apiKey = 'wma_internal_notif_key_9x2z';
     
     public function view($attachmentId)
     {

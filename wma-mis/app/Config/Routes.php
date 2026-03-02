@@ -98,6 +98,8 @@ $routes->get('verifyCalibrationChart/(:any)/(:any)/(:any)', 'VerificationControl
 //
 $routes->get('verificationAlert', 'NotificationController::verificationAlert');
 $routes->get('debtAlert', 'NotificationController::debtAlert');
+// Internal API - called by osa_app backend on document reupload
+$routes->post('osa/notifyReupload', 'WmaNotificationsController::notifyReupload');
 
 
 $routes->get('cars', 'DataDevController::cars');
@@ -235,6 +237,12 @@ $routes->group('', ['filter' => 'AuthFilter'], function ($routes, $appRoutes = [
     $appRoutes['notifications'] = 'UserNotificationsController::index';
     $appRoutes['osaNotificationsAjax'] = 'UserNotificationsController::getNotificationsAjax';
     $appRoutes['osaMarkNotificationRead/(:any)'] = 'UserNotificationsController::markNotificationRead/$1';
+    $appRoutes['osaMarkAllNotificationsRead'] = 'UserNotificationsController::markAllRead';
+    // WMA Officer Notifications (vessel_discharge DB)
+    $appRoutes['wmaNotifications'] = 'WmaNotificationsController::index';
+    $appRoutes['wmaNotificationsAjax'] = 'WmaNotificationsController::getAjax';
+    $appRoutes['wmaMarkNotificationRead/(:num)'] = 'WmaNotificationsController::markRead/$1';
+    $appRoutes['wmaMarkAllNotificationsRead'] = 'WmaNotificationsController::markAllRead';
     $appRoutes['viewApplication/(:any)'] = 'OsaController::viewApplication/$1';
     $appRoutes['viewCompletedApplication/(:any)'] = 'OsaController::viewCompletedApplication/$1';
     $appRoutes['viewCompleteApplication'] = 'OsaController::completedApplications';

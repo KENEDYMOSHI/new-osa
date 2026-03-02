@@ -125,7 +125,7 @@ public function viewApplication($id)
 
   $data['user']= $this->user;
   $data['application'] = $application;
-  $data['apiKey'] = 'osa_approval_api_key_12345';
+  $data['apiKey'] = 'wma_internal_notif_key_9x2z';
 
   return view('Pages/Osa/ApplicationDetail',$data);
 }
@@ -429,6 +429,9 @@ public function approveApplication()
     $result = $this->licenseModel->updateApplicationStatus($applicationId, 'Approved', $stage, $comment);
 
     if ($result === true) {
+        // ---- WMA Notification: notify officers of the next stage ----
+        $this->_notifyNextStageOfficers($stage, $applicationId);
+        // --------------------------------------------------------------
         return redirect()->back()->with('success', 'Application approved successfully');
     } else {
         $errorMsg = is_string($result) ? $result : 'Failed to approve application';
@@ -656,5 +659,76 @@ public function rejectApplication()
         return view('Pages/Osa/ServiceRecords', $data);
     }
 
+    // ---------------------------------------------------------------
+    // Private helper: notify officers of the next approval stage
+    // after the current stage is approved.
+    // Stage map: 1=manager→2=surveillance, 2→3=dts, 3→4=ceo, 4→done
+    // ---------------------------------------------------------------
+    private function _notifyNextStageOfficers(int $approvedStage, string $applicationId): void
+    {
+        try {
+            // Map approved stage → next stage's group name(s)
+            $stageToGroup = [
+                1 => ['surveillance'],
+                2 => ['dts'],
+                3 => ['ceo'],
+                4 => ['admin', 'superadmin'],
+            ];
+
+            $nextGroups = $stageToGroup[$approvedStage] ?? [];
+            if (empty($nextGroups)) {
+                return; // Stage 4 approved = fully approved, no next stage
+            }
+
+            $stageLabels = [
+                1 => 'Regional Manager',
+                2 => 'Surveillance Officer',
+                3 => 'Technical Director (DTS)',
+                4 => 'Commissioner/CEO',
+            ];
+            $nextStageLabel = $stageLabels[$approvedStage + 1] ?? 'Next Stage';
+
+            // Find users that belong to the next group(s)
+            $db = \Config\Database::connect(); // vessel_discharge (default)
+            $userIds = [];
+
+            foreach ($nextGroups as $groupName) {
+                // auth_groups_users → join auth_groups to get users in this group
+                $rows = $db->table('auth_groups_users agu')
+                    ->select('agu.user_id')
+                    ->join('auth_groups ag', 'ag.id = agu.group_id', 'inner')
+                    ->where('ag.name', $groupName)
+                    ->get()
+                    ->getResultArray();
+
+                foreach ($rows as $row) {
+                    $userIds[] = (int) $row['user_id'];
+                }
+            }
+
+            $userIds = array_unique($userIds);
+
+            if (empty($userIds)) {
+                return;
+            }
+
+            $notifModel = new \App\Models\WmaNotificationModel();
+            $approverName = trim(($this->user->first_name ?? '') . ' ' . ($this->user->last_name ?? ''));
+            if (empty($approverName)) {
+                $approverName = $this->user->username ?? 'An officer';
+            }
+
+            $notifModel->notifyMany(
+                $userIds,
+                'Application Ready for Your Review',
+                "Application #{$applicationId} has been approved by the {$stageLabels[$approvedStage]} and is now awaiting your review as {$nextStageLabel}.",
+                'application_approved',
+                $applicationId
+            );
+        } catch (\Throwable $e) {
+            // Log but don't break the main flow
+            log_message('error', 'WMA Notification error in _notifyNextStageOfficers: ' . $e->getMessage());
+        }
+    }
 
 }

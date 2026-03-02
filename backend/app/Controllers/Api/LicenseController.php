@@ -18,6 +18,29 @@ class LicenseController extends ResourceController
 {
     use ResponseTrait;
 
+    /**
+     * Maps a short document_type key → full human-readable label.
+     * Format returned: "Full Name (short_key)"
+     * Add or update entries here whenever new document types are introduced.
+     */
+    private static function resolveDocumentLabel(string $docType): string
+    {
+        $map = [
+            'brela'           => 'Certificate of Registration/Incorporation from BRELA',
+            'businessLicense' => 'Business Licence',
+            'tin'             => 'Tax Identification Number (TIN) Certificate',
+            'taxClearance'    => 'Tax Clearance Certificate',
+            'identity'        => 'National Identity Card / Passport',
+            'csee'            => 'CSEE Certificate (Form IV)',
+            'psle'            => 'PSLE Certificate (Standard VII)',
+            'passport'        => 'Passport',
+            'practisingCert'  => 'Practising Certificate',
+        ];
+
+        $fullName = $map[$docType] ?? null;
+        return $fullName ? "{$fullName} ({$docType})" : $docType;
+    }
+
     private function generateUuid()
     {
         return sprintf(
@@ -155,11 +178,25 @@ class LicenseController extends ResourceController
 
                     // Send Notification for Re-upload (App Notification)
                     $this->sendReuploadNotification($currentApp, $user, $docType);
-                    
-                    // Send Email to the specific officer who returned it
-                    if (!empty($existingDoc->returned_by)) {
-                        $this->sendResubmissionEmail($currentApp, $user, $docType, $existingDoc->returned_by);
+
+                    // Send WMA notification + email to the officer who returned the document.
+                    // If returned_by is NULL (e.g. legacy data), fall back to the current stage approver.
+                    $officerToNotify = $existingDoc->returned_by ?? null;
+                    if (!$officerToNotify && $currentApp) {
+                        // Fallback: use the approver assigned to the current approval stage
+                        // $currentApp is an array, not an object
+                        $appId = is_array($currentApp) ? ($currentApp['id'] ?? null) : ($currentApp->id ?? null);
+                        $db = \Config\Database::connect();
+                        if ($appId) {
+                            $review = $db->table('application_reviews')
+                                         ->where('application_id', $appId)
+                                         ->orderBy('created_at', 'DESC')
+                                         ->get(1)->getRow();
+                            $officerToNotify = $review ? $review->approver_id : null;
+                        }
                     }
+
+                    $this->sendResubmissionEmail($currentApp, $user, $docType, $officerToNotify);
 
                     return $this->respondCreated([
                         'message' => 'File re-uploaded successfully',
@@ -228,9 +265,9 @@ class LicenseController extends ResourceController
         $db = \Config\Database::connect();
         
         // Determine the approver based on current stage
-        $currentStage = $currentApp->current_stage ?? 1;
+        $currentStage = is_array($currentApp) ? ($currentApp['current_stage'] ?? 1) : ($currentApp->current_stage ?? 1);
         $approverColumn = 'approver_stage_' . $currentStage;
-        $approverId = $currentApp->$approverColumn ?? null;
+        $approverId = is_array($currentApp) ? ($currentApp[$approverColumn] ?? null) : ($currentApp->$approverColumn ?? null);
 
         // Only send notification if an approver is assigned
         if ($approverId) {
@@ -239,7 +276,8 @@ class LicenseController extends ResourceController
             $personalInfo = $db->table('practitioner_personal_infos')->where('user_uuid', $user->uuid)->get()->getRow();
             $applicantName = $personalInfo ? ($personalInfo->first_name . ' ' . $personalInfo->last_name) : 'Applicant';
 
-            $controlNumber = $currentApp->control_number ?? 'Unknown';
+            $controlNumber = is_array($currentApp) ? ($currentApp['control_number'] ?? 'Unknown') : ($currentApp->control_number ?? 'Unknown');
+            $appId = is_array($currentApp) ? ($currentApp['id'] ?? null) : ($currentApp->id ?? null);
 
             $notifData = [
                 'id' => $notifId,
@@ -247,7 +285,7 @@ class LicenseController extends ResourceController
                 'title' => 'Document Re-uploaded',
                 'message' => "Applicant {$applicantName} has re-uploaded '{$docType}' for Application {$controlNumber}.",
                 'type' => 'document_reuploaded',
-                'related_entity_id' => $currentApp->id,
+                'related_entity_id' => $appId,
                 'is_read' => 0,
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s')
@@ -258,79 +296,166 @@ class LicenseController extends ResourceController
     }
 
     /**
-     * Helper to send notification (in-app + email) when a returned document is re-uploaded
+     * Helper to send notification (in-app + email + wma_notifications) when a returned document is re-uploaded.
+     *
+     * @param object|null $currentApp  The application record (from osa_app)
+     * @param object      $user        The applicant user (Shield user object)
+     * @param string      $docType     Document type name (e.g. "Practising Certificate")
+     * @param int|string  $returnedById The ID of the WMA officer who originally returned the document
      */
     private function sendResubmissionEmail($currentApp, $user, $docType, $returnedById) {
-        if (!$currentApp || !$returnedById) return;
+        if (!$currentApp) return;
 
-        $db = \Config\Database::connect();
-        
-        // 1. Get Applicant Details (Name and Region)
-        $personalInfo = $db->table('practitioner_personal_infos')->where('user_uuid', $user->uuid)->get()->getRow();
-        $applicantName = $personalInfo ? ($personalInfo->first_name . ' ' . $personalInfo->last_name) : 'Applicant';
-        $regionName = $personalInfo ? ($personalInfo->region ?? 'Tanzania') : 'Tanzania';
+        // Expand short document key → full human-readable label
+        $docLabel = self::resolveDocumentLabel($docType);
 
-        // 2. Compose the Swahili message
-        $subject = 'Nyaraka Zilizorekebishwa (Document Resubmitted)';
-        
-        $htmlMessage = "Salamu.<br><br>";
-        $htmlMessage .= "Tafadhali fahamu kuwa mwombaji <b>{$applicantName}</b> kutoka mkoa wa <b>{$regionName}</b> amewasilisha tena nyaraka <b>{$docType}</b> baada ya kufanya marekebisho kama alivyoshauriwa hapo awali.<br><br>";
-        $htmlMessage .= "Baada ya mapitio ya awali, imebainika kuwa hati hiyo imezingatia maelekezo yaliyotolewa na marekebisho yaliyohitajika yamefanyika ipasavyo.<br><br>";
-        $htmlMessage .= "Hivyo, inawasilishwa kwako kwa ajili ya mapitio zaidi na hatua stahiki kulingana na utaratibu wa mfumo.<br><br>";
-        $htmlMessage .= "Tafadhali endelea na hatua zinazofuata ipasavyo.<br><br>";
-        $htmlMessage .= "Asante.";
-        
-        $plainMessage = strip_tags(str_replace('<br>', "\n", $htmlMessage));
+        $db = \Config\Database::connect(); // osa_app (default in backend)
 
-        // 3. ALWAYS insert the in-app notification into the database
+        // ── 1. Get Applicant Details ───────────────────────────────────────
+        $personalInfo = $db->table('practitioner_personal_infos')
+                           ->where('user_uuid', $user->uuid)
+                           ->get()->getRow();
+        $applicantName = $personalInfo
+            ? trim(($personalInfo->first_name ?? '') . ' ' . ($personalInfo->last_name ?? ''))
+            : 'Mwombaji';
+        if (empty($applicantName)) $applicantName = 'Mwombaji';
+        $regionName = $personalInfo->region ?? 'Tanzania';
+        $appId = is_array($currentApp) ? ($currentApp['id'] ?? null) : ($currentApp->id ?? null);
+        $appControlNumber = is_array($currentApp) ? ($currentApp['control_number'] ?? null) : ($currentApp->control_number ?? null);
+        $controlNumber = $appControlNumber ?? ($appId ?? 'N/A');
+
+        // ── 2. Build Swahili Email Template ───────────────────────────────
+        $subject = 'Nyaraka Zilizorekebishwa — ' . $docLabel;
+
+        $htmlMessage = '
+        <div style="font-family: Arial, sans-serif; max-width: 680px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+            <div style="background: #1a3d6b; padding: 20px 30px;">
+                <h2 style="color: #ffffff; margin: 0; font-size: 18px;">WMA — Arifa ya Nyaraka Zilizorejelewa</h2>
+            </div>
+            <div style="padding: 30px; background: #ffffff; color: #374151; font-size: 15px; line-height: 1.8;">
+                <p>Salamu.</p>
+                <p>
+                    Tafadhali fahamu kuwa mwombaji <strong>' . htmlspecialchars($applicantName) . '</strong>
+                    kutoka mkoa wa <strong>' . htmlspecialchars($regionName) . '</strong>
+                    amewasilisha tena nyaraka <strong>' . htmlspecialchars($docLabel) . '</strong>
+                    baada ya kufanya marekebisho kama alivyoshauriwa hapo awali.
+                </p>
+                <p>
+                    Baada ya mapitio ya awali, imebainika kuwa hati hiyo imezingatia maelekezo yaliyotolewa
+                    na marekebisho yaliyohitajika yamefanyika ipasavyo.
+                </p>
+                <p>
+                    Hivyo, inawasilishwa kwako kwa ajili ya mapitio zaidi na hatua stahiki kulingana
+                    na utaratibu wa mfumo.
+                </p>
+                <p>Tafadhali endelea na hatua zinazofuata ipasavyo.</p>
+                <br>
+                <p style="color: #6b7280; font-size: 13px;">
+                    Nambari ya Maombi: <strong>' . htmlspecialchars($controlNumber) . '</strong><br>
+                    Tarehe: <strong>' . date('d M Y, H:i') . '</strong>
+                </p>
+            </div>
+            <div style="background: #f9fafb; padding: 16px 30px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af; text-align: center;">
+                Mfumo wa Udhibiti wa Leseni — WMA-MIS | Ujumbe huu umetumwa kiotomatiki, tafadhali usireply.
+            </div>
+        </div>';
+
+        $plainMessage = "Salamu.\n\n"
+            . "Mwombaji {$applicantName} kutoka mkoa wa {$regionName} amewasilisha tena nyaraka '{$docLabel}' "
+            . "baada ya kufanya marekebisho kama alivyoshauriwa hapo awali.\n\n"
+            . "Baada ya mapitio ya awali, imebainika kuwa hati hiyo imezingatia maelekezo yaliyotolewa "
+            . "na marekebisho yaliyohitajika yamefanyika ipasavyo.\n\n"
+            . "Hivyo, inawasilishwa kwako kwa ajili ya mapitio zaidi na hatua stahiki kulingana na utaratibu wa mfumo.\n\n"
+            . "Tafadhali endelea na hatua zinazofuata ipasavyo.\n\nAsante.";
+
+        // ── 3. In-app notification → osa_app.notifications (applicant portal) ──
         $notifData = [
-            'id'               => md5(uniqid(rand(), true)),
-            'user_id'          => $returnedById, 
-            'title'            => $subject,
-            'message'          => $plainMessage,
-            'type'             => 'document_reuploaded',
-            'related_entity_id'=> $currentApp->id,
-            'is_read'          => 0,
-            'created_at'       => date('Y-m-d H:i:s'),
-            'updated_at'       => date('Y-m-d H:i:s')
+            'id'                => md5(uniqid(rand(), true)),
+            'user_id'           => $returnedById,
+            'title'             => $subject,
+            'message'           => $plainMessage,
+            'type'              => 'document_reuploaded',
+            'related_entity_id' => $appId,
+            'is_read'           => 0,
+            'created_at'        => date('Y-m-d H:i:s'),
+            'updated_at'        => date('Y-m-d H:i:s'),
         ];
         $insertResult = $db->table('notifications')->insert($notifData);
-        log_message('info', "In-app notification insert for user {$returnedById}: " . ($insertResult ? 'SUCCESS' : 'FAILED') . ". DB Error: " . json_encode($db->error()));
+        log_message('info', "osa_app notification insert for officer {$returnedById}: " . ($insertResult ? 'SUCCESS' : 'FAILED'));
 
-        // 4. Try to find the officer's email and send an email notification too
+        // ── 4. Resolve officer email first (needed for webhook payload + email send) ──
         $officerEmail = null;
-        
-        // Try getting email from auth_identities (Shield)
-        $identity = $db->table('auth_identities')
-                       ->select('secret as email')
-                       ->where('user_id', $returnedById)
-                       ->where('type', 'email_password')
-                       ->get()->getRow();
-                       
-        if ($identity && !empty($identity->email)) {
-             $officerEmail = $identity->email;
-        } else {
-             // Fallback: Try getting from license_users directly
-             $officerUser = $db->table('license_users')->where('id', $returnedById)->get()->getRow();
-             if ($officerUser && isset($officerUser->email) && !empty($officerUser->email)) {
-                  $officerEmail = $officerUser->email;
-             }
+        if ($returnedById) {
+            $identity = $db->table('auth_identities')
+                           ->select('secret as email')
+                           ->where('user_id', $returnedById)
+                           ->where('type', 'email_password')
+                           ->get()->getRow();
+            if ($identity && !empty($identity->email)) {
+                $officerEmail = $identity->email;
+            } else {
+                $officerUser = $db->table('license_users')->where('id', $returnedById)->get()->getRow();
+                if ($officerUser && !empty($officerUser->email)) {
+                    $officerEmail = $officerUser->email;
+                }
+            }
         }
 
+        // ── 5. WMA-MIS notification → vessel_discharge.wma_notifications ──────
+        // Pass officer_email so the webhook resolves the correct vessel_discharge user ID.
+        try {
+            $wmaMisBaseUrl = rtrim(getenv('WMA_MIS_URL') ?: 'http://localhost:8081', '/');
+            $webhookUrl    = $wmaMisBaseUrl . '/osa/notifyReupload';
+
+            $payload = json_encode([
+                'api_key'             => 'wma_internal_notif_key_9x2z',
+                'application_id'      => (string) $appId,
+                'attachment_name'     => $docLabel,
+                'returned_by_user_id' => (int) ($returnedById ?? 0),
+                'officer_email'       => $officerEmail ?? '',
+                'applicant_name'      => $applicantName,
+                'region_name'         => $regionName,
+                'control_number'      => $controlNumber,
+            ]);
+
+            $ch = curl_init($webhookUrl);
+            curl_setopt_array($ch, [
+                CURLOPT_POST           => true,
+                CURLOPT_POSTFIELDS     => $payload,
+                CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT        => 5,
+                CURLOPT_CONNECTTIMEOUT => 3,
+            ]);
+            $curlResponse = curl_exec($ch);
+            $curlError    = curl_error($ch);
+            $httpCode     = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($curlError) {
+                log_message('error', "WMA notifyReupload curl error: {$curlError}");
+            } else {
+                log_message('info', "WMA notifyReupload webhook called. HTTP {$httpCode}. Response: {$curlResponse}");
+            }
+        } catch (\Throwable $e) {
+            log_message('error', 'WMA webhook exception: ' . $e->getMessage());
+        }
+
+        // ── 6. Send Email ──────────────────────────────────────────────────
         if ($officerEmail) {
             $email = \Config\Services::email();
             $email->setTo($officerEmail);
             $email->setSubject($subject);
             $email->setMailType('html');
             $email->setMessage($htmlMessage);
-            
+
             if ($email->send()) {
-                log_message('info', "Resubmission email sent to {$officerEmail} for document {$docType}");
+                log_message('info', "Resubmission email sent to {$officerEmail} for document '{$docLabel}'");
             } else {
-                log_message('error', "Failed to send resubmission email to {$officerEmail}. Error: " . $email->printDebugger(['headers']));
+                log_message('error', "Failed email to {$officerEmail}. Error: " . $email->printDebugger(['headers']));
             }
         } else {
-            log_message('warning', "No email found for officer ID {$returnedById}, in-app notification was still created.");
+            log_message('warning', "No email found for officer ID {$returnedById} — wma_notification was still created.");
         }
     }
 

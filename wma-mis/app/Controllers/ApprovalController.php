@@ -10,7 +10,7 @@ class ApprovalController extends BaseController
     use ResponseTrait;
 
     // TODO: Move this to .env
-    private $apiKey = 'osa_approval_api_key_12345';
+    private $apiKey = 'wma_internal_notif_key_9x2z';
 
     public function index()
     {

@@ -1736,10 +1736,12 @@ function submitReturn() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'X-API-KEY': '<?= $apiKey ?>'
         },
         body: JSON.stringify({
             document_id: currentDocId,
-            rejection_reason: reason
+            rejection_reason: reason,
+            returned_by_user_id: <?= auth()->id() ?? 'null' ?>
         })
     })
     .then(response => response.json())

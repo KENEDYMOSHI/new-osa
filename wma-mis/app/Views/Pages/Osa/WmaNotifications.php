@@ -319,7 +319,7 @@
                 <hr style="margin:8px 14px;border-color:#dee2e6;">
 
                 <?php if($unreadCount > 0): ?>
-                <a href="<?= base_url('osaMarkAllNotificationsRead') ?>"
+                <a href="<?= base_url('wmaMarkAllNotificationsRead') ?>"
                    class="ec-folder"
                    onclick="return confirm('Mark all as read?')">
                     <span class="folder-left"><i class="fas fa-check-double"></i> Mark all read</span>
@@ -498,7 +498,7 @@ function openMessage(el) {
 
     // Mark as read if unread
     if (el.classList.contains('unread')) {
-        fetch(BASE_URL + '/osaMarkNotificationRead/' + id, { method: 'GET' })
+        fetch(BASE_URL + '/wmaMarkNotificationRead/' + id, { method: 'GET' })
             .then(() => {
                 el.classList.remove('unread');
                 // Remove blue dot
@@ -516,16 +516,13 @@ function markCurrentRead() {
     if (!currentId) return;
     var el = document.querySelector('.ec-msg[data-id="' + currentId + '"]');
     if (el) {
-        fetch(`<?= base_url('osaMarkNotificationRead') ?>/${currentId}`)
-            .then(r => r.json())
-            .then(res => {
-                if(res.success) {
-                    el.classList.remove('unread');
-                    var dot = el.querySelector('.unread-dot');
-                    if (dot) dot.remove();
-                    document.getElementById('btn-mark-read').style.display = 'none';
-                    refreshSidebarCounts();
-                }
+        fetch(BASE_URL + '/wmaMarkNotificationRead/' + currentId, { method: 'GET' })
+            .then(() => {
+                el.classList.remove('unread');
+                var dot = el.querySelector('.unread-dot');
+                if (dot) dot.remove();
+                document.getElementById('btn-mark-read').style.display = 'none';
+                refreshSidebarCounts();
             });
     }
 }
