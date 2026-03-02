@@ -102,7 +102,8 @@ class WmaNotificationsController extends BaseController
     //   "returned_by_user_id": 42,
     //   "applicant_name": "Juma Ally",      ← optional
     //   "region_name": "Dar es Salaam",     ← optional
-    //   "control_number": "WMA-2026-0012"   ← optional
+    //   "control_number": "WMA-2026-0012",  ← optional
+    //   "request_number": "OSA/REQ/2026/03/01" ← optional
     // }
     // ----------------------------------------------------------------
     public function notifyReupload()
@@ -122,6 +123,7 @@ class WmaNotificationsController extends BaseController
         $applicantName    = $body['applicant_name']        ?? 'Mwombaji';
         $regionName       = $body['region_name']           ?? 'Tanzania';
         $controlNumber    = $body['control_number']        ?? ($applicationId ?? 'N/A');
+        $requestNumber    = $body['request_number']        ?? null;
 
         // ── Resolve correct vessel_discharge user ID via officer email ──────
         // The backend sends the osa_app user ID which differs from vessel_discharge user ID.
@@ -171,7 +173,8 @@ class WmaNotificationsController extends BaseController
             $title,
             $message,
             'document_reuploaded',
-            $applicationId
+            $applicationId,
+            $requestNumber
         );
 
         return $this->response->setJSON([

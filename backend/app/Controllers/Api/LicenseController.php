@@ -343,6 +343,7 @@ class LicenseController extends ResourceController
         $appId = is_array($currentApp) ? ($currentApp['id'] ?? null) : ($currentApp->id ?? null);
         $appControlNumber = is_array($currentApp) ? ($currentApp['control_number'] ?? null) : ($currentApp->control_number ?? null);
         $controlNumber = $appControlNumber ?? ($appId ?? 'N/A');
+        $requestNumber = is_array($currentApp) ? ($currentApp['request_number'] ?? null) : ($currentApp->request_number ?? null);
 
         // ── 2. Build Swahili Email Template ───────────────────────────────
         $subject = 'Nyaraka Zilizorekebishwa — ' . $docLabel;
@@ -396,6 +397,7 @@ class LicenseController extends ResourceController
             'message'           => $plainMessage,
             'type'              => 'document_reuploaded',
             'related_entity_id' => $appId,
+            'request_number'    => $requestNumber ?? null,
             'is_read'           => 0,
             'created_at'        => date('Y-m-d H:i:s'),
             'updated_at'        => date('Y-m-d H:i:s'),
@@ -436,6 +438,7 @@ class LicenseController extends ResourceController
                 'applicant_name'      => $applicantName,
                 'region_name'         => $regionName,
                 'control_number'      => $controlNumber,
+                'request_number'      => $requestNumber ?? null,
             ]);
 
             $ch = curl_init($webhookUrl);
