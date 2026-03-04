@@ -191,10 +191,10 @@ class AdminController extends ResourceController
         // Fallback to email if username is not available
         $approverName = $user->username ?? $user->email ?? 'Admin'; 
         
-        // Fetch Real Name from Vessel Discharge DB (WMA)
+        // Fetch Real Name from default DB
         try {
-            $wmaDb = \Config\Database::connect('wma');
-            $userQuery = $wmaDb->table('license_users')->where('id', $user->id)->get()->getRow();
+            $db = \Config\Database::connect();
+            $userQuery = $db->table('license_users')->where('id', $user->id)->get()->getRow();
             if ($userQuery) {
                 $realName = trim(($userQuery->first_name ?? '') . ' ' . ($userQuery->last_name ?? ''));
                 if (!empty($realName)) {
@@ -203,7 +203,7 @@ class AdminController extends ResourceController
             }
         } catch (\Throwable $e) {
             // Log error but continue with fallback
-            log_message('error', 'Failed to fetch approver name from WMA DB: ' . $e->getMessage());
+            log_message('error', 'Failed to fetch approver name: ' . $e->getMessage());
         }
         
         $data["approver_stage_{$currentStage}"] = $approverName;

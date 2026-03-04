@@ -321,11 +321,10 @@ class ApprovalController extends BaseController
                     $approverId = $review['approver_id'] ?? $approverId;
                 } 
                 
-                // FINAL FALLBACK/REPAIR: Lookup in VESSEL_DISCHARGE users table if we have an ID
-                // This satisfies the requirement to "fix by taking id and name from vessel_discharge"
+                // FINAL FALLBACK/REPAIR: Lookup in default database users table if we have an ID
+                // This satisfies the requirement to "fix by taking id and name"
                 if (!empty($approverId) && is_numeric($approverId)) {
-                    $wmaDb = \Config\Database::connect('wma');
-                    $userQuery = $wmaDb->table('license_users')->where('id', $approverId)->get()->getRow();
+                    $userQuery = $db->table('license_users')->where('id', $approverId)->get()->getRow();
                     
                     if ($userQuery) {
                         $realName = trim(($userQuery->first_name ?? '') . ' ' . ($userQuery->last_name ?? ''));
@@ -606,10 +605,9 @@ class ApprovalController extends BaseController
              // 4. Insert Review Comment with Approver Details
             if (!empty($comment) || $statusDecision !== 'Pending') {
                 
-                // Fetch full name from VESSEL_DISCHARGE database (wma group)
+                // Fetch full name from default database
                 // This is the source of truth for "users" in this system context
-                $wmaDb = \Config\Database::connect('wma');
-                $userQuery = $wmaDb->table('license_users')->where('id', $approverId)->get()->getRow();
+                $userQuery = $db->table('license_users')->where('id', $approverId)->get()->getRow();
                 
                 $approverFullName = 'Unknown Approver';
                 $approverTitle = $currentStage . ' Officer';

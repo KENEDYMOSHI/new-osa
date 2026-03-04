@@ -41,8 +41,8 @@ class FormDController extends BaseController
     public function getUserRequests($userId)
     {
         $builder = $this->model->builder();
-        $builder->select('form_d_requests.*, vessel_discharge.users.first_name as inspector_first_name, vessel_discharge.users.last_name as inspector_last_name');
-        $builder->join('vessel_discharge.users', 'vessel_discharge.users.id = form_d_requests.inspector_id', 'left');
+        $builder->select('form_d_requests.*, license_users.first_name as inspector_first_name, license_users.last_name as inspector_last_name');
+        $builder->join('license_users', 'license_users.id = form_d_requests.inspector_id', 'left');
         $builder->where('form_d_requests.user_id', $userId);
         $builder->orderBy('form_d_requests.created_at', 'DESC');
         

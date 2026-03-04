@@ -400,16 +400,17 @@
                         ?>
                         <?php if (!$isQualification): ?>
                         <div class="col-md-6 col-lg-4 mb-4">
-                            <div class="card border-0 shadow-sm h-100 hover-shadow transition <?= (isset($doc->status) && $doc->status == 'Returned') ? 'returned-document' : '' ?>">
+                            <div class="card border-0 shadow-sm h-100 hover-shadow transition <?= (isset($doc->status) && in_array($doc->status, ['Returned', 'Resubmitted'])) ? 'returned-document' : '' ?>" data-doc-id="<?= $doc->id ?? '' ?>">
                                 <div class="card-body p-4">
                                     <!-- Header with Icon and Badge -->
                                     <div class="d-flex align-items-start mb-3">
-                                        <?php if (isset($doc->status) && $doc->status == 'Returned'): ?>
-                                        <!-- Pulsing Warning Icon for Returned Documents -->
+                                        <?php if (isset($doc->status) && in_array($doc->status, ['Returned', 'Resubmitted'])): ?>
+                                        <!-- Pulsing Warning Icon for Returned/Resubmitted Documents -->
                                         <div class="document-icon bg-danger rounded-circle p-3 mr-3 pulse-animation">
                                             <i class="fas fa-exclamation-triangle text-white fa-lg"></i>
                                         </div>
                                         <?php else: ?>
+                                        <!-- Normal Document Icon (For Uploaded or Accepted docs) -->
                                         <div class="document-icon bg-danger-light rounded-circle p-3 mr-3">
                                             <i class="fas fa-file-pdf text-danger fa-lg"></i>
                                         </div>
@@ -431,6 +432,10 @@
                                                     $badgeClass = 'badge-info';
                                                     $badgeText = 'RESUBMITTED';
                                                     $badgeIcon = 'fa-sync';
+                                                } elseif ($doc->status == 'Submitted') {
+                                                    $badgeClass = 'badge-primary';
+                                                    $badgeText = 'REUPLOADED';
+                                                    $badgeIcon = 'fa-check-double';
                                                 } elseif ($doc->status == 'Approved') {
                                                     $badgeClass = 'badge-primary';
                                                     $badgeText = 'APPROVED';
@@ -519,12 +524,12 @@
                                         ?>
                                         <?php if ($isQualification): ?>
                                         <div class="col-md-6 col-lg-4 mb-4">
-                                             <div class="card hover-shadow mb-3 <?= (isset($doc->status) && $doc->status == 'Returned') ? 'returned-document' : '' ?>" 
+                                             <div class="card hover-shadow mb-3 <?= (isset($doc->status) && in_array($doc->status, ['Returned', 'Resubmitted'])) ? 'returned-document' : '' ?>" 
                                       data-doc-id="<?= $doc->id ?? '' ?>">
                                                 <div class="card-body p-4">
                                                     <!-- Header with Icon and Badge -->
                                                     <div class="d-flex align-items-start mb-3">
-                                                        <?php if (isset($doc->status) && $doc->status == 'Returned'): ?>
+                                                        <?php if (isset($doc->status) && in_array($doc->status, ['Returned', 'Resubmitted'])): ?>
                                                         <!-- Pulsing Warning Icon for Returned Documents -->
                                                         <div class="document-icon bg-danger rounded-circle p-3 mr-3 pulse-animation">
                                                             <i class="fas fa-exclamation-triangle text-white fa-lg"></i>
@@ -551,6 +556,10 @@
                                                                     $badgeClass = 'badge-info';
                                                                     $badgeText = 'RESUBMITTED';
                                                                     $badgeIcon = 'fa-sync';
+                                                                } elseif ($doc->status == 'Submitted') {
+                                                                    $badgeClass = 'badge-primary';
+                                                                    $badgeText = 'REUPLOADED';
+                                                                    $badgeIcon = 'fa-check-double';
                                                                 } elseif ($doc->status == 'Approved') {
                                                                     $badgeClass = 'badge-primary';
                                                                     $badgeText = 'APPROVED';
@@ -1094,19 +1103,7 @@
                                 }
                             </style>
 
-                            <!-- Flash Messages -->
-                            <?php if (session()->getFlashdata('success')): ?>
-                                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                    <i class="fas fa-check-circle mr-2"></i><?= session()->getFlashdata('success') ?>
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                </div>
-                            <?php endif; ?>
-                            <?php if (session()->getFlashdata('error')): ?>
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                    <i class="fas fa-exclamation-circle mr-2"></i><?= session()->getFlashdata('error') ?>
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                </div>
-                            <?php endif; ?>
+                            <!-- Flash Messages handled by SweetAlert at the bottom of the page -->
 
                             <h5 class="mb-5 text-gray-800 font-weight-bold ml-2">Application Timeline</h5>
 
@@ -1801,53 +1798,114 @@ function submitReturn() {
     });
 }
 
-// On page load, check which documents have been viewed and update UI
-document.addEventListener('DOMContentLoaded', function() {
-    // Get all document cards with returned status
-    const returnedCards = document.querySelectorAll('.returned-document');
+function acceptDocument(docId) {
+    if (!docId) {
+        alert('Document ID is missing');
+        return;
+    }
     
-    returnedCards.forEach(card => {
-        // Find the view button to get document ID
-        const viewButton = card.querySelector('[onclick*="viewDocument"]');
-        if (viewButton) {
-            const onclickAttr = viewButton.getAttribute('onclick');
-            const match = onclickAttr.match(/viewDocument\('([^']+)'/);
-            if (match && match[1]) {
-                const docId = match[1];
+    if (!confirm('Are you sure you want to accept this resubmitted document?')) {
+        return;
+    }
+    
+    // Find button to show loading state (if called from a button click event)
+    let submitBtn = event ? event.target : null;
+    let originalText = '';
+    
+    if (submitBtn) {
+        // If they clicked the icon inside the button
+        if (submitBtn.tagName === 'I') {
+            submitBtn = submitBtn.parentElement;
+        }
+        originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>...';
+    }
+    
+    // Send accept request to backend
+    fetch('http://localhost:8080/api/admin/document/accept', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-API-KEY': '<?= $apiKey ?>'
+        },
+        body: JSON.stringify({
+            document_id: docId,
+            accepted_by_user_id: <?= auth()->id() ?? 'null' ?>
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+        
+        if (data.status === 'success' || data.message) {
+            alert('Document has been accepted successfully');
+            
+            // Update document UI without reloading
+            const docCards = document.querySelectorAll('[data-doc-id="' + docId + '"]');
+            docCards.forEach(card => {
+                // Remove returned styling
+                card.classList.remove('returned-document');
                 
-                // Check if this document has been viewed
-                if (isDocumentViewed(docId)) {
-                    // Remove returned-document class
-                    card.classList.remove('returned-document');
+                // Change icon
+                const iconContainer = card.querySelector('.document-icon');
+                if (iconContainer) {
+                    iconContainer.classList.remove('pulse-animation', 'bg-danger');
+                    // Check if it's a qualification document (has graduation cap badge)
+                    const isQualification = card.querySelector('.fa-graduation-cap') !== null;
                     
-                    // Update icon from pulsing warning to normal PDF icon
-                    const pulsingIcon = card.querySelector('.pulse-animation');
-                    if (pulsingIcon) {
-                        pulsingIcon.classList.remove('pulse-animation', 'bg-danger');
-                        pulsingIcon.classList.add('bg-danger-light');
-                        const icon = pulsingIcon.querySelector('i');
-                        if (icon) {
-                            icon.classList.remove('text-white', 'fa-exclamation-triangle');
-                            icon.classList.add('text-danger', 'fa-file-pdf');
-                        }
-                    }
-                    
-                    // For qualification documents, update to certificate icon
-                    const qualIcon = card.querySelector('.bg-warning-light');
-                    if (qualIcon && qualIcon.classList.contains('pulse-animation')) {
-                        qualIcon.classList.remove('pulse-animation', 'bg-danger');
-                        qualIcon.classList.add('bg-warning-light');
-                        const icon = qualIcon.querySelector('i');
-                        if (icon) {
-                            icon.classList.remove('text-white', 'fa-exclamation-triangle');
-                            icon.classList.add('text-warning', 'fa-certificate');
-                        }
+                    if (isQualification) {
+                        iconContainer.classList.add('bg-warning-light');
+                        iconContainer.innerHTML = '<i class="fas fa-certificate text-warning fa-lg"></i>';
+                    } else {
+                        iconContainer.classList.add('bg-danger-light');
+                        iconContainer.innerHTML = '<i class="fas fa-file-pdf text-danger fa-lg"></i>';
                     }
                 }
-            }
+                
+                // Update badge to primary (REUPLOADED)
+                const badge = card.querySelector('.badge');
+                if (badge) {
+                    badge.className = 'badge badge-primary badge-pill px-3 py-1 mb-2';
+                    badge.style = ''; // remove bold style
+                    badge.innerHTML = '<i class="fas fa-check-double mr-1"></i> REUPLOADED';
+                }
+                
+                // Remove rejection reason alert
+                const alert = card.querySelector('.alert-danger');
+                if (alert) {
+                    alert.remove();
+                }
+                
+                // Hide accept and return buttons, keep only view
+                const actionButtons = card.querySelector('.d-flex.gap-2');
+                if (actionButtons) {
+                    // Find exactly the Accept button and Return button
+                    const acceptBtn = actionButtons.querySelector('button[onclick*="acceptDocument"]');
+                    const returnBtn = actionButtons.querySelector('button[onclick*="showReturnModal"]');
+                    if (acceptBtn) acceptBtn.style.display = 'none';
+                    if (returnBtn) returnBtn.style.display = 'none';
+                }
+            });
+            
+        } else {
+            alert('Failed to accept document: ' + (data.error || 'Unknown error'));
         }
+    })
+    .catch(error => {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+        console.error('Error:', error);
+        alert('An error occurred while accepting the document');
     });
-});
+}
+
+// Document ready routines can go here if needed
 
 // Print Modal Functions
 function openPrintModal() {
@@ -1912,11 +1970,54 @@ $(document).ready(function() {
     setTimeout(function() {
         $('.preloader, .overlay, .loading-overlay').remove();
     }, 500);
+
+    // Switch to tab if hash is present in URL
+    var hash = window.location.hash;
+    if (hash) {
+        $('.nav-pills a[href="' + hash + '"]').tab('show');
+        // Scroll slightly down so tabs are fully visible
+        setTimeout(function() {
+            window.scrollTo(0, $('.nav-pills').offset().top - 70);
+        }, 100);
+    }
+
+    // Change hash in URL when tab is switched
+    $('.nav-pills a').on('shown.bs.tab', function (e) {
+        if(history.pushState) {
+            history.pushState(null, null, e.target.hash); 
+        } else {
+            window.location.hash = e.target.hash; 
+        }
+    });
 });
 
 // Also try on window load
 $(window).on('load', function() {
     $('.preloader, .overlay, .loading-overlay').fadeOut().remove();
+});
+</script>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(document).ready(function() {
+    <?php if (session()->getFlashdata('success')): ?>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: <?= json_encode(session()->getFlashdata('success')) ?>,
+            confirmButtonColor: '#28a745'
+        });
+    <?php endif; ?>
+    
+    <?php if (session()->getFlashdata('error')): ?>
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: <?= json_encode(session()->getFlashdata('error')) ?>,
+            confirmButtonColor: '#dc3545'
+        });
+    <?php endif; ?>
 });
 </script>
 

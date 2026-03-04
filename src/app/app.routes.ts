@@ -248,9 +248,9 @@ export const routes: Routes = [
         title: 'Application | Pattern Approval - WMA'
       },
       {
-        path: 'status',
-        loadComponent: () => import('./pages/pattern-approval/status/pattern-approval-status.component').then(m => m.PatternApprovalStatusComponent),
-        title: 'Status | Pattern Approval - WMA'
+        path: 'applications',
+        loadComponent: () => import('./pages/pattern-approval/applications-list/applications-list.component').then(m => m.ApplicationsListComponent),
+        title: 'Applications | Pattern Approval - WMA'
       },
       {
         path: 'profile',
@@ -261,6 +261,11 @@ export const routes: Routes = [
         path: 'notifications',
         loadComponent: () => import('./pages/pattern-approval/notifications-list/pattern-notifications.component').then(m => m.PatternNotificationsComponent),
         title: 'Notifications | Pattern Approval - WMA'
+      },
+      {
+        path: 'details',
+        loadComponent: () => import('./pages/pattern-approval/details/pattern-details.component').then(m => m.PatternDetailsComponent),
+        title: 'Pattern Details | Pattern Approval - WMA'
       },
       {
         path: 'support-help',

@@ -34,6 +34,19 @@ class AuthController extends ResourceController
             $key = getenv('JWT_SECRET') ?: 'your_secret_key_here';
             $decoded = JWT::decode($token, new Key($key, 'HS256'));
             
+            // Check if the token has 'table' indicating a custom user table
+            if (isset($decoded->table) && in_array($decoded->table, ['pattern_users', 'customer_users'])) {
+                $db = \Config\Database::connect();
+                $user = $db->table($decoded->table)->where('id', $decoded->uid)->get()->getRow();
+                
+                if (!$user) {
+                    log_message('error', 'Auth: Custom User not found for ID: ' . $decoded->uid . ' in ' . $decoded->table);
+                }
+                
+                return $user;
+            }
+
+            // Fallback to Shield users table for practitioners
             $users = model(UserModel::class);
             $user = $users->findById($decoded->uid);
             
@@ -431,20 +444,25 @@ class AuthController extends ResourceController
                 return $this->failUnauthorized('User not found or invalid token');
             }
 
-            // Get UUID from users table
+            // Get UUID from database if needed
             $db = \Config\Database::connect();
-            $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
             
-            if (!$userRecord) {
-                return $this->failNotFound('User record not found in database');
-            }
-
-            // Check if uuid column exists or is set
-            if (!isset($userRecord->uuid)) {
-                // Fallback or error? Let's return null UUID for now to avoid crash
-                $uuid = null;
+            if (isset($user->uuid) && isset($user->user_type) && in_array($user->user_type, ['pattern_approval', 'customer'])) {
+                $uuid = $user->uuid;
             } else {
-                $uuid = $userRecord->uuid;
+                $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
+                
+                if (!$userRecord) {
+                    return $this->failNotFound('User record not found in database');
+                }
+
+                // Check if uuid column exists or is set
+                if (!isset($userRecord->uuid)) {
+                    // Fallback or error? Let's return null UUID for now to avoid crash
+                    $uuid = null;
+                } else {
+                    $uuid = $userRecord->uuid;
+                }
             }
 
             // Fetch Personal Info
@@ -512,8 +530,13 @@ class AuthController extends ResourceController
 
         // Get UUID
         $db = \Config\Database::connect();
-        $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
-        $uuid = $userRecord->uuid;
+        
+        if (isset($user->uuid) && isset($user->user_type) && in_array($user->user_type, ['pattern_approval', 'customer'])) {
+            $uuid = $user->uuid;
+        } else {
+            $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
+            $uuid = $userRecord->uuid;
+        }
 
         $personalInfoModel = new \App\Models\PractitionerPersonalInfoModel();
         $existing = $personalInfoModel->where('user_uuid', $uuid)->first();
@@ -539,8 +562,12 @@ class AuthController extends ResourceController
 
         // Get UUID
         $db = \Config\Database::connect();
-        $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
-        $uuid = $userRecord->uuid;
+        if (isset($user->uuid) && isset($user->user_type) && in_array($user->user_type, ['pattern_approval', 'customer'])) {
+            $uuid = $user->uuid;
+        } else {
+            $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
+            $uuid = $userRecord->uuid;
+        }
 
         $businessInfoModel = new \App\Models\PractitionerBusinessInfoModel();
         $existing = $businessInfoModel->where('user_uuid', $uuid)->first();
@@ -597,7 +624,25 @@ class AuthController extends ResourceController
             return $this->failValidationErrors($validation->getErrors());
         }
 
-        // Verify current password
+        if (isset($user->user_type) && in_array($user->user_type, ['pattern_approval', 'customer'])) {
+            $tableName = $user->user_type === 'pattern_approval' ? 'pattern_users' : 'customer_users';
+            $db = \Config\Database::connect();
+            $customUser = $db->table($tableName)->where('id', $user->id)->get()->getRow();
+            
+            if (!$customUser || !password_verify($data['currentPassword'], $customUser->password_hash)) {
+                return $this->failValidationErrors([
+                    'currentPassword' => 'Incorrect current password for ' . $user->email
+                ]);
+            }
+            
+            $db->table($tableName)->where('id', $user->id)->update([
+                'password_hash' => password_hash($data['newPassword'], PASSWORD_BCRYPT)
+            ]);
+            
+            return $this->respond(['message' => 'Password changed successfully']);
+        }
+
+        // Verify current password for shield users
         $credentials = [
             'email'    => $user->email,
             'password' => $data['currentPassword']
@@ -646,8 +691,12 @@ class AuthController extends ResourceController
 
         // Get UUID
         $db = \Config\Database::connect();
-        $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
-        $uuid = $userRecord->uuid;
+        if (isset($user->uuid) && isset($user->user_type) && in_array($user->user_type, ['pattern_approval', 'customer'])) {
+            $uuid = $user->uuid;
+        } else {
+            $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
+            $uuid = $userRecord->uuid;
+        }
 
         // Validate file upload
         $file = $this->request->getFile('picture');
@@ -840,30 +889,34 @@ class AuthController extends ResourceController
         // Shield User Entity: $user->password_hash
         // Let's use auth service helper or standard password_verify.
         
-        // Fetch full User Entity for Shield
-        $usersModel = model(UserModel::class);
-        $userEntity = $usersModel->findById($user->id);
-
-        // Check if same (Shield uses specific hashing, but let's assume standard PHP verify works on the hash stored)
-        // If Shield uses distinct hashing service, we should use that.
-        // For now, simpler: Update logic.
-        
         // Update Password
-        $userEntity->fill([
-            'password' => $newPassword
-        ]);
-        $usersModel->save($userEntity);
+        if (isset($user->user_type) && in_array($user->user_type, ['pattern_approval', 'customer'])) {
+            $tableName = $user->user_type === 'pattern_approval' ? 'pattern_users' : 'customer_users';
+            $db = \Config\Database::connect();
+            $db->table($tableName)->where('id', $user->id)->update([
+                'password_hash' => password_hash($newPassword, PASSWORD_BCRYPT),
+                'active' => 1,
+                'failed_login_attempts' => 0
+            ]);
+        } else {
+            // Fetch full User Entity for Shield
+            $usersModel = model(UserModel::class);
+            $userEntity = $usersModel->findById($user->id);
 
-        // ✅ Re-activate account on successful password reset and reset failed attempts
-        // We need to check which table the user belongs to and activate them accordingly
-        $db = \Config\Database::connect();
-        $db->table('license_users')->where('id', $user->id)->update(['active' => 1, 'failed_login_attempts' => 0]);
-        $db->table('pattern_users')->where('email', $user->email)->update(['active' => 1, 'failed_login_attempts' => 0]);
-        $db->table('customer_users')->where('email', $user->email)->update(['active' => 1, 'failed_login_attempts' => 0]);
-        $db->table('license_users')->where('id', $user->id)->update([
-            'active'     => 1,
-            'updated_at' => date('Y-m-d H:i:s'),
-        ]);
+            if ($userEntity) {
+                $userEntity->fill([
+                    'password' => $newPassword
+                ]);
+                $usersModel->save($userEntity);
+            }
+
+            $db = \Config\Database::connect();
+            $db->table('license_users')->where('id', $user->id)->update([
+                'active'     => 1,
+                'failed_login_attempts' => 0,
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
 
         // Mark OTP as used
         $db->table('password_resets')
@@ -882,7 +935,15 @@ class AuthController extends ResourceController
 
         $db = \Config\Database::connect();
         $uuid = is_array($info) ? $info['user_uuid'] : $info->user_uuid;
-        return $db->table('license_users')->where('uuid', $uuid)->get()->getRow();
+        
+        $user = $db->table('license_users')->where('uuid', $uuid)->get()->getRow();
+        if ($user) return $user;
+        
+        $user = $db->table('pattern_users')->where('uuid', $uuid)->get()->getRow();
+        if ($user) return $user;
+        
+        $user = $db->table('customer_users')->where('uuid', $uuid)->get()->getRow();
+        return $user;
     }
 
     private function validateOtp($userId, $otp)

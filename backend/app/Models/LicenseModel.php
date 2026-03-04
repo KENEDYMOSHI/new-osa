@@ -77,7 +77,7 @@ class LicenseModel extends Model
         // Get application details
         $application = $this->db->table('license_applications la')
             ->select('la.*, u.uuid as user_uuid')
-            ->join('users u', 'la.user_id = u.id', 'left')
+            ->join('license_users u', 'la.user_id = u.id', 'left')
             ->where('la.id', $applicationId)
             ->get()
             ->getRow();

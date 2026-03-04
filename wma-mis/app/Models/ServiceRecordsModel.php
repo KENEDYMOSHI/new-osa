@@ -19,15 +19,15 @@ class ServiceRecordsModel extends Model
         $builder = $db->table('technicians_registry');
         
         // Join with users table to get technician username
-        $builder->select('technicians_registry.*, users.username, users.uuid,
+        $builder->select('technicians_registry.*, license_users.username, license_users.uuid,
                           technicians_registry.instrument_type as instrument, 
                           technicians_registry.instrument_issue as issue_problem,
-                          users.username as technician_name');
-        $builder->join('users', 'users.id = technicians_registry.user_id', 'left');
+                          license_users.username as technician_name');
+        $builder->join('license_users', 'license_users.id = technicians_registry.user_id', 'left');
 
         // Apply filters
         if (!empty($filters['technician_name'])) {
-            $builder->like('users.username', $filters['technician_name']);
+            $builder->like('license_users.username', $filters['technician_name']);
         }
         
         if (!empty($filters['customer_name'])) {

@@ -5,7 +5,7 @@ import { AdminService } from '../../services/admin.service';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-
+import Swal from 'sweetalert2';
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
@@ -164,21 +164,45 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   approveApplication(id: string) {
-    if (confirm('Are you sure you want to approve this application?')) {
-      this.adminService.approveApplication(id).subscribe({
-        next: () => {
-          alert('Application approved successfully');
-          this.fetchApplications(); // Refresh list
-          if (this.selectedApplication && this.selectedApplication.application.id === id) {
-             this.closeModal(); // Close modal if open for this app
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You are about to approve this application.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#10B981', // green-500
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, approve it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: 'Processing...',
+          text: 'Please wait while the application is being approved.',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
           }
-        },
-        error: (err) => {
-          console.error('Failed to approve application', err);
-          alert('Failed to approve application');
-        }
-      });
-    }
+        });
+
+        this.adminService.approveApplication(id).subscribe({
+          next: () => {
+            Swal.fire({
+              icon: 'success',
+              title: 'Approved!',
+              text: 'Application has been successfully approved.',
+              confirmButtonColor: '#10B981'
+            });
+            this.fetchApplications(); // Refresh list
+            if (this.selectedApplication && this.selectedApplication.application.id === id) {
+               this.closeModal(); // Close modal if open for this app
+            }
+          },
+          error: (err) => {
+            console.error('Failed to approve application', err);
+            Swal.fire('Error', 'Failed to approve application', 'error');
+          }
+        });
+      }
+    });
   }
 
   getDocumentUrl(id: string): string {

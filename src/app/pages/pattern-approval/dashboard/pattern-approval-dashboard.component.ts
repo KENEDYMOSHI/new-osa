@@ -18,10 +18,20 @@ export class PatternApprovalDashboardComponent implements OnInit {
     rejected: 0
   };
 
+  requiredDocs: string[] = [
+    'Pattern Approval Certificate from Country of Origin',
+    'Operation Manual of the Device',
+    'Calibration Manual of the Instrument',
+    'Technical Specifications of the Instrument',
+    'Information on the Means of Sealing',
+    'Drawing/Photograph of the Instrument',
+    'Test Report from Accredited Laboratory',
+    'Business Registration Certificate (TIN)',
+  ];
+
   constructor(private authService: AuthService) {}
 
   ngOnInit() {
-    // Get user profile
     this.authService.getProfile().subscribe({
       next: (response: any) => {
         this.user = response.user;
@@ -30,8 +40,6 @@ export class PatternApprovalDashboardComponent implements OnInit {
         console.error('Error fetching user profile:', error);
       }
     });
-
-    // TODO: Fetch Pattern Approval applications stats
-    // For now, using placeholder data
+    // TODO: Fetch real Pattern Approval application stats from API
   }
 }

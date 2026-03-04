@@ -155,11 +155,15 @@ class WmaNotificationsController extends BaseController
             ]);
         }
 
+        // Build the URL for viewing the application attachments tab
+        $url = rtrim(base_url(), '/') . '/viewApplication/' . $applicationId . '#documents';
+        $attachmentLink = "<a href=\"{$url}\" style=\"text-decoration: underline; color: #0056b3;\" target=\"_blank\">{$attachmentName}</a>";
+
         // Build the Swahili notification message (HTML supported in preview)
         $title   = 'Nyaraka Ilirejelewa: ' . $attachmentName;
         $message = "Salamu.\n"
             . "Tafadhali fahamu kuwa mwombaji <strong>{$applicantName}</strong> kutoka mkoa wa {$regionName} "
-            . "amewasilisha tena nyaraka <strong>'{$attachmentName}'</strong> baada ya kufanya marekebisho "
+            . "amewasilisha tena nyaraka <strong>'{$attachmentLink}'</strong> baada ya kufanya marekebisho "
             . "kama alivyoshauriwa hapo awali.\n"
             . "Baada ya mapitio ya awali, imebainika kuwa hati hiyo imezingatia maelekezo "
             . "yaliyotolewa na marekebisho yaliyohitajika yamefanyika ipasavyo.\n"

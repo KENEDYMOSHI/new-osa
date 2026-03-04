@@ -689,12 +689,12 @@ public function rejectApplication()
             $nextStageLabel = $stageLabels[$approvedStage + 1] ?? 'Next Stage';
 
             // Find users that belong to the next group(s)
-            $db = \Config\Database::connect(); // vessel_discharge (default)
+            $dbAuth = \Config\Database::connect('osa'); // Use OSA database for auth tables
             $userIds = [];
 
             foreach ($nextGroups as $groupName) {
                 // auth_groups_users → join auth_groups to get users in this group
-                $rows = $db->table('auth_groups_users agu')
+                $rows = $dbAuth->table('auth_groups_users agu')
                     ->select('agu.user_id')
                     ->join('auth_groups ag', 'ag.id = agu.group_id', 'inner')
                     ->where('ag.name', $groupName)
@@ -725,6 +725,81 @@ public function rejectApplication()
                 'application_approved',
                 $applicationId
             );
+
+            // ==========================================
+            // SEND EMAIL NOTIFICATIONS TO NEXT STAGE
+            // ==========================================
+            
+            // 1. Fetch Application Details for the Email
+            $appModel = new \App\Models\LicenseApplicationModel();
+            $application = $appModel->find($applicationId);
+            
+            $applicantName = 'Mwombaji';
+            $regionName = 'Mkoa';
+            $requestNumber = $application->request_number ?? $applicationId;
+            
+            if ($application) {
+                // Determine Applicant Name
+                if (!empty($application->applicant_name)) {
+                    $applicantName = trim($application->applicant_name);
+                } else {
+                    $first = $application->first_name ?? '';
+                    $last = $application->last_name ?? '';
+                    if (!empty($first) || !empty($last)) {
+                        $applicantName = trim($first . ' ' . $last);
+                    }
+                }
+                
+                // Determine Region
+                $regionName = $application->region ?? 'Mkoa Husika';
+            }
+
+            // 2. Fetch User Emails from auth_identities
+            $emails = [];
+            if (!empty($userIds)) {
+                $emailRows = $dbAuth->table('auth_identities')
+                                ->select('secret as email')
+                                ->whereIn('user_id', $userIds)
+                                ->where('type', 'email_password')
+                                ->get()
+                                ->getResultArray();
+                                
+                foreach ($emailRows as $er) {
+                    if (!empty($er['email'])) {
+                        $emails[] = $er['email'];
+                    }
+                }
+            }
+
+            // 3. Send Emails via CodeIgniter Email Service
+            if (!empty($emails)) {
+                $emailService = \Config\Services::email();
+                
+                // Prepare Swahili Email Body
+                $approvedByLabel = $stageLabels[$approvedStage];
+                $messageBody = "
+                Salamu,<br><br>
+                Tafadhali fahamu kuwa mwombaji <strong>{$applicantName}</strong> kutoka mkoa wa <strong>{$regionName}</strong> amekamilisha hatua ya mapitio katika ngazi ya <strong>{$approvedByLabel}</strong> na maombi yake yameidhinishwa katika hatua hiyo.<br><br>
+                Hivyo, maombi hayo sasa yamewasilishwa kwako kwa ajili ya mapitio na uamuzi katika ngazi yako kulingana na utaratibu wa mfumo.<br><br>
+                Tafadhali pitia maombi hayo na chukua hatua stahiki kwa mujibu wa taratibu zilizowekwa.<br><br>
+                Maombi Na.: <strong>{$requestNumber}</strong><br><br>
+                Asante.
+                ";
+
+                helper('emailTemplate');
+                // Use existing emailTemplate($name, $id, $greetings, $msg)
+                // Passing empty $id and $name as they are tailored for account activation but provides WMA styling wrapper
+                $htmlMessage = emailTemplate('', '', 'Habari', $messageBody);
+
+                foreach ($emails as $recipientEmail) {
+                    $emailService->clear(); // Clear previous settings per loop
+                    $emailService->setTo($recipientEmail);
+                    $emailService->setSubject('Maombi Yanasubiri Mapitio Yako - ' . $requestNumber);
+                    $emailService->setMessage($htmlMessage);
+                    $emailService->send();
+                }
+            }
+            
         } catch (\Throwable $e) {
             // Log but don't break the main flow
             log_message('error', 'WMA Notification error in _notifyNextStageOfficers: ' . $e->getMessage());

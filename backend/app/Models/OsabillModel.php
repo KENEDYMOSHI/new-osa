@@ -18,6 +18,7 @@ class OsabillModel extends Model
         'control_number', 
         'amount', 
         'bill_type', 
+        'fee_type',
         'payer_name', 
         'payer_phone', 
         'bill_description', 
