@@ -1,0 +1,123 @@
+<div class="relative">
+
+  <!-- Label + Checkbox -->
+  <label class="flex items-center gap-2 mb-2 cursor-pointer w-fit">
+    <input type="checkbox" [(ngModel)]="enabled" (change)="enabledChange.emit(enabled); !enabled && clear()"
+      class="w-4 h-4 accent-[#F7941D] cursor-pointer" />
+    <span class="text-sm font-medium text-black dark:text-white">{{ label }}</span>
+  </label>
+
+  <!-- Input trigger -->
+  <div class="relative">
+    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+      </svg>
+    </span>
+    <input type="text" readonly [value]="displayValue"
+      (click)="toggle()"
+      [placeholder]="enabled ? 'Select date range...' : 'Enable date range first'"
+      [class]="enabled
+        ? 'w-full pl-10 pr-4 py-3 rounded border border-stroke bg-transparent text-sm outline-none cursor-pointer transition focus:border-primary dark:border-form-strokedark dark:bg-form-input'
+        : 'w-full pl-10 pr-4 py-3 rounded border border-stroke bg-gray-50 text-sm text-gray-400 cursor-not-allowed dark:border-form-strokedark dark:bg-form-input'" />
+    <button *ngIf="from || to" (click)="clear()" title="Clear"
+      class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Calendar dropdown -->
+  <div *ngIf="isOpen"
+    class="drp-dropdown absolute z-50 bg-white dark:bg-boxdark border border-stroke dark:border-strokedark rounded-xl shadow-xl mt-1 p-4 select-none"
+    (mouseleave)="hoverDate = null">
+
+    <!-- Calendars -->
+    <div class="flex gap-6">
+
+      <!-- Left month -->
+      <div class="drp-cal">
+        <div class="drp-month-header">
+          <button (click)="prevMonth()" class="drp-nav-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <span class="font-semibold text-sm text-black dark:text-white">
+            {{ MONTHS[leftMonth] }} {{ leftYear }}
+          </span>
+          <span class="w-6"></span>
+        </div>
+        <div class="drp-weekrow">
+          <span *ngFor="let d of DAYS">{{ d }}</span>
+        </div>
+        <div *ngFor="let row of leftGrid" class="drp-week">
+          <ng-container *ngFor="let day of row">
+            <span *ngIf="!day" class="drp-cell drp-empty"></span>
+            <span *ngIf="day"
+              class="drp-cell"
+              [class.drp-start]="isStart(day)"
+              [class.drp-end]="isEnd(day)"
+              [class.drp-in-range]="isInRange(day)"
+              [class.drp-today]="isToday(day)"
+              (mouseenter)="onDayHover(day)"
+              (click)="onDayClick(day)">
+              {{ day.getDate() }}
+            </span>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="w-px bg-stroke dark:bg-strokedark"></div>
+
+      <!-- Right month -->
+      <div class="drp-cal">
+        <div class="drp-month-header">
+          <span class="w-6"></span>
+          <span class="font-semibold text-sm text-black dark:text-white">
+            {{ MONTHS[rightMonth] }} {{ rightYear }}
+          </span>
+          <button (click)="nextMonth()" class="drp-nav-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+        <div class="drp-weekrow">
+          <span *ngFor="let d of DAYS">{{ d }}</span>
+        </div>
+        <div *ngFor="let row of rightGrid" class="drp-week">
+          <ng-container *ngFor="let day of row">
+            <span *ngIf="!day" class="drp-cell drp-empty"></span>
+            <span *ngIf="day"
+              class="drp-cell"
+              [class.drp-start]="isStart(day)"
+              [class.drp-end]="isEnd(day)"
+              [class.drp-in-range]="isInRange(day)"
+              [class.drp-today]="isToday(day)"
+              (mouseenter)="onDayHover(day)"
+              (click)="onDayClick(day)">
+              {{ day.getDate() }}
+            </span>
+          </ng-container>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="drp-footer">
+      <span class="text-sm text-gray-600 dark:text-gray-300 font-medium">
+        {{ displayValue || '&nbsp;' }}
+      </span>
+      <div class="flex gap-2">
+        <button (click)="cancel()" class="drp-btn-cancel">Cancel</button>
+        <button (click)="apply()" class="drp-btn-apply">Apply</button>
+      </div>
+    </div>
+
+  </div>
+</div>

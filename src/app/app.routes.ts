@@ -272,6 +272,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/pattern-approval/support-help/pattern-support.component').then(m => m.PatternSupportComponent),
         title: 'Support & Help | Pattern Approval - WMA'
       },
+      {
+        path: 'billing-payments',
+        loadComponent: () => import('./pages/pattern-approval/billing-payments/billing-payments.component').then(m => m.BillingPaymentsComponent),
+        title: 'Billing & Payments | Pattern Approval - WMA'
+      },
     ]
   },
 

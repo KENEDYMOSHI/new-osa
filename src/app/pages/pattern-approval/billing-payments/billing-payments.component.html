@@ -1,0 +1,206 @@
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center bg-white p-6 rounded-lg shadow-sm border border-stroke border-t-4 border-t-[#F7941D] dark:border-strokedark dark:bg-boxdark">
+    <div>
+      <h2 class="text-2xl font-bold text-black dark:text-white">Billing &amp; Payments</h2>
+      <p class="text-sm text-body mt-1">View and manage your invoices and payment records.</p>
+    </div>
+  </div>
+
+
+  <!-- Filters -->
+  <div class="bg-white p-5 rounded-lg shadow-sm border border-stroke border-t-4 border-t-[#F7941D] dark:border-strokedark dark:bg-boxdark">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+
+      <!-- Pattern Type -->
+      <div>
+        <label class="mb-2 block text-sm font-medium text-black dark:text-white">Pattern Type</label>
+        <div class="relative z-20 bg-transparent dark:bg-form-input">
+          <select [(ngModel)]="selectedPatternType"
+            class="relative z-20 w-full appearance-none rounded border border-stroke bg-transparent py-3 px-5 outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input">
+            <option value="">All Types</option>
+            <option *ngFor="let t of patternTypes" [value]="t">{{ t }}</option>
+          </select>
+          <span class="absolute right-4 top-1/2 z-30 -translate-y-1/2">
+            <svg class="fill-current w-5 h-5" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- Payment Status -->
+      <div>
+        <label class="mb-2 block text-sm font-medium text-black dark:text-white">Payment Status</label>
+        <div class="relative z-20 bg-transparent dark:bg-form-input">
+          <select [(ngModel)]="selectedStatus"
+            class="relative z-20 w-full appearance-none rounded border border-stroke bg-transparent py-3 px-5 outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input">
+            <option value="">All Statuses</option>
+            <option value="Paid">Paid</option>
+            <option value="Pending">Pending</option>
+            <option value="Overdue">Overdue</option>
+            <option value="Waived">Waived</option>
+          </select>
+          <span class="absolute right-4 top-1/2 z-30 -translate-y-1/2">
+            <svg class="fill-current w-5 h-5" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- Search By Control Number -->
+      <div>
+        <label class="mb-2 block text-sm font-medium text-black dark:text-white">Control Number</label>
+        <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2">
+            <svg class="fill-current w-4 h-4 text-body" viewBox="0 0 20 20">
+              <path d="M14.386 14.386l4.0877 4.0877-8.273-8.273c1.5246-1.1444 2.5039-2.9975 2.5039-5.0747 0-3.4868-2.8272-6.314-6.314-6.314s-6.314 2.8272-6.314 6.314 2.8272 6.314 6.314 6.314c2.0772 0 3.9303-0.9793 5.0747-2.5039l4.588 4.588 1.414-1.414-4.588-4.588zm-3.08-3.08c-1.2828 1.2828-3.0519 2.0711-5.002 2.0711-3.922 0-7.114-3.192-7.114-7.114 0-3.922 3.192-7.114 7.114-7.114 3.922 0 7.114 3.192 7.114 7.114 0 1.9501-0.7883 3.7192-2.0711 5.002z"/>
+            </svg>
+          </span>
+          <input type="text" [(ngModel)]="searchControlNumber"
+            placeholder="Search by control number..."
+            class="w-full rounded border border-stroke bg-transparent py-3 pl-11 pr-5 outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input" />
+        </div>
+      </div>
+
+      <!-- Single Date (with enable checkbox) -->
+      <div>
+        <label class="flex items-center gap-2 mb-2 cursor-pointer w-fit">
+          <input type="checkbox"
+            [checked]="dateMode === 'date'"
+            (change)="setDateMode(dateMode === 'date' ? '' : 'date')"
+            class="w-4 h-4 accent-[#F7941D] cursor-pointer" />
+          <span class="text-sm font-medium text-black dark:text-white">Date</span>
+        </label>
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </span>
+          <input type="date" [(ngModel)]="filterDate"
+            [disabled]="dateMode !== 'date'"
+            [class]="dateMode === 'date'
+              ? 'w-full pl-10 pr-4 py-3 rounded border border-stroke bg-transparent outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input text-sm'
+              : 'w-full pl-10 pr-4 py-3 rounded border border-stroke bg-gray-50 text-gray-400 outline-none text-sm cursor-not-allowed dark:border-form-strokedark dark:bg-form-input'" />
+        </div>
+      </div>
+
+      <!-- Date Range Picker -->
+      <div class="md:col-span-2 xl:col-span-1">
+        <app-date-range-picker
+          label="Date Range"
+          [forceEnabled]="dateMode === 'range'"
+          (enabledChange)="setDateMode($event ? 'range' : '')"
+          (rangeSelected)="onRangeSelected($event)">
+        </app-date-range-picker>
+      </div>
+
+    </div>
+
+    <!-- Clear Filters -->
+    <div class="mt-4 flex justify-end">
+      <button (click)="clearFilters()"
+        class="inline-flex items-center gap-1.5 rounded-md border border-stroke px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:border-strokedark dark:text-white dark:hover:bg-meta-4 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        Clear Filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Invoices Table -->
+  <div class="rounded-lg border border-stroke border-t-4 border-t-[#F7941D] bg-white px-5 pt-6 pb-4 shadow-sm dark:border-strokedark dark:bg-boxdark sm:px-7.5">
+    <div class="max-w-full overflow-x-auto">
+      <table class="w-full table-auto">
+        <thead>
+          <tr class="bg-gray-2 dark:bg-meta-4 text-left">
+            <th class="min-w-[130px] py-4 px-4 font-semibold text-black dark:text-white whitespace-nowrap">Date</th>
+            <th class="min-w-[180px] py-4 px-4 font-semibold text-black dark:text-white whitespace-nowrap">Pattern Type</th>
+            <th class="min-w-[160px] py-4 px-4 font-semibold text-black dark:text-white whitespace-nowrap">Category</th>
+            <th class="min-w-[150px] py-4 px-4 font-semibold text-black dark:text-white whitespace-nowrap">Fee Type</th>
+            <th class="min-w-[130px] py-4 px-4 font-semibold text-black dark:text-white whitespace-nowrap">Payment Status</th>
+            <th class="min-w-[180px] py-4 px-4 font-semibold text-black dark:text-white whitespace-nowrap">Control Number</th>
+            <th class="min-w-[150px] py-4 px-4 font-semibold text-black dark:text-white whitespace-nowrap">Amount (TZS)</th>
+            <th class="py-4 px-4 font-semibold text-black dark:text-white text-right whitespace-nowrap">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let inv of filteredInvoices; let i = index"
+              class="border-b border-[#eee] dark:border-strokedark hover:bg-gray-50 dark:hover:bg-meta-4 transition-colors">
+
+            <!-- Date -->
+            <td class="py-4 px-4 whitespace-nowrap">
+              <p class="text-sm text-black dark:text-white">{{ inv.date }}</p>
+            </td>
+
+            <!-- Pattern Type -->
+            <td class="py-4 px-4 whitespace-nowrap">
+              <p class="font-semibold text-black dark:text-white">{{ inv.patternType }}</p>
+            </td>
+
+            <!-- Category -->
+            <td class="py-4 px-4 whitespace-nowrap">
+              <p class="text-sm text-black dark:text-white">{{ inv.category }}</p>
+            </td>
+
+            <!-- Fee Type -->
+            <td class="py-4 px-4 whitespace-nowrap">
+              <p class="text-sm text-black dark:text-white">{{ inv.feeType }}</p>
+            </td>
+
+            <!-- Payment Status -->
+            <td class="py-4 px-4 whitespace-nowrap">
+              <span [class]="badgeClass(inv.status)">{{ inv.status }}</span>
+            </td>
+
+            <!-- Control Number -->
+            <td class="py-4 px-4 whitespace-nowrap">
+              <p class="font-bold text-[#F7941D]">{{ inv.controlNumber }}</p>
+            </td>
+
+            <!-- Amount -->
+            <td class="py-4 px-4 whitespace-nowrap">
+              <p class="font-semibold text-black dark:text-white">{{ inv.amount | number }}</p>
+            </td>
+
+            <!-- Action -->
+            <td class="py-4 px-4 text-right whitespace-nowrap">
+              <div class="flex justify-end gap-2">
+                <button *ngIf="inv.status === 'Paid'"
+                  title="Download Receipt"
+                  class="inline-flex items-center gap-1.5 rounded-md bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 shadow-sm transition-colors">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                  </svg>
+                  Receipt
+                </button>
+                <button *ngIf="inv.status === 'Pending' || inv.status === 'Overdue'"
+                  title="Pay Now"
+                  class="inline-flex items-center gap-1.5 rounded-md bg-[#F7941D] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#e07d0a] shadow-sm transition-colors">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                  </svg>
+                  Pay Now
+                </button>
+              </div>
+            </td>
+
+          </tr>
+
+          <!-- Empty state -->
+          <tr *ngIf="filteredInvoices.length === 0">
+            <td colspan="8" class="py-12 text-center text-gray-400">
+              <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>
+              </svg>
+              <p class="text-sm">No records found matching your filters.</p>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

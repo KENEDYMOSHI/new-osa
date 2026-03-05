@@ -1,0 +1,136 @@
+.drp-dropdown {
+  min-width: 580px;
+}
+
+/* Calendar column */
+.drp-cal {
+  flex: 1;
+  min-width: 240px;
+}
+
+/* Month header row */
+.drp-month-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.drp-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: #6b7280;
+  transition: background 0.15s;
+}
+.drp-nav-btn:hover {
+  background: #f3f4f6;
+}
+
+/* Weekday header */
+.drp-weekrow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+.drp-weekrow span {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #9ca3af;
+  padding: 4px 0;
+}
+
+/* Week row */
+.drp-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+/* Day cell */
+.drp-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  border-radius: 50%;
+  color: #374151;
+  transition: background 0.1s, color 0.1s;
+  position: relative;
+}
+.drp-cell:hover {
+  background: #f3f4f6;
+}
+.drp-cell.drp-empty {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Start / End selected */
+.drp-cell.drp-start,
+.drp-cell.drp-end {
+  background: #F7941D !important;
+  color: #fff !important;
+  border-radius: 50%;
+  font-weight: 700;
+  z-index: 1;
+}
+
+/* In-range highlight */
+.drp-cell.drp-in-range {
+  background: #fff3e0;
+  color: #c06000;
+  border-radius: 0;
+}
+
+/* Combine start edge with range */
+.drp-cell.drp-start.drp-in-range,
+.drp-cell.drp-end.drp-in-range {
+  background: #F7941D;
+  color: #fff;
+  border-radius: 50%;
+}
+
+/* Today indicator */
+.drp-cell.drp-today:not(.drp-start):not(.drp-end) {
+  font-weight: 700;
+  color: #F7941D;
+}
+
+/* Footer */
+.drp-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.drp-btn-cancel {
+  padding: 6px 16px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  background: #fff;
+  transition: background 0.15s;
+}
+.drp-btn-cancel:hover { background: #f3f4f6; }
+
+.drp-btn-apply {
+  padding: 6px 18px;
+  border-radius: 6px;
+  background: #F7941D;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  transition: background 0.15s;
+}
+.drp-btn-apply:hover { background: #e07d0a; }

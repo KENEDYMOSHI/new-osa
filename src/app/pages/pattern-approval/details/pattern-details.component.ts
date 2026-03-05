@@ -14,8 +14,10 @@ interface PatternItem {
   sealingMethod: string;
   certificateNumber: string;
   issuedDate: string;
-  expiryDate: string;
   status: string;
+  controlNumber: string;
+  amount: number;
+  paymentStatus: string;
 }
 
 @Component({
@@ -43,8 +45,10 @@ export class PatternDetailsComponent implements OnInit {
       sealingMethod: 'Lead Seal',
       certificateNumber: 'PA/2024/WI/001',
       issuedDate: 'Feb 26, 2026',
-      expiryDate: 'Feb 25, 2029',
       status: 'Approved',
+      controlNumber: 'CTL/2024/WI/001',
+      amount: 150000,
+      paymentStatus: 'Paid',
     },
     {
       brand: 'Gilbarco',
@@ -57,8 +61,10 @@ export class PatternDetailsComponent implements OnInit {
       sealingMethod: 'Electronic Seal',
       certificateNumber: 'PA/2025/FP/002',
       issuedDate: 'Jan 10, 2026',
-      expiryDate: 'Jan 09, 2029',
       status: 'Approved',
+      controlNumber: 'CTL/2025/FP/002',
+      amount: 200000,
+      paymentStatus: 'Paid',
     },
   ];
 
