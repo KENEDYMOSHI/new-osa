@@ -91,6 +91,81 @@
         .pulse-animation {
             animation: pulse 2s ease-in-out infinite;
         }
+
+        /* Compact reason chip hover tooltip */
+        .bg-danger-light {
+            background-color: #ffe8e8 !important;
+        }
+
+        .reason-hover-container {
+            position: relative;
+        }
+
+        .reason-hover-container .reason-tooltip {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 10px;
+            width: max-content;
+            max-width: 250px;
+            background-color: #dc3545; /* text-danger standard */
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.2s, top 0.2s;
+            pointer-events: none;
+        }
+
+        .reason-hover-container:hover .reason-tooltip {
+            display: block;
+            opacity: 1;
+            top: calc(100% + 5px);
+        }
+
+        .reason-hover-container .tooltip-arrow {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: transparent transparent #dc3545 transparent;
+        }
+
+        /* Fix for tooltip stacking context in grids */
+        .card {
+            z-index: 1;
+        }
+        .card:hover {
+            z-index: 1050; /* Bring hovered card above others */
+        }
+
+        /* NEW tab badge */
+        .tab-new-badge {
+            position: relative;
+            display: inline-block;
+        }
+        .tab-new-badge .badge-new {
+            position: absolute;
+            top: -8px;
+            right: -12px;
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            color: #fff;
+            font-size: 0.55rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            padding: 2px 5px;
+            border-radius: 20px;
+            box-shadow: 0 2px 6px rgba(255,65,108,0.45);
+            animation: badgePulse 1.6s ease-in-out infinite;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 2px 6px rgba(255,65,108,0.45); }
+            50% { transform: scale(1.15); box-shadow: 0 4px 12px rgba(255,65,108,0.7); }
+        }
     </style>
     <div class="container-fluid">
         <div class="row mb-2">
@@ -208,9 +283,21 @@
                             // Statuses: Applicant_Submission, Pending_DTS, Pending_CEO, Approved, Approved_DTS, etc.
                             // Basically anything AFTER 'Approved_Surveillance' and triggering 'Applicant_Submission'
                             $showTools = in_array($application->status, ['Applicant_Submission', 'Pending_DTS', 'Pending_CEO', 'Approved_DTS', 'Approved_CEO', 'Approved', 'Rejected']);
+                            // Show NEW badge only before CEO approval
+                            $showNewBadge = in_array($application->status, ['Applicant_Submission', 'Pending_DTS', 'Pending_CEO']);
                          ?>
                          <?php if ($showTools): ?>
-                            <li class="nav-item"><a class="nav-link" href="#tools" data-toggle="tab"><i class="fas fa-tools mr-1"></i> Tools & Qualifications</a></li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#tools" data-toggle="tab">
+                                    <i class="fas fa-tools mr-1"></i>
+                                    <span class="<?= $showNewBadge ? 'tab-new-badge' : '' ?>">
+                                        Tools &amp; Qualifications
+                                        <?php if ($showNewBadge): ?>
+                                            <span class="badge-new">NEW</span>
+                                        <?php endif; ?>
+                                    </span>
+                                </a>
+                            </li>
                          <?php endif; ?>
 
                          <li class="nav-item"><a class="nav-link" href="#approvals" data-toggle="tab"><i class="fas fa-tasks mr-1"></i> Approvals</a></li>
@@ -474,13 +561,21 @@
                                         </button>
                                     </div>
                                     
-                                    <!-- Rejection Reason Alert -->
+                                    <!-- Rejection Reason — compact chip, click for full message -->
                                     <?php if (isset($doc->rejection_reason) && !empty($doc->rejection_reason)): ?>
-                                    <div class="alert alert-danger mt-3 mb-0 py-2 px-3 border-left" style="border-left: 4px solid #dc3545 !important;">
-                                        <small class="font-weight-bold">
+                                    <div class="mt-2 position-relative reason-hover-container">
+                                        <div class="d-inline-flex align-items-center bg-danger-light text-danger px-2 py-1 rounded-pill" style="font-size: 0.75rem; font-weight: 600; cursor: help; border: 1px solid #f5c6cb; transition: all 0.2s;">
                                             <i class="fas fa-exclamation-circle mr-1"></i>
-                                            <strong>Reason:</strong> <?= $doc->rejection_reason ?>
-                                        </small>
+                                            <span class="text-truncate" style="max-width: 150px;">Reason: <?= mb_strimwidth(strip_tags($doc->rejection_reason), 0, 50, '...') ?></span>
+                                            <i class="fas fa-question-circle ml-1 opacity-50"></i>
+                                        </div>
+                                        
+                                        <!-- Tooltip Content -->
+                                        <div class="reason-tooltip shadow-lg rounded p-3">
+                                            <div class="tooltip-arrow"></div>
+                                            <h6 class="text-white font-weight-bold mb-1" style="font-size: 0.75rem;"><i class="fas fa-exclamation-circle mr-1"></i> Return Reason</h6>
+                                            <p class="text-white-50 mb-0" style="font-size: 0.7rem; white-space: pre-wrap; word-break: break-word; line-height: 1.4;"><?= htmlspecialchars($doc->rejection_reason, ENT_QUOTES) ?></p>
+                                        </div>
                                     </div>
                                     <?php endif; ?>
                                 </div>
@@ -598,13 +693,21 @@
                                                         </button>
                                                     </div>
 
-                                                    <!-- Rejection Reason Alert -->
+                                                    <!-- Rejection Reason — compact chip, click for full message -->
                                                     <?php if (isset($doc->rejection_reason) && !empty($doc->rejection_reason)): ?>
-                                                    <div class="alert alert-danger mt-3 mb-0 py-2 px-3 border-left" style="border-left: 4px solid #dc3545 !important;">
-                                                        <small class="font-weight-bold">
+                                                    <div class="mt-2 position-relative reason-hover-container">
+                                                        <div class="d-inline-flex align-items-center bg-danger-light text-danger px-2 py-1 rounded-pill" style="font-size: 0.75rem; font-weight: 600; cursor: help; border: 1px solid #f5c6cb; transition: all 0.2s;">
                                                             <i class="fas fa-exclamation-circle mr-1"></i>
-                                                            <strong>Reason:</strong> <?= $doc->rejection_reason ?>
-                                                        </small>
+                                                            <span class="text-truncate" style="max-width: 150px;">Reason: <?= mb_strimwidth(strip_tags($doc->rejection_reason), 0, 50, '...') ?></span>
+                                                            <i class="fas fa-question-circle ml-1 opacity-50"></i>
+                                                        </div>
+                                                        
+                                                        <!-- Tooltip Content -->
+                                                        <div class="reason-tooltip shadow-lg rounded p-3">
+                                                            <div class="tooltip-arrow"></div>
+                                                            <h6 class="text-white font-weight-bold mb-1" style="font-size: 0.75rem;"><i class="fas fa-exclamation-circle mr-1"></i> Return Reason</h6>
+                                                            <p class="text-white-50 mb-0" style="font-size: 0.7rem; white-space: pre-wrap; word-break: break-word; line-height: 1.4;"><?= htmlspecialchars($doc->rejection_reason, ENT_QUOTES) ?></p>
+                                                        </div>
                                                     </div>
                                                     <?php endif; ?>
                                                 </div>
@@ -1013,8 +1116,19 @@
                         <?php foreach ($returnedDocs as $rdoc): ?>
                             <li class="list-group-item bg-transparent px-0 border-bottom-0 pb-0">
                                 <strong><i class="fas fa-file-alt text-danger mr-2"></i><?= htmlspecialchars($rdoc->document_type ?? $rdoc->original_name ?? 'Document') ?></strong>
-                                <div class="mt-2 p-3 rounded" style="background-color: #fdf5f5; border-left: 3px solid #e74a3b;">
-                                    <em class="text-danger">"<?= htmlspecialchars($rdoc->rejection_reason ?? 'No reason provided') ?>"</em>
+                                <div class="mt-2 position-relative reason-hover-container">
+                                    <div class="d-inline-flex align-items-center bg-danger-light text-danger px-2 py-1 rounded-pill" style="font-size: 0.75rem; font-weight: 600; cursor: help; border: 1px solid #f5c6cb; transition: all 0.2s;">
+                                        <i class="fas fa-exclamation-circle mr-1"></i>
+                                        <span class="text-truncate" style="max-width: 150px;">Reason: <?= mb_strimwidth(strip_tags($rdoc->rejection_reason ?? 'No reason provided'), 0, 50, '...') ?></span>
+                                        <i class="fas fa-question-circle ml-1 opacity-50"></i>
+                                    </div>
+                                    
+                                    <!-- Tooltip Content -->
+                                    <div class="reason-tooltip shadow-lg rounded p-3">
+                                        <div class="tooltip-arrow"></div>
+                                        <h6 class="text-white font-weight-bold mb-1" style="font-size: 0.75rem;"><i class="fas fa-exclamation-circle mr-1"></i> Return Reason</h6>
+                                        <p class="text-white-50 mb-0" style="font-size: 0.7rem; white-space: pre-wrap; word-break: break-word; line-height: 1.4;"><?= htmlspecialchars($rdoc->rejection_reason ?? 'No reason provided', ENT_QUOTES) ?></p>
+                                    </div>
                                 </div>
                             </li>
                         <?php endforeach; ?>
@@ -2020,5 +2134,7 @@ $(document).ready(function() {
     <?php endif; ?>
 });
 </script>
+
+
 
 <?= $this->endSection(); ?>

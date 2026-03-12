@@ -7,6 +7,7 @@ import { AppModalComponent } from '../../components/app-modal/app-modal.componen
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
+import { LocationService, District, Ward } from '../../services/location.service';
 
 @Component({
   selector: 'app-profile',
@@ -32,7 +33,8 @@ export class ProfileComponent implements OnInit {
   };
 
   personalInfo: any = {};
-  companyInfo: any = {};
+  companies: any[] = [];
+  currentCompanyInfo: any = {};
 
   securityInfo = {
     currentPassword: '',
@@ -43,6 +45,11 @@ export class ProfileComponent implements OnInit {
   showCurrentPassword = false;
   showNewPassword = false;
   showConfirmPassword = false;
+
+  // Location Data for Company
+  regions: string[] = [];
+  companyDistricts: District[] = [];
+  companyWards: Ward[] = [];
 
   licenseData = [
     {
@@ -71,7 +78,8 @@ export class ProfileComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private route: ActivatedRoute,
-    private licenseService: LicenseService
+    private licenseService: LicenseService,
+    private locationService: LocationService
   ) {}
 
   ngOnInit() {
@@ -79,6 +87,38 @@ export class ProfileComponent implements OnInit {
         this.activeView = params['view'] || 'profile';
     });
     this.fetchProfile();
+    this.loadRegions();
+  }
+
+  loadRegions() {
+    this.locationService.getRegions().subscribe({
+      next: (data) => this.regions = data,
+      error: (err) => console.error('Error loading regions', err)
+    });
+  }
+
+  onCompanyRegionChange() {
+    this.currentCompanyInfo.district = '';
+    this.currentCompanyInfo.town = '';
+    this.companyDistricts = [];
+    this.companyWards = [];
+    if (this.currentCompanyInfo.region) {
+      this.locationService.getDistricts(this.currentCompanyInfo.region).subscribe({
+        next: (data) => this.companyDistricts = data,
+        error: (err) => console.error('Error loading districts', err)
+      });
+    }
+  }
+
+  onCompanyDistrictChange() {
+    this.currentCompanyInfo.town = '';
+    this.companyWards = [];
+    if (this.currentCompanyInfo.district) {
+      this.locationService.getWards(this.currentCompanyInfo.district).subscribe({
+        next: (data) => this.companyWards = data,
+        error: (err) => console.error('Error loading wards', err)
+      });
+    }
   }
 
   async fetchProfile() {
@@ -111,8 +151,23 @@ export class ProfileComponent implements OnInit {
         };
       }
 
-      if (data.businessInfo) {
-        this.companyInfo = {
+      if (data.businessInfos && data.businessInfos.length > 0) {
+        this.companies = data.businessInfos.map((info: any) => ({
+          id: info.id,
+          tin: info.tin,
+          companyName: info.company_name,
+          companyEmail: info.company_email,
+          companyPhone: info.company_phone,
+          brelaNumber: info.brela_number,
+          region: info.bus_region,
+          district: info.bus_district,
+          town: info.bus_town,
+          postalCode: info.postal_code,
+          street: info.bus_street,
+          sealNumber: info.seal_number
+        }));
+      } else if (data.businessInfo) {
+        this.companies = [{
           tin: data.businessInfo.tin,
           companyName: data.businessInfo.company_name,
           companyEmail: data.businessInfo.company_email,
@@ -124,13 +179,15 @@ export class ProfileComponent implements OnInit {
           postalCode: data.businessInfo.postal_code,
           street: data.businessInfo.bus_street,
           sealNumber: data.businessInfo.seal_number
-        };
+        }];
+      } else {
+        this.companies = [];
       }
 
       // Initialize backup data
       this.backupData = JSON.parse(JSON.stringify({
         personal: this.personalInfo,
-        company: this.companyInfo,
+        company: this.currentCompanyInfo,
         social: this.socialLinks
       }));
 
@@ -164,7 +221,7 @@ export class ProfileComponent implements OnInit {
     // Backup current state
     this.backupData = JSON.parse(JSON.stringify({
         personal: this.personalInfo,
-        company: this.companyInfo,
+        company: this.currentCompanyInfo,
         social: this.socialLinks
     }));
   }
@@ -173,7 +230,7 @@ export class ProfileComponent implements OnInit {
     this.showModal = false;
     // Restore data on cancel
     this.personalInfo = { ...this.backupData.personal };
-    this.companyInfo = { ...this.backupData.company };
+    this.currentCompanyInfo = { ...this.backupData.company };
     this.socialLinks = { ...this.backupData.social };
   }
 
@@ -215,12 +272,26 @@ export class ProfileComponent implements OnInit {
     }
   }
 
-  openCompanyEditModal() {
+  openCompanyEditModal(company?: any) {
+    if (company) {
+      this.currentCompanyInfo = { ...company };
+      // Pre-load districts and wards if region and district exist
+      if (this.currentCompanyInfo.region) {
+        this.locationService.getDistricts(this.currentCompanyInfo.region).subscribe(d => this.companyDistricts = d);
+      }
+      if (this.currentCompanyInfo.district) {
+        this.locationService.getWards(this.currentCompanyInfo.district).subscribe(w => this.companyWards = w);
+      }
+    } else {
+      this.currentCompanyInfo = {};
+      this.companyDistricts = [];
+      this.companyWards = [];
+    }
     this.showCompanyModal = true;
     // Backup current state
     this.backupData = JSON.parse(JSON.stringify({
         personal: this.personalInfo,
-        company: this.companyInfo,
+        company: this.currentCompanyInfo,
         social: this.socialLinks
     }));
   }
@@ -228,13 +299,13 @@ export class ProfileComponent implements OnInit {
   closeCompanyModal() {
     this.showCompanyModal = false;
     // Restore data on cancel
-    this.companyInfo = { ...this.backupData.company };
+    this.currentCompanyInfo = { ...this.backupData.company };
   }
 
   async saveCompanyProfile() {
     this.isLoading = true;
     try {
-        await firstValueFrom(this.authService.updateBusinessProfile(this.companyInfo));
+        await firstValueFrom(this.authService.updateBusinessProfile(this.currentCompanyInfo));
         
         await Swal.fire({
             title: 'Success!',

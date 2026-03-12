@@ -232,7 +232,7 @@ class ApprovalController extends BaseController
         
         // 4. Get all attachments with category
         $attachmentBuilder = $db->table('license_application_attachments');
-        $attachmentBuilder->select('id, user_id, application_id, document_type, original_name as file_name, document_type as type, mime_type, status, category, created_at'); // Include category
+        $attachmentBuilder->select('id, user_id, application_id, document_type, original_name as file_name, document_type as type, mime_type, status, rejection_reason, category, created_at'); // Include category and rejection reason
         $attachmentBuilder->where('application_id', $id);
         $attachments = $attachmentBuilder->get()->getResult();
         

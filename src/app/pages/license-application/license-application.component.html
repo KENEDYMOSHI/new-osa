@@ -163,11 +163,11 @@
       </div>
     </div>
 
-    <!-- Card 2: Company Details -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden border-t-4 border-t-[#e79a3f]">
+    <!-- Card 2: Company Details Cards -->
+    <div *ngFor="let company of companies; let i = index" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden border-t-4 border-t-[#e79a3f] mb-6">
       <div class="bg-orange-50 px-6 py-4 border-b border-orange-100 flex justify-between items-center">
         <div>
-          <h2 class="text-lg font-bold text-gray-800">Company Information</h2>
+          <h2 class="text-lg font-bold text-gray-800">Company Information {{ companies.length > 1 ? '#' + (i + 1) : '' }}</h2>
           <p class="text-xs text-gray-500">This information has been pre-filled from your registration data.</p>
         </div>
         <button (click)="navigateToProfile()" class="flex items-center gap-2 px-4 py-2 rounded-md border border-stroke text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors bg-white">
@@ -182,7 +182,7 @@
         
         <!-- Company Name -->
         <div class="relative">
-          <input type="text" [value]="companyInfo.company_name || companyInfo.companyName || '-'" readonly
+          <input type="text" [value]="company.company_name || company.companyName || '-'" readonly
             class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
           <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
             Company Name
@@ -191,7 +191,7 @@
 
         <!-- Registration Number (BRELA) -->
         <div class="relative">
-          <input type="text" [value]="companyInfo.brela_number || companyInfo.brelaNumber || '-'" readonly
+          <input type="text" [value]="company.brela_number || company.brelaNumber || '-'" readonly
             class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
           <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
             Registration Number (BRELA)
@@ -200,7 +200,7 @@
 
         <!-- Tax Number (TIN) -->
         <div class="relative">
-          <input type="text" [value]="companyInfo.tin || '-'" readonly
+          <input type="text" [value]="company.tin || '-'" readonly
             class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
           <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
             Tax Number (TIN)
@@ -209,7 +209,7 @@
 
         <!-- Company Email -->
         <div class="relative">
-          <input type="text" [value]="companyInfo.company_email || companyInfo.companyEmail || '-'" readonly
+          <input type="text" [value]="company.company_email || company.companyEmail || '-'" readonly
             class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
           <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
             Company Email
@@ -218,7 +218,7 @@
 
         <!-- Company Phone -->
         <div class="relative">
-          <input type="text" [value]="companyInfo.company_phone || companyInfo.companyPhone || '-'" readonly
+          <input type="text" [value]="company.company_phone || company.companyPhone || '-'" readonly
             class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
           <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
             Company Phone
@@ -227,7 +227,7 @@
 
         <!-- Region -->
         <div class="relative">
-          <input type="text" [value]="companyInfo.bus_region || companyInfo.region || '-'" readonly
+          <input type="text" [value]="company.bus_region || company.region || '-'" readonly
             class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
           <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
             Region
@@ -236,7 +236,7 @@
 
         <!-- District -->
         <div class="relative">
-          <input type="text" [value]="companyInfo.bus_district || companyInfo.district || '-'" readonly
+          <input type="text" [value]="company.bus_district || company.district || '-'" readonly
             class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
           <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
             District
@@ -245,7 +245,7 @@
 
         <!-- Town -->
         <div class="relative">
-          <input type="text" [value]="companyInfo.bus_town || companyInfo.town || '-'" readonly
+          <input type="text" [value]="company.bus_town || company.town || '-'" readonly
             class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
           <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
             Town
@@ -254,7 +254,7 @@
 
         <!-- Postal Code -->
         <div class="relative">
-          <input type="text" [value]="companyInfo.postal_code || companyInfo.postalCode || '-'" readonly
+          <input type="text" [value]="company.postal_code || company.postalCode || '-'" readonly
             class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
           <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
             Postal Code
@@ -263,7 +263,7 @@
 
         <!-- Street/Village -->
         <div class="relative">
-          <input type="text" [value]="companyInfo.bus_street || companyInfo.street || '-'" readonly
+          <input type="text" [value]="company.bus_street || company.street || '-'" readonly
             class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
           <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
             Street/Village
@@ -355,18 +355,22 @@
         
         <!-- Removed invalid global file input -->
         
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
+        <div class="overflow-x-auto" *ngFor="let companyItem of companyDocuments; let i = index">
+          <h3 class="font-bold text-gray-700 mb-2" *ngIf="companyDocuments.length > 1" [ngClass]="{'mt-6': i > 0}">
+            Attachments for {{ companyItem.company.company_name || companyItem.company.companyName }}
+          </h3>
+          <table class="w-full text-left border-collapse mb-6">
             <thead>
               <tr class="border-b border-gray-200">
                 <th class="py-3 px-4 text-sm font-semibold text-gray-700">Document Name</th>
+                <th class="py-3 px-4 text-sm font-semibold text-gray-700">Company Name</th>
                 <th class="py-3 px-4 text-sm font-semibold text-gray-700">Date Uploaded</th>
                 <th class="py-3 px-4 text-sm font-semibold text-gray-700">Status</th>
                 <th class="py-3 px-4 text-sm font-semibold text-gray-700">Action</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let doc of requiredDocuments" 
+              <tr *ngFor="let doc of companyItem.documents" 
                   [ngClass]="{
                     'border-b border-gray-100 hover:bg-gray-50': doc.status !== 'Returned' || doc.viewed,
                     'returned-document': doc.status === 'Returned' && !doc.viewed
@@ -385,10 +389,8 @@
                     </svg>
                     {{ doc.fileName }}
                   </div>
-                  <div *ngIf="(doc.status === 'Returned' || doc.status === 'Pending') && doc.rejectionReason" class="text-xs mt-2 p-2 rounded rejection-alert">
-                    <span class="font-bold">Reason:</span> {{ doc.rejectionReason }}
-                  </div>
                 </td>
+                <td class="py-3 px-4 text-sm text-gray-800">{{ companyItem.company.company_name || companyItem.company.companyName || '-' }}</td>
                 <td class="py-3 px-4 text-sm text-gray-600">{{ doc.date }}</td>
                 <td class="py-3 px-4">
                   <span [ngClass]="{
@@ -445,10 +447,30 @@
                       </button>
                     </ng-container>
                     <!-- Hidden File Input -->
-                    <input type="file" [id]="'fileInput-' + doc.id" class="hidden" (change)="onFileSelected($event, doc.id)" accept="application/pdf">
+                    <input type="file" [id]="'fileInput-' + (doc.uniqueId || doc.id)" class="hidden" (change)="onFileSelected($event, doc.id)" accept="application/pdf">
                   </div>
-                  <div *ngIf="(doc.status === 'Returned' || doc.status === 'Pending') && doc.rejectionReason" class="text-xs text-red-600 mt-1 font-medium bg-red-50 p-1 rounded">
-                    Reason: {{ doc.rejectionReason }}
+                  <div *ngIf="(doc.status === 'Returned' || doc.status === 'Pending') && doc.rejectionReason" class="mt-1 relative group cursor-help inline-block">
+                    <div class="inline-flex items-center gap-1.5 bg-red-50 border border-red-200 text-red-700 px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors group-hover:bg-red-100 group-hover:border-red-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 text-red-500">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/>
+                      </svg>
+                      <span class="max-w-[150px] sm:max-w-[200px] truncate">Reason: {{ doc.rejectionReason }}</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 text-red-400 opacity-70">
+                        <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+                        <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                    
+                    <div class="absolute top-full left-0 mt-2 w-64 z-[100] opacity-0 invisible -translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200 ease-out pointer-events-none">
+                      <div class="absolute top-0 left-4 -translate-y-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-red-600"></div>
+                      <div class="bg-red-600 rounded-xl shadow-xl px-4 py-3">
+                        <p class="text-[11px] font-bold text-white mb-1.5 flex items-center gap-1.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5 shrink-0"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/></svg>
+                          Return Reason
+                        </p>
+                        <p class="text-[10px] text-red-100 leading-relaxed whitespace-pre-wrap break-words">{{ doc.rejectionReason }}</p>
+                      </div>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -498,9 +520,7 @@
                     </svg>
                     {{ doc.fileName }}
                   </div>
-                  <div *ngIf="(doc.status === 'Returned' || doc.status === 'Pending') && doc.rejectionReason" class="text-xs mt-2 p-2 rounded rejection-alert">
-                    <span class="font-bold">Reason:</span> {{ doc.rejectionReason }}
-                  </div>
+
                 </td>
                 <td class="py-3 px-4 text-sm text-gray-600">{{ doc.date }}</td>
                 <td class="py-3 px-4">
@@ -637,8 +657,28 @@
                     <!-- Hidden File Input -->
                     <input type="file" [id]="'fileInput-' + doc.id" class="hidden" (change)="onFileSelected($event, doc.id)" accept="application/pdf">
                   </div>
-                  <div *ngIf="(doc.status === 'Returned' || doc.status === 'Pending') && doc.rejectionReason" class="text-xs text-red-600 mt-1 font-medium bg-red-50 p-1 rounded">
-                    Reason: {{ doc.rejectionReason }}
+                  <div *ngIf="(doc.status === 'Returned' || doc.status === 'Pending') && doc.rejectionReason" class="mt-1 relative group cursor-help inline-block">
+                    <div class="inline-flex items-center gap-1.5 bg-red-50 border border-red-200 text-red-700 px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors group-hover:bg-red-100 group-hover:border-red-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 text-red-500">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/>
+                      </svg>
+                      <span class="max-w-[150px] sm:max-w-[200px] truncate">Reason: {{ doc.rejectionReason }}</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 text-red-400 opacity-70">
+                        <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+                        <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                    
+                    <div class="absolute top-full left-0 mt-2 w-64 z-[100] opacity-0 invisible -translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200 ease-out pointer-events-none">
+                      <div class="absolute top-0 left-4 -translate-y-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-red-600"></div>
+                      <div class="bg-red-600 rounded-xl shadow-xl px-4 py-3">
+                        <p class="text-[11px] font-bold text-white mb-1.5 flex items-center gap-1.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5 shrink-0"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/></svg>
+                          Return Reason
+                        </p>
+                        <p class="text-[10px] text-red-100 leading-relaxed whitespace-pre-wrap break-words">{{ doc.rejectionReason }}</p>
+                      </div>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -824,21 +864,47 @@
       </div>
       <div class="p-0">
         <div class="px-6 py-4 space-y-3">
-          <div *ngFor="let license of selectedLicenses" class="text-sm text-gray-700 border-b border-gray-50 pb-3 last:border-0 last:pb-0">
-            <div class="flex justify-between items-center">
-              <span class="font-medium">{{ license.name }}:</span>
-              <span class="font-bold text-gray-800">{{ applicationFee | number }} TZS</span>
-            </div>
-            <div *ngIf="license.userSelectedInstruments && license.userSelectedInstruments.length > 0" class="mt-2 flex flex-wrap gap-1">
-              <span *ngFor="let inst of license.userSelectedInstruments" class="text-[10px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded border border-orange-100 flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-2 h-2">
-                  <circle cx="10" cy="10" r="10" />
-                </svg>
-                {{ inst }}
-              </span>
+          <div *ngFor="let license of selectedLicenses" class="text-sm text-gray-700 border-b border-gray-100 pb-3 mb-3 last:border-0 last:pb-0 last:mb-0">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 bg-white px-4 py-3 rounded-lg border border-gray-100 shadow-sm">
+              
+              <!-- License Type (Start) -->
+              <div class="flex-1 w-full text-left">
+                <span class="font-bold text-gray-800 block mb-1">{{ license.name }}</span>
+                <div *ngIf="license.userSelectedInstruments && license.userSelectedInstruments.length > 0" class="flex flex-wrap gap-1 mt-2">
+                  <span *ngFor="let inst of license.userSelectedInstruments" class="text-[10px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded border border-orange-100 flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-2 h-2">
+                      <circle cx="10" cy="10" r="10" />
+                    </svg>
+                    {{ inst }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Company Name (Middle) -->
+              <div class="flex-1 w-full flex flex-col md:items-center">
+                <div class="w-full max-w-sm">
+                  <label class="block text-xs font-semibold text-gray-500 mb-1 md:text-center">Company Name for License:</label>
+                  <div *ngIf="companies.length > 0">
+                    <select [(ngModel)]="selectedCompanyId" class="w-full text-sm rounded border border-gray-300 bg-white py-1.5 px-3 outline-none transition focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B] shadow-sm">
+                      <option value="" disabled>-- Select a Company --</option>
+                      <option *ngFor="let company of companies" [value]="company.id">
+                        {{ company.companyName || company.company_name }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fee Amount (End/Right) -->
+              <div class="flex-[0.5] w-full flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center">
+                <span class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-0 md:mb-1">Fee Amount</span>
+                <span class="font-bold text-gray-900 whitespace-nowrap">{{ applicationFee | number }} TZS</span>
+              </div>
+              
             </div>
           </div>
         </div>
+        
         
         <div class="bg-[#FFF7ED] px-6 py-4 flex justify-between items-center">
           <span class="font-bold text-gray-800">Total Amount:</span>
@@ -848,13 +914,16 @@
     </div>
 
     <!-- Card 5: Declaration -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden border-t-4 border-t-[#e79a3f]">
-      <div class="bg-orange-50 px-6 py-4 border-b border-orange-100">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden border-t-4 border-t-[#e79a3f]" [ngClass]="{'opacity-60 pointer-events-none': !selectedCompanyId}">
+      <div class="bg-orange-50 px-6 py-4 border-b border-orange-100 flex justify-between items-center">
         <h2 class="text-lg font-bold text-gray-800">Declaration</h2>
+        <span *ngIf="!selectedCompanyId" class="text-xs text-red-500 font-semibold bg-red-50 px-2 py-1 rounded">Please select a company in Application Fees first</span>
       </div>
       <div class="p-6">
-        <label class="flex items-start gap-3 cursor-pointer">
-          <input type="checkbox" [(ngModel)]="declarationAccepted" class="mt-1 h-5 w-5 text-[#F59E0B] rounded border-gray-300 focus:ring-[#F59E0B]">
+        <label class="flex items-start gap-3" [ngClass]="!selectedCompanyId ? 'cursor-not-allowed' : 'cursor-pointer'">
+          <input type="checkbox" [(ngModel)]="declarationAccepted" 
+                 [disabled]="!selectedCompanyId"
+                 class="mt-1 h-5 w-5 text-[#F59E0B] rounded border-gray-300 focus:ring-[#F59E0B] disabled:opacity-50">
           <div class="text-sm text-gray-700">
             <p class="font-medium mb-1">I hereby declare that the information provided is true and correct.</p>
             <p class="text-gray-500">By checking this box, I declare that all the information provided in this application is true and accurate to the best of my knowledge. I understand that providing false information may result in application rejection or license revocation.</p>

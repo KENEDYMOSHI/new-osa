@@ -159,6 +159,10 @@ export class LicenseApplicationComponent implements OnInit {
 
   requiredDocuments: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned' | 'Resubmitted' | 'Pending'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string; viewed?: boolean; pendingFile?: File }[] = [];
 
+  companies: any[] = [];
+  companyDocuments: { company: any, documents: { id: string; name: string; date: string; status: 'Not Uploaded' | 'Uploaded' | 'Returned' | 'Resubmitted' | 'Pending'; fileName?: string | null; dbId?: string; submitted?: boolean; rejectionReason?: string; viewed?: boolean; pendingFile?: File; companyId?: string; uniqueId?: string }[] }[] = [];
+
+  selectedCompanyId: string = ''; // Used during application submission
   selectedDoc: any = null;
 
   today: Date = new Date();
@@ -184,28 +188,42 @@ export class LicenseApplicationComponent implements OnInit {
   isApplicationSubmitted = false;
 
   updateRequiredDocuments() {
-    // Clone base documents to avoid reference issues
-    let docs = JSON.parse(JSON.stringify(this.baseDocuments));
-    
-    if (this.applicationType === 'Renewal') {
-      const renewalDocs = JSON.parse(JSON.stringify(this.renewalDocuments));
-      docs = [...docs, ...renewalDocs];
-    }
-    
-    // Preserve status of existing documents if switching types
-    if (this.requiredDocuments.length > 0) {
-        docs.forEach((newDoc: any) => {
-            const existing = this.requiredDocuments.find(d => d.id === newDoc.id);
-            if (existing && existing.status === 'Uploaded') {
-                newDoc.status = existing.status;
-                newDoc.date = existing.date;
-                newDoc.fileName = existing.fileName;
-                newDoc.dbId = existing.dbId;
-            }
-        });
-    }
+    this.companyDocuments = this.companies.map(company => {
+      let docs = JSON.parse(JSON.stringify(this.baseDocuments));
+      
+      if (this.applicationType === 'Renewal') {
+        const renewalDocs = JSON.parse(JSON.stringify(this.renewalDocuments));
+        docs = [...docs, ...renewalDocs];
+      }
+      
+      // Preserve status of existing documents if switching types
+      const existingCompanyDocs = this.companyDocuments?.find(cd => cd.company.id === company.id);
+      if (existingCompanyDocs && existingCompanyDocs.documents.length > 0) {
+          docs.forEach((newDoc: any) => {
+              const existing = existingCompanyDocs.documents.find((d: any) => d.id === newDoc.id);
+              if (existing && (existing.status === 'Uploaded' || existing.status === 'Returned' || existing.status === 'Resubmitted')) {
+                  newDoc.status = existing.status;
+                  newDoc.date = existing.date;
+                  newDoc.fileName = existing.fileName;
+                  newDoc.dbId = existing.dbId;
+                  newDoc.rejectionReason = existing.rejectionReason;
+                  newDoc.viewed = existing.viewed;
+              }
+          });
+      }
 
-    this.requiredDocuments = docs;
+      // Add company info to each doc for uploading context
+      docs.forEach((newDoc: any) => {
+          newDoc.companyId = company.id;
+          newDoc.uniqueId = `${newDoc.id}_${company.id || 'new'}`;
+      });
+
+      return {
+        company: company,
+        documents: docs
+      };
+    });
+
     // Reload documents from backend to ensure status is up to date
     this.loadUserDocuments(); 
   }
@@ -226,8 +244,22 @@ export class LicenseApplicationComponent implements OnInit {
           this.calculateTotal();
         }
   
-        if (data.businessInfo) {
+        if (data.businessInfos && data.businessInfos.length > 0) {
+          this.companies = data.businessInfos;
+          this.companyInfo = this.companies[0]; // Set default for backward compatibility
+          // Removed auto-selection of company
+          // if (!this.selectedCompanyId) {
+          //    this.selectedCompanyId = this.companies[0].id;
+          // }
+          this.updateRequiredDocuments();
+        } else if (data.businessInfo) {
+          this.companies = [data.businessInfo];
           this.companyInfo = { ...data.businessInfo };
+          // Removed auto-selection of company
+          // if (!this.selectedCompanyId) {
+          //    this.selectedCompanyId = data.businessInfo.id;
+          // }
+          this.updateRequiredDocuments();
         }
       },
       error: (err: any) => {
@@ -476,21 +508,35 @@ export class LicenseApplicationComponent implements OnInit {
         docs.forEach((doc: any) => {
           const docType = (doc.document_type || '').toLowerCase();
           
-          // Check required documents
-          const reqDoc = this.requiredDocuments.find(d => 
-              d.id.toLowerCase() === docType || d.name.toLowerCase() === docType
-          );
-          if (reqDoc) {
-            reqDoc.status = doc.status === 'Returned' ? 'Returned' : 'Uploaded';
-            reqDoc.date = new Date(doc.created_at || Date.now()).toLocaleDateString('en-GB');
-            reqDoc.fileName = doc.original_name;
-            reqDoc.dbId = doc.id;
-            reqDoc.submitted = (this.isApplicationSubmitted && doc.application_id === this.applicationId);
-            (reqDoc as any).category = doc.category || 'attachment'; // PRESERVE category from database
-            if (doc.status === 'Returned') {
-                reqDoc.rejectionReason = doc.rejection_reason;
-                reqDoc.viewed = false; // Initialize as not viewed
-            }
+          // Check required documents across all companies
+          if (this.companyDocuments && this.companyDocuments.length > 0) {
+              // Legacy fallback: if a document has no company_id, assign it to the first company
+              let targetCompanyId = doc.company_id;
+              if (!targetCompanyId && this.companies.length > 0) {
+                  targetCompanyId = this.companies[0].id || this.companies[0].tin; 
+                  // Fallback ID to first company if we don't have a rigid DB id
+              }
+
+              this.companyDocuments.forEach(companyGroup => {
+                  // Only apply the document if it matches the target company
+                  if (companyGroup.company.id == targetCompanyId || companyGroup.company.tin == targetCompanyId || !targetCompanyId) {
+                      const reqDoc = companyGroup.documents.find(d => 
+                          (d.id.toLowerCase() === docType || d.name.toLowerCase() === docType)
+                      );
+                      if (reqDoc) {
+                        reqDoc.status = doc.status === 'Returned' ? 'Returned' : 'Uploaded';
+                        reqDoc.date = new Date(doc.created_at || Date.now()).toLocaleDateString('en-GB');
+                        reqDoc.fileName = doc.original_name;
+                        reqDoc.dbId = doc.id;
+                        reqDoc.submitted = (this.isApplicationSubmitted && doc.application_id === this.applicationId);
+                        (reqDoc as any).category = doc.category || 'attachment'; // PRESERVE category from database
+                        if (doc.status === 'Returned') {
+                            reqDoc.rejectionReason = doc.rejection_reason;
+                            reqDoc.viewed = false; // Initialize as not viewed
+                        }
+                      }
+                  }
+              });
           }
 
           // Check qualification documents
@@ -519,11 +565,12 @@ export class LicenseApplicationComponent implements OnInit {
 
   triggerFileUpload(doc: any) {
     this.selectedDoc = doc;
-    const fileInput = document.getElementById('fileInput-' + doc.id) as HTMLInputElement;
+    const fileInputId = 'fileInput-' + (doc.uniqueId || doc.id);
+    const fileInput = document.getElementById(fileInputId) as HTMLInputElement;
     if (fileInput) {
       fileInput.click();
     } else {
-      console.error('File input not found for:', doc.id);
+      console.error('File input not found for:', fileInputId);
     }
   }
 
@@ -618,7 +665,11 @@ export class LicenseApplicationComponent implements OnInit {
       category = targetDoc.category;
     }
 
-    this.licenseService.uploadDocument(file, documentType, appId, category).subscribe({
+    // Retrieve companyName if available
+    const companyName = targetDoc?.companyId ? this.companies.find(c => c.id === targetDoc.companyId)?.company_name 
+      || this.companies.find(c => c.id === targetDoc.companyId)?.companyName : undefined;
+
+    this.licenseService.uploadDocument(file, documentType, appId, category, targetDoc?.companyId, companyName).subscribe({
       next: (response: any) => {
         // Update the target doc
         targetDoc.status = response.status || 'Uploaded';
@@ -776,7 +827,11 @@ export class LicenseApplicationComponent implements OnInit {
       category = doc.category;
     }
 
-    this.licenseService.uploadDocument(doc.pendingFile, doc.id, appId, category).subscribe({
+    // Retrieve companyName if available
+    const companyName = doc.companyId ? this.companies.find(c => c.id === doc.companyId)?.company_name 
+      || this.companies.find(c => c.id === doc.companyId)?.companyName : undefined;
+
+    this.licenseService.uploadDocument(doc.pendingFile, doc.id, appId, category, doc.companyId, companyName).subscribe({
       next: (response: any) => {
         // Update the document
         doc.status = response.status || 'Uploaded';
@@ -996,6 +1051,11 @@ export class LicenseApplicationComponent implements OnInit {
       return;
     }
 
+    if (!this.selectedCompanyId && this.companies.length > 0) {
+      Swal.fire('Error', 'Please select a company for this application under Application Fees.', 'error');
+      return;
+    }
+
     // Validate Criteria for Selected Licenses
     for (const license of selectedLicenses) {
         if (license.availableInstruments && license.availableInstruments.length > 0) {
@@ -1011,23 +1071,55 @@ export class LicenseApplicationComponent implements OnInit {
         }
     }
 
-    // Validate Required Documents
-    const missingDocs = this.requiredDocuments.filter(doc => doc.status !== 'Uploaded');
-    if (missingDocs.length > 0) {
-        const missingNames = missingDocs.map(d => d.name).join('<br>');
-        Swal.fire({
-            icon: 'error',
-            title: 'Missing Documents',
-            html: `Please upload the following required documents before submitting:<br><br><b>${missingNames}</b>`
-        });
-        return;
+    // Validate Required Documents specifically for the Selected Company
+    if (this.selectedCompanyId) {
+        const selectedCompanyDocs = this.companyDocuments.find(cd => cd.company.id === this.selectedCompanyId || cd.company.tin === this.selectedCompanyId);
+        
+        if (selectedCompanyDocs) {
+            const missingDocs = selectedCompanyDocs.documents.filter(doc => doc.status !== 'Uploaded');
+            if (missingDocs.length > 0) {
+                const missingNames = missingDocs.map(d => d.name).join('<br>');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Missing Documents for Selected Company',
+                    html: `Please upload the following required documents for the selected company before submitting:<br><br><b>${missingNames}</b>`
+                });
+                return;
+            }
+        }
+    } else {
+        // Fallback validation if no company is selected (though this is caught above, it's good practice)
+        const missingDocs = this.companyDocuments.flatMap(cd => cd.documents).filter(doc => doc.status !== 'Uploaded');
+        if (missingDocs.length > 0) {
+            const missingNames = missingDocs.map(d => d.name).join('<br>');
+            Swal.fire({
+                icon: 'error',
+                title: 'Missing Documents',
+                html: `Please upload the following required documents before submitting:<br><br><b>${missingNames}</b>`
+            });
+            return;
+        }
     }
 
     this.isSubmitting = true;
 
     // Collect all valid attachment IDs (Uploaded status)
     const attachmentIds: string[] = [];
-    [...this.requiredDocuments, ...this.qualificationDocuments].forEach(doc => {
+    
+    // Only include attachments for the specifically selected company
+    let targetDocs: any[] = [];
+    if (this.selectedCompanyId) {
+        const selectedCompanyDocs = this.companyDocuments.find(cd => cd.company.id === this.selectedCompanyId || cd.company.tin === this.selectedCompanyId);
+        if (selectedCompanyDocs) {
+            targetDocs = selectedCompanyDocs.documents;
+        }
+    } else {
+        // Fallback for length == 1 or edge cases
+        targetDocs = this.companyDocuments.length > 0 ? this.companyDocuments[0].documents : [];
+    }
+
+    // Add company-specific attachments AND global qualification documents
+    [...targetDocs, ...this.qualificationDocuments].forEach(doc => {
         if (doc.status === 'Uploaded' && doc.dbId) {
             attachmentIds.push(doc.dbId);
         }
@@ -1041,6 +1133,7 @@ export class LicenseApplicationComponent implements OnInit {
 
     const applicationData = {
       applicationType: this.applicationType,
+      companyId: this.selectedCompanyId,
       totalAmount: this.totalAmount,
       declaration: this.declarationAccepted,
       licenseTypes: JSON.stringify(licensesToSubmit),

@@ -105,6 +105,8 @@ class LicenseController extends ResourceController
         $docType = $this->request->getPost('documentType');
         $applicationId = $this->request->getPost('applicationId');
         $category = $this->request->getPost('category');
+        $companyId = $this->request->getPost('companyId');
+        $companyName = $this->request->getPost('companyName');
 
         $existingDoc = null;
         $currentApp = null;
@@ -121,15 +123,21 @@ class LicenseController extends ResourceController
             $currentApp = $app;
 
             // Check if a document of this type already exists for this application
-            $existingDoc = $attachmentModel->where('application_id', $applicationId)
-                                           ->where('document_type', $docType)
-                                           ->first();
+            $query = $attachmentModel->where('application_id', $applicationId)
+                                     ->where('document_type', $docType);
+            if ($companyId && $companyId !== 'null' && $companyId !== 'undefined') {
+                $query->where('company_id', $companyId);
+            }
+            $existingDoc = $query->first();
         } else {
             // Draft mode: Check if a document of this type already exists for the user (unattached)
-            $existingDoc = $attachmentModel->where('user_id', $user->id)
-                                           ->where('document_type', $docType)
-                                           ->where('application_id', null)
-                                           ->first();
+            $query = $attachmentModel->where('user_id', $user->id)
+                                     ->where('document_type', $docType)
+                                     ->where('application_id', null);
+            if ($companyId && $companyId !== 'null' && $companyId !== 'undefined') {
+                $query->where('company_id', $companyId);
+            }
+            $existingDoc = $query->first();
             $applicationId = null; // Ensure null for insertion
         }
 
@@ -168,7 +176,9 @@ class LicenseController extends ResourceController
                     // Ensure category is updated/preserved
                     'category'         => $category,
                     // Ensure app link is preserved (should vary rarely change here)
-                    'application_id'   => $applicationId
+                    'application_id'   => $applicationId,
+                    'company_id'       => ($companyId && $companyId !== 'null' && $companyId !== 'undefined') ? $companyId : null,
+                    'company_name'     => ($companyName && $companyName !== 'null' && $companyName !== 'undefined') ? $companyName : null
                 ];
 
                 try {
@@ -229,6 +239,8 @@ class LicenseController extends ResourceController
             'id'             => $id,
             'user_id'        => $user->id,
             'application_id' => $applicationId,
+            'company_id'     => ($companyId && $companyId !== 'null' && $companyId !== 'undefined') ? $companyId : null,
+            'company_name'   => ($companyName && $companyName !== 'null' && $companyName !== 'undefined') ? $companyName : null,
             'document_type'  => $docType,
             'category'       => $category,
             'file_path'      => $filePath,
@@ -499,16 +511,17 @@ class LicenseController extends ResourceController
 
         log_message('error', 'getUserDocuments: User ID ' . $user->id . ' has ' . count($allDocs) . ' documents.');
 
-        // Filter to keep only the latest document for each document_type
+        // Filter to keep only the latest document for each document_type AND company_id
         $latestDocs = [];
         $seenTypes = [];
 
         foreach ($allDocs as $doc) {
-            if (!in_array($doc->document_type, $seenTypes)) {
+            $key = $doc->document_type . '_' . ($doc->company_id ?? 'null');
+            if (!in_array($key, $seenTypes)) {
                 // Remove file_content to reduce payload size
                 unset($doc->file_content);
                 $latestDocs[] = $doc;
-                $seenTypes[] = $doc->document_type;
+                $seenTypes[] = $key;
             }
         }
 
@@ -929,10 +942,13 @@ class LicenseController extends ResourceController
                         $newAppId = $this->generateUuid();
                      }
 
+                     $companyId = $data['companyId'] ?? null;
+
                      $appData = [
                         'id' => $newAppId,
                         'initial_application_id' => $batchId, // Link independent licenses via Batch ID
                         'user_id' => $userId,
+                        'company_id' => $companyId,
                         'status' => 'Pending',
                         'approval_stage' => 'Manager', // Start flow
                         'application_type' => $applicationType,
@@ -1342,21 +1358,28 @@ class LicenseController extends ResourceController
             
             // Show advanced stages (DTS & CEO) based on application type:
             // - For RENEWAL: Show after Surveillance approval (no exam required)
-            // - For NEW: Show after Surveillance approval AND exam marks are saved
+            // - For NEW: Show ONLY if applicant PASSED the exam (result = PASS)
             $showAdvancedStages = false;
+            $isPass = (strtoupper($interviewResult ?? '') === 'PASS');
+            $isFailed = !$isRenewal && (strtoupper($interviewResult ?? '') === 'FAIL');
             
             if ($isRenewal) {
-                // RENEWAL: Show DTS/CEO after Surveillance approval
+                // RENEWAL: Show DTS/CEO after Surveillance approval (no exam required)
                 $showAdvancedStages = ($currentStage >= 3) || ($status === 'Approved_Surveillance');
             } else {
-                // NEW: Show DTS/CEO after Surveillance approval AND exam marks exist
-                $hasExamMarks = !empty($interviewResult); // Exam marks have been saved
-                $showAdvancedStages = ($currentStage >= 3) || (($status === 'Approved_Surveillance') && $hasExamMarks);
+                // NEW: Show DTS/CEO ONLY when exam result is PASS
+                // If FAIL, journey stops at Surveillance — DTS & CEO never shown
+                $showAdvancedStages = $isPass && (($currentStage >= 3) || ($status === 'Approved_Surveillance'));
             }
             
             // Applicant Action: Fill License Application Module
-            // Unlocked when Surveillance Approves (and implicitly Exam Passed for NEW)
-            $canFillLicenseApp = ($status === 'Approved_Surveillance');
+            // For NEW: Unlocked only when Surveillance Approved AND exam result = PASS
+            // For RENEWAL: Unlocked when Surveillance Approved (no exam required)
+            if ($isRenewal) {
+                $canFillLicenseApp = ($status === 'Approved_Surveillance');
+            } else {
+                $canFillLicenseApp = ($status === 'Approved_Surveillance') && $isPass;
+            }
 
             // Base steps (always shown): Regional Manager and Surveillance
             $steps = [
@@ -1504,6 +1527,8 @@ class LicenseController extends ResourceController
                     'panel' => $app['panel_names']
                 ],
                 'canFillLicenseApp' => $canFillLicenseApp,
+                'isFailed'          => $isFailed,          // True when New License + FAIL result
+                'applicationEnded'  => $isFailed,          // Alias for template convenience
                 'bill_status' => $billStatus, // For license fee workflow
                 'control_number' => $controlNumber,
                 // Explicitly return license specific bill details for "Request Control Number" logic
@@ -1681,17 +1706,28 @@ class LicenseController extends ResourceController
 
         $db = \Config\Database::connect();
         
-        // Check if there is ANY application in 'Approved_Surveillance' status
-        // This unlocks the License Application Module for the applicant to complete details.
+        // Check eligibility rules:
+        // - RENEWAL apps: only need Approved_Surveillance status
+        // - NEW apps: need Approved_Surveillance AND interview result = PASS
         $builder = $db->table('license_applications');
+        $builder->join('interview_assessments', 'interview_assessments.application_id = license_applications.id', 'left');
         $builder->where('license_applications.user_id', $user->id);
         $builder->where('license_applications.status', 'Approved_Surveillance');
+        
+        // For Renewal: no exam check. For New: must have PASS result.
+        $builder->groupStart();
+            $builder->where('license_applications.application_type', 'Renewal');
+            $builder->orGroupStart();
+                $builder->where('license_applications.application_type !=', 'Renewal');
+                $builder->where('interview_assessments.result', 'PASS');
+            $builder->groupEnd();
+        $builder->groupEnd();
         
         $count = $builder->countAllResults();
         
         return $this->respond([
             'canApply' => $count > 0,
-            'message' => 'Checked eligibility based on Surveillance approval.'
+            'message'  => 'Checked eligibility based on Surveillance approval and exam result.'
         ]);
     }
 

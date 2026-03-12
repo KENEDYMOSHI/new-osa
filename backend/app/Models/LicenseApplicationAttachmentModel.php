@@ -12,7 +12,7 @@ class LicenseApplicationAttachmentModel extends Model
     protected $returnType       = 'object';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['id', 'user_id', 'application_id', 'document_type', 'file_path', 'original_name', 'file_content', 'mime_type', 'status', 'rejection_reason'];
+    protected $allowedFields    = ['id', 'user_id', 'application_id', 'company_id', 'company_name', 'document_type', 'file_path', 'original_name', 'file_content', 'mime_type', 'status', 'rejection_reason', 'category', 'returned_by'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;

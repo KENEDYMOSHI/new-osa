@@ -473,9 +473,9 @@ class AuthController extends ResourceController
                 $personalInfoModel = new \App\Models\PractitionerPersonalInfoModel();
                 $personalInfo = $personalInfoModel->where('user_uuid', $uuid)->first();
 
-            // Fetch Business Info
+            // Fetch Business Infos
                 $businessInfoModel = new \App\Models\PractitionerBusinessInfoModel();
-                $businessInfo = $businessInfoModel->where('user_uuid', $uuid)->first();
+                $businessInfos = $businessInfoModel->where('user_uuid', $uuid)->findAll();
             }
 
             // Fetch Licenses
@@ -511,7 +511,7 @@ class AuthController extends ResourceController
                     'uuid' => $uuid
                 ],
                 'personalInfo' => $personalInfo,
-                'businessInfo' => $businessInfo,
+                'businessInfos' => $businessInfos,
                 'licenses' => $licenses
             ]);
         } catch (\Exception $e) {
@@ -570,7 +570,13 @@ class AuthController extends ResourceController
         }
 
         $businessInfoModel = new \App\Models\PractitionerBusinessInfoModel();
-        $existing = $businessInfoModel->where('user_uuid', $uuid)->first();
+        
+        $companyId = $data['id'] ?? null;
+        $existing = null;
+        
+        if ($companyId) {
+            $existing = $businessInfoModel->where('id', $companyId)->where('user_uuid', $uuid)->first();
+        }
 
         // Map frontend camelCase to backend snake_case
         $updateData = [
@@ -580,7 +586,7 @@ class AuthController extends ResourceController
             'company_phone' => $data['companyPhone'] ?? ($existing->company_phone ?? null),
             'bus_region'    => $data['region'] ?? ($existing->bus_region ?? null),
             'bus_district'  => $data['district'] ?? ($existing->bus_district ?? null),
-            'bus_ward'      => $data['ward'] ?? ($existing->bus_ward ?? null),
+            'bus_ward'      => $data['ward'] ?? $data['town'] ?? ($existing->bus_ward ?? null),
             'postal_code'   => $data['postalCode'] ?? ($existing->postal_code ?? null),
             'bus_street'    => $data['street'] ?? ($existing->bus_street ?? null),
             'tin'           => $data['tin'] ?? ($existing->tin ?? null),

@@ -690,6 +690,11 @@ Tafadhali endelea na hatua zinazofuata ipasavyo.
 Asante.
 
 
+Kwenye module ya license applicant kwenye module ya Dashboard /
+Profile kwenye card ya Company Information information tengeneza namna ya applicant kuweza kuadd company information kama anafanya kazi zaid ya company moja na pia kwenye Required Attachments
+ awe na uwezo wakuappload Required Attachments
+ za hiyo company nyingne bila kuindoa au kufuta zile za kampuni ya kwanza 
 
+Kwenye Module ya License Applicant katika sehemu ya Dashboard/Profile, ndani ya card ya Company Information, mfumo uboreshwe ili kumpa applicant uwezo wa kuongeza taarifa za kampuni zaidi ya moja endapo anafanya kazi na kampuni nyingi. Applicant awe na option ya ku add another company na kuingiza taarifa za kampuni hiyo kama vile ilivyo kwenye card iliopo. Kila kampuni ihifadhiwe kama rekodi tofauti ndani ya profile ya applicant. Aidha, kwenye sehemu ya Required Attachments, applicant awe na uwezo wa ku upload nyaraka zinazohitajika kwa kila kampuni aliyoiongeza, ambapo attachments za kampuni mpya zitaunganishwa na kampuni husika bila kuathiri, kufuta au kubadilisha attachments zilizokwisha kupakiwa kwa kampuni ya kwanza. Mfumo pia uweze kuonyesha attachments kwa kuzingatia kampuni husika ili kuhakikisha kuwa nyaraka za kila kampuni zinahifadhiwa na kuonekana kwa usahihi.
 
 

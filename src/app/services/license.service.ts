@@ -22,7 +22,7 @@ export class LicenseService {
   // Actually, I'll use multi_replace.
 
 
-  uploadDocument(file: File, documentType: string, applicationId?: string, category?: string): Observable<any> {
+  uploadDocument(file: File, documentType: string, applicationId?: string, category?: string, companyId?: string, companyName?: string): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('documentType', documentType);
@@ -31,6 +31,12 @@ export class LicenseService {
     }
     if (category) {
       formData.append('category', category);
+    }
+    if (companyId) {
+      formData.append('companyId', companyId);
+    }
+    if (companyName) {
+      formData.append('companyName', companyName);
     }
     return this.http.post(`${this.apiUrl}/upload`, formData, { headers: this.getHeaders() });
   }

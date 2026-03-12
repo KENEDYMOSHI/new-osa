@@ -201,19 +201,18 @@
       </div>
     </div>
 
-    <!-- Company Information Card -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden border-t-4 border-t-[#e79a3f]">
+    <!-- Company Information Cards -->
+    <div *ngFor="let company of companies; let i = index" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden border-t-4 border-t-[#e79a3f] mb-6">
       <div class="bg-orange-50 px-6 py-4 border-b border-orange-100 flex justify-between items-center">
         <h3 class="text-lg font-bold text-gray-800">
-          Company Information
+          Company Information {{ companies.length > 1 ? '#' + (i + 1) : '' }}
         </h3>
-        <button (click)="openCompanyEditModal()" class="bg-[#F59E0B] hover:bg-[#D97706] text-white font-medium py-2 px-6 rounded-lg shadow-sm transition-colors flex items-center gap-2 text-sm">
+        <button (click)="openCompanyEditModal(company)" class="bg-[#F59E0B] hover:bg-[#D97706] text-white font-medium py-2 px-6 rounded-lg shadow-sm transition-colors flex items-center gap-2 text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
             </svg>
             Edit
         </button>
-        <!-- Company Edit temporarily disabled until modal support added -->
       </div>
       <div class="p-7">
 
@@ -222,7 +221,7 @@
           
           <!-- Company Name -->
           <div class="relative">
-            <input type="text" [value]="companyInfo.companyName || '-'" readonly
+            <input type="text" [value]="company.companyName || '-'" readonly
               class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
             <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
               Company Name
@@ -231,7 +230,7 @@
 
           <!-- Registration Number (BRELA) -->
           <div class="relative">
-            <input type="text" [value]="companyInfo.brelaNumber || '-'" readonly
+            <input type="text" [value]="company.brelaNumber || '-'" readonly
               class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
             <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
               Registration Number (BRELA)
@@ -240,7 +239,7 @@
 
           <!-- Tax Number (TIN) -->
           <div class="relative">
-            <input type="text" [value]="companyInfo.tin || '-'" readonly
+            <input type="text" [value]="company.tin || '-'" readonly
               class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
             <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
               Tax Number (TIN)
@@ -249,11 +248,11 @@
 
           <!-- Seal Number -->
           <div class="relative">
-            <input type="text" [value]="companyInfo.sealNumber || 'Not Set'" readonly
-              [ngClass]="companyInfo.sealNumber ? 'border-green-500 bg-green-50/20 text-green-700 dark:text-green-400' : 'border-orange-500 bg-orange-50/20 text-orange-700 dark:text-orange-400'"
+            <input type="text" [value]="company.sealNumber || 'Not Set'" readonly
+              [ngClass]="company.sealNumber ? 'border-green-500 bg-green-50/20 text-green-700 dark:text-green-400' : 'border-orange-500 bg-orange-50/20 text-orange-700 dark:text-orange-400'"
               class="peer w-full rounded-lg border px-4 pt-6 pb-2 outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:bg-form-input" />
             <label 
-              [ngClass]="companyInfo.sealNumber ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'"
+              [ngClass]="company.sealNumber ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'"
               class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75">
               Seal Number
             </label>
@@ -261,7 +260,7 @@
 
           <!-- Company Email -->
           <div class="relative">
-            <input type="text" [value]="companyInfo.companyEmail || '-'" readonly
+            <input type="text" [value]="company.companyEmail || '-'" readonly
               class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
             <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
               Company Email
@@ -270,7 +269,7 @@
 
           <!-- Company Phone -->
           <div class="relative">
-            <input type="text" [value]="companyInfo.companyPhone || '-'" readonly
+            <input type="text" [value]="company.companyPhone || '-'" readonly
               class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
             <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
               Company Phone
@@ -279,7 +278,7 @@
 
           <!-- Region -->
           <div class="relative">
-            <input type="text" [value]="companyInfo.region || '-'" readonly
+            <input type="text" [value]="company.region || '-'" readonly
               class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
             <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
               Region
@@ -288,7 +287,7 @@
 
           <!-- District -->
           <div class="relative">
-            <input type="text" [value]="companyInfo.district || '-'" readonly
+            <input type="text" [value]="company.district || '-'" readonly
               class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
             <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
               District
@@ -297,7 +296,7 @@
 
           <!-- Town -->
           <div class="relative">
-            <input type="text" [value]="companyInfo.town || '-'" readonly
+            <input type="text" [value]="company.town || '-'" readonly
               class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
             <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
               Town
@@ -306,7 +305,7 @@
 
           <!-- Postal Code -->
           <div class="relative">
-            <input type="text" [value]="companyInfo.postalCode || '-'" readonly
+            <input type="text" [value]="company.postalCode || '-'" readonly
               class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
             <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
               Postal Code
@@ -315,7 +314,7 @@
 
           <!-- Street/Village -->
           <div class="relative">
-            <input type="text" [value]="companyInfo.street || '-'" readonly
+            <input type="text" [value]="company.street || '-'" readonly
               class="peer w-full rounded-lg border border-stroke bg-transparent px-4 pt-6 pb-2 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" />
             <label class="absolute left-4 top-4 z-10 origin-[0] -translate-y-3 scale-75 transform text-sm text-gray-500 duration-300 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 dark:text-gray-400">
               Street/Village
@@ -324,6 +323,16 @@
 
         </div>
       </div>
+    </div>
+
+    <!-- Add Another Company Button -->
+    <div class="flex justify-end mt-4 mb-6">
+      <button (click)="openCompanyEditModal()" class="bg-[#F59E0B] hover:bg-[#D97706] text-white font-medium py-2.5 px-6 rounded-lg shadow-sm transition-colors flex items-center gap-2 text-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        Add Another Company
+      </button>
     </div>
 
     <!-- License Information Card -->
@@ -684,27 +693,27 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="mb-2 block text-sm font-medium text-black dark:text-white">Company Name</label>
-            <input [(ngModel)]="companyInfo.companyName" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+            <input [(ngModel)]="currentCompanyInfo.companyName" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
           </div>
           <div>
             <label class="mb-2 block text-sm font-medium text-black dark:text-white">BRELA Number</label>
-            <input [(ngModel)]="companyInfo.brelaNumber" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+            <input [(ngModel)]="currentCompanyInfo.brelaNumber" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
           </div>
           <div>
             <label class="mb-2 block text-sm font-medium text-black dark:text-white">TIN</label>
-            <input [(ngModel)]="companyInfo.tin" type="text" maxlength="9" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+            <input [(ngModel)]="currentCompanyInfo.tin" type="text" maxlength="9" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
           </div>
           <div>
             <label class="mb-2 block text-sm font-medium text-black dark:text-white">Seal Number</label>
-            <input [(ngModel)]="companyInfo.sealNumber" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+            <input [(ngModel)]="currentCompanyInfo.sealNumber" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
           </div>
           <div>
             <label class="mb-2 block text-sm font-medium text-black dark:text-white">Company Email</label>
-            <input [(ngModel)]="companyInfo.companyEmail" type="email" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+            <input [(ngModel)]="currentCompanyInfo.companyEmail" type="email" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
           </div>
           <div>
             <label class="mb-2 block text-sm font-medium text-black dark:text-white">Company Phone</label>
-            <input [(ngModel)]="companyInfo.companyPhone" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+            <input [(ngModel)]="currentCompanyInfo.companyPhone" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
           </div>
         </div>
       </div>
@@ -715,23 +724,32 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="mb-2 block text-sm font-medium text-black dark:text-white">Region</label>
-            <input [(ngModel)]="companyInfo.region" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+            <select [(ngModel)]="currentCompanyInfo.region" (change)="onCompanyRegionChange()" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary">
+              <option value="" disabled selected>Select Region</option>
+              <option *ngFor="let region of regions" [value]="region">{{ region }}</option>
+            </select>
           </div>
           <div>
             <label class="mb-2 block text-sm font-medium text-black dark:text-white">District</label>
-            <input [(ngModel)]="companyInfo.district" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+            <select [(ngModel)]="currentCompanyInfo.district" (change)="onCompanyDistrictChange()" [disabled]="!companyDistricts.length" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary">
+              <option value="" disabled selected>Select District</option>
+              <option *ngFor="let district of companyDistricts" [value]="district.name">{{ district.name }}</option>
+            </select>
           </div>
           <div>
-            <label class="mb-2 block text-sm font-medium text-black dark:text-white">Town</label>
-            <input [(ngModel)]="companyInfo.town" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+            <label class="mb-2 block text-sm font-medium text-black dark:text-white">Town / Ward</label>
+            <select [(ngModel)]="currentCompanyInfo.town" [disabled]="!companyWards.length" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary">
+              <option value="" disabled selected>Select Town / Ward</option>
+              <option *ngFor="let ward of companyWards" [value]="ward.name">{{ ward.name }}</option>
+            </select>
           </div>
           <div>
             <label class="mb-2 block text-sm font-medium text-black dark:text-white">Postal Code</label>
-            <input [(ngModel)]="companyInfo.postalCode" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+            <input [(ngModel)]="currentCompanyInfo.postalCode" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
           </div>
           <div class="md:col-span-2">
             <label class="mb-2 block text-sm font-medium text-black dark:text-white">Street/Village</label>
-            <input [(ngModel)]="companyInfo.street" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
+            <input [(ngModel)]="currentCompanyInfo.street" type="text" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary" />
           </div>
         </div>
       </div>
