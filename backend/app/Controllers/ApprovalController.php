@@ -78,6 +78,7 @@ class ApprovalController extends BaseController
             license_applications.id as application_id,
             license_applications.created_at,
             license_applications.user_id,
+            license_applications.company_id,
             license_applications.approver_stage_1,
             license_applications.approver_stage_2,
             license_applications.approver_stage_3,
@@ -113,8 +114,11 @@ class ApprovalController extends BaseController
         // Join Users and Personal/Business Info
         $builder->join('license_users', 'license_users.id = license_applications.user_id', 'left');
         $builder->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = license_users.uuid', 'left');
-        $builder->join('practitioner_business_infos', 'practitioner_business_infos.user_uuid = license_users.uuid', 'left');
+        // Join company info using BOTH user_uuid AND company_id so only the selected company's data appears
+        $builder->join('practitioner_business_infos', 'practitioner_business_infos.user_uuid = license_users.uuid AND (license_applications.company_id IS NULL OR practitioner_business_infos.id = license_applications.company_id)', 'left');
         
+        // Deduplicate: each application should appear exactly once
+        $builder->groupBy('license_application_items.id');
         $builder->orderBy('license_applications.created_at', 'DESC');
         
         $items = $builder->get()->getResultArray();
@@ -203,7 +207,7 @@ class ApprovalController extends BaseController
             }
         }
         
-        // 3. Get company information
+        // 3. Get company information — use company_id from license_applications if present
         $companyInfo = [
             'company_name' => '', 'tin_number' => '', 'registration_number' => '', 
             'company_phone' => '', 'company_email' => '',
@@ -212,7 +216,18 @@ class ApprovalController extends BaseController
 
         if ($user && isset($user->uuid)) {
             $businessBuilder = $db->table('practitioner_business_infos');
-            $business = $businessBuilder->where('user_uuid', $user->uuid)->get()->getRow();
+            
+            // Prefer the specific company selected at submission time
+            $companyId = $application->company_id ?? null;
+            if ($companyId) {
+                $business = $businessBuilder
+                    ->where('user_uuid', $user->uuid)
+                    ->where('id', $companyId)
+                    ->get()->getRow();
+            } else {
+                // Fallback: first company linked to user
+                $business = $businessBuilder->where('user_uuid', $user->uuid)->get()->getRow();
+            }
             
             if ($business) {
                 $companyInfo = [
@@ -230,26 +245,34 @@ class ApprovalController extends BaseController
             }
         }
         
-        // 4. Get all attachments with category
-        $attachmentBuilder = $db->table('license_application_attachments');
-        $attachmentBuilder->select('id, user_id, application_id, document_type, original_name as file_name, document_type as type, mime_type, status, rejection_reason, category, created_at'); // Include category and rejection reason
-        $attachmentBuilder->where('application_id', $id);
-        $attachments = $attachmentBuilder->get()->getResult();
-        
-        // Categorize attachments based on database category field
-        $requiredAttachments = [];
-        $qualificationAttachments = [];
-        
-        foreach ($attachments as $attachment) {
-            // Use database category if available, otherwise fallback to heuristic
-            $category = $attachment->category ?? 'attachment';
-            
-            if ($category === 'qualification') {
-                $qualificationAttachments[] = $attachment;
-            } else {
-                $requiredAttachments[] = $attachment;
-            }
+        // 4. Get attachments split by category — use separate queries for clean isolation.
+
+        // 4a. Required Attachments: only those belonging to the company selected at submission.
+        //     If company_id is stored on the application, filter strictly. Otherwise show all.
+        $reqBuilder = $db->table('license_application_attachments');
+        $reqBuilder->select('license_application_attachments.id, license_application_attachments.user_id, license_application_attachments.application_id, license_application_attachments.document_type, license_application_attachments.original_name as file_name, license_application_attachments.document_type as type, license_application_attachments.mime_type, license_application_attachments.status, license_application_attachments.rejection_reason, license_application_attachments.category, license_application_attachments.company_id, license_application_attachments.created_at, practitioner_business_infos.company_name');
+        $reqBuilder->join('practitioner_business_infos', 'practitioner_business_infos.id = license_application_attachments.company_id', 'left');
+        $reqBuilder->where('license_application_attachments.application_id', $id);
+        $reqBuilder->where('license_application_attachments.category !=', 'qualification');
+        if ($companyId !== null) {
+            // Strict: only show docs for the company that was selected at submission
+            $reqBuilder->groupStart()
+                ->where('license_application_attachments.company_id', $companyId)
+                ->orWhere('license_application_attachments.company_id', null)
+            ->groupEnd();
         }
+        $requiredAttachments = $reqBuilder->get()->getResult();
+
+        // 4b. Qualification Documents: personal docs shared across companies — no company filter.
+        $qualBuilder = $db->table('license_application_attachments');
+        $qualBuilder->select('license_application_attachments.id, license_application_attachments.user_id, license_application_attachments.application_id, license_application_attachments.document_type, license_application_attachments.original_name as file_name, license_application_attachments.document_type as type, license_application_attachments.mime_type, license_application_attachments.status, license_application_attachments.rejection_reason, license_application_attachments.category, license_application_attachments.company_id, license_application_attachments.created_at');
+        $qualBuilder->where('license_application_attachments.application_id', $id);
+        $qualBuilder->where('license_application_attachments.category', 'qualification');
+        $qualificationAttachments = $qualBuilder->get()->getResult();
+
+        // 4c. Merge for the $attachments variable (used elsewhere in responses)
+        $attachments = array_merge($requiredAttachments, $qualificationAttachments);
+
         
         // 5. Get qualifications (from separate table if exists, otherwise empty)
         $qualifications = [];
@@ -399,6 +422,8 @@ class ApprovalController extends BaseController
                 'app_control_number' => $application->app_control_number ?? '',
                 'license_control_number' => $application->license_control_number ?? '',
                 'license_number' => $application->license_number ?? '',
+                'request_number' => $application->request_number ?? '',
+                'company_id' => $application->company_id ?? null,
                 'created_at' => $application->created_at,
                 'updated_at' => $application->updated_at
             ],

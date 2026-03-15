@@ -204,8 +204,9 @@ class LicenseModel extends Model
         $applications = [];
         foreach ($apiData as $item) {
             $app = new \stdClass();
-            $app->id = $item->id ?? 0;
+            $app->id = $item->application_id ?? $item->id ?? 0;  // Use parent application_id for detail view
             $app->application_id = $item->application_id ?? '';
+            $app->item_id = $item->id ?? 0; // Keep item-level id if needed
             
             // Parse applicant name
             $fullName = $item->applicant_name ?? 'Unknown';

@@ -317,8 +317,8 @@ export class ProfileComponent implements OnInit {
       
       this.showCompanyModal = false;
       
-      // Refresh global state
-      this.authService.getProfile().subscribe();
+      // Refresh global state and wait for it to visually update the list
+      await this.fetchProfile();
 
     } catch (error) {
       console.error('Error saving company profile:', error);

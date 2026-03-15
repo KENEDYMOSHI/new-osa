@@ -214,8 +214,9 @@ export class LicenseApplicationComponent implements OnInit {
 
       // Add company info to each doc for uploading context
       docs.forEach((newDoc: any) => {
-          newDoc.companyId = company.id;
-          newDoc.uniqueId = `${newDoc.id}_${company.id || 'new'}`;
+          newDoc.companyId = company.id || company.tin;
+          newDoc.companyName = company.company_name || company.companyName;
+          newDoc.uniqueId = `${newDoc.id}_${company.id || company.tin || 'new'}`;
       });
 
       return {
@@ -510,21 +511,19 @@ export class LicenseApplicationComponent implements OnInit {
           
           // Check required documents across all companies
           if (this.companyDocuments && this.companyDocuments.length > 0) {
-              // Legacy fallback: if a document has no company_id, assign it to the first company
-              let targetCompanyId = doc.company_id;
-              if (!targetCompanyId && this.companies.length > 0) {
-                  targetCompanyId = this.companies[0].id || this.companies[0].tin; 
-                  // Fallback ID to first company if we don't have a rigid DB id
-              }
+              const docCompanyId = doc.company_id ?? null;
 
               this.companyDocuments.forEach(companyGroup => {
-                  // Only apply the document if it matches the target company
-                  if (companyGroup.company.id == targetCompanyId || companyGroup.company.tin == targetCompanyId || !targetCompanyId) {
-                      const reqDoc = companyGroup.documents.find(d => 
+                  const groupId = companyGroup.company.id ?? companyGroup.company.tin ?? null;
+                  // Strict per-company match or fallback for legacy docs without company_id
+                  // A doc with no company_id (legacy) will map to the first company.
+                  const isLegacyMatch = (docCompanyId == null && companyGroup === this.companyDocuments[0]);
+                  if (docCompanyId == groupId || isLegacyMatch) {
+                      const reqDoc = companyGroup.documents.find((d: any) => 
                           (d.id.toLowerCase() === docType || d.name.toLowerCase() === docType)
                       );
                       if (reqDoc) {
-                        reqDoc.status = doc.status === 'Returned' ? 'Returned' : 'Uploaded';
+                        reqDoc.status = doc.status === 'Returned' ? 'Returned' : (doc.status === 'Resubmitted' ? 'Resubmitted' : 'Uploaded');
                         reqDoc.date = new Date(doc.created_at || Date.now()).toLocaleDateString('en-GB');
                         reqDoc.fileName = doc.original_name;
                         reqDoc.dbId = doc.id;
@@ -544,7 +543,7 @@ export class LicenseApplicationComponent implements OnInit {
               d.id.toLowerCase() === docType || d.name.toLowerCase() === docType
           );
           if (qualDoc) {
-            qualDoc.status = doc.status === 'Returned' ? 'Returned' : 'Uploaded';
+            qualDoc.status = doc.status === 'Returned' ? 'Returned' : (doc.status === 'Resubmitted' ? 'Resubmitted' : 'Uploaded');
             qualDoc.date = new Date(doc.created_at || Date.now()).toLocaleDateString('en-GB');
             qualDoc.fileName = doc.original_name;
             qualDoc.dbId = doc.id;
@@ -665,9 +664,12 @@ export class LicenseApplicationComponent implements OnInit {
       category = targetDoc.category;
     }
 
-    // Retrieve companyName if available
-    const companyName = targetDoc?.companyId ? this.companies.find(c => c.id === targetDoc.companyId)?.company_name 
-      || this.companies.find(c => c.id === targetDoc.companyId)?.companyName : undefined;
+    // Retrieve companyName if available directly from targetDoc or fallback
+    let companyName = targetDoc?.companyName;
+    if (!companyName && targetDoc?.companyId) {
+      const foundCompany = this.companies.find(c => c.id == targetDoc.companyId || c.tin == targetDoc.companyId);
+      companyName = foundCompany?.company_name || foundCompany?.companyName;
+    }
 
     this.licenseService.uploadDocument(file, documentType, appId, category, targetDoc?.companyId, companyName).subscribe({
       next: (response: any) => {
@@ -827,9 +829,12 @@ export class LicenseApplicationComponent implements OnInit {
       category = doc.category;
     }
 
-    // Retrieve companyName if available
-    const companyName = doc.companyId ? this.companies.find(c => c.id === doc.companyId)?.company_name 
-      || this.companies.find(c => c.id === doc.companyId)?.companyName : undefined;
+    // Retrieve companyName if available directly from doc or fallback
+    let companyName = doc.companyName;
+    if (!companyName && doc.companyId) {
+      const foundCompany = this.companies.find(c => c.id == doc.companyId || c.tin == doc.companyId);
+      companyName = foundCompany?.company_name || foundCompany?.companyName;
+    }
 
     this.licenseService.uploadDocument(doc.pendingFile, doc.id, appId, category, doc.companyId, companyName).subscribe({
       next: (response: any) => {

@@ -470,14 +470,24 @@ class AdminController extends ResourceController
         return $this->respond(['message' => 'Document returned successfully', 'status' => 'success']);
     }
 
-    public function acceptDocument($id)
+    public function acceptDocument($id = null)
     {
-        // Skip authentication in development mode
-        if (ENVIRONMENT !== 'development') {
-            $user = $this->getUserFromToken();
-            if (!$user) {
-                return $this->failUnauthorized('Invalid or expired token. Please login again.');
-            }
+        // Allow BOTH Bearer token (for future/testing) AND X-API-KEY (server-to-server from WMA-MIS)
+        $user = $this->getUserFromToken();
+        $apiKey = $this->request->getHeaderLine('X-API-KEY');
+        $validApiKey = 'wma_internal_notif_key_9x2z'; // Same key used for webhook
+
+        if (!$user && $apiKey !== $validApiKey) {
+            return $this->failUnauthorized('Invalid or expired token. Please login again.');
+        }
+
+        $json = $this->request->getJSON();
+        if (!$id) {
+            $id = $json->document_id ?? null;
+        }
+
+        if (!$id) {
+            return $this->fail('Document ID is required');
         }
 
         $db = \Config\Database::connect();

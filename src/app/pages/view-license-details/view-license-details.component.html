@@ -91,9 +91,12 @@
   
   <div class="flex flex-col p-6">
     <!-- Header -->
-    <div class="grid grid-cols-6 rounded-sm bg-gray-2 dark:bg-meta-4 sm:grid-cols-6">
+    <div class="grid grid-cols-7 rounded-sm bg-gray-2 dark:bg-meta-4 sm:grid-cols-7">
       <div class="p-2.5 xl:p-5">
         <h5 class="text-sm font-medium uppercase xsm:text-base">License Number</h5>
+      </div>
+      <div class="p-2.5 text-center xl:p-5">
+        <h5 class="text-sm font-medium uppercase xsm:text-base">Company</h5>
       </div>
       <div class="p-2.5 text-center xl:p-5">
         <h5 class="text-sm font-medium uppercase xsm:text-base">Type</h5>
@@ -123,11 +126,18 @@
     </div>
 
     <!-- List -->
-    <div *ngFor="let license of filteredLicenses" class="grid grid-cols-6 border-b border-stroke dark:border-strokedark sm:grid-cols-6 items-center">
+    <div *ngFor="let license of filteredLicenses" class="grid grid-cols-7 border-b border-stroke dark:border-strokedark sm:grid-cols-7 items-center">
       
       <!-- License Number -->
       <div class="flex items-center gap-3 p-2.5 xl:p-5">
         <p class="text-black dark:text-white font-medium">{{ license.license_number }}</p>
+      </div>
+
+      <!-- Company Name -->
+      <div class="flex items-center justify-center p-2.5 xl:p-5">
+        <p class="text-sm text-gray-600" [title]="license.company_name">
+          {{ license.company_name || '—' }}
+        </p>
       </div>
 
       <!-- Type -->

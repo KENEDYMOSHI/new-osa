@@ -112,6 +112,9 @@ class LicenseController extends ResourceController
         $currentApp = null;
 
         // 1. Identify Existing Document and Application
+        // Normalise companyId so we can use it consistently
+        $hasCompanyId = $companyId && $companyId !== 'null' && $companyId !== 'undefined' && $companyId !== '';
+
         if ($applicationId && $applicationId !== 'null' && $applicationId !== 'undefined') {
             // Verify application belongs to user
             $appModel = new LicenseApplicationModel();
@@ -122,24 +125,60 @@ class LicenseController extends ResourceController
             }
             $currentApp = $app;
 
-            // Check if a document of this type already exists for this application
+            // Check if a document of this type already exists for this application+company combo
             $query = $attachmentModel->where('application_id', $applicationId)
                                      ->where('document_type', $docType);
-            if ($companyId && $companyId !== 'null' && $companyId !== 'undefined') {
+            if ($hasCompanyId) {
                 $query->where('company_id', $companyId);
+            } else {
+                $query->where('company_id', null);
             }
             $existingDoc = $query->first();
+
+            // Fallback: if no exact match, check if there is a 'Returned' doc of the same type
+            // for this application (any company_id). This handles the case where the company_id
+            // stored on the returned doc differs from what the re-upload sends.
+            if (!$existingDoc) {
+                $returnedDoc = $attachmentModel
+                    ->where('application_id', $applicationId)
+                    ->where('document_type', $docType)
+                    ->where('status', 'Returned')
+                    ->first();
+                if ($returnedDoc) {
+                    $existingDoc = $returnedDoc;
+                }
+            }
         } else {
             // Draft mode: Check if a document of this type already exists for the user (unattached)
+            // CRITICAL: Always scope by company_id to avoid cross-company overwrites.
+            // Docs with different company_ids are treated as completely separate documents.
             $query = $attachmentModel->where('user_id', $user->id)
                                      ->where('document_type', $docType)
                                      ->where('application_id', null);
-            if ($companyId && $companyId !== 'null' && $companyId !== 'undefined') {
+            if ($hasCompanyId) {
                 $query->where('company_id', $companyId);
+            } else {
+                // No company: only match docs that also have no company_id
+                $query->where('company_id', null);
             }
             $existingDoc = $query->first();
+
+            // Fallback for draft mode: look for any 'Returned' doc of same type for this user
+            if (!$existingDoc) {
+                $returnedDoc = $attachmentModel
+                    ->where('user_id', $user->id)
+                    ->where('document_type', $docType)
+                    ->where('application_id', null)
+                    ->where('status', 'Returned')
+                    ->first();
+                if ($returnedDoc) {
+                    $existingDoc = $returnedDoc;
+                }
+            }
+
             $applicationId = null; // Ensure null for insertion
         }
+
 
         // 2. Handle Existing Document (Update if Returned, Delete otherwise)
         if ($existingDoc) {
@@ -152,7 +191,7 @@ class LicenseController extends ResourceController
             if ($existingDoc->status === 'Returned') {
                 // UPDATE LOGIC: Update existing record, preserve ID
                 $id = $existingDoc->id;
-                $status = 'Uploaded';
+                $status = 'Resubmitted';
 
                 // Cleanup: Delete old file from disk if it exists
                 if (!empty($existingDoc->file_path)) {

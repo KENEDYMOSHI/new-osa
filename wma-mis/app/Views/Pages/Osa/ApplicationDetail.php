@@ -517,7 +517,7 @@
                                                     $badgeStyle = 'font-weight: bold; font-size: 0.75rem; padding: 0.4rem 0.8rem;';
                                                 } elseif ($doc->status == 'Resubmitted') {
                                                     $badgeClass = 'badge-info';
-                                                    $badgeText = 'RESUBMITTED';
+                                                    $badgeText = 'REUPLOADED';
                                                     $badgeIcon = 'fa-sync';
                                                 } elseif ($doc->status == 'Submitted') {
                                                     $badgeClass = 'badge-primary';
@@ -536,9 +536,15 @@
                                             <h6 class="font-weight-bold text-dark mb-1 line-clamp-2">
                                                 <?= $doc->document_type ?? $doc->type ?? $doc->document_name ?? $doc->file_name ?? 'Document' ?>
                                             </h6>
-                                            <p class="text-muted small mb-0">
+                                             <p class="text-muted small mb-0">
                                                 <i class="fas fa-file mr-1"></i> <?= $doc->file_name ?? $doc->original_name ?? 'File' ?>
-                                            </p>
+                                             </p>
+                                             <?php if (!empty($doc->company_name)): ?>
+                                             <p class="text-muted small mb-0 mt-1">
+                                                <i class="fas fa-building mr-1 text-primary"></i>
+                                                <span class="badge badge-light border text-primary" style="font-size:0.72rem;"><?= htmlspecialchars($doc->company_name) ?></span>
+                                             </p>
+                                             <?php endif; ?>
                                         </div>
                                     </div>
                                     
@@ -649,7 +655,7 @@
                                                                     $badgeStyle = 'font-weight: bold; font-size: 0.75rem; padding: 0.4rem 0.8rem;';
                                                                 } elseif ($doc->status == 'Resubmitted') {
                                                                     $badgeClass = 'badge-info';
-                                                                    $badgeText = 'RESUBMITTED';
+                                                                    $badgeText = 'REUPLOADED';
                                                                     $badgeIcon = 'fa-sync';
                                                                 } elseif ($doc->status == 'Submitted') {
                                                                     $badgeClass = 'badge-primary';
@@ -668,9 +674,15 @@
                                                             <h6 class="font-weight-bold text-dark mb-1 line-clamp-2">
                                                                 <?= $doc->document_type ?? $doc->type ?? $doc->document_name ?? $doc->file_name ?? 'Qualification' ?>
                                                             </h6>
-                                                            <p class="text-muted small mb-0">
+                                                             <p class="text-muted small mb-0">
                                                                 <i class="fas fa-file mr-1"></i> <?= $doc->file_name ?? $doc->original_name ?? 'File' ?>
-                                                            </p>
+                                                             </p>
+                                                             <?php if (!empty($doc->company_name)): ?>
+                                                             <p class="text-muted small mb-0 mt-1">
+                                                                <i class="fas fa-building mr-1 text-warning"></i>
+                                                                <span class="badge badge-light border text-warning" style="font-size:0.72rem;"><?= htmlspecialchars($doc->company_name) ?></span>
+                                                             </p>
+                                                             <?php endif; ?>
                                                         </div>
                                                     </div>
                                                     
@@ -1827,12 +1839,12 @@ function submitReturn() {
     const reason = document.getElementById('returnReason').value.trim();
     
     if (!reason) {
-        alert('Please enter a reason for returning this document');
+        Swal.fire('Warning', 'Please enter a reason for returning this document', 'warning');
         return;
     }
     
     if (!currentDocId) {
-        alert('Document ID is missing');
+        Swal.fire('Error', 'Document ID is missing', 'error');
         return;
     }
     
@@ -1865,7 +1877,12 @@ function submitReturn() {
             $('#returnDocumentModal').modal('hide');
             
             // Show success message
-            alert('Document has been returned successfully');
+            Swal.fire({
+                title: 'Success!',
+                text: 'Document has been returned successfully.',
+                icon: 'success',
+                confirmButtonText: 'Okay'
+            });
             
             // Update document badge and status without reloading
             const docCards = document.querySelectorAll('[data-doc-id="' + currentDocId + '"]');
@@ -1901,121 +1918,128 @@ function submitReturn() {
             document.getElementById('returnReason').value = '';
             currentDocId = null;
         } else {
-            alert('Failed to return document: ' + (data.error || 'Unknown error'));
+            Swal.fire('Error', 'Failed to return document: ' + (data.error || 'Unknown error'), 'error');
         }
     })
     .catch(error => {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
         console.error('Error:', error);
-        alert('An error occurred while returning the document');
+        Swal.fire('Error', 'An error occurred while returning the document', 'error');
     });
 }
 
 function acceptDocument(docId) {
     if (!docId) {
-        alert('Document ID is missing');
+        Swal.fire('Error', 'Document ID is missing', 'error');
         return;
     }
     
-    if (!confirm('Are you sure you want to accept this resubmitted document?')) {
-        return;
-    }
-    
-    // Find button to show loading state (if called from a button click event)
-    let submitBtn = event ? event.target : null;
-    let originalText = '';
-    
-    if (submitBtn) {
-        // If they clicked the icon inside the button
-        if (submitBtn.tagName === 'I') {
-            submitBtn = submitBtn.parentElement;
-        }
-        originalText = submitBtn.innerHTML;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>...';
-    }
-    
-    // Send accept request to backend
-    fetch('http://localhost:8080/api/admin/document/accept', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-API-KEY': '<?= $apiKey ?>'
-        },
-        body: JSON.stringify({
-            document_id: docId,
-            accepted_by_user_id: <?= auth()->id() ?? 'null' ?>
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-        }
-        
-        if (data.status === 'success' || data.message) {
-            alert('Document has been accepted successfully');
+    Swal.fire({
+        title: 'Accept Document?',
+        text: "Are you sure you want to accept this resubmitted document?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-check mr-1"></i> Yes, accept it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Find button to show loading state
+            let submitBtn = event ? event.target : null;
+            let originalText = '';
             
-            // Update document UI without reloading
-            const docCards = document.querySelectorAll('[data-doc-id="' + docId + '"]');
-            docCards.forEach(card => {
-                // Remove returned styling
-                card.classList.remove('returned-document');
-                
-                // Change icon
-                const iconContainer = card.querySelector('.document-icon');
-                if (iconContainer) {
-                    iconContainer.classList.remove('pulse-animation', 'bg-danger');
-                    // Check if it's a qualification document (has graduation cap badge)
-                    const isQualification = card.querySelector('.fa-graduation-cap') !== null;
+            if (submitBtn) {
+                if (submitBtn.tagName === 'I') {
+                    submitBtn = submitBtn.parentElement;
+                }
+                originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>...';
+            }
+            
+            // Send accept request to backend
+            fetch('http://localhost:8080/api/admin/document/accept', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-KEY': '<?= $apiKey ?>'
+                },
+                body: JSON.stringify({
+                    document_id: docId,
+                    accepted_by_user_id: <?= auth()->id() ?? 'null' ?>
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success' || data.message) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Document has been accepted successfully.',
+                        icon: 'success',
+                        confirmButtonText: 'Okay'
+                    });
                     
-                    if (isQualification) {
-                        iconContainer.classList.add('bg-warning-light');
-                        iconContainer.innerHTML = '<i class="fas fa-certificate text-warning fa-lg"></i>';
-                    } else {
-                        iconContainer.classList.add('bg-danger-light');
-                        iconContainer.innerHTML = '<i class="fas fa-file-pdf text-danger fa-lg"></i>';
+                    // Update document UI without reloading
+                    const docCards = document.querySelectorAll('[data-doc-id="' + docId + '"]');
+                    docCards.forEach(card => {
+                        // Remove returned styling
+                        card.classList.remove('returned-document');
+                        
+                        // Change icon
+                        const iconContainer = card.querySelector('.document-icon');
+                        if (iconContainer) {
+                            iconContainer.classList.remove('pulse-animation', 'bg-danger');
+                            const isQualification = card.querySelector('.fa-graduation-cap') !== null;
+                            
+                            if (isQualification) {
+                                iconContainer.classList.add('bg-warning-light');
+                                iconContainer.innerHTML = '<i class="fas fa-certificate text-warning fa-lg"></i>';
+                            } else {
+                                iconContainer.classList.add('bg-danger-light');
+                                iconContainer.innerHTML = '<i class="fas fa-file-pdf text-danger fa-lg"></i>';
+                            }
+                        }
+                        
+                        // Update badge to primary (REUPLOADED)
+                        const badge = card.querySelector('.badge');
+                        if (badge) {
+                            badge.className = 'badge badge-primary badge-pill px-3 py-1 mb-2';
+                            badge.style = '';
+                            badge.innerHTML = '<i class="fas fa-check-double mr-1"></i> REUPLOADED';
+                        }
+                        
+                        // Remove rejection reason alert
+                        const alert = card.querySelector('.alert-danger');
+                        if (alert) {
+                            alert.remove();
+                        }
+                        
+                        // Hide accept button, keep return and view
+                        const actionButtons = card.querySelector('.d-flex.gap-2');
+                        if (actionButtons) {
+                            const acceptBtn = actionButtons.querySelector('button[onclick*="acceptDocument"]');
+                            if (acceptBtn) acceptBtn.style.display = 'none';
+                        }
+                    });
+                    
+                } else {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
                     }
+                    Swal.fire('Error', 'Failed to accept document: ' + (data.error || 'Unknown error'), 'error');
                 }
-                
-                // Update badge to primary (REUPLOADED)
-                const badge = card.querySelector('.badge');
-                if (badge) {
-                    badge.className = 'badge badge-primary badge-pill px-3 py-1 mb-2';
-                    badge.style = ''; // remove bold style
-                    badge.innerHTML = '<i class="fas fa-check-double mr-1"></i> REUPLOADED';
+            })
+            .catch(error => {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
                 }
-                
-                // Remove rejection reason alert
-                const alert = card.querySelector('.alert-danger');
-                if (alert) {
-                    alert.remove();
-                }
-                
-                // Hide accept and return buttons, keep only view
-                const actionButtons = card.querySelector('.d-flex.gap-2');
-                if (actionButtons) {
-                    // Find exactly the Accept button and Return button
-                    const acceptBtn = actionButtons.querySelector('button[onclick*="acceptDocument"]');
-                    const returnBtn = actionButtons.querySelector('button[onclick*="showReturnModal"]');
-                    if (acceptBtn) acceptBtn.style.display = 'none';
-                    if (returnBtn) returnBtn.style.display = 'none';
-                }
+                console.error('Error:', error);
+                Swal.fire('Error', 'An error occurred while accepting the document', 'error');
             });
-            
-        } else {
-            alert('Failed to accept document: ' + (data.error || 'Unknown error'));
         }
-    })
-    .catch(error => {
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-        }
-        console.error('Error:', error);
-        alert('An error occurred while accepting the document');
     });
 }
 
@@ -2103,6 +2127,45 @@ $(document).ready(function() {
             window.location.hash = e.target.hash; 
         }
     });
+
+    // Normalize previously viewed Resubmitted documents visually on page load
+    try {
+        const viewedDocs = JSON.parse(localStorage.getItem('viewedDocuments') || '[]');
+        if (viewedDocs.length > 0) {
+            viewedDocs.forEach(function(docId) {
+                const docCards = document.querySelectorAll('[data-doc-id="' + docId + '"]');
+                docCards.forEach(function(docCard) {
+                    if (docCard.classList.contains('returned-document')) {
+                        docCard.classList.remove('returned-document');
+                        
+                        // Remove pulsing icon
+                        const pulsingIcon = docCard.querySelector('.pulse-animation');
+                        if (pulsingIcon) {
+                            pulsingIcon.classList.remove('pulse-animation', 'bg-danger');
+                            
+                            // Check if it's a qualification document 
+                            const isQualification = docCard.querySelector('.fa-graduation-cap') !== null;
+                            if(isQualification) {
+                                pulsingIcon.classList.add('bg-warning-light');
+                                const icon = pulsingIcon.querySelector('i');
+                                if (icon) {
+                                    icon.classList.remove('fa-exclamation-triangle', 'text-white');
+                                    icon.classList.add('fa-certificate', 'text-warning');
+                                }
+                            } else {
+                                pulsingIcon.classList.add('bg-danger-light');
+                                const icon = pulsingIcon.querySelector('i');
+                                if (icon) {
+                                    icon.classList.remove('fa-exclamation-triangle', 'text-white');
+                                    icon.classList.add('fa-file-pdf', 'text-danger');
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        }
+    } catch(e) { console.error('Error parsing viewed documents:', e); }
 });
 
 // Also try on window load
