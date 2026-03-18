@@ -89,7 +89,7 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
       stationInfo: this.fb.group({
         stationType: ['private', Validators.required],
         companyName: ['', Validators.required],
-        tin: ['', Validators.required],
+        tin: ['', [Validators.required, Validators.minLength(9), Validators.maxLength(9), Validators.pattern(/^[0-9]*$/)]],
         businessLicenseNumber: ['', Validators.required],
         postalAddress: ['', Validators.required],
         region: ['', Validators.required],
