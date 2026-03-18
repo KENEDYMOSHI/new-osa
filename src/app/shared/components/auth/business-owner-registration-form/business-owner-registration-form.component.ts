@@ -6,7 +6,7 @@ import Swal from 'sweetalert2';
 import { AuthService } from '../../../../core/services/auth.service';
 import { District, LocationService, PostalCode, Ward } from '../../../../services/location.service';
 
-type BusinessRegistrationStepKey = 'station' | 'ownership' | 'contact' | 'security' | 'review';
+type BusinessRegistrationStepKey = 'business' | 'ownership' | 'contact' | 'security' | 'review';
 
 @Component({
   selector: 'app-business-owner-registration-form',
@@ -20,9 +20,9 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
   isSubmitting = false;
 
   regions: string[] = [];
-  stationDistricts: District[] = [];
-  stationWards: Ward[] = [];
-  stationPostalCodes: PostalCode[] = [];
+  businessDistricts: District[] = [];
+  businessWards: Ward[] = [];
+  businessPostalCodes: PostalCode[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -35,12 +35,13 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
     this.initForm();
     this.loadRegions();
     this.setupLocationListeners();
-    this.setupStationTypeListener();
+    this.setupBusinessTypeListener();
+    this.applyOwnershipValidation(this.businessInfo.get('businessType')?.value);
   }
 
   get visibleSteps(): Array<{ key: BusinessRegistrationStepKey; label: string }> {
     const steps: Array<{ key: BusinessRegistrationStepKey; label: string }> = [
-      { key: 'station', label: 'Station' },
+      { key: 'business', label: 'Business' },
     ];
 
     if (this.isPrivateCompany) {
@@ -61,11 +62,11 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
   }
 
   get currentStepKey(): BusinessRegistrationStepKey {
-    return this.visibleSteps[this.currentStep - 1]?.key ?? 'station';
+    return this.visibleSteps[this.currentStep - 1]?.key ?? 'business';
   }
 
-  get stationInfo(): FormGroup {
-    return this.registrationForm.get('stationInfo') as FormGroup;
+  get businessInfo(): FormGroup {
+    return this.registrationForm.get('businessInfo') as FormGroup;
   }
 
   get ownershipDetails(): FormGroup {
@@ -81,13 +82,13 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
   }
 
   get isPrivateCompany(): boolean {
-    return this.stationInfo.get('stationType')?.value === 'private';
+    return this.businessInfo.get('businessType')?.value === 'private';
   }
 
   initForm(): void {
     this.registrationForm = this.fb.group({
-      stationInfo: this.fb.group({
-        stationType: ['private', Validators.required],
+      businessInfo: this.fb.group({
+        businessType: ['private', Validators.required],
         companyName: ['', Validators.required],
         tin: ['', [Validators.required, Validators.minLength(9), Validators.maxLength(9), Validators.pattern(/^[0-9]*$/)]],
         businessLicenseNumber: ['', Validators.required],
@@ -123,40 +124,49 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
     });
   }
 
-  setupStationTypeListener(): void {
-    this.stationInfo.get('stationType')?.valueChanges.subscribe((stationType) => {
-      const ownershipControls = [
-        'firstName',
-        'secondName',
-        'lastName',
-        'phoneNumber',
-        'emailAddress',
-        'postalAddress',
-      ];
+  setupBusinessTypeListener(): void {
+    this.businessInfo.get('businessType')?.valueChanges.subscribe((businessType) => {
+      this.applyOwnershipValidation(businessType);
 
-      if (stationType === 'private') {
-        ownershipControls.forEach((field) => {
-          const control = this.ownershipDetails.get(field);
-          control?.setValidators(field === 'emailAddress'
-            ? [Validators.required, Validators.email]
-            : field === 'phoneNumber'
-              ? [Validators.required, Validators.minLength(10), Validators.maxLength(10), Validators.pattern(/^[0-9]*$/)]
-              : [Validators.required]);
-          control?.updateValueAndValidity({ emitEvent: false });
-        });
-      } else {
-        this.ownershipDetails.reset();
-        ownershipControls.forEach((field) => {
-          const control = this.ownershipDetails.get(field);
-          control?.clearValidators();
-          control?.updateValueAndValidity({ emitEvent: false });
-        });
-
-        if (this.currentStepKey === 'ownership') {
-          this.currentStep = 2;
-        }
+      if (businessType !== 'private' && this.currentStepKey === 'ownership') {
+        this.currentStep = 2;
       }
     });
+  }
+
+  applyOwnershipValidation(businessType: string): void {
+    const ownershipControls = [
+      'firstName',
+      'secondName',
+      'lastName',
+      'phoneNumber',
+      'emailAddress',
+      'postalAddress',
+    ];
+
+    if (businessType === 'private') {
+      this.ownershipDetails.enable({ emitEvent: false });
+      ownershipControls.forEach((field) => {
+        const control = this.ownershipDetails.get(field);
+        control?.setValidators(field === 'emailAddress'
+          ? [Validators.required, Validators.email]
+          : field === 'phoneNumber'
+            ? [Validators.required, Validators.minLength(10), Validators.maxLength(10), Validators.pattern(/^[0-9]*$/)]
+            : [Validators.required]);
+        control?.updateValueAndValidity({ emitEvent: false });
+      });
+      return;
+    }
+
+    this.ownershipDetails.reset();
+    ownershipControls.forEach((field) => {
+      const control = this.ownershipDetails.get(field);
+      control?.clearValidators();
+      control?.setErrors(null);
+      control?.updateValueAndValidity({ emitEvent: false });
+    });
+    this.ownershipDetails.disable({ emitEvent: false });
+    this.ownershipDetails.updateValueAndValidity({ emitEvent: false });
   }
 
   loadRegions(): void {
@@ -171,66 +181,66 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
   }
 
   setupLocationListeners(): void {
-    this.stationInfo.get('region')?.valueChanges.subscribe((region) => {
+    this.businessInfo.get('region')?.valueChanges.subscribe((region) => {
       if (!region) {
-        this.stationDistricts = [];
-        this.stationWards = [];
-        this.stationPostalCodes = [];
+        this.businessDistricts = [];
+        this.businessWards = [];
+        this.businessPostalCodes = [];
         return;
       }
 
       this.locationService.getDistricts(region).subscribe({
         next: (districts) => {
-          this.stationDistricts = districts;
-          this.stationInfo.patchValue({ district: '', ward: '', postalCode: '' }, { emitEvent: false });
-          this.stationWards = [];
-          this.stationPostalCodes = [];
+          this.businessDistricts = districts;
+          this.businessInfo.patchValue({ district: '', ward: '', postalCode: '' }, { emitEvent: false });
+          this.businessWards = [];
+          this.businessPostalCodes = [];
         },
         error: (err) => {
           console.error('Failed to load districts:', err);
-          this.stationDistricts = [];
+          this.businessDistricts = [];
         },
       });
     });
 
-    this.stationInfo.get('district')?.valueChanges.subscribe((district) => {
+    this.businessInfo.get('district')?.valueChanges.subscribe((district) => {
       if (!district) {
-        this.stationWards = [];
-        this.stationPostalCodes = [];
+        this.businessWards = [];
+        this.businessPostalCodes = [];
         return;
       }
 
       this.locationService.getWards(district).subscribe({
         next: (wards) => {
-          this.stationWards = wards;
-          this.stationInfo.patchValue({ ward: '', postalCode: '' }, { emitEvent: false });
-          this.stationPostalCodes = [];
+          this.businessWards = wards;
+          this.businessInfo.patchValue({ ward: '', postalCode: '' }, { emitEvent: false });
+          this.businessPostalCodes = [];
         },
         error: (err) => {
           console.error('Failed to load wards:', err);
-          this.stationWards = [];
+          this.businessWards = [];
         },
       });
     });
 
-    this.stationInfo.get('ward')?.valueChanges.subscribe((ward) => {
+    this.businessInfo.get('ward')?.valueChanges.subscribe((ward) => {
       if (!ward) {
-        this.stationPostalCodes = [];
-        this.stationInfo.get('postalCode')?.setValue('', { emitEvent: false });
+        this.businessPostalCodes = [];
+        this.businessInfo.get('postalCode')?.setValue('', { emitEvent: false });
         return;
       }
 
       this.locationService.getPostalCodes(ward).subscribe({
         next: (postalCodes) => {
-          this.stationPostalCodes = postalCodes;
-          this.stationInfo.get('postalCode')?.setValue(
+          this.businessPostalCodes = postalCodes;
+          this.businessInfo.get('postalCode')?.setValue(
             postalCodes.length === 1 ? postalCodes[0].postcode : '',
             { emitEvent: false }
           );
         },
         error: (err) => {
           console.error('Failed to load postal codes:', err);
-          this.stationPostalCodes = [];
+          this.businessPostalCodes = [];
         },
       });
     });
@@ -239,8 +249,8 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
   nextStep(): void {
     const stepKey = this.currentStepKey;
 
-    if (stepKey === 'station') {
-      this.advanceIfValid(this.stationInfo);
+    if (stepKey === 'business') {
+      this.advanceIfValid(this.businessInfo);
       return;
     }
 
@@ -343,14 +353,15 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
     const formValue = this.registrationForm.value;
     const payload = {
       ...formValue,
+      ownershipDetails: this.isPrivateCompany ? formValue.ownershipDetails : null,
       registrationType: 'business_owner',
       userType: 'business_owner',
       email: formValue.contactPerson.emailAddress,
       phone: formValue.contactPerson.phoneNumber,
       password: formValue.security.password,
       confirmPassword: formValue.security.confirmPassword,
-      companyName: formValue.stationInfo.companyName,
-      stationType: formValue.stationInfo.stationType,
+      companyName: formValue.businessInfo.companyName,
+      businessType: formValue.businessInfo.businessType,
     };
 
     this.authService.register(payload).subscribe({
