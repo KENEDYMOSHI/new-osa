@@ -215,6 +215,11 @@ export const routes: Routes = [
     title: 'Practitioner Registration | WMA Online Services Portal'
   },
   {
+    path: 'register-business-owner',
+    loadComponent: () => import('./pages/auth-pages/business-owner-registration/business-owner-registration.component').then(m => m.BusinessOwnerRegistrationComponent),
+    title: 'Business Owner Registration | WMA Online Services Portal'
+  },
+  {
     path: 'register-pattern-approval',
     loadComponent: () => import('./pages/auth-pages/pattern-approval-registration/pattern-approval-registration.component').then(m => m.PatternApprovalRegistrationComponent),
     title: 'Pattern Approval Registration | WMA Online Services Portal'
