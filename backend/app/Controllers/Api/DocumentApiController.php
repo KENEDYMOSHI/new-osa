@@ -112,13 +112,60 @@ class DocumentApiController extends ResourceController
             // Let's add basic notification if user_id exists on the attachment
             $doc = $db->table('license_application_attachments')->where('id', $documentId)->get()->getRow();
             if ($doc && !empty($doc->user_id)) {
+                // Fetch Applicant Name and Application Number (Request Number)
+                $appDetails = $db->table('license_applications')
+                    ->select('license_applications.request_number, practitioner_personal_infos.first_name, practitioner_personal_infos.last_name')
+                    ->join('license_users', 'license_users.id = license_applications.user_id', 'left')
+                    ->join('practitioner_personal_infos', 'practitioner_personal_infos.user_uuid = license_users.uuid', 'left')
+                    ->where('license_applications.id', $doc->application_id)
+                    ->get()
+                    ->getRow();
+
+                $applicantName = $appDetails ? trim(($appDetails->first_name ?? '') . ' ' . ($appDetails->last_name ?? '')) : '';
+                $requestNumber = $appDetails ? ($appDetails->request_number ?? 'N/A') : 'N/A';
+
+                if (empty($applicantName)) {
+                    $applicantName = "Ndugu";
+                } else {
+                    $applicantName = ucwords(strtolower($applicantName));
+                }
+
+                $documentNames = [
+                    'tin' => 'Tax Payer Identification Number (TIN)',
+                    'businessLicense' => 'Business License',
+                    'incorporationCertificate' => 'Certificate of Incorporation/Registration',
+                    'memorandum' => 'Memorandum and Articles of Association',
+                    'ida' => 'Industrial Development Authority (IDA) Certificate',
+                    'gmp' => 'Good Manufacturing Practice (GMP) Certificate',
+                    'id' => 'Identity Card (National ID / Driver\'s License / Voter ID)',
+                    'identity' => 'Identity Card (National ID / Driver\'s License / Voter ID)',
+                    'tbs' => 'Tanzania Bureau of Standards (TBS) Certificate',
+                    'tmda' => 'Tanzania Medicines and Medical Devices Authority (TMDA) Certificate'
+                ];
+
+                $docType = $doc->document_type;
+                $fullDocName = isset($documentNames[$docType]) ? $documentNames[$docType] : $docType;
+
+                $notifMessage = "Salamu,\n" .
+                               "<b>{$applicantName}</b>\n\n" .
+                               "Baada ya mapitio ya awali, imebainika kuwa hati ya <b>({$fullDocName})</b> uliyowasilisha inahitaji kufanyiwa marekebisho.\n\n" .
+                               "Maelezo ya marekebisho:\n" .
+                               "{$rejectionReason}\n\n" .
+                               "Tafadhali fanya marekebisho kulingana na maelekezo yaliyotolewa kisha re-upload hati iliyorekebishwa ili kuendelea na hatua zinazofuata za maombi yako.\n\n" .
+                               "<b>Maombi Na.:</b> {$requestNumber}\n\n" .
+                               "Asante.\n\n" .
+                               "Weights and Measures Agency (WMA)\n" .
+                               "Vipimo House, Chief Chemist Street\n" .
+                               "P.O. Box 2014, Dodoma – Tanzania\n" .
+                               "info@wma.go.tz";
+
                  $notifBuilder = $db->table('notifications');
                  $uuid = md5(uniqid(rand(), true));
                  $notifData = [
                     'id' => $uuid,
                     'user_id' => $doc->user_id,
                     'title' => 'Document Returned',
-                    'message' => "Your document '{$doc->document_type}' was returned. Reason: {$rejectionReason}",
+                    'message' => $notifMessage,
                     'type' => 'document_returned',
                     'related_entity_id' => $doc->application_id,
                     'created_at' => date('Y-m-d H:i:s'),

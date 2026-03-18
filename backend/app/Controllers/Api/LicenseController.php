@@ -1548,6 +1548,7 @@ class LicenseController extends ResourceController
                 'status' => $status,
                 'statusColor' => $statusColor,
                 'licenseClass' => $licenseClass,
+                'request_number' => $app['request_number'] ?? 'N/A',
                 'date' => date('M d, Y', strtotime($app['created_at'])),
                 'licenseFee' => $licenseFee,
                 'applicationFee' => $applicationFee,

@@ -64,12 +64,12 @@ export class NotificationsComponent implements OnInit {
         initials: this.getInitials(this.extractSenderName(notif.title)),
         subject: notif.title,
         preview: notif.message.substring(0, 50) + '...',
-        content: notif.message.replace('Reason:', '<br><br><strong class="font-bold text-gray-900">Reason:</strong>'),
+        content: this.formatNotificationMessage(notif.message.replace(/\n/g, '<br>')),
         date: this.formatDate(notif.created_at),
         time: this.formatTime(notif.created_at),
         source: 'ONLINE SEARCH',
-        email: 'user@mailinator.com',
-        phone: '+1 (107) 477-7849',
+        email: 'ictsupport@wma.go.tz',
+        phone: '',
         isRead: notif.is_read,
         isStarred: false
       }));
@@ -116,6 +116,31 @@ export class NotificationsComponent implements OnInit {
     const hours = date.getHours();
     const minutes = date.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
+  }
+
+  formatNotificationMessage(message: string): string {
+    // Map of document abbreviations to their full names
+    const documentNames: { [key: string]: string } = {
+      'tin': 'Tax Payer Identification Number (TIN)',
+      'businessLicense': 'Business License',
+      'incorporationCertificate': 'Certificate of Incorporation/Registration',
+      'memorandum': 'Memorandum and Articles of Association',
+      'ida': 'Industrial Development Authority (IDA) Certificate',
+      'gmp': 'Good Manufacturing Practice (GMP) Certificate',
+      'id': 'Identity Card (National ID, Voter ID, Passport, or Driving License)',
+      'identity': 'Identity Card (National ID, Voter ID, Passport, or Driving License)',
+      'tbs': 'Tanzania Bureau of Standards (TBS) Certificate',
+      'tmda': 'Tanzania Medicines and Medical Devices Authority (TMDA) Certificate'
+    };
+
+    // Replace document names enclosed in single quotes, e.g., 'tin' -> 'Tax Payer Identification Number (TIN)'
+    return message.replace(/'([^']+)'/g, (match, docCode) => {
+      const lowerCode = docCode.toLowerCase();
+      if (documentNames[lowerCode]) {
+        return `'${documentNames[lowerCode]}'`;
+      }
+      return match;
+    });
   }
 
   selectMessage(message: Message): void {
