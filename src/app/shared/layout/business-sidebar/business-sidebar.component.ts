@@ -1,5 +1,6 @@
 import { CommonModule } from "@angular/common";
-import { Component } from "@angular/core";
+import { Component, Pipe, PipeTransform } from "@angular/core";
+import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 import { Router, RouterModule } from "@angular/router";
 import { SidebarService } from "../../services/sidebar.service";
 
@@ -9,10 +10,22 @@ type NavItem = {
   path?: string;
 };
 
+@Pipe({
+  name: 'safeHtml',
+  standalone: true,
+})
+export class SafeHtmlPipe implements PipeTransform {
+  constructor(private sanitizer: DomSanitizer) {}
+
+  transform(value: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(value);
+  }
+}
+
 @Component({
   selector: "app-business-sidebar",
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, SafeHtmlPipe],
   templateUrl: "./business-sidebar.component.html",
 })
 export class BusinessSidebarComponent {
