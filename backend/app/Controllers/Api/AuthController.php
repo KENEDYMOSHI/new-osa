@@ -10,6 +10,8 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use App\Libraries\SmsLibrary;
 use App\Models\PractitionerPersonalInfoModel;
+use App\Models\BusinessOwnerInfoModel;
+use App\Models\BusinessContactInfoModel;
 
 class AuthController extends ResourceController
 {
@@ -35,7 +37,7 @@ class AuthController extends ResourceController
             $decoded = JWT::decode($token, new Key($key, 'HS256'));
             
             // Check if the token has 'table' indicating a custom user table
-            if (isset($decoded->table) && in_array($decoded->table, ['pattern_users', 'customer_users'])) {
+            if (isset($decoded->table) && in_array($decoded->table, ['pattern_users', 'customer_users', 'business_users'])) {
                 $db = \Config\Database::connect();
                 $user = $db->table($decoded->table)->where('id', $decoded->uid)->get()->getRow();
                 
@@ -67,6 +69,12 @@ class AuthController extends ResourceController
     public function register()
     {
         $data = $this->request->getJSON(true); // Get as associative array
+        $registrationType = $data['registrationType'] ?? 'practitioner';
+
+        // === Business Owner Registration (separate flow) ===
+        if ($registrationType === 'business_owner') {
+            return $this->registerBusinessOwner($data);
+        }
 
         $rules = [
             'contactSecurity.email' => [
@@ -96,16 +104,16 @@ class AuthController extends ResourceController
         }
 
         // Manual check for confirm password
-        if (!isset($data['contactSecurity']['confirmPassword']) || 
+        if (!isset($data['contactSecurity']['confirmPassword']) ||
             $data['contactSecurity']['password'] !== $data['contactSecurity']['confirmPassword']) {
              return $this->failValidationErrors(['confirmPassword' => 'Passwords do not match']);
         }
 
         // Determine User Type and Target Table
-        $userType = isset($data['registrationType']) && $data['registrationType'] === 'pattern_approval' 
-            ? 'pattern_approval' 
-            : (isset($data['registrationType']) && $data['registrationType'] === 'customer' ? 'customer' : 'practitioner');
-            
+        $userType = $registrationType === 'pattern_approval'
+            ? 'pattern_approval'
+            : ($registrationType === 'customer' ? 'customer' : 'practitioner');
+
         $uuid = strtoupper(md5(uniqid(rand(), true))); // Uppercase 32 char hash
         $baseUsername = $data['personalInfo']['firstName'] . ' ' . $data['personalInfo']['lastName'];
         $uniqueUsername = $baseUsername . '_' . time();
@@ -120,12 +128,12 @@ class AuthController extends ResourceController
                 ->get()->getRow();
             $resolvedCenterNumber = $centerRow->centerNumber ?? null;
         }
-        
+
         try {
             if ($userType == 'pattern_approval' || $userType == 'customer') {
                 // 1. Create User (Bypass Shield, Custom Tables)
                 $tableName = $userType == 'pattern_approval' ? 'pattern_users' : 'customer_users';
-                
+
                 $db->table($tableName)->insert([
                     'uuid' => $uuid,
                     'username' => $uniqueUsername,
@@ -140,7 +148,7 @@ class AuthController extends ResourceController
                     'created_at' => date('Y-m-d H:i:s'),
                     'updated_at' => date('Y-m-d H:i:s')
                 ]);
-                
+
                 $userId = $db->insertID();
             } else {
                 // 1. Create User (Shield - License / Practitioner)
@@ -150,7 +158,7 @@ class AuthController extends ResourceController
                     'email'    => $data['contactSecurity']['email'],
                     'password' => $data['contactSecurity']['password'],
                 ]);
-                
+
                 $users->save($user);
                 $user = $users->findById($users->getInsertID());
                 $userId = $user->id;
@@ -227,6 +235,143 @@ class AuthController extends ResourceController
         }
     }
 
+    private function registerBusinessOwner(array $data)
+    {
+        $db = \Config\Database::connect();
+
+        // Validation
+        $email = $data['security']['email'] ?? null;
+        $password = $data['security']['password'] ?? null;
+        $confirmPassword = $data['security']['confirmPassword'] ?? null;
+        $contactPhone = $data['contactPerson']['phoneNumber'] ?? null;
+
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->failValidationErrors(['email' => 'Valid email is required.']);
+        }
+
+        // Check email uniqueness across all user tables
+        $emailExists = $db->table('business_users')->where('email', $email)->get()->getRow()
+            || $db->table('pattern_users')->where('email', $email)->get()->getRow()
+            || $db->table('customer_users')->where('email', $email)->get()->getRow()
+            || $db->table('auth_identities')->where('secret', $email)->get()->getRow();
+        if ($emailExists) {
+            return $this->failValidationErrors(['email' => 'This email address is already registered.']);
+        }
+
+        if (!$password || strlen($password) < 8) {
+            return $this->failValidationErrors(['password' => 'Password must be at least 8 characters.']);
+        }
+
+        if ($password !== $confirmPassword) {
+            return $this->failValidationErrors(['confirmPassword' => 'Passwords do not match.']);
+        }
+
+        if (!$contactPhone) {
+            return $this->failValidationErrors(['contactPerson.phoneNumber' => 'Contact phone number is required.']);
+        }
+
+        // Check phone uniqueness in business_contact_infos
+        $existingPhone = $db->table('business_contact_infos')->where('phone_number', $contactPhone)->get()->getRow();
+        if ($existingPhone) {
+            return $this->failValidationErrors(['contactPerson.phoneNumber' => 'This phone number is already registered.']);
+        }
+
+        $uuid = strtoupper(md5(uniqid(rand(), true)));
+        $contactFirstName = $data['contactPerson']['firstName'] ?? '';
+        $contactLastName = $data['contactPerson']['lastName'] ?? '';
+        $uniqueUsername = $contactFirstName . ' ' . $contactLastName . '_' . time();
+
+        // Auto-resolve collection_center from business region
+        $region = $data['businessInfo']['region'] ?? null;
+        $resolvedCenterNumber = null;
+        if ($region) {
+            $centerRow = $db->table('collectioncenter')
+                ->where('centerName', $region)
+                ->get()->getRow();
+            $resolvedCenterNumber = $centerRow->centerNumber ?? null;
+        }
+
+        try {
+            // 1. Create business_users record
+            $db->table('business_users')->insert([
+                'uuid'              => $uuid,
+                'username'          => $uniqueUsername,
+                'email'             => $email,
+                'password_hash'     => password_hash($password, PASSWORD_BCRYPT),
+                'user_type'         => 'business_owner',
+                'business_type'     => $data['businessInfo']['businessType'] ?? null,
+                'phone_number'      => $contactPhone,
+                'region'            => $region,
+                'collection_center' => $resolvedCenterNumber,
+                'active'            => 1,
+                'created_at'        => date('Y-m-d H:i:s'),
+                'updated_at'        => date('Y-m-d H:i:s'),
+            ]);
+            $userId = $db->insertID();
+
+            // 2. Create business_owner_infos record
+            $ownershipDetails = $data['ownershipDetails'] ?? null;
+            $businessOwnerData = [
+                'user_uuid'              => $uuid,
+                'company_name'           => $data['businessInfo']['companyName'] ?? null,
+                'business_type'          => $data['businessInfo']['businessType'] ?? null,
+                'tin'                    => $data['businessInfo']['tin'] ?? null,
+                'business_license_number' => $data['businessInfo']['businessLicenseNumber'] ?? null,
+                'postal_address'         => $data['businessInfo']['postalAddress'] ?? null,
+                'office_phone_number'    => $data['businessInfo']['officePhoneNumber'] ?? null,
+                'region'                 => $data['businessInfo']['region'] ?? null,
+                'district'               => $data['businessInfo']['district'] ?? null,
+                'ward'                   => $data['businessInfo']['ward'] ?? null,
+                'postal_code'            => $data['businessInfo']['postalCode'] ?? null,
+                'owner_first_name'       => $ownershipDetails['firstName'] ?? null,
+                'owner_second_name'      => $ownershipDetails['secondName'] ?? null,
+                'owner_last_name'        => $ownershipDetails['lastName'] ?? null,
+                'owner_phone_number'     => $ownershipDetails['phoneNumber'] ?? null,
+                'owner_email_address'    => $ownershipDetails['emailAddress'] ?? null,
+                'owner_postal_address'   => $ownershipDetails['postalAddress'] ?? null,
+            ];
+            $businessOwnerInfoModel = new BusinessOwnerInfoModel();
+            $businessOwnerInfoModel->insert($businessOwnerData);
+
+            // 3. Create business_contact_infos record
+            $contactData = [
+                'user_uuid'                => $uuid,
+                'first_name'               => $data['contactPerson']['firstName'] ?? null,
+                'second_name'              => $data['contactPerson']['secondName'] ?? null,
+                'last_name'                => $data['contactPerson']['lastName'] ?? null,
+                'designation'              => $data['contactPerson']['designation'] ?? null,
+                'phone_number'             => $contactPhone,
+                'alternative_phone_number' => $data['contactPerson']['alternativePhoneNumber'] ?? null,
+                'email_address'            => $data['contactPerson']['emailAddress'] ?? null,
+            ];
+            $businessContactInfoModel = new BusinessContactInfoModel();
+            $businessContactInfoModel->insert($contactData);
+
+            // 4. Generate JWT
+            $key = getenv('JWT_SECRET') ?: 'your_secret_key_here';
+            $payload = [
+                'iss'       => 'localhost',
+                'aud'       => 'localhost',
+                'iat'       => time(),
+                'exp'       => time() + 3600,
+                'uid'       => $userId,
+                'uuid'      => $uuid,
+                'email'     => $email,
+                'user_type' => 'business_owner',
+                'table'     => 'business_users',
+            ];
+
+            $token = JWT::encode($payload, $key, 'HS256');
+
+            return $this->respondCreated([
+                'message' => 'User registered successfully',
+                'token' => $token,
+            ]);
+        } catch (\Exception $e) {
+            return $this->failServerError($e->getMessage());
+        }
+    }
+
     public function checkPhone()
     {
         $phone = $this->request->getVar('phone');
@@ -260,8 +405,8 @@ class AuthController extends ResourceController
         $db = \Config\Database::connect();
         $key = getenv('JWT_SECRET') ?: 'your_secret_key_here';
 
-        // === Step 1: Check pattern_users and customer_users first (custom tables) ===
-        foreach (['pattern_users', 'customer_users'] as $tableName) {
+        // === Step 1: Check custom user tables first (pattern, customer, business) ===
+        foreach (['pattern_users', 'customer_users', 'business_users'] as $tableName) {
             $customUser = $db->table($tableName)
                 ->where('email', $data['email'])
                 ->get()->getRow();
@@ -447,44 +592,48 @@ class AuthController extends ResourceController
             // Get UUID from database if needed
             $db = \Config\Database::connect();
             
-            if (isset($user->uuid) && isset($user->user_type) && in_array($user->user_type, ['pattern_approval', 'customer'])) {
+            if (isset($user->uuid) && isset($user->user_type) && in_array($user->user_type, ['pattern_approval', 'customer', 'business_owner'])) {
                 $uuid = $user->uuid;
             } else {
                 $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
-                
+
                 if (!$userRecord) {
                     return $this->failNotFound('User record not found in database');
                 }
 
-                // Check if uuid column exists or is set
                 if (!isset($userRecord->uuid)) {
-                    // Fallback or error? Let's return null UUID for now to avoid crash
                     $uuid = null;
                 } else {
                     $uuid = $userRecord->uuid;
                 }
             }
 
-            // Fetch Personal Info
+            // Fetch profile data based on user type
             $personalInfo = null;
-            $businessInfo = null;
+            $businessInfos = null;
+            $businessOwnerInfo = null;
+            $businessContactInfo = null;
+            $licenses = [];
 
-            if ($uuid) {
+            if ($uuid && isset($user->user_type) && $user->user_type === 'business_owner') {
+                // Business owner: fetch from business-specific tables
+                $businessOwnerInfoModel = new BusinessOwnerInfoModel();
+                $businessOwnerInfo = $businessOwnerInfoModel->where('user_uuid', $uuid)->first();
+
+                $businessContactInfoModel = new BusinessContactInfoModel();
+                $businessContactInfo = $businessContactInfoModel->where('user_uuid', $uuid)->first();
+            } elseif ($uuid) {
+                // Practitioner / Pattern / Customer: use practitioner tables
                 $personalInfoModel = new \App\Models\PractitionerPersonalInfoModel();
                 $personalInfo = $personalInfoModel->where('user_uuid', $uuid)->first();
 
-            // Fetch Business Infos
                 $businessInfoModel = new \App\Models\PractitionerBusinessInfoModel();
                 $businessInfos = $businessInfoModel->where('user_uuid', $uuid)->findAll();
             }
 
-            // Fetch Licenses
-            $licenses = [];
-            if (isset($user->id)) {
-                 $db = \Config\Database::connect();
+            // Fetch Licenses (only for practitioner/license users)
+            if (isset($user->id) && (!isset($user->user_type) || !in_array($user->user_type, ['business_owner', 'pattern_approval', 'customer']))) {
                  $builder = $db->table('license_applications');
-                 // Select relevant fields, especially license_type from items
-                 // Join with licenses table to get actual issue_date and expiry_date
                  $builder->select('
                     license_applications.id as app_id,
                     license_applications.created_at,
@@ -508,10 +657,13 @@ class AuthController extends ResourceController
                     'id' => $user->id,
                     'username' => $user->username,
                     'email' => $user->email,
-                    'uuid' => $uuid
+                    'uuid' => $uuid,
+                    'user_type' => $user->user_type ?? 'practitioner',
                 ],
                 'personalInfo' => $personalInfo,
                 'businessInfos' => $businessInfos,
+                'businessOwnerInfo' => $businessOwnerInfo,
+                'businessContactInfo' => $businessContactInfo,
                 'licenses' => $licenses
             ]);
         } catch (\Exception $e) {
@@ -531,7 +683,7 @@ class AuthController extends ResourceController
         // Get UUID
         $db = \Config\Database::connect();
         
-        if (isset($user->uuid) && isset($user->user_type) && in_array($user->user_type, ['pattern_approval', 'customer'])) {
+        if (isset($user->uuid) && isset($user->user_type) && in_array($user->user_type, ['pattern_approval', 'customer', 'business_owner'])) {
             $uuid = $user->uuid;
         } else {
             $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
@@ -562,23 +714,28 @@ class AuthController extends ResourceController
 
         // Get UUID
         $db = \Config\Database::connect();
-        if (isset($user->uuid) && isset($user->user_type) && in_array($user->user_type, ['pattern_approval', 'customer'])) {
+        if (isset($user->uuid) && isset($user->user_type) && in_array($user->user_type, ['pattern_approval', 'customer', 'business_owner'])) {
             $uuid = $user->uuid;
         } else {
             $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();
             $uuid = $userRecord->uuid;
         }
 
+        // Business owner uses different tables
+        if (isset($user->user_type) && $user->user_type === 'business_owner') {
+            return $this->updateBusinessOwnerProfile($uuid, $data);
+        }
+
+        // Practitioner / Pattern / Customer uses practitioner_business_infos
         $businessInfoModel = new \App\Models\PractitionerBusinessInfoModel();
-        
+
         $companyId = $data['id'] ?? null;
         $existing = null;
-        
+
         if ($companyId) {
             $existing = $businessInfoModel->where('id', $companyId)->where('user_uuid', $uuid)->first();
         }
 
-        // Map frontend camelCase to backend snake_case
         $updateData = [
             'company_name'  => $data['companyName'] ?? ($existing->company_name ?? null),
             'brela_number'  => $data['brelaNumber'] ?? ($existing->brela_number ?? null),
@@ -593,15 +750,69 @@ class AuthController extends ResourceController
             'seal_number'   => $data['sealNumber'] ?? ($existing->seal_number ?? null),
         ];
 
-        // Remove null values if you don't want to overwrite with null (optional, depending on requirement)
-        // For now, we keep them as null if not provided and not existing, or update if provided.
-        // Actually, the ?? logic above preserves existing if not provided in $data.
-
         if ($existing) {
             $businessInfoModel->update($existing->id, $updateData);
         } else {
             $updateData['user_uuid'] = $uuid;
             $businessInfoModel->insert($updateData);
+        }
+
+        return $this->respond(['message' => 'Business profile updated successfully']);
+    }
+
+    private function updateBusinessOwnerProfile(string $uuid, array $data)
+    {
+        // Update business_owner_infos
+        $businessOwnerInfoModel = new BusinessOwnerInfoModel();
+        $existing = $businessOwnerInfoModel->where('user_uuid', $uuid)->first();
+
+        $ownerData = [
+            'company_name'           => $data['companyName'] ?? ($existing->company_name ?? null),
+            'business_type'          => $data['businessType'] ?? ($existing->business_type ?? null),
+            'tin'                    => $data['tin'] ?? ($existing->tin ?? null),
+            'business_license_number' => $data['businessLicenseNumber'] ?? ($existing->business_license_number ?? null),
+            'postal_address'         => $data['postalAddress'] ?? ($existing->postal_address ?? null),
+            'office_phone_number'    => $data['officePhoneNumber'] ?? ($existing->office_phone_number ?? null),
+            'region'                 => $data['region'] ?? ($existing->region ?? null),
+            'district'               => $data['district'] ?? ($existing->district ?? null),
+            'ward'                   => $data['ward'] ?? ($existing->ward ?? null),
+            'postal_code'            => $data['postalCode'] ?? ($existing->postal_code ?? null),
+            'owner_first_name'       => $data['ownerFirstName'] ?? ($existing->owner_first_name ?? null),
+            'owner_second_name'      => $data['ownerSecondName'] ?? ($existing->owner_second_name ?? null),
+            'owner_last_name'        => $data['ownerLastName'] ?? ($existing->owner_last_name ?? null),
+            'owner_phone_number'     => $data['ownerPhoneNumber'] ?? ($existing->owner_phone_number ?? null),
+            'owner_email_address'    => $data['ownerEmailAddress'] ?? ($existing->owner_email_address ?? null),
+            'owner_postal_address'   => $data['ownerPostalAddress'] ?? ($existing->owner_postal_address ?? null),
+        ];
+
+        if ($existing) {
+            $businessOwnerInfoModel->update($existing->id, $ownerData);
+        } else {
+            $ownerData['user_uuid'] = $uuid;
+            $businessOwnerInfoModel->insert($ownerData);
+        }
+
+        // Update business_contact_infos if contact data provided
+        if (isset($data['contactFirstName']) || isset($data['contactLastName']) || isset($data['contactPhone'])) {
+            $businessContactInfoModel = new BusinessContactInfoModel();
+            $existingContact = $businessContactInfoModel->where('user_uuid', $uuid)->first();
+
+            $contactData = [
+                'first_name'               => $data['contactFirstName'] ?? ($existingContact->first_name ?? null),
+                'second_name'              => $data['contactSecondName'] ?? ($existingContact->second_name ?? null),
+                'last_name'                => $data['contactLastName'] ?? ($existingContact->last_name ?? null),
+                'designation'              => $data['contactDesignation'] ?? ($existingContact->designation ?? null),
+                'phone_number'             => $data['contactPhone'] ?? ($existingContact->phone_number ?? null),
+                'alternative_phone_number' => $data['contactAlternativePhone'] ?? ($existingContact->alternative_phone_number ?? null),
+                'email_address'            => $data['contactEmail'] ?? ($existingContact->email_address ?? null),
+            ];
+
+            if ($existingContact) {
+                $businessContactInfoModel->update($existingContact->id, $contactData);
+            } else {
+                $contactData['user_uuid'] = $uuid;
+                $businessContactInfoModel->insert($contactData);
+            }
         }
 
         return $this->respond(['message' => 'Business profile updated successfully']);
@@ -630,8 +841,13 @@ class AuthController extends ResourceController
             return $this->failValidationErrors($validation->getErrors());
         }
 
-        if (isset($user->user_type) && in_array($user->user_type, ['pattern_approval', 'customer'])) {
-            $tableName = $user->user_type === 'pattern_approval' ? 'pattern_users' : 'customer_users';
+        if (isset($user->user_type) && in_array($user->user_type, ['pattern_approval', 'customer', 'business_owner'])) {
+            $tableMap = [
+                'pattern_approval' => 'pattern_users',
+                'customer' => 'customer_users',
+                'business_owner' => 'business_users',
+            ];
+            $tableName = $tableMap[$user->user_type];
             $db = \Config\Database::connect();
             $customUser = $db->table($tableName)->where('id', $user->id)->get()->getRow();
             
@@ -697,7 +913,7 @@ class AuthController extends ResourceController
 
         // Get UUID
         $db = \Config\Database::connect();
-        if (isset($user->uuid) && isset($user->user_type) && in_array($user->user_type, ['pattern_approval', 'customer'])) {
+        if (isset($user->uuid) && isset($user->user_type) && in_array($user->user_type, ['pattern_approval', 'customer', 'business_owner'])) {
             $uuid = $user->uuid;
         } else {
             $userRecord = $db->table('license_users')->where('id', $user->id)->get()->getRow();

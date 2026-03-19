@@ -21,7 +21,9 @@ class BusinessUserModel extends Model
         'business_type',
         'phone_number',
         'region',
+        'collection_center',
         'active',
+        'failed_login_attempts',
         'last_active',
     ];
 
