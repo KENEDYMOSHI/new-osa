@@ -215,7 +215,7 @@ export const routes: Routes = [
     title: 'Practitioner Registration | WMA Online Services Portal'
   },
   {
-    path: 'register-business-owner',
+    path: 'register-business',
     loadComponent: () => import('./pages/auth-pages/business-owner-registration/business-owner-registration.component').then(m => m.BusinessOwnerRegistrationComponent),
     title: 'Business Owner Registration | WMA Online Services Portal'
   },
@@ -306,7 +306,7 @@ export const routes: Routes = [
   {
     path:'signin',
     component:SignInComponent,
-    title:'Angular Sign In Dashboard | TailAdmin - Angular Admin Dashboard Template'
+    title:'Welcome to WMA Online Services Portal | Sign In'
   },
   {
     path: 'auth/forgot-password',
@@ -316,12 +316,12 @@ export const routes: Routes = [
   {
     path:'signup',
     component:SignUpComponent,
-    title:'Angular Sign Up Dashboard | TailAdmin - Angular Admin Dashboard Template'
+    title:'Welcome to WMA Online Services Portal | Sign Up'
   },
   // error pages
   {
     path:'**',
     component:NotFoundComponent,
-    title:'Angular NotFound Dashboard | TailAdmin - Angular Admin Dashboard Template'
+    title:'Welcome to WMA Online Services Portal'
   },
 ];
