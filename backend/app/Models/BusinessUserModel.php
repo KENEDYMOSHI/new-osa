@@ -22,7 +22,6 @@ class BusinessUserModel extends Model
         'phone_number',
         'region',
         'active',
-        'status',
         'last_active',
     ];
 

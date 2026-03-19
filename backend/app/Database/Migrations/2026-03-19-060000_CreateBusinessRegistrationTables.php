@@ -16,12 +16,9 @@ class CreateBusinessRegistrationTables extends Migration
             'email'             => ['type' => 'varchar', 'constraint' => 255, 'null' => true, 'unique' => true],
             'password_hash'     => ['type' => 'varchar', 'constraint' => 255, 'null' => false],
             'user_type'         => ['type' => 'varchar', 'constraint' => 50, 'default' => 'business_owner'],
-            'registration_type' => ['type' => 'varchar', 'constraint' => 50, 'default' => 'business_owner'],
             'business_type'     => ['type' => 'varchar', 'constraint' => 50, 'null' => true],
             'phone_number'      => ['type' => 'varchar', 'constraint' => 20, 'null' => true],
             'region'            => ['type' => 'varchar', 'constraint' => 100, 'null' => true],
-            'status'            => ['type' => 'varchar', 'constraint' => 255, 'null' => true],
-            'status_message'    => ['type' => 'varchar', 'constraint' => 255, 'null' => true],
             'active'            => ['type' => 'tinyint', 'constraint' => 1, 'null' => false, 'default' => 0],
             'last_active'       => ['type' => 'datetime', 'null' => true],
             'created_at'        => ['type' => 'datetime', 'null' => true],
@@ -29,6 +26,7 @@ class CreateBusinessRegistrationTables extends Migration
             'deleted_at'        => ['type' => 'datetime', 'null' => true],
         ]);
         $this->forge->addKey('id', true);
+        $this->forge->addUniqueKey('uuid');
         $this->forge->createTable('business_users');
 
         # 2. Create Business Owner Infos Table (business + ownership data)
