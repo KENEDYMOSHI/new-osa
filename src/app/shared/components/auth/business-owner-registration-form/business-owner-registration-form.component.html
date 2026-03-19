@@ -1,6 +1,6 @@
 <div class="w-full">
   <div class="flex justify-between items-center mb-10 px-2 sm:px-4 gap-2">
-    <ng-container *ngFor="let step of visibleSteps; let i = index">
+    <ng-container *ngFor="let key of stepKeys; let i = index">
       <div class="flex flex-col items-center min-w-0">
         <div
           class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300"
@@ -12,10 +12,10 @@
           class="text-[11px] mt-2 font-medium text-center"
           [ngClass]="currentStep >= i + 1 ? 'text-[#F59E0B]' : 'text-gray-400'"
         >
-          {{ step.label }}
+          {{ getStepLabel(i) }}
         </span>
       </div>
-      <div *ngIf="i < visibleSteps.length - 1" class="flex-grow h-1 mx-1 sm:mx-2 bg-gray-200">
+      <div *ngIf="i < stepKeys.length - 1" class="flex-grow h-1 mx-1 sm:mx-2 bg-gray-200">
         <div
           class="h-full bg-[#F59E0B] transition-all duration-300"
           [style.width.%]="currentStep > i + 1 ? 100 : 0"
@@ -25,6 +25,7 @@
   </div>
 
   <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()">
+    <!-- Step 1: Business Information -->
     <div *ngIf="currentStepKey === 'business'" formGroupName="businessInfo">
       <h2 class="text-2xl font-bold text-gray-800 mb-6">Business Information</h2>
 
@@ -109,115 +110,155 @@
       </div>
     </div>
 
-    <div *ngIf="currentStepKey === 'ownership'" formGroupName="ownershipDetails">
-      <h2 class="text-2xl font-bold text-gray-800 mb-6">Ownership Details</h2>
+    <!-- Step 2: Ownership & Contact (merged) -->
+    <div *ngIf="currentStepKey === 'people'">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ isPrivateCompany ? 'Ownership & Contact Details' : 'Contact Person Details' }}</h2>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">First Name <span class="text-red-500">*</span></label>
-          <input type="text" formControlName="firstName" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Second Name <span class="text-red-500">*</span></label>
-          <input type="text" formControlName="secondName" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Last Name <span class="text-red-500">*</span></label>
-          <input type="text" formControlName="lastName" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
-        </div>
-      </div>
+      <!-- Ownership Details (only for private) -->
+      <div *ngIf="isPrivateCompany" formGroupName="ownershipDetails" class="mb-8">
+        <h3 class="text-lg font-semibold text-gray-700 mb-4 border-b border-gray-200 pb-2">Owner Information <span class="text-gray-400 text-xs font-normal">(Optional)</span></h3>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number <span class="text-red-500">*</span></label>
-          <input type="text" formControlName="phoneNumber" maxlength="10" placeholder="07XXXXXXXX" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
-          <div *ngIf="ownershipDetails.get('phoneNumber')?.invalid && ownershipDetails.get('phoneNumber')?.touched" class="text-red-500 text-xs mt-1">
-            Valid 10-digit phone number is required.
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+            <input type="text" formControlName="firstName" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Second Name</label>
+            <input type="text" formControlName="secondName" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+            <input type="text" formControlName="lastName" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
           </div>
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email Address <span class="text-red-500">*</span></label>
-          <input type="email" formControlName="emailAddress" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+            <input type="text" formControlName="phoneNumber" maxlength="10" placeholder="07XXXXXXXX" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+            <div *ngIf="ownershipDetails.get('phoneNumber')?.invalid && ownershipDetails.get('phoneNumber')?.touched" class="text-red-500 text-xs mt-1">
+              Valid 10-digit phone number is required.
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <input type="email" formControlName="emailAddress" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+            <div *ngIf="ownershipDetails.get('emailAddress')?.invalid && ownershipDetails.get('emailAddress')?.touched" class="text-red-500 text-xs mt-1">
+              Valid email address is required.
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Postal Address</label>
+          <input type="text" formControlName="postalAddress" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
         </div>
       </div>
 
-      <div class="mt-6">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Postal Address <span class="text-red-500">*</span></label>
-        <input type="text" formControlName="postalAddress" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+      <!-- Contact Person Details -->
+      <div formGroupName="contactPerson">
+        <h3 *ngIf="isPrivateCompany" class="text-lg font-semibold text-gray-700 mb-4 border-b border-gray-200 pb-2">Contact Person</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">First Name <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="firstName" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Second Name <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="secondName" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Last Name <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="lastName" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Designation / Title <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="designation" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email Address <span class="text-red-500">*</span></label>
+            <input type="email" formControlName="emailAddress" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number <span class="text-red-500">*</span></label>
+            <input type="text" formControlName="phoneNumber" maxlength="10" placeholder="07XXXXXXXX" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+            <div *ngIf="contactPerson.get('phoneNumber')?.invalid && contactPerson.get('phoneNumber')?.touched" class="text-red-500 text-xs mt-1">
+              Valid 10-digit phone number is required.
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Alternative Number</label>
+            <input type="text" formControlName="alternativePhoneNumber" maxlength="10" placeholder="Optional" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+            <div *ngIf="contactPerson.get('alternativePhoneNumber')?.invalid && contactPerson.get('alternativePhoneNumber')?.touched" class="text-red-500 text-xs mt-1">
+              Valid 10-digit phone number is required.
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div *ngIf="currentStepKey === 'contact'" formGroupName="contactPerson">
-      <h2 class="text-2xl font-bold text-gray-800 mb-6">Contact Person Details</h2>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">First Name <span class="text-red-500">*</span></label>
-          <input type="text" formControlName="firstName" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Second Name <span class="text-red-500">*</span></label>
-          <input type="text" formControlName="secondName" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Last Name <span class="text-red-500">*</span></label>
-          <input type="text" formControlName="lastName" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Designation / Title <span class="text-red-500">*</span></label>
-          <input type="text" formControlName="designation" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email Address <span class="text-red-500">*</span></label>
-          <input type="email" formControlName="emailAddress" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number <span class="text-red-500">*</span></label>
-          <input type="text" formControlName="phoneNumber" maxlength="10" placeholder="07XXXXXXXX" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
-          <div *ngIf="contactPerson.get('phoneNumber')?.invalid && contactPerson.get('phoneNumber')?.touched" class="text-red-500 text-xs mt-1">
-            Valid 10-digit phone number is required.
-          </div>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Alternative Number</label>
-          <input type="text" formControlName="alternativePhoneNumber" maxlength="10" placeholder="Optional" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
-          <div *ngIf="contactPerson.get('alternativePhoneNumber')?.invalid && contactPerson.get('alternativePhoneNumber')?.touched" class="text-red-500 text-xs mt-1">
-            Valid 10-digit phone number is required.
-          </div>
-        </div>
-      </div>
-    </div>
-
+    <!-- Step 3: Security (with email) -->
     <div *ngIf="currentStepKey === 'security'" formGroupName="security">
       <h2 class="text-2xl font-bold text-gray-800 mb-6">Security</h2>
 
       <div class="bg-white/60 border border-[#F59E0B]/20 rounded-xl p-4 mb-6 text-sm text-gray-700">
-        This account will use the contact person's email and phone number for communication.
+        This account will use this email and password to log in to the platform. Please ensure you use a valid email address and create a strong password to secure your account.
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="space-y-6">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Password <span class="text-red-500">*</span></label>
-          <input type="password" formControlName="password" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Email Address <span class="text-red-500">*</span></label>
+          <input type="email" formControlName="email" placeholder="example@mail.com" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all placeholder-gray-400">
+          <div *ngIf="security.get('email')?.invalid && security.get('email')?.touched" class="text-red-500 text-xs mt-1">
+            Valid email address is required.
+          </div>
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password <span class="text-red-500">*</span></label>
-          <input type="password" formControlName="confirmPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
-        </div>
-      </div>
 
-      <label class="mt-6 flex items-start gap-3 text-sm text-gray-700">
-        <input type="checkbox" formControlName="termsAccepted" class="mt-1 h-4 w-4 rounded border-gray-300 text-[#F59E0B] focus:ring-[#F59E0B]">
-        <span>I confirm that the submitted business registration information is accurate and complete.</span>
-      </label>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Password <span class="text-red-500">*</span></label>
+            <div class="relative">
+              <input [type]="showPassword ? 'text' : 'password'" formControlName="password" class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all">
+              <button type="button" (click)="showPassword = !showPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                <svg *ngIf="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                <svg *ngIf="showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.59 6.59m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>
+              </button>
+            </div>
+            <div *ngIf="security.get('password')?.invalid && security.get('password')?.touched" class="text-red-500 text-xs mt-1">
+              Minimum 8 characters required.
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password <span class="text-red-500">*</span></label>
+            <div class="relative">
+              <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg bg-[#FDF6E9] focus:ring-[#F59E0B] focus:border-[#F59E0B] outline-none transition-all" [ngClass]="{'border-red-500': passwordsMismatch}">
+              <button type="button" (click)="showConfirmPassword = !showConfirmPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                <svg *ngIf="!showConfirmPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                <svg *ngIf="showConfirmPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.59 6.59m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>
+              </button>
+            </div>
+            <div *ngIf="passwordsMismatch" class="text-red-500 text-xs mt-1">
+              Passwords do not match.
+            </div>
+          </div>
+        </div>
+
+        <label class="flex items-start gap-3 text-sm text-gray-700">
+          <input type="checkbox" formControlName="termsAccepted" class="mt-1 h-4 w-4 rounded border-gray-300 text-[#F59E0B] focus:ring-[#F59E0B]">
+          <span>I confirm that the submitted business registration information is accurate and complete.</span>
+        </label>
+      </div>
     </div>
 
+    <!-- Step 4: Review -->
     <div *ngIf="currentStepKey === 'review'">
       <h2 class="text-2xl font-bold text-gray-800 mb-6">Review Your Information</h2>
 
@@ -237,7 +278,7 @@
           </div>
         </div>
 
-        <div *ngIf="isPrivateCompany">
+        <div *ngIf="hasOwnershipData">
           <h3 class="font-bold text-gray-800 border-b border-[#F59E0B]/20 pb-2 mb-3 text-base">Ownership Details</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 text-sm">
             <p><span class="font-medium text-gray-500">Owner Name:</span> <span class="text-gray-900">{{ ownershipDetails.get('firstName')?.value }} {{ ownershipDetails.get('secondName')?.value }} {{ ownershipDetails.get('lastName')?.value }}</span></p>
@@ -255,6 +296,13 @@
             <p><span class="font-medium text-gray-500">Phone Number:</span> <span class="text-gray-900">{{ contactPerson.get('phoneNumber')?.value }}</span></p>
             <p><span class="font-medium text-gray-500">Alternative Number:</span> <span class="text-gray-900">{{ contactPerson.get('alternativePhoneNumber')?.value || 'N/A' }}</span></p>
             <p><span class="font-medium text-gray-500">Email Address:</span> <span class="text-gray-900">{{ contactPerson.get('emailAddress')?.value }}</span></p>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="font-bold text-gray-800 border-b border-[#F59E0B]/20 pb-2 mb-3 text-base">Account Details</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            <p><span class="font-medium text-gray-500">Email:</span> <span class="text-gray-900">{{ security.get('email')?.value }}</span></p>
           </div>
         </div>
       </div>
@@ -278,7 +326,7 @@
         [disabled]="isSubmitting"
         class="px-8 py-2 bg-[#F59E0B] text-white rounded-full font-medium hover:bg-[#D97706] transition-colors shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <span *ngIf="isSubmitting && currentStepKey === 'contact'" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+        <span *ngIf="isSubmitting && currentStepKey === 'people'" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
         Next
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
       </button>

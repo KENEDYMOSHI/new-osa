@@ -6,7 +6,7 @@ import Swal from 'sweetalert2';
 import { AuthService } from '../../../../core/services/auth.service';
 import { District, LocationService, PostalCode, Ward } from '../../../../services/location.service';
 
-type BusinessRegistrationStepKey = 'business' | 'ownership' | 'contact' | 'security' | 'review';
+type BusinessRegistrationStepKey = 'business' | 'people' | 'security' | 'review';
 
 @Component({
   selector: 'app-business-owner-registration-form',
@@ -16,6 +16,7 @@ type BusinessRegistrationStepKey = 'business' | 'ownership' | 'contact' | 'secur
 })
 export class BusinessOwnerRegistrationFormComponent implements OnInit {
   currentStep = 1;
+  totalSteps = 4;
   registrationForm!: FormGroup;
   isSubmitting = false;
 
@@ -23,6 +24,10 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
   businessDistricts: District[] = [];
   businessWards: Ward[] = [];
   businessPostalCodes: PostalCode[] = [];
+
+  readonly stepKeys: BusinessRegistrationStepKey[] = ['business', 'people', 'security', 'review'];
+  showPassword = false;
+  showConfirmPassword = false;
 
   constructor(
     private fb: FormBuilder,
@@ -39,30 +44,28 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
     this.applyOwnershipValidation(this.businessInfo.get('businessType')?.value);
   }
 
-  get visibleSteps(): Array<{ key: BusinessRegistrationStepKey; label: string }> {
-    const steps: Array<{ key: BusinessRegistrationStepKey; label: string }> = [
-      { key: 'business', label: 'Business' },
-    ];
-
-    if (this.isPrivateCompany) {
-      steps.push({ key: 'ownership', label: 'Ownership' });
+  get stepLabel(): string {
+    const key = this.currentStepKey;
+    if (key === 'people') {
+      return this.isPrivateCompany ? 'Ownership & Contact' : 'Contact';
     }
-
-    steps.push(
-      { key: 'contact', label: 'Contact' },
-      { key: 'security', label: 'Security' },
-      { key: 'review', label: 'Review' }
-    );
-
-    return steps;
-  }
-
-  get totalSteps(): number {
-    return this.visibleSteps.length;
+    if (key === 'business') return 'Business';
+    if (key === 'security') return 'Security';
+    return 'Review';
   }
 
   get currentStepKey(): BusinessRegistrationStepKey {
-    return this.visibleSteps[this.currentStep - 1]?.key ?? 'business';
+    return this.stepKeys[this.currentStep - 1] ?? 'business';
+  }
+
+  getStepLabel(index: number): string {
+    const key = this.stepKeys[index];
+    if (key === 'people') {
+      return this.isPrivateCompany ? 'Ownership' : 'Contact';
+    }
+    if (key === 'business') return 'Business';
+    if (key === 'security') return 'Security';
+    return 'Review';
   }
 
   get businessInfo(): FormGroup {
@@ -85,6 +88,18 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
     return this.businessInfo.get('businessType')?.value === 'private';
   }
 
+  get hasOwnershipData(): boolean {
+    if (!this.isPrivateCompany) return false;
+    const val = this.ownershipDetails.value;
+    return val && Object.values(val).some((v: any) => v && v.toString().trim().length > 0);
+  }
+
+  get passwordsMismatch(): boolean {
+    const password = this.security.get('password')?.value;
+    const confirmPassword = this.security.get('confirmPassword')?.value;
+    return confirmPassword?.length > 0 && password !== confirmPassword;
+  }
+
   initForm(): void {
     this.registrationForm = this.fb.group({
       businessInfo: this.fb.group({
@@ -100,12 +115,12 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
         officePhoneNumber: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(10), Validators.pattern(/^[0-9]*$/)]],
       }),
       ownershipDetails: this.fb.group({
-        firstName: ['', Validators.required],
-        secondName: ['', Validators.required],
-        lastName: ['', Validators.required],
-        phoneNumber: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(10), Validators.pattern(/^[0-9]*$/)]],
-        emailAddress: ['', [Validators.required, Validators.email]],
-        postalAddress: ['', Validators.required],
+        firstName: [''],
+        secondName: [''],
+        lastName: [''],
+        phoneNumber: ['', [Validators.minLength(10), Validators.maxLength(10), Validators.pattern(/^[0-9]*$/)]],
+        emailAddress: ['', Validators.email],
+        postalAddress: [''],
       }),
       contactPerson: this.fb.group({
         firstName: ['', Validators.required],
@@ -117,6 +132,7 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
         emailAddress: ['', [Validators.required, Validators.email]],
       }),
       security: this.fb.group({
+        email: ['', [Validators.required, Validators.email]],
         password: ['', [Validators.required, Validators.minLength(8)]],
         confirmPassword: ['', Validators.required],
         termsAccepted: [false, Validators.requiredTrue],
@@ -127,44 +143,16 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
   setupBusinessTypeListener(): void {
     this.businessInfo.get('businessType')?.valueChanges.subscribe((businessType) => {
       this.applyOwnershipValidation(businessType);
-
-      if (businessType !== 'private' && this.currentStepKey === 'ownership') {
-        this.currentStep = 2;
-      }
     });
   }
 
   applyOwnershipValidation(businessType: string): void {
-    const ownershipControls = [
-      'firstName',
-      'secondName',
-      'lastName',
-      'phoneNumber',
-      'emailAddress',
-      'postalAddress',
-    ];
-
     if (businessType === 'private') {
       this.ownershipDetails.enable({ emitEvent: false });
-      ownershipControls.forEach((field) => {
-        const control = this.ownershipDetails.get(field);
-        control?.setValidators(field === 'emailAddress'
-          ? [Validators.required, Validators.email]
-          : field === 'phoneNumber'
-            ? [Validators.required, Validators.minLength(10), Validators.maxLength(10), Validators.pattern(/^[0-9]*$/)]
-            : [Validators.required]);
-        control?.updateValueAndValidity({ emitEvent: false });
-      });
       return;
     }
 
     this.ownershipDetails.reset();
-    ownershipControls.forEach((field) => {
-      const control = this.ownershipDetails.get(field);
-      control?.clearValidators();
-      control?.setErrors(null);
-      control?.updateValueAndValidity({ emitEvent: false });
-    });
     this.ownershipDetails.disable({ emitEvent: false });
     this.ownershipDetails.updateValueAndValidity({ emitEvent: false });
   }
@@ -254,12 +242,7 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
       return;
     }
 
-    if (stepKey === 'ownership') {
-      this.advanceIfValid(this.ownershipDetails);
-      return;
-    }
-
-    if (stepKey === 'contact') {
+    if (stepKey === 'people') {
       if (this.contactPerson.invalid) {
         this.showValidationError(this.contactPerson);
         return;
@@ -353,10 +336,10 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
     const formValue = this.registrationForm.value;
     const payload = {
       ...formValue,
-      ownershipDetails: this.isPrivateCompany ? formValue.ownershipDetails : null,
+      ownershipDetails: this.hasOwnershipData ? formValue.ownershipDetails : null,
       registrationType: 'business_owner',
       userType: 'business_owner',
-      email: formValue.contactPerson.emailAddress,
+      email: formValue.security.email,
       phone: formValue.contactPerson.phoneNumber,
       password: formValue.security.password,
       confirmPassword: formValue.security.confirmPassword,
