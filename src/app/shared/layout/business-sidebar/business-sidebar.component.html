@@ -16,18 +16,18 @@
   (mouseleave)="sidebarService.setHovered(false)"
 >
   <div
-    class="py-6 flex items-center gap-3 border-b border-gray-200 dark:border-gray-800 mb-6"
+    class="py-3 lg:py-4 flex items-center gap-3 border-b border-gray-200 dark:border-gray-800 mb-6"
     [ngClass]="{
       'xl:justify-center': !((isExpanded$ | async) || (isHovered$ | async)),
       'justify-start': (isExpanded$ | async) || (isHovered$ | async)
     }"
   >
-    <a routerLink="/business/dashboard" class="flex flex-col items-center gap-3">
-      <div class="bg-white rounded-lg p-1">
-        <img src="/images/logo/wma-logo.jpg" alt="WMA Logo" width="60" height="60" class="object-contain" />
+    <a routerLink="/business/dashboard" class="flex items-center gap-3">
+      <div class="bg-white rounded-lg p-1 shrink-0">
+        <img src="/images/logo/wma-logo.jpg" alt="WMA Logo" width="40" height="40" class="object-contain" />
       </div>
       @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) {
-        <span class="text-xl font-bold text-gray-900 dark:text-white tracking-wide">WMA Portal</span>
+        <span class="text-xl font-bold text-gray-900 dark:text-white tracking-wide whitespace-nowrap">WMA Portal</span>
       }
     </a>
   </div>
