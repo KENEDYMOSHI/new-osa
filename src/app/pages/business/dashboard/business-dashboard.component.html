@@ -4,7 +4,7 @@
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Welcome back, {{ user?.company_name || user?.username || 'Business Owner' }}</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Welcome back, {{ user?.displayName || user?.company_name || 'Business Owner' }}</p>
     </div>
     <button routerLink="/business/register-equipment"
       class="inline-flex items-center gap-2 bg-[#F7941D] text-white font-semibold px-4 py-2.5 rounded-lg hover:bg-[#e0860f] transition-colors text-sm shrink-0">

@@ -41,6 +41,9 @@ export class BusinessDashboardComponent implements OnInit {
     this.authService.getProfile().subscribe({
       next: (response: any) => {
         this.user = response.user;
+        if (this.user?.username) {
+          this.user.displayName = this.user.username.split('_')[0];
+        }
       },
       error: (error) => {
         console.error('Error fetching user profile:', error);
