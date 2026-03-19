@@ -151,7 +151,7 @@ export class SignInComponent implements OnInit, OnDestroy {
       if (userType === 'pattern_approval') {
         this.router.navigate(['/pattern-approval/dashboard']);
       } else if (userType === 'business_owner') {
-        this.router.navigate(['/']); // Business owner dashboard
+        this.router.navigate(['/business/dashboard']);
       } else if (userType === 'practitioner' || userType === 'applicant' || userType === 'user') {
         this.router.navigate(['/']); // Main dashboard for License Application
       } else {

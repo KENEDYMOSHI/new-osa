@@ -285,6 +285,64 @@ export const routes: Routes = [
     ]
   },
 
+  // Business Owner Module Routes
+  {
+    path: 'business',
+    loadComponent: () => import('./shared/layout/business-layout/business-layout.component').then(m => m.BusinessLayoutComponent),
+    canActivate: [authGuard, userTypeGuard('business_owner')],
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./pages/business/dashboard/business-dashboard.component').then(m => m.BusinessDashboardComponent),
+        title: 'Dashboard | Business Portal - WMA'
+      },
+      {
+        path: 'register-equipment',
+        loadComponent: () => import('./pages/business/dashboard/business-dashboard.component').then(m => m.BusinessDashboardComponent),
+        title: 'Register Equipment | Business Portal - WMA'
+      },
+      {
+        path: 'equipment',
+        loadComponent: () => import('./pages/business/dashboard/business-dashboard.component').then(m => m.BusinessDashboardComponent),
+        title: 'My Equipment | Business Portal - WMA'
+      },
+      {
+        path: 'applications',
+        loadComponent: () => import('./pages/business/dashboard/business-dashboard.component').then(m => m.BusinessDashboardComponent),
+        title: 'Applications & Requests | Business Portal - WMA'
+      },
+      {
+        path: 'certificates',
+        loadComponent: () => import('./pages/business/dashboard/business-dashboard.component').then(m => m.BusinessDashboardComponent),
+        title: 'Certificates & Reports | Business Portal - WMA'
+      },
+      {
+        path: 'billing-payments',
+        loadComponent: () => import('./pages/business/dashboard/business-dashboard.component').then(m => m.BusinessDashboardComponent),
+        title: 'Billing & Payments | Business Portal - WMA'
+      },
+      {
+        path: 'notifications',
+        loadComponent: () => import('./pages/business/dashboard/business-dashboard.component').then(m => m.BusinessDashboardComponent),
+        title: 'Notifications | Business Portal - WMA'
+      },
+      {
+        path: 'support-help',
+        loadComponent: () => import('./pages/business/dashboard/business-dashboard.component').then(m => m.BusinessDashboardComponent),
+        title: 'Support & Help | Business Portal - WMA'
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./pages/business/profile/business-profile.component').then(m => m.BusinessProfileComponent),
+        title: 'Profile | Business Portal - WMA'
+      },
+    ]
+  },
 
   {
     path: 'admin-test',

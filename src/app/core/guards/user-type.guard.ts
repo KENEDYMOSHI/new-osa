@@ -28,6 +28,8 @@ export function userTypeGuard(requiredUserType: string | string[]): CanActivateF
       // User type mismatch - redirect to appropriate dashboard
       if (normalizedCurrentUserType === 'pattern_approval') {
         router.navigate(['/pattern-approval/dashboard']);
+      } else if (normalizedCurrentUserType === 'business_owner') {
+        router.navigate(['/business/dashboard']);
       } else {
         router.navigate(['/']);
       }
