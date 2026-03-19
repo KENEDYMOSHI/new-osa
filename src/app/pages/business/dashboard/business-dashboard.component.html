@@ -1,109 +1,81 @@
 <div class="space-y-6">
 
-  <!-- Welcome Banner -->
-  <div class="bg-gradient-to-r from-[#F7941D] to-[#d87c0d] rounded-lg p-6 text-white shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <!-- Page Header — clean, no gradient -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
-      <h1 class="text-xl font-extrabold mb-1">Welcome to WMA Business Portal</h1>
-      <p class="text-white/85 text-sm">{{ user?.company_name || user?.username || 'Business Owner' }}, manage your equipment, certificates and compliance from one place.</p>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Welcome back, {{ user?.company_name || user?.username || 'Business Owner' }}</p>
     </div>
     <button routerLink="/business/register-equipment"
-      class="inline-flex items-center gap-2 bg-white text-[#F7941D] font-bold px-4 py-2 rounded-md shadow hover:bg-orange-50 transition-colors text-sm shrink-0">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-      Register New Equipment
+      class="inline-flex items-center gap-2 bg-[#F7941D] text-white font-semibold px-4 py-2.5 rounded-lg hover:bg-[#e0860f] transition-colors text-sm shrink-0">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg>
+      Register Equipment
     </button>
   </div>
 
-  <!-- Stats Cards -->
-  <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
-    <!-- Registered Equipment -->
-    <div class="bg-white rounded-lg p-5 shadow-sm border border-stroke border-t-4 border-t-[#F7941D] dark:border-strokedark dark:bg-boxdark flex items-center justify-between">
-      <div>
-        <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Registered Equipment</p>
-        <p class="text-2xl font-black text-black dark:text-white">{{ stats.registeredEquipment }}</p>
-      </div>
-      <div class="w-11 h-11 bg-orange-50 rounded-xl flex items-center justify-center dark:bg-orange-900/20">
-        <svg class="w-5 h-5 text-[#F7941D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-      </div>
+  <!-- Stats — 4 cards max, unified neutral style, no rainbow -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white rounded-lg p-5 border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+      <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium mb-2">Equipment</p>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.registeredEquipment }}</p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ stats.pendingVerifications }} pending verification</p>
     </div>
-    <!-- Pending Verifications -->
-    <div class="bg-white rounded-lg p-5 shadow-sm border border-stroke border-t-4 border-t-yellow-400 dark:border-strokedark dark:bg-boxdark flex items-center justify-between">
-      <div>
-        <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Pending Verifications</p>
-        <p class="text-2xl font-black text-yellow-500">{{ stats.pendingVerifications }}</p>
-      </div>
-      <div class="w-11 h-11 bg-yellow-50 rounded-xl flex items-center justify-center dark:bg-yellow-900/20">
-        <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      </div>
+    <div class="bg-white rounded-lg p-5 border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+      <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium mb-2">Certificates</p>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.activeCertificates }}</p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ stats.upcomingRenewals }} upcoming renewals</p>
     </div>
-    <!-- Active Certificates -->
-    <div class="bg-white rounded-lg p-5 shadow-sm border border-stroke border-t-4 border-t-green-500 dark:border-strokedark dark:bg-boxdark flex items-center justify-between">
-      <div>
-        <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Active Certificates</p>
-        <p class="text-2xl font-black text-green-600">{{ stats.activeCertificates }}</p>
-      </div>
-      <div class="w-11 h-11 bg-green-50 rounded-xl flex items-center justify-center dark:bg-green-900/20">
-        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      </div>
+    <div class="bg-white rounded-lg p-5 border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+      <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium mb-2">Applications</p>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.totalApplications }}</p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ stats.pendingInspections }} pending inspection</p>
     </div>
-    <!-- Upcoming Renewals -->
-    <div class="bg-white rounded-lg p-5 shadow-sm border border-stroke border-t-4 border-t-blue-500 dark:border-strokedark dark:bg-boxdark flex items-center justify-between">
-      <div>
-        <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Upcoming Renewals</p>
-        <p class="text-2xl font-black text-blue-600">{{ stats.upcomingRenewals }}</p>
+    <div class="bg-white rounded-lg p-5 border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">Compliance</p>
+        <span class="w-2 h-2 rounded-full" [ngClass]="{
+          'bg-green-500': stats.pendingVerifications === 0 && stats.pendingInspections === 0,
+          'bg-yellow-500': stats.pendingVerifications > 0 || stats.pendingInspections > 0
+        }"></span>
       </div>
-      <div class="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center dark:bg-blue-900/20">
-        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-      </div>
-    </div>
-    <!-- Total Applications -->
-    <div class="bg-white rounded-lg p-5 shadow-sm border border-stroke border-t-4 border-t-purple-500 dark:border-strokedark dark:bg-boxdark flex items-center justify-between">
-      <div>
-        <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Total Applications</p>
-        <p class="text-2xl font-black text-purple-600">{{ stats.totalApplications }}</p>
-      </div>
-      <div class="w-11 h-11 bg-purple-50 rounded-xl flex items-center justify-center dark:bg-purple-900/20">
-        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-      </div>
-    </div>
-    <!-- Pending Inspections -->
-    <div class="bg-white rounded-lg p-5 shadow-sm border border-stroke border-t-4 border-t-red-500 dark:border-strokedark dark:bg-boxdark flex items-center justify-between">
-      <div>
-        <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Pending Inspections</p>
-        <p class="text-2xl font-black text-red-500">{{ stats.pendingInspections }}</p>
-      </div>
-      <div class="w-11 h-11 bg-red-50 rounded-xl flex items-center justify-center dark:bg-red-900/20">
-        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      </div>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.pendingVerifications + stats.pendingInspections }}</p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">action items remaining</p>
     </div>
   </div>
 
-  <!-- Equipment Overview + Quick Actions -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Main content: Equipment table + Alerts side by side -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-    <!-- Equipment Overview -->
-    <div class="bg-white rounded-lg p-6 shadow-sm border border-stroke border-t-4 border-t-[#F7941D] dark:border-strokedark dark:bg-boxdark">
-      <h2 class="font-bold text-black dark:text-white mb-4">Equipment Overview</h2>
+    <!-- Equipment Overview — spans 2 cols -->
+    <div class="lg:col-span-2 bg-white rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <h2 class="font-semibold text-gray-900 dark:text-white">Equipment Overview</h2>
+        <a routerLink="/business/equipment" class="text-xs text-[#F7941D] hover:underline font-medium">View all</a>
+      </div>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
-            <tr class="border-b border-stroke dark:border-strokedark">
-              <th class="text-left py-2.5 text-xs text-gray-400 uppercase tracking-wide font-semibold">Type</th>
-              <th class="text-center py-2.5 text-xs text-gray-400 uppercase tracking-wide font-semibold">Total</th>
-              <th class="text-center py-2.5 text-xs text-gray-400 uppercase tracking-wide font-semibold">Verified</th>
-              <th class="text-center py-2.5 text-xs text-gray-400 uppercase tracking-wide font-semibold">Pending</th>
-              <th class="text-right py-2.5 text-xs text-gray-400 uppercase tracking-wide font-semibold w-28">Progress</th>
+            <tr class="border-b border-gray-100 dark:border-gray-700">
+              <th class="text-left px-6 py-3 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">Type</th>
+              <th class="text-center px-3 py-3 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">Total</th>
+              <th class="text-center px-3 py-3 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">Verified</th>
+              <th class="text-center px-3 py-3 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">Pending</th>
+              <th class="text-right px-6 py-3 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium w-28">Progress</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let eq of equipmentSummary" class="border-b border-stroke/50 dark:border-strokedark/50 last:border-0">
-              <td class="py-3 font-medium text-black dark:text-white">{{ eq.type }}</td>
-              <td class="py-3 text-center text-gray-600 dark:text-gray-300">{{ eq.count }}</td>
-              <td class="py-3 text-center text-green-600 font-semibold">{{ eq.verified }}</td>
-              <td class="py-3 text-center text-yellow-500 font-semibold">{{ eq.pending }}</td>
-              <td class="py-3">
+            <tr *ngFor="let eq of equipmentSummary" class="border-b border-gray-50 dark:border-gray-700/50 last:border-0">
+              <td class="px-6 py-3.5 font-medium text-gray-900 dark:text-white">{{ eq.type }}</td>
+              <td class="px-3 py-3.5 text-center text-gray-600 dark:text-gray-300">{{ eq.count }}</td>
+              <td class="px-3 py-3.5 text-center text-gray-900 dark:text-white font-medium">{{ eq.verified }}</td>
+              <td class="px-3 py-3.5 text-center">
+                <span *ngIf="eq.pending > 0" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">{{ eq.pending }}</span>
+                <span *ngIf="eq.pending === 0" class="text-gray-400">0</span>
+              </td>
+              <td class="px-6 py-3.5">
                 <div class="flex items-center gap-2 justify-end">
-                  <div class="w-20 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div class="h-full bg-green-500 rounded-full transition-all" [style.width.%]="(eq.verified / eq.count) * 100"></div>
+                  <div class="w-20 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div class="h-full bg-[#F7941D] rounded-full transition-all" [style.width.%]="(eq.verified / eq.count) * 100"></div>
                   </div>
                   <span class="text-xs text-gray-400 w-8 text-right">{{ ((eq.verified / eq.count) * 100) | number:'1.0-0' }}%</span>
                 </div>
@@ -112,83 +84,70 @@
           </tbody>
         </table>
       </div>
-      <div class="mt-4 pt-4 border-t border-stroke dark:border-strokedark flex items-center gap-2 text-xs text-gray-500">
-        <svg class="w-4 h-4 text-[#F7941D] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        Equipment verification is valid for <strong class="text-black dark:text-white">12 months</strong> from the date of issue.
-      </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="bg-white rounded-lg p-6 shadow-sm border border-stroke border-t-4 border-t-[#F7941D] dark:border-strokedark dark:bg-boxdark">
-      <h2 class="font-bold text-black dark:text-white mb-4">Quick Actions</h2>
-      <div class="space-y-3">
-        <button routerLink="/business/register-equipment"
-          class="flex items-center w-full p-4 border border-stroke rounded-lg hover:border-[#F7941D] hover:bg-orange-50 transition-colors text-left group dark:border-strokedark dark:hover:bg-orange-900/10">
-          <div class="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center mr-3 group-hover:bg-[#F7941D] transition-colors shrink-0 dark:bg-orange-900/20">
-            <svg class="w-5 h-5 text-[#F7941D] group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    <!-- Alerts — single column -->
+    <div class="bg-white rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 class="font-semibold text-gray-900 dark:text-white">Alerts</h2>
+      </div>
+      <div class="p-4 space-y-3">
+        <div class="flex items-start gap-3 p-3 rounded-lg bg-amber-50/60 dark:bg-amber-900/10">
+          <div class="w-7 h-7 bg-amber-100 dark:bg-amber-900/30 rounded-md flex items-center justify-center shrink-0 mt-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600"><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/></svg>
           </div>
           <div>
-            <p class="font-semibold text-black dark:text-white text-sm">Register New Equipment</p>
-            <p class="text-xs text-gray-500">Add fuel pumps, tanks, weighbridges or flow meters</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">3 items due for verification</p>
+            <p class="text-xs text-gray-500 mt-0.5">Within the next 30 days</p>
           </div>
-        </button>
-        <button routerLink="/business/applications"
-          class="flex items-center w-full p-4 border border-stroke rounded-lg hover:border-[#F7941D] hover:bg-orange-50 transition-colors text-left group dark:border-strokedark dark:hover:bg-orange-900/10">
-          <div class="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center mr-3 group-hover:bg-[#F7941D] transition-colors shrink-0 dark:bg-orange-900/20">
-            <svg class="w-5 h-5 text-[#F7941D] group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-          </div>
-          <div>
-            <p class="font-semibold text-black dark:text-white text-sm">Request Technical Inspection</p>
-            <p class="text-xs text-gray-500">Schedule an inspection for your equipment</p>
-          </div>
-        </button>
-        <button routerLink="/business/certificates"
-          class="flex items-center w-full p-4 border border-stroke rounded-lg hover:border-[#F7941D] hover:bg-orange-50 transition-colors text-left group dark:border-strokedark dark:hover:bg-orange-900/10">
-          <div class="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center mr-3 group-hover:bg-[#F7941D] transition-colors shrink-0 dark:bg-orange-900/20">
-            <svg class="w-5 h-5 text-[#F7941D] group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+        </div>
+        <div class="flex items-start gap-3 p-3 rounded-lg bg-red-50/60 dark:bg-red-900/10">
+          <div class="w-7 h-7 bg-red-100 dark:bg-red-900/30 rounded-md flex items-center justify-center shrink-0 mt-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-600"><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/></svg>
           </div>
           <div>
-            <p class="font-semibold text-black dark:text-white text-sm">View Certificates</p>
-            <p class="text-xs text-gray-500">Download and manage verification certificates</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">Certificate renewal due</p>
+            <p class="text-xs text-gray-500 mt-0.5">Station ABC &mdash; 15 Apr 2026</p>
           </div>
-        </button>
-        <button routerLink="/business/billing-payments"
-          class="flex items-center w-full p-4 border border-stroke rounded-lg hover:border-[#F7941D] hover:bg-orange-50 transition-colors text-left group dark:border-strokedark dark:hover:bg-orange-900/10">
-          <div class="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center mr-3 group-hover:bg-[#F7941D] transition-colors shrink-0 dark:bg-orange-900/20">
-            <svg class="w-5 h-5 text-[#F7941D] group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+        </div>
+        <div class="flex items-start gap-3 p-3 rounded-lg bg-blue-50/60 dark:bg-blue-900/10">
+          <div class="w-7 h-7 bg-blue-100 dark:bg-blue-900/30 rounded-md flex items-center justify-center shrink-0 mt-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M12 16v.01"/><path d="M12 13a2 2 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483"/></svg>
           </div>
           <div>
-            <p class="font-semibold text-black dark:text-white text-sm">Make Payment</p>
-            <p class="text-xs text-gray-500">Pay for verifications, certificates and fees</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">Regulation update</p>
+            <p class="text-xs text-gray-500 mt-0.5">New WMA rules effective 01 May 2026</p>
           </div>
-        </button>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Recent Activity -->
-  <div class="bg-white rounded-lg p-6 shadow-sm border border-stroke border-t-4 border-t-[#F7941D] dark:border-strokedark dark:bg-boxdark">
-    <h2 class="font-bold text-black dark:text-white mb-4">Recent Activity</h2>
+  <div class="bg-white rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <h2 class="font-semibold text-gray-900 dark:text-white">Recent Activity</h2>
+    </div>
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
-          <tr class="border-b border-stroke dark:border-strokedark">
-            <th class="text-left py-2.5 text-xs text-gray-400 uppercase tracking-wide font-semibold">Date</th>
-            <th class="text-left py-2.5 text-xs text-gray-400 uppercase tracking-wide font-semibold">Description</th>
-            <th class="text-right py-2.5 text-xs text-gray-400 uppercase tracking-wide font-semibold">Status</th>
+          <tr class="border-b border-gray-100 dark:border-gray-700">
+            <th class="text-left px-6 py-3 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">Date</th>
+            <th class="text-left px-3 py-3 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">Description</th>
+            <th class="text-right px-6 py-3 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">Status</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let activity of recentActivities" class="border-b border-stroke/50 dark:border-strokedark/50 last:border-0">
-            <td class="py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ activity.date }}</td>
-            <td class="py-3 text-black dark:text-white">{{ activity.description }}</td>
-            <td class="py-3 text-right">
+          <tr *ngFor="let activity of recentActivities" class="border-b border-gray-50 dark:border-gray-700/50 last:border-0">
+            <td class="px-6 py-3.5 text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ activity.date }}</td>
+            <td class="px-3 py-3.5 text-gray-900 dark:text-white">{{ activity.description }}</td>
+            <td class="px-6 py-3.5 text-right">
               <span
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                 [ngClass]="{
-                  'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': activity.statusColor === 'green',
-                  'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400': activity.statusColor === 'yellow',
-                  'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': activity.statusColor === 'blue'
+                  'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400': activity.statusColor === 'green',
+                  'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400': activity.statusColor === 'yellow',
+                  'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400': activity.statusColor === 'blue'
                 }">
                 {{ activity.status }}
               </span>
@@ -196,43 +155,6 @@
           </tr>
         </tbody>
       </table>
-    </div>
-  </div>
-
-  <!-- Compliance Alerts -->
-  <div class="bg-white rounded-lg p-6 shadow-sm border border-stroke border-t-4 border-t-[#F7941D] dark:border-strokedark dark:bg-boxdark">
-    <h2 class="font-bold text-black dark:text-white mb-4">Compliance Alerts</h2>
-    <div class="space-y-3">
-      <!-- Urgent: Equipment due for verification -->
-      <div class="flex items-start gap-3 p-4 rounded-lg border-l-4 border-l-yellow-400 bg-yellow-50/50 dark:bg-yellow-900/10 border border-stroke dark:border-strokedark">
-        <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center shrink-0 dark:bg-yellow-900/30">
-          <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
-        </div>
-        <div>
-          <p class="text-sm font-semibold text-black dark:text-white">3 equipment items due for verification in the next 30 days</p>
-          <p class="text-xs text-gray-500 mt-0.5">Schedule inspections promptly to avoid compliance penalties.</p>
-        </div>
-      </div>
-      <!-- Urgent: Certificate renewal -->
-      <div class="flex items-start gap-3 p-4 rounded-lg border-l-4 border-l-red-400 bg-red-50/50 dark:bg-red-900/10 border border-stroke dark:border-strokedark">
-        <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center shrink-0 dark:bg-red-900/30">
-          <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
-        </div>
-        <div>
-          <p class="text-sm font-semibold text-black dark:text-white">Annual certificate renewal for Station ABC due on 15 Apr 2026</p>
-          <p class="text-xs text-gray-500 mt-0.5">Renew before the deadline to maintain your operating licence.</p>
-        </div>
-      </div>
-      <!-- Info: Regulation update -->
-      <div class="flex items-start gap-3 p-4 rounded-lg border-l-4 border-l-blue-400 bg-blue-50/50 dark:bg-blue-900/10 border border-stroke dark:border-strokedark">
-        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0 dark:bg-blue-900/30">
-          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <div>
-          <p class="text-sm font-semibold text-black dark:text-white">New WMA regulation update &mdash; effective from 01 May 2026</p>
-          <p class="text-xs text-gray-500 mt-0.5">Review the updated compliance requirements for all measuring instruments.</p>
-        </div>
-      </div>
     </div>
   </div>
 
