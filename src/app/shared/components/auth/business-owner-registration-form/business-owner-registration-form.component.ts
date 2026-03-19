@@ -91,7 +91,7 @@ export class BusinessOwnerRegistrationFormComponent implements OnInit {
         businessType: ['private', Validators.required],
         companyName: ['', Validators.required],
         tin: ['', [Validators.required, Validators.minLength(9), Validators.maxLength(9), Validators.pattern(/^[0-9]*$/)]],
-        businessLicenseNumber: ['', Validators.required],
+        businessLicenseNumber: ['', [Validators.required, Validators.pattern(/^[0-9]*$/)]],
         postalAddress: ['', Validators.required],
         region: ['', Validators.required],
         district: ['', Validators.required],
