@@ -262,6 +262,30 @@ layer(base);
   @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300;
 }
 
+/* Business sidebar menu styles */
+@utility biz-menu-item {
+  @apply relative flex items-center w-full gap-3 px-3 py-2.5 font-medium rounded-xl text-sm
+    bg-white/5 border border-dashed border-gray-700 transition-all duration-200;
+}
+
+@utility biz-menu-active {
+  @apply !bg-[#3f352e] !border-[#d4a373] text-[#f59e0b];
+}
+
+@utility biz-menu-inactive {
+  @apply text-gray-400 hover:bg-white/10 hover:text-white;
+}
+
+@utility biz-menu-icon {
+  & svg {
+    @apply !size-5;
+  }
+}
+
+@utility biz-menu-text {
+  @apply text-sm;
+}
+
 @utility menu-dropdown-item {
   @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-theme-sm font-medium;
 }
