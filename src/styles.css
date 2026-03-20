@@ -264,26 +264,38 @@ layer(base);
 
 /* Business sidebar menu styles */
 @utility biz-menu-item {
-  @apply relative flex items-center w-full gap-3 px-3 py-2.5 font-medium rounded-xl text-sm
-    bg-gray-50 dark:bg-white/5 border border-dashed border-gray-200 dark:border-gray-700 transition-all duration-200;
+  @apply relative flex items-center w-full gap-3 px-3 py-2.5 font-medium text-sm transition-all duration-200;
 }
 
 @utility biz-menu-active {
-  @apply !bg-[#FFF7ED] dark:!bg-[#3f352e] !border-[#F7941D] dark:!border-[#d4a373] text-[#F7941D] dark:text-[#f59e0b];
+  @apply !font-extrabold !text-white border-b-2;
+  border-image: linear-gradient(90deg, #F7941D, transparent) 1;
 }
 
 @utility biz-menu-inactive {
-  @apply text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white;
+  @apply text-white/40 border-b border-transparent hover:text-white/75 transition-colors duration-150;
 }
 
 @utility biz-menu-icon {
+  @apply relative shrink-0;
   & svg {
     @apply !size-5;
   }
 }
 
 @utility biz-menu-text {
-  @apply text-sm;
+  @apply text-sm tracking-wide;
+}
+
+@utility biz-menu-icon-active {
+  color: #F7941D !important;
+  filter: drop-shadow(0 0 6px rgba(247, 148, 29, 0.9));
+}
+
+@utility biz-neon-bar {
+  @apply absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-sm bg-[#F7941D];
+  height: 60%;
+  box-shadow: 0 0 10px #F7941D, 0 0 20px rgba(247, 148, 29, 0.4);
 }
 
 @utility menu-dropdown-item {
