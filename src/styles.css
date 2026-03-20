@@ -273,7 +273,6 @@ layer(base);
   /* Dark mode: override border with fading gradient */
   .dark & {
     border-image: linear-gradient(90deg, #F7941D, transparent) 1;
-    border-color: unset;
   }
 }
 
@@ -303,7 +302,9 @@ layer(base);
 @utility biz-neon-bar {
   @apply absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-sm bg-[#F7941D];
   height: 60%;
-  box-shadow: 0 0 10px #F7941D, 0 0 20px rgba(247, 148, 29, 0.4);
+  .dark & {
+    box-shadow: 0 0 10px #F7941D, 0 0 20px rgba(247, 148, 29, 0.4);
+  }
 }
 
 @utility menu-dropdown-item {
