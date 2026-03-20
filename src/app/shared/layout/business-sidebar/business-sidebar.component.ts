@@ -3,6 +3,7 @@ import { Component, Pipe, PipeTransform } from "@angular/core";
 import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 import { Router, RouterModule } from "@angular/router";
 import { SidebarService } from "../../services/sidebar.service";
+import { UserDropdownComponent } from "../../components/header/user-dropdown/user-dropdown.component";
 
 type NavItem = {
   name: string;
@@ -25,7 +26,7 @@ export class SafeHtmlPipe implements PipeTransform {
 @Component({
   selector: "app-business-sidebar",
   standalone: true,
-  imports: [CommonModule, RouterModule, SafeHtmlPipe],
+  imports: [CommonModule, RouterModule, SafeHtmlPipe, UserDropdownComponent],
   templateUrl: "./business-sidebar.component.html",
 })
 export class BusinessSidebarComponent {
