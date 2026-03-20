@@ -119,6 +119,14 @@ export class BusinessSidebarComponent implements OnInit {
       .unsubscribe();
   }
 
+  handleCollapse() {
+    if (window.innerWidth >= 1280) {
+      this.sidebarService.toggleExpanded();
+    } else {
+      this.sidebarService.setMobileOpen(false);
+    }
+  }
+
   onMenuClick() {
     this.isMobileOpen$
       .subscribe((isMobile) => {

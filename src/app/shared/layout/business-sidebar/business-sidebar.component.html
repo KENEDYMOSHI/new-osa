@@ -19,6 +19,18 @@
   (mouseenter)="onSidebarMouseEnter()"
   (mouseleave)="sidebarService.setHovered(false)"
 >
+  <!-- Close button — mobile only -->
+  @if (isMobileOpen$ | async) {
+    <button
+      (click)="sidebarService.setMobileOpen(false)"
+      class="xl:hidden absolute top-4 right-4 flex items-center justify-center size-8 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+      aria-label="Close Sidebar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6L6 18M6 6l12 12" />
+      </svg>
+    </button>
+  }
+
   <!-- Business logo + name -->
   <div class="py-4 flex flex-col items-center">
     <div class="rounded-lg overflow-hidden shrink-0">
