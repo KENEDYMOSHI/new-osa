@@ -82,7 +82,7 @@
                 routerLinkActive="biz-menu-active"
                 class="biz-menu-item group"
                 [ngClass]="{ 'biz-menu-inactive': !isActive(nav.path) }"
-                [title]="nav.name"
+                [title]="((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) ? null : nav.name"
                 (click)="onMenuClick()"
               >
                 <!-- Neon left bar — only shown when active, only in dark mode -->

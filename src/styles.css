@@ -279,7 +279,7 @@ layer(base);
 
 @utility biz-menu-inactive {
   @apply text-gray-600 dark:text-white/40 border-b border-transparent hover:text-gray-900 dark:hover:text-white/75 transition-colors duration-150;
-  &:hover .biz-menu-icon svg {
+  .dark &:hover .biz-menu-icon svg {
     filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
   }
 }
