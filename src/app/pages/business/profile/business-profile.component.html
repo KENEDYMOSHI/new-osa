@@ -9,19 +9,37 @@
 
     <!-- Hero: Company identity — the first thing users need to confirm -->
     <div class="rounded-xl bg-gradient-to-r from-[#0c0f1c] to-[#1a1f36] px-6 py-5 text-white">
-      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-        <div>
-          <p class="text-xs text-white/40 font-medium tracking-wide uppercase mb-1">Company</p>
-          <h1 class="text-lg font-bold tracking-tight leading-snug">{{ businessInfo?.company_name || 'N/A' }}</h1>
-          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[13px] text-white/45">
-            <span class="flex items-center gap-1.5">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l18 0"/><path d="M3 10l18 0"/><path d="M5 6l7 -3l7 3"/><path d="M4 10l0 11"/><path d="M20 10l0 11"/><path d="M8 14l0 3"/><path d="M12 14l0 3"/><path d="M16 14l0 3"/></svg>
-              {{ businessInfo?.business_type || 'N/A' }}
-            </span>
-            <span class="flex items-center gap-1.5">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0z"/></svg>
-              {{ businessInfo?.district || 'N/A' }}, {{ businessInfo?.region || 'N/A' }}
-            </span>
+      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <!-- Logo -->
+          <button (click)="openLogoModal()" class="group relative w-16 h-16 rounded-xl shrink-0 overflow-hidden border-2 transition-colors"
+            [ngClass]="logoUrl ? 'border-white/10 hover:border-white/30' : 'border-dashed border-white/20 hover:border-white/40'">
+            <!-- Has logo -->
+            <img *ngIf="logoUrl" [src]="logoUrl" alt="Business logo" class="w-full h-full object-cover" />
+            <!-- No logo placeholder -->
+            <div *ngIf="!logoUrl" class="w-full h-full flex flex-col items-center justify-center bg-white/5 group-hover:bg-white/10 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-white/30 group-hover:text-white/50 transition-colors"><path d="M15 8h.01"/><path d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z"/><path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5"/><path d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3"/></svg>
+              <span class="text-[9px] text-white/25 mt-0.5">Logo</span>
+            </div>
+            <!-- Edit overlay on hover when logo exists -->
+            <div *ngIf="logoUrl" class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg>
+            </div>
+          </button>
+          <!-- Info -->
+          <div>
+            <p class="text-xs text-white/40 font-medium tracking-wide uppercase mb-1">Company</p>
+            <h1 class="text-lg font-bold tracking-tight leading-snug">{{ businessInfo?.company_name || 'N/A' }}</h1>
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[13px] text-white/45">
+              <span class="flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l18 0"/><path d="M3 10l18 0"/><path d="M5 6l7 -3l7 3"/><path d="M4 10l0 11"/><path d="M20 10l0 11"/><path d="M8 14l0 3"/><path d="M12 14l0 3"/><path d="M16 14l0 3"/></svg>
+                {{ businessInfo?.business_type || 'N/A' }}
+              </span>
+              <span class="flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0z"/></svg>
+                {{ businessInfo?.district || 'N/A' }}, {{ businessInfo?.region || 'N/A' }}
+              </span>
+            </div>
           </div>
         </div>
         <!-- Verified badge -->
@@ -182,5 +200,76 @@
 
     </div>
 
+  </div>
+</div>
+
+<!-- Logo Upload Modal -->
+<div *ngIf="showLogoModal" class="fixed inset-0 z-[999] flex items-center justify-center p-4">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="closeLogoModal()"></div>
+
+  <!-- Modal -->
+  <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700/60">
+      <h3 class="text-[15px] font-semibold text-gray-900 dark:text-white">Upload Business Logo</h3>
+      <button (click)="closeLogoModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-300 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6">
+      <!-- Drop zone -->
+      <div
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+        (click)="fileInput.click()"
+        class="relative cursor-pointer rounded-xl border-2 border-dashed transition-colors p-8"
+        [ngClass]="isDragging
+          ? 'border-[#F7941D] bg-[#F7941D]/5'
+          : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 bg-gray-50 dark:bg-gray-700/30'">
+
+        <input #fileInput type="file" accept="image/png,image/jpeg,image/webp" class="hidden" (change)="onFileSelected($event)" />
+
+        <!-- Preview -->
+        <div *ngIf="logoPreview" class="flex flex-col items-center">
+          <img [src]="logoPreview" alt="Preview" class="w-24 h-24 rounded-xl object-cover border border-gray-200 dark:border-gray-600" />
+          <p class="text-sm text-gray-600 dark:text-gray-300 mt-3 font-medium">{{ selectedLogoFile?.name }}</p>
+          <p class="text-xs text-gray-400 mt-0.5">Click or drop to replace</p>
+        </div>
+
+        <!-- Empty state -->
+        <div *ngIf="!logoPreview" class="flex flex-col items-center">
+          <div class="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-600 flex items-center justify-center mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400 dark:text-gray-300"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 9l5 -5l5 5"/><path d="M12 4l0 12"/></svg>
+          </div>
+          <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Drop your logo here</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">or click to browse</p>
+          <p class="text-xs text-gray-300 dark:text-gray-600 mt-3">PNG, JPG or WebP. Max 1MB.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100 dark:border-gray-700/60 bg-gray-50 dark:bg-gray-800/50">
+      <button *ngIf="logoUrl && !logoPreview" (click)="removeLogo(); closeLogoModal()" class="text-sm text-red-500 hover:text-red-600 font-medium transition-colors">
+        Remove logo
+      </button>
+      <div *ngIf="!logoUrl || logoPreview"></div>
+      <div class="flex items-center gap-3">
+        <button (click)="closeLogoModal()" class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors">
+          Cancel
+        </button>
+        <button
+          (click)="uploadLogo()"
+          [disabled]="!selectedLogoFile || isUploading"
+          class="px-4 py-2 rounded-lg text-sm font-medium text-white bg-[#F7941D] hover:bg-[#e5850f] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+          <div *ngIf="isUploading" class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white/30 border-t-white"></div>
+          {{ isUploading ? 'Uploading...' : 'Upload' }}
+        </button>
+      </div>
+    </div>
   </div>
 </div>
