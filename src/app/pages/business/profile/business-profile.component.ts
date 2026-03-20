@@ -20,6 +20,18 @@ export class BusinessProfileComponent implements OnInit {
     this.loadUserProfile();
   }
 
+  getOwnerInitials(): string {
+    const first = this.businessInfo?.owner_first_name?.[0] || '';
+    const last = this.businessInfo?.owner_last_name?.[0] || '';
+    return (first + last).toUpperCase() || '?';
+  }
+
+  getContactInitials(): string {
+    const first = this.contactInfo?.first_name?.[0] || '';
+    const last = this.contactInfo?.last_name?.[0] || '';
+    return (first + last).toUpperCase() || '?';
+  }
+
   loadUserProfile() {
     this.isLoading = true;
     this.authService.getProfile().subscribe({
