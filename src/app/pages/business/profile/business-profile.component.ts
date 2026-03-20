@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-business-profile',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './business-profile.component.html',
 })
 export class BusinessProfileComponent implements OnInit {
@@ -21,6 +22,29 @@ export class BusinessProfileComponent implements OnInit {
   selectedLogoFile: File | null = null;
   isDragging = false;
   isUploading = false;
+
+  // Edit Owner
+  showEditOwnerModal = false;
+  editOwnerForm = {
+    first_name: '',
+    second_name: '',
+    last_name: '',
+    phone_number: '',
+    email: '',
+    postal_address: '',
+  };
+
+  // Edit Contact
+  showEditContactModal = false;
+  editContactForm = {
+    first_name: '',
+    second_name: '',
+    last_name: '',
+    designation: '',
+    phone_number: '',
+    alternative_phone: '',
+    email: '',
+  };
 
   constructor(private authService: AuthService) {}
 
@@ -57,6 +81,7 @@ export class BusinessProfileComponent implements OnInit {
     });
   }
 
+  // --- Logo ---
   openLogoModal() {
     this.showLogoModal = true;
     this.logoPreview = null;
@@ -115,7 +140,6 @@ export class BusinessProfileComponent implements OnInit {
     if (!this.selectedLogoFile) return;
     this.isUploading = true;
     // TODO: Replace with actual API call
-    // this.businessService.uploadLogo(this.selectedLogoFile).subscribe(...)
     setTimeout(() => {
       this.logoUrl = this.logoPreview;
       this.isUploading = false;
@@ -128,5 +152,52 @@ export class BusinessProfileComponent implements OnInit {
     this.logoPreview = null;
     this.selectedLogoFile = null;
     // TODO: API call to remove logo
+  }
+
+  // --- Edit Owner ---
+  openEditOwnerModal() {
+    this.editOwnerForm = {
+      first_name: this.businessInfo?.owner_first_name || '',
+      second_name: this.businessInfo?.owner_second_name || '',
+      last_name: this.businessInfo?.owner_last_name || '',
+      phone_number: this.businessInfo?.owner_phone_number || '',
+      email: this.businessInfo?.owner_email_address || '',
+      postal_address: this.businessInfo?.owner_postal_address || '',
+    };
+    this.showEditOwnerModal = true;
+  }
+
+  closeEditOwnerModal() {
+    this.showEditOwnerModal = false;
+  }
+
+  saveOwner() {
+    // TODO: API call to save owner info
+    console.log('Save owner:', this.editOwnerForm);
+    this.closeEditOwnerModal();
+  }
+
+  // --- Edit Contact ---
+  openEditContactModal() {
+    this.editContactForm = {
+      first_name: this.contactInfo?.first_name || '',
+      second_name: this.contactInfo?.second_name || '',
+      last_name: this.contactInfo?.last_name || '',
+      designation: this.contactInfo?.designation || '',
+      phone_number: this.contactInfo?.phone_number || '',
+      alternative_phone: this.contactInfo?.alternative_phone_number || '',
+      email: this.contactInfo?.email_address || '',
+    };
+    this.showEditContactModal = true;
+  }
+
+  closeEditContactModal() {
+    this.showEditContactModal = false;
+  }
+
+  saveContact() {
+    // TODO: API call to save contact info
+    console.log('Save contact:', this.editContactForm);
+    this.closeEditContactModal();
   }
 }
