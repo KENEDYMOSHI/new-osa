@@ -1,5 +1,11 @@
 <aside
-  class="fixed flex flex-col top-0 px-5 left-0 bg-white dark:bg-gray-900 text-gray-900 dark:text-white h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 dark:border-gray-800"
+  class="fixed flex flex-col top-0 px-4 left-0 h-screen transition-all duration-300 ease-in-out z-50 relative
+    bg-white border-r border-gray-200
+    dark:[background:rgba(10,14,26,0.85)]
+    dark:[backdrop-filter:blur(24px)]
+    dark:border-r dark:border-[rgba(0,255,255,0.08)]
+    text-gray-900 dark:text-white"
+  style="--sidebar-glow: linear-gradient(160deg,rgba(10,14,26,0.85),rgba(13,27,42,0.85),rgba(26,26,46,0.85));"
   [ngClass]="{
     'w-[290px]':
       (isExpanded$ | async) || (isMobileOpen$ | async) || (isHovered$ | async),
@@ -16,18 +22,20 @@
   (mouseleave)="sidebarService.setHovered(false)"
 >
   <div
-    class="py-3 lg:py-4 flex items-center gap-3 border-b border-gray-200 dark:border-gray-800 mb-6"
+    class="py-4 flex items-center gap-3 border-b border-gray-200 dark:border-[rgba(247,148,29,0.15)] mb-5"
     [ngClass]="{
       'xl:justify-center': !((isExpanded$ | async) || (isHovered$ | async)),
       'justify-start': (isExpanded$ | async) || (isHovered$ | async)
     }"
   >
     <a routerLink="/business/dashboard" class="flex items-center gap-3">
-      <div class="bg-white rounded-lg p-1 shrink-0">
-        <img src="/images/logo/wma-logo.jpg" alt="WMA Logo" width="40" height="40" class="object-contain" />
+      <div
+        class="rounded-xl p-1.5 shrink-0 bg-white dark:bg-[#F7941D] shadow-sm dark:[box-shadow:0_0_20px_rgba(247,148,29,0.5)]"
+      >
+        <img src="/images/logo/wma-logo.jpg" alt="WMA Logo" width="36" height="36" class="object-contain rounded-lg" />
       </div>
       @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) {
-        <span class="text-xl font-bold text-gray-900 dark:text-white tracking-wide whitespace-nowrap">WMA Portal</span>
+        <span class="text-lg font-bold text-gray-900 dark:text-white tracking-wide whitespace-nowrap">WMA Portal</span>
       }
     </a>
   </div>
@@ -38,7 +46,7 @@
         <!-- Menu Section -->
         <div>
           <h2
-            class="mb-4 text-xs font-bold uppercase flex leading-5 text-gray-400 dark:text-gray-500 tracking-wider"
+            class="mb-4 text-[10px] font-bold uppercase flex leading-5 text-gray-400 dark:text-[rgba(247,148,29,0.55)] tracking-widest"
             [ngClass]="{
               'xl:justify-center': !(
                 (isExpanded$ | async) || (isHovered$ | async)
@@ -77,10 +85,16 @@
                 [ngClass]="{ 'biz-menu-inactive': !isActive(nav.path) }"
                 (click)="onMenuClick()"
               >
+                <!-- Neon left bar — only shown when active, only in dark mode -->
+                <span
+                  class="biz-neon-bar hidden dark:block"
+                  [class.opacity-0]="!isActive(nav.path)"
+                  [class.opacity-100]="isActive(nav.path)"
+                ></span>
                 <span
                   class="biz-menu-icon"
                   [ngClass]="{
-                    'menu-item-icon-active': isActive(nav.path),
+                    'biz-menu-icon-active': isActive(nav.path),
                     'text-gray-400 group-hover:text-gray-700 dark:group-hover:text-white': !isActive(nav.path)
                   }"
                   [innerHTML]="nav.icon | safeHtml"
@@ -100,5 +114,9 @@
         <!-- end main menu -->
       </div>
     </nav>
+  </div>
+  <!-- Neon separator line — right edge glow -->
+  <div class="hidden dark:block absolute top-0 right-0 bottom-0 w-px pointer-events-none"
+    style="background: linear-gradient(180deg, transparent 0%, rgba(247,148,29,0.35) 40%, rgba(247,148,29,0.35) 60%, transparent 100%);">
   </div>
 </aside>
