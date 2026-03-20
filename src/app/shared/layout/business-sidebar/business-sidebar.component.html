@@ -117,9 +117,7 @@
   <!-- User profile — pinned to bottom -->
   <div class="mt-auto border-t border-[rgba(247,148,29,0.15)] py-4 relative overflow-visible">
     <app-user-dropdown />
-    @if (businessName && ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async))) {
-      <p class="mt-2 text-xs text-white/50 truncate">{{ businessName }}</p>
-    }
+  
   </div>
 
   <!-- Neon separator line — right edge glow -->
