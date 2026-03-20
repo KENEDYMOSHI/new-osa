@@ -1,9 +1,10 @@
 import { CommonModule } from "@angular/common";
-import { Component, Pipe, PipeTransform } from "@angular/core";
+import { Component, OnInit, Pipe, PipeTransform } from "@angular/core";
 import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 import { Router, RouterModule } from "@angular/router";
 import { SidebarService } from "../../services/sidebar.service";
 import { UserDropdownComponent } from "../../components/header/user-dropdown/user-dropdown.component";
+import { AuthService } from "../../../core/services/auth.service";
 
 type NavItem = {
   name: string;
@@ -29,7 +30,7 @@ export class SafeHtmlPipe implements PipeTransform {
   imports: [CommonModule, RouterModule, SafeHtmlPipe, UserDropdownComponent],
   templateUrl: "./business-sidebar.component.html",
 })
-export class BusinessSidebarComponent {
+export class BusinessSidebarComponent implements OnInit {
   // Business Portal nav items (Tabler Icons - outline)
   navItems: NavItem[] = [
     {
@@ -82,14 +83,26 @@ export class BusinessSidebarComponent {
   readonly isExpanded$;
   readonly isMobileOpen$;
   readonly isHovered$;
+  businessName = '';
 
   constructor(
     public sidebarService: SidebarService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.isExpanded$ = this.sidebarService.isExpanded$;
     this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
     this.isHovered$ = this.sidebarService.isHovered$;
+  }
+
+  ngOnInit() {
+    this.authService.getProfile().subscribe({
+      next: (data) => {
+        if (data.user) {
+          this.businessName = data.user.username?.split('_')[0] || '';
+        }
+      }
+    });
   }
 
   isActive(path: string): boolean {

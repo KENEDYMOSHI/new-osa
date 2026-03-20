@@ -28,12 +28,12 @@
   >
     <a routerLink="/business/dashboard" class="flex items-center gap-3">
       <div
-        class="rounded-xl p-1.5 shrink-0 bg-white dark:bg-[#F7941D] shadow-sm dark:[box-shadow:0_0_20px_rgba(247,148,29,0.5)]"
+        class="rounded-lg shrink-0 overflow-hidden shadow-sm dark:[box-shadow:0_0_20px_rgba(247,148,29,0.5)]"
       >
-        <img src="/images/logo/wma-logo.jpg" alt="WMA Logo" width="36" height="36" class="object-contain rounded-lg" />
+        <img src="/images/logo/logo-icon.svg" alt="Business Logo" width="40" height="40" class="object-contain" />
       </div>
       @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) {
-        <span class="text-lg font-bold text-gray-900 dark:text-white tracking-wide whitespace-nowrap">WMA Portal</span>
+        <span class="text-lg font-bold text-white tracking-wide whitespace-nowrap">Business Portal</span>
       }
     </a>
   </div>
@@ -117,6 +117,9 @@
   <!-- User profile — pinned to bottom -->
   <div class="mt-auto border-t border-[rgba(247,148,29,0.15)] py-4 relative overflow-visible">
     <app-user-dropdown />
+    @if (businessName && ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async))) {
+      <p class="mt-2 text-xs text-white/50 truncate">{{ businessName }}</p>
+    }
   </div>
 
   <!-- Neon separator line — right edge glow -->
