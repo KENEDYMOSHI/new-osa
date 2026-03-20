@@ -268,12 +268,17 @@ layer(base);
 }
 
 @utility biz-menu-active {
-  @apply !font-extrabold !text-white border-b-2;
-  border-image: linear-gradient(90deg, #F7941D, transparent) 1;
+  /* Light mode: orange text + solid orange underline */
+  @apply !font-extrabold !text-[#F7941D] dark:!text-white border-b-2 !border-[#F7941D];
+  /* Dark mode: override border with fading gradient */
+  .dark & {
+    border-image: linear-gradient(90deg, #F7941D, transparent) 1;
+    border-color: unset;
+  }
 }
 
 @utility biz-menu-inactive {
-  @apply text-white/40 border-b border-transparent hover:text-white/75 transition-colors duration-150;
+  @apply text-gray-600 dark:text-white/40 border-b border-transparent hover:text-gray-900 dark:hover:text-white/75 transition-colors duration-150;
 }
 
 @utility biz-menu-icon {
