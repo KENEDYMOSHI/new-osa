@@ -118,13 +118,18 @@ export class BusinessEquipmentsComponent {
   ];
 
   selectedStatus: EquipmentStatus = 'all';
+  searchTerm = '';
 
   get filteredEquipments(): RegisteredEquipment[] {
-    if (this.selectedStatus === 'all') {
-      return this.equipments;
-    }
+    return this.equipments.filter((equipment) => {
+      const matchesStatus =
+        this.selectedStatus === 'all' || equipment.status === this.selectedStatus;
+      const matchesSearch =
+        this.searchTerm.trim().length === 0 ||
+        equipment.equipmentName.toLowerCase().includes(this.searchTerm.trim().toLowerCase());
 
-    return this.equipments.filter((equipment) => equipment.status === this.selectedStatus);
+      return matchesStatus && matchesSearch;
+    });
   }
 
   get totalEquipments(): number {
@@ -145,6 +150,10 @@ export class BusinessEquipmentsComponent {
 
   setStatusFilter(status: EquipmentStatus): void {
     this.selectedStatus = status;
+  }
+
+  setSearchTerm(value: string): void {
+    this.searchTerm = value;
   }
 
   getStatusCount(status: RegisteredEquipmentStatus): number {
