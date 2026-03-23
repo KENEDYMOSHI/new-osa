@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { AddEquipmentModalComponent, NewEquipmentPayload } from './add-equipment-modal.component';
 
 type EquipmentStatus = 'all' | 'pending' | 'verified';
 type RegisteredEquipmentStatus = Exclude<EquipmentStatus, 'all'>;
@@ -21,7 +22,7 @@ type StatusFilterOption = {
 @Component({
   selector: 'app-business-equipments',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, AddEquipmentModalComponent],
   templateUrl: './business-equipments.component.html',
 })
 export class BusinessEquipmentsComponent {
@@ -151,9 +152,6 @@ export class BusinessEquipmentsComponent {
   selectedStatus: EquipmentStatus = 'all';
   searchTerm = '';
   showAddEquipmentModal = false;
-  serviceTypeSearchTerm = '';
-  equipmentNameDraft = '';
-  selectedServiceType = '';
   readonly businessName = 'NOVAS Agency Limited';
 
   get filteredEquipments(): RegisteredEquipment[] {
@@ -170,25 +168,6 @@ export class BusinessEquipmentsComponent {
 
   get totalEquipments(): number {
     return this.equipments.length;
-  }
-
-  get filteredServiceTypes(): string[] {
-    const query = this.serviceTypeSearchTerm.trim().toLowerCase();
-
-    if (!query) {
-      return this.serviceTypes;
-    }
-
-    return this.serviceTypes.filter((serviceType) =>
-      serviceType.toLowerCase().includes(query),
-    );
-  }
-
-  get canCreateEquipment(): boolean {
-    return (
-      this.equipmentNameDraft.trim().length > 0 &&
-      this.selectedServiceType.trim().length > 0
-    );
   }
 
   setStatusFilter(status: EquipmentStatus): void {
@@ -217,35 +196,16 @@ export class BusinessEquipmentsComponent {
 
   openAddEquipmentModal(): void {
     this.showAddEquipmentModal = true;
-    this.equipmentNameDraft = '';
-    this.selectedServiceType = '';
-    this.serviceTypeSearchTerm = '';
   }
 
   closeAddEquipmentModal(): void {
     this.showAddEquipmentModal = false;
   }
 
-  setEquipmentName(value: string): void {
-    this.equipmentNameDraft = value;
-  }
-
-  setServiceTypeSearchTerm(value: string): void {
-    this.serviceTypeSearchTerm = value;
-  }
-
-  selectServiceType(serviceType: string): void {
-    this.selectedServiceType = serviceType;
-  }
-
-  addEquipment(): void {
-    if (!this.canCreateEquipment) {
-      return;
-    }
-
+  addEquipment(payload: NewEquipmentPayload): void {
     const newEquipment: RegisteredEquipment = {
-      equipmentName: this.equipmentNameDraft.trim(),
-      serviceType: this.selectedServiceType,
+      equipmentName: payload.equipmentName,
+      serviceType: payload.serviceType,
       dateAdded: new Date().toISOString().slice(0, 10),
       status: 'pending',
       businessName: this.businessName,
