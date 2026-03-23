@@ -308,7 +308,7 @@ export const routes: Routes = [
       },
       {
         path: 'equipments',
-        loadComponent: () => import('./pages/business/dashboard/business-dashboard.component').then(m => m.BusinessDashboardComponent),
+        loadComponent: () => import('./pages/business/equipments/business-equipments.component').then(m => m.BusinessEquipmentsComponent),
         title: 'My Equipments | Business Portal - WMA'
       },
       {
