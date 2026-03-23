@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
+import { RouterModule } from '@angular/router';
 
 type EquipmentStatus = 'all' | 'pending' | 'verified';
 type RegisteredEquipmentStatus = Exclude<EquipmentStatus, 'all'>;
@@ -20,7 +21,7 @@ type StatusFilterOption = {
 @Component({
   selector: 'app-business-equipments',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './business-equipments.component.html',
 })
 export class BusinessEquipmentsComponent {
@@ -134,18 +135,6 @@ export class BusinessEquipmentsComponent {
 
   get totalEquipments(): number {
     return this.equipments.length;
-  }
-
-  get verifiedCount(): number {
-    return this.getStatusCount('verified');
-  }
-
-  get pendingCount(): number {
-    return this.getStatusCount('pending');
-  }
-
-  get activeServiceTypeCount(): number {
-    return new Set(this.equipments.map((equipment) => equipment.serviceType)).size;
   }
 
   setStatusFilter(status: EquipmentStatus): void {
