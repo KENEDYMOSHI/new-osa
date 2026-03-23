@@ -31,7 +31,37 @@ export class BusinessEquipmentsComponent {
     { label: 'Verified', value: 'verified' },
   ];
 
-  readonly equipments: RegisteredEquipment[] = [
+  readonly serviceTypes: string[] = [
+    'Vehicle Tank Verification (VTV)',
+    'Weighbridge',
+    'Fixed Storage Tank',
+    'Bulk Storage Tank (BST)',
+    'Pre Packaging',
+    'Wagon Tank',
+    'Fuel pump',
+    'Flow Meter',
+    'Check pump',
+    'Pressure gauges',
+    'Proving Tank',
+    'Taximeter',
+    'Metre Rule',
+    'Tape Measure',
+    'Brim Measure system',
+    'Suspended Digital Ware',
+    'Counter scale',
+    'Platform scale',
+    'Spring Balance',
+    'Weigher',
+    'Automatic Weigher',
+    'Beam Scale',
+    'Sandy & Ballast lorry (SBL)',
+    'Other Measuring Instrument',
+    'Other Measures of Length',
+    'Domestic gas meter',
+    'Weights',
+  ];
+
+  equipments: RegisteredEquipment[] = [
     {
       equipmentName: 'Forecourt Pump FP-01',
       serviceType: 'Fuel pump',
@@ -120,6 +150,11 @@ export class BusinessEquipmentsComponent {
 
   selectedStatus: EquipmentStatus = 'all';
   searchTerm = '';
+  showAddEquipmentModal = false;
+  serviceTypeSearchTerm = '';
+  equipmentNameDraft = '';
+  selectedServiceType = '';
+  readonly businessName = 'NOVAS Agency Limited';
 
   get filteredEquipments(): RegisteredEquipment[] {
     return this.equipments.filter((equipment) => {
@@ -135,6 +170,25 @@ export class BusinessEquipmentsComponent {
 
   get totalEquipments(): number {
     return this.equipments.length;
+  }
+
+  get filteredServiceTypes(): string[] {
+    const query = this.serviceTypeSearchTerm.trim().toLowerCase();
+
+    if (!query) {
+      return this.serviceTypes;
+    }
+
+    return this.serviceTypes.filter((serviceType) =>
+      serviceType.toLowerCase().includes(query),
+    );
+  }
+
+  get canCreateEquipment(): boolean {
+    return (
+      this.equipmentNameDraft.trim().length > 0 &&
+      this.selectedServiceType.trim().length > 0
+    );
   }
 
   setStatusFilter(status: EquipmentStatus): void {
@@ -159,5 +213,47 @@ export class BusinessEquipmentsComponent {
 
   isActiveFilter(status: EquipmentStatus): boolean {
     return this.selectedStatus === status;
+  }
+
+  openAddEquipmentModal(): void {
+    this.showAddEquipmentModal = true;
+    this.equipmentNameDraft = '';
+    this.selectedServiceType = '';
+    this.serviceTypeSearchTerm = '';
+  }
+
+  closeAddEquipmentModal(): void {
+    this.showAddEquipmentModal = false;
+  }
+
+  setEquipmentName(value: string): void {
+    this.equipmentNameDraft = value;
+  }
+
+  setServiceTypeSearchTerm(value: string): void {
+    this.serviceTypeSearchTerm = value;
+  }
+
+  selectServiceType(serviceType: string): void {
+    this.selectedServiceType = serviceType;
+  }
+
+  addEquipment(): void {
+    if (!this.canCreateEquipment) {
+      return;
+    }
+
+    const newEquipment: RegisteredEquipment = {
+      equipmentName: this.equipmentNameDraft.trim(),
+      serviceType: this.selectedServiceType,
+      dateAdded: new Date().toISOString().slice(0, 10),
+      status: 'pending',
+      businessName: this.businessName,
+    };
+
+    this.equipments = [newEquipment, ...this.equipments];
+    this.selectedStatus = 'all';
+    this.searchTerm = '';
+    this.closeAddEquipmentModal();
   }
 }
