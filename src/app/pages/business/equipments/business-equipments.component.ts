@@ -17,11 +17,6 @@ type StatusFilterOption = {
   value: EquipmentStatus;
 };
 
-type ServiceTypeBreakdown = {
-  serviceType: string;
-  count: number;
-};
-
 @Component({
   selector: 'app-business-equipments',
   standalone: true,
@@ -33,36 +28,6 @@ export class BusinessEquipmentsComponent {
     { label: 'All Statuses', value: 'all' },
     { label: 'Pending', value: 'pending' },
     { label: 'Verified', value: 'verified' },
-  ];
-
-  readonly serviceCatalog: string[] = [
-    'Vehicle Tank Verification (VTV)',
-    'Weighbridge',
-    'Fixed Storage Tank',
-    'Bulk Storage Tank (BST)',
-    'Pre Packaging',
-    'Wagon Tank',
-    'Fuel pump',
-    'Flow Meter',
-    'Check pump',
-    'Pressure gauges',
-    'Proving Tank',
-    'Taximeter',
-    'Metre Rule',
-    'Tape Measure',
-    'Brim Measure system',
-    'Suspended Digital Ware',
-    'Counter scale',
-    'Platform scale',
-    'Spring Balance',
-    'Weigher',
-    'Automatic Weigher',
-    'Beam Scale',
-    'Sandy & Ballast lorry (SBL)',
-    'Other Measuring Instrument',
-    'Other Measures of Length',
-    'Domestic gas meter',
-    'Weights',
   ];
 
   readonly equipments: RegisteredEquipment[] = [
@@ -176,19 +141,6 @@ export class BusinessEquipmentsComponent {
 
   get activeServiceTypeCount(): number {
     return new Set(this.equipments.map((equipment) => equipment.serviceType)).size;
-  }
-
-  get serviceTypeBreakdown(): ServiceTypeBreakdown[] {
-    const breakdown = new Map<string, number>();
-
-    for (const equipment of this.equipments) {
-      breakdown.set(equipment.serviceType, (breakdown.get(equipment.serviceType) ?? 0) + 1);
-    }
-
-    return Array.from(breakdown.entries())
-      .map(([serviceType, count]) => ({ serviceType, count }))
-      .sort((left, right) => right.count - left.count || left.serviceType.localeCompare(right.serviceType))
-      .slice(0, 6);
   }
 
   setStatusFilter(status: EquipmentStatus): void {
