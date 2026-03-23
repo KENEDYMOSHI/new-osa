@@ -26,7 +26,7 @@ type StatusFilterOption = {
 })
 export class BusinessEquipmentsComponent {
   readonly statusFilters: StatusFilterOption[] = [
-    { label: 'All Statuses', value: 'all' },
+    { label: 'All', value: 'all' },
     { label: 'Pending', value: 'pending' },
     { label: 'Verified', value: 'verified' },
   ];
