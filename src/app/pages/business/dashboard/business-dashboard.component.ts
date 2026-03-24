@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { AuthService } from '../../../core/services/auth.service';
+import { BusinessRegistrationService } from '../../../services/business-registration.service';
 
 @Component({
   selector: 'app-business-dashboard',
@@ -11,6 +11,7 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class BusinessDashboardComponent implements OnInit {
   user: any = null;
+  businessInfo: any = null;
   stats = {
     registeredEquipment: 12,
     pendingVerifications: 3,
@@ -35,18 +36,16 @@ export class BusinessDashboardComponent implements OnInit {
     { type: 'Flow Meters', count: 2, verified: 1, pending: 1 },
   ];
 
-  constructor(private authService: AuthService) {}
+  constructor(private businessService: BusinessRegistrationService) {}
 
   ngOnInit() {
-    this.authService.getProfile().subscribe({
+    this.businessService.getProfile().subscribe({
       next: (response: any) => {
         this.user = response.user;
-        if (this.user?.username) {
-          this.user.displayName = this.user.username.split('_')[0];
-        }
+        this.businessInfo = response.businessOwnerInfo;
       },
       error: (error) => {
-        console.error('Error fetching user profile:', error);
+        console.error('Error fetching business profile:', error);
       }
     });
   }

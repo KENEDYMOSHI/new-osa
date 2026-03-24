@@ -7,6 +7,7 @@ use CodeIgniter\RESTful\ResourceController;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use App\Models\BusinessOwnerInfoModel;
+use App\Models\BusinessContactInfoModel;
 
 class BusinessRegistrationController extends ResourceController
 {
@@ -32,6 +33,36 @@ class BusinessRegistrationController extends ResourceController
         } catch (\Exception $e) {
             log_message('error', 'BusinessRegistrationController token error: ' . $e->getMessage());
             return null;
+        }
+    }
+
+    public function getProfile()
+    {
+        $user = $this->getUserFromToken();
+
+        if (!$user) {
+            return $this->failUnauthorized('Unauthorized');
+        }
+
+        try {
+            $ownerInfo   = (new BusinessOwnerInfoModel())->where('user_uuid', $user->uuid)->first();
+            $contactInfo = (new BusinessContactInfoModel())->where('user_uuid', $user->uuid)->first();
+
+            return $this->respond([
+                'user' => [
+                    'id'           => $user->id,
+                    'uuid'         => $user->uuid,
+                    'email'        => $user->email,
+                    'phone_number' => $user->phone_number,
+                    'created_at'   => $user->created_at,
+                    'last_active'  => $user->last_active,
+                ],
+                'businessOwnerInfo'  => $ownerInfo,
+                'businessContactInfo'=> $contactInfo,
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'BusinessRegistrationController::getProfile error: ' . $e->getMessage());
+            return $this->failServerError('Failed to load profile');
         }
     }
 

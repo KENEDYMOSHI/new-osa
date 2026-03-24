@@ -3,15 +3,15 @@
   <!-- Welcome Banner -->
   <div class="rounded-xl bg-gradient-to-r from-[#0c0f1c] to-[#1a1f36] p-6 text-white">
     <div>
-      <h1 class="text-xl font-bold">Welcome back, NOVAS AGENCY LIMITED</h1>
+      <h1 class="text-xl font-bold">Welcome back, {{ businessInfo?.company_name || 'Business' }}</h1>
       <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2 text-sm text-white/60">
         <span class="flex items-center gap-1.5">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4a2 2 0 0 1 2-2h8.5L20 7.5V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3"/><polyline points="14 2 14 8 20 8"/></svg>
-          Business ID: TC-2025-001
+          TIN: {{ businessInfo?.tin || 'N/A' }}
         </span>
         <span class="flex items-center gap-1.5">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Last login: June 17, 2025 at 2:30 PM
+          Last login: {{ (user?.last_active | date:'medium') || 'N/A' }}
         </span>
       </div>
     </div>
@@ -21,27 +21,35 @@
   <div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6">
     <div class="flex items-center justify-between mb-5">
       <h2 class="text-base font-semibold text-gray-900 dark:text-white">Business Summary</h2>
-      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400">
+      <span *ngIf="businessInfo?.verification_status === 'verified'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400">
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         Verified
+      </span>
+      <span *ngIf="businessInfo?.verification_status === 'pending' || !businessInfo?.verification_status" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v6l4 2"/><path d="M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0 -18"/></svg>
+        Pending
+      </span>
+      <span *ngIf="businessInfo?.verification_status === 'failed'" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        Failed
       </span>
     </div>
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
       <div>
         <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">Business Name</p>
-        <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">TechCorp Solutions Ltd</p>
+        <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{{ businessInfo?.company_name || 'N/A' }}</p>
       </div>
       <div>
         <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">License Number</p>
-        <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">BL-2024-5678</p>
+        <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{{ businessInfo?.business_license_number || 'N/A' }}</p>
       </div>
       <div>
         <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">Business Type</p>
-        <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">Fuel Station</p>
+        <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{{ businessInfo?.business_type || 'N/A' }}</p>
       </div>
       <div>
         <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">Location</p>
-        <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">Dar es Salaam, Kinondoni</p>
+        <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{{ businessInfo?.district || 'N/A' }}, {{ businessInfo?.region || 'N/A' }}</p>
       </div>
     </div>
   </div>

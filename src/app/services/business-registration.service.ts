@@ -12,6 +12,10 @@ export class BusinessRegistrationService {
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
+  getProfile(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/profile`, { headers: this.getHeaders() });
+  }
+
   uploadLogo(formData: FormData): Observable<any> {
     return this.http.post(`${this.apiUrl}/upload-logo`, formData, { headers: this.getHeaders() });
   }

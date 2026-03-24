@@ -102,11 +102,8 @@ export class BusinessSidebarComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.authService.getProfile().subscribe({
+    this.businessService.getProfile().subscribe({
       next: (data) => {
-        if (data.user) {
-          this.businessName = data.user.username?.split('_')[0] || '';
-        }
         this.logoUrl = data.businessOwnerInfo?.business_logo || null;
         this.companyName = data.businessOwnerInfo?.company_name || '';
       }

@@ -67,7 +67,7 @@ export class BusinessProfileComponent implements OnInit {
 
   loadUserProfile() {
     this.isLoading = true;
-    this.authService.getProfile().subscribe({
+    this.businessService.getProfile().subscribe({
       next: (response: any) => {
         this.user = response.user;
         this.businessInfo = response.businessOwnerInfo;

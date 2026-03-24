@@ -608,22 +608,24 @@ class AuthController extends ResourceController
                 }
             }
 
-            // Fetch profile data based on user type
-            $personalInfo = null;
+            # Business owners use BusinessRegistrationController::getProfile for full profile data
+            if (isset($user->user_type) && $user->user_type === 'business_owner') {
+                return $this->respond([
+                    'user' => [
+                        'id'        => $user->id,
+                        'username'  => $user->username,
+                        'email'     => $user->email,
+                        'uuid'      => $uuid,
+                        'user_type' => $user->user_type,
+                    ]
+                ]);
+            }
+
+            $personalInfo  = null;
             $businessInfos = null;
-            $businessOwnerInfo = null;
-            $businessContactInfo = null;
-            $licenses = [];
+            $licenses      = [];
 
-            if ($uuid && isset($user->user_type) && $user->user_type === 'business_owner') {
-                // Business owner: fetch from business-specific tables
-                $businessOwnerInfoModel = new BusinessOwnerInfoModel();
-                $businessOwnerInfo = $businessOwnerInfoModel->where('user_uuid', $uuid)->first();
-
-                $businessContactInfoModel = new BusinessContactInfoModel();
-                $businessContactInfo = $businessContactInfoModel->where('user_uuid', $uuid)->first();
-            } elseif ($uuid) {
-                // Practitioner / Pattern / Customer: use practitioner tables
+            if ($uuid) {
                 $personalInfoModel = new \App\Models\PractitionerPersonalInfoModel();
                 $personalInfo = $personalInfoModel->where('user_uuid', $uuid)->first();
 
@@ -631,10 +633,9 @@ class AuthController extends ResourceController
                 $businessInfos = $businessInfoModel->where('user_uuid', $uuid)->findAll();
             }
 
-            // Fetch Licenses (only for practitioner/license users)
-            if (isset($user->id) && (!isset($user->user_type) || !in_array($user->user_type, ['business_owner', 'pattern_approval', 'customer']))) {
-                 $builder = $db->table('license_applications');
-                 $builder->select('
+            if (isset($user->id) && (!isset($user->user_type) || !in_array($user->user_type, ['pattern_approval', 'customer']))) {
+                $builder = $db->table('license_applications');
+                $builder->select('
                     license_applications.id as app_id,
                     license_applications.created_at,
                     license_applications.valid_from,
@@ -644,35 +645,25 @@ class AuthController extends ResourceController
                     license_application_items.status,
                     licenses.issue_date,
                     licenses.expiry_date as license_expiry_date
-                 ');
-                 $builder->join('license_application_items', 'license_application_items.application_id = license_applications.id');
-                 $builder->join('licenses', 'licenses.application_id = license_applications.id', 'left');
-                 $builder->where('license_applications.user_id', $user->id);
-                 $builder->orderBy('license_applications.created_at', 'DESC');
-                 $licenses = $builder->get()->getResult();
-            }
-
-            $userPayload = [
-                'id'         => $user->id,
-                'username'   => $user->username,
-                'email'      => $user->email,
-                'uuid'       => $uuid,
-                'user_type'  => $user->user_type ?? 'practitioner',
-            ];
-
-            if (isset($user->user_type) && $user->user_type === 'business_owner') {
-                $userPayload['phone_number'] = $user->phone_number ?? null;
-                $userPayload['created_at']   = $user->created_at ?? null;
-                $userPayload['last_active']  = $user->last_active ?? null;
+                ');
+                $builder->join('license_application_items', 'license_application_items.application_id = license_applications.id');
+                $builder->join('licenses', 'licenses.application_id = license_applications.id', 'left');
+                $builder->where('license_applications.user_id', $user->id);
+                $builder->orderBy('license_applications.created_at', 'DESC');
+                $licenses = $builder->get()->getResult();
             }
 
             return $this->respond([
-                'user'               => $userPayload,
-                'personalInfo'       => $personalInfo,
-                'businessInfos'      => $businessInfos,
-                'businessOwnerInfo'  => $businessOwnerInfo,
-                'businessContactInfo'=> $businessContactInfo,
-                'licenses'           => $licenses
+                'user' => [
+                    'id'        => $user->id,
+                    'username'  => $user->username,
+                    'email'     => $user->email,
+                    'uuid'      => $uuid,
+                    'user_type' => $user->user_type ?? 'practitioner',
+                ],
+                'personalInfo'  => $personalInfo,
+                'businessInfos' => $businessInfos,
+                'licenses'      => $licenses
             ]);
         } catch (\Exception $e) {
             return $this->failServerError('Server Error: ' . $e->getMessage());

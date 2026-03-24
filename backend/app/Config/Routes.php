@@ -97,6 +97,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->get('available-license-types', 'ApplicationReviewController::getAvailableLicenseTypes');
 
     // Business Registration
+    $routes->get('business/profile', 'BusinessRegistrationController::getProfile');
     $routes->post('business/upload-logo', 'BusinessRegistrationController::uploadLogo');
     $routes->post('business/remove-logo', 'BusinessRegistrationController::removeLogo');
 
