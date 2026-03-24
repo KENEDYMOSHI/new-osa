@@ -332,7 +332,7 @@ export class BusinessProfileComponent implements OnInit {
 
   saveContact() {
     this.isSavingContact = true;
-    this.businessService.updateBusinessInfo(this.editContactForm).subscribe({
+    this.businessService.updateContactInfo(this.editContactForm).subscribe({
       next: () => {
         this.isSavingContact = false;
         this.closeEditContactModal();

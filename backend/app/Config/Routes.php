@@ -99,6 +99,7 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     // Business Registration
     $routes->get('business/profile', 'BusinessRegistrationController::getProfile');
     $routes->post('business/update-info', 'BusinessRegistrationController::updateBusinessInfo');
+    $routes->post('business/update-contact', 'BusinessRegistrationController::updateContactInfo');
     $routes->post('business/upload-logo', 'BusinessRegistrationController::uploadLogo');
     $routes->post('business/remove-logo', 'BusinessRegistrationController::removeLogo');
 

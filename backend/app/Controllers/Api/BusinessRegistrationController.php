@@ -140,6 +140,55 @@ class BusinessRegistrationController extends ResourceController
         }
     }
 
+    public function updateContactInfo()
+    {
+        $user = $this->getUserFromToken();
+
+        if (!$user) {
+            return $this->failUnauthorized('Unauthorized');
+        }
+
+        $data = $this->request->getJSON(true);
+
+        try {
+            $ownerModel = new BusinessOwnerInfoModel();
+            $existing   = $ownerModel->where('user_uuid', $user->uuid)->first();
+
+            if (!$existing) {
+                return $this->failNotFound('Business info not found');
+            }
+
+            if (($existing->verification_status ?? 'pending') !== 'pending') {
+                return $this->fail('Contact info can only be edited while verification is pending', 403);
+            }
+
+            $contactModel    = new BusinessContactInfoModel();
+            $existingContact = $contactModel->where('user_uuid', $user->uuid)->first();
+
+            $contactData = [
+                'first_name'               => $data['contactFirstName']        ?? ($existingContact->first_name ?? null),
+                'second_name'              => $data['contactSecondName']       ?? ($existingContact->second_name ?? null),
+                'last_name'                => $data['contactLastName']         ?? ($existingContact->last_name ?? null),
+                'designation'              => $data['contactDesignation']      ?? ($existingContact->designation ?? null),
+                'phone_number'             => $data['contactPhone']            ?? ($existingContact->phone_number ?? null),
+                'alternative_phone_number' => $data['contactAlternativePhone'] ?? ($existingContact->alternative_phone_number ?? null),
+                'email_address'            => $data['contactEmail']            ?? ($existingContact->email_address ?? null),
+            ];
+
+            if ($existingContact) {
+                $contactModel->update($existingContact->id, $contactData);
+            } else {
+                $contactData['user_uuid'] = $user->uuid;
+                $contactModel->insert($contactData);
+            }
+
+            return $this->respond(['message' => 'Contact information updated successfully']);
+        } catch (\Exception $e) {
+            log_message('error', 'updateContactInfo error: ' . $e->getMessage());
+            return $this->failServerError('Failed to update contact information');
+        }
+    }
+
     public function uploadLogo()
     {
         $user = $this->getUserFromToken();
