@@ -33,6 +33,7 @@ class BusinessOwnerInfoModel extends Model
         'owner_phone_number',
         'owner_email_address',
         'owner_postal_address',
+        'verification_status',
     ];
 
     protected $useTimestamps = true;

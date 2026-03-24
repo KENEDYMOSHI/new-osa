@@ -52,6 +52,7 @@ class CreateBusinessRegistrationTables extends Migration
             'owner_phone_number'     => ['type' => 'varchar', 'constraint' => 20, 'null' => true],
             'owner_email_address'    => ['type' => 'varchar', 'constraint' => 255, 'null' => true],
             'owner_postal_address'   => ['type' => 'varchar', 'constraint' => 255, 'null' => true],
+            'verification_status'    => ['type' => 'enum', 'constraint' => ['pending', 'verified', 'failed'], 'default' => 'pending'],
             'created_at'             => ['type' => 'datetime', 'null' => true],
             'updated_at'             => ['type' => 'datetime', 'null' => true],
         ]);

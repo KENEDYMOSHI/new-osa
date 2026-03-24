@@ -652,19 +652,28 @@ class AuthController extends ResourceController
                  $licenses = $builder->get()->getResult();
             }
 
+            $userPayload = [
+                'id'         => $user->id,
+                'username'   => $user->username,
+                'email'      => $user->email,
+                'uuid'       => $uuid,
+                'user_type'  => $user->user_type ?? 'practitioner',
+            ];
+
+            if (isset($user->user_type) && $user->user_type === 'business_owner') {
+                $userPayload['phone_number'] = $user->phone_number ?? null;
+                $userPayload['is_verified']  = isset($user->active) ? (bool) $user->active : false;
+                $userPayload['created_at']   = $user->created_at ?? null;
+                $userPayload['last_active']  = $user->last_active ?? null;
+            }
+
             return $this->respond([
-                'user' => [
-                    'id' => $user->id,
-                    'username' => $user->username,
-                    'email' => $user->email,
-                    'uuid' => $uuid,
-                    'user_type' => $user->user_type ?? 'practitioner',
-                ],
-                'personalInfo' => $personalInfo,
-                'businessInfos' => $businessInfos,
-                'businessOwnerInfo' => $businessOwnerInfo,
-                'businessContactInfo' => $businessContactInfo,
-                'licenses' => $licenses
+                'user'               => $userPayload,
+                'personalInfo'       => $personalInfo,
+                'businessInfos'      => $businessInfos,
+                'businessOwnerInfo'  => $businessOwnerInfo,
+                'businessContactInfo'=> $businessContactInfo,
+                'licenses'           => $licenses
             ]);
         } catch (\Exception $e) {
             return $this->failServerError('Server Error: ' . $e->getMessage());
