@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { BusinessRegistrationService } from '../../../services/business-registration.service';
-import { District, LocationService, Ward } from '../../../services/location.service';
+import { District, LocationService, PostalCode, Ward } from '../../../services/location.service';
 
 @Component({
   selector: 'app-business-profile',
@@ -29,6 +29,7 @@ export class BusinessProfileComponent implements OnInit {
   regions: string[] = [];
   districts: District[] = [];
   wards: Ward[] = [];
+  postalCodes: PostalCode[] = [];
 
   // Edit Business Info
   showEditBusinessModal = false;
@@ -216,6 +217,9 @@ export class BusinessProfileComponent implements OnInit {
     if (this.editBusinessForm.district) {
       this.locationService.getWards(this.editBusinessForm.district).subscribe({ next: (w) => (this.wards = w) });
     }
+    if (this.editBusinessForm.ward) {
+      this.locationService.getPostalCodes(this.editBusinessForm.ward).subscribe({ next: (p) => (this.postalCodes = p) });
+    }
     this.showEditBusinessModal = true;
   }
 
@@ -223,13 +227,16 @@ export class BusinessProfileComponent implements OnInit {
     this.showEditBusinessModal = false;
     this.districts = [];
     this.wards = [];
+    this.postalCodes = [];
   }
 
   onRegionChange(region: string) {
     this.editBusinessForm.district = '';
     this.editBusinessForm.ward = '';
+    this.editBusinessForm.postalCode = '';
     this.districts = [];
     this.wards = [];
+    this.postalCodes = [];
     if (region) {
       this.locationService.getDistricts(region).subscribe({ next: (d) => (this.districts = d) });
     }
@@ -237,9 +244,24 @@ export class BusinessProfileComponent implements OnInit {
 
   onDistrictChange(district: string) {
     this.editBusinessForm.ward = '';
+    this.editBusinessForm.postalCode = '';
     this.wards = [];
+    this.postalCodes = [];
     if (district) {
       this.locationService.getWards(district).subscribe({ next: (w) => (this.wards = w) });
+    }
+  }
+
+  onWardChange(ward: string) {
+    this.editBusinessForm.postalCode = '';
+    this.postalCodes = [];
+    if (ward) {
+      this.locationService.getPostalCodes(ward).subscribe({
+        next: (p) => {
+          this.postalCodes = p;
+          if (p.length === 1) this.editBusinessForm.postalCode = p[0].postcode;
+        }
+      });
     }
   }
 
