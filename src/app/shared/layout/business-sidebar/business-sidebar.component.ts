@@ -81,6 +81,7 @@ export class BusinessSidebarComponent implements OnInit {
   readonly isMobileOpen$;
   readonly isHovered$;
   businessName = '';
+  companyName = '';
   logoUrl: string | null = null;
 
   showLogoModal = false;
@@ -107,6 +108,7 @@ export class BusinessSidebarComponent implements OnInit {
           this.businessName = data.user.username?.split('_')[0] || '';
         }
         this.logoUrl = data.businessOwnerInfo?.business_logo || null;
+        this.companyName = data.businessOwnerInfo?.company_name || '';
       }
     });
   }
