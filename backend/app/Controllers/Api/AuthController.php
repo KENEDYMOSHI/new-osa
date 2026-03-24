@@ -662,7 +662,6 @@ class AuthController extends ResourceController
 
             if (isset($user->user_type) && $user->user_type === 'business_owner') {
                 $userPayload['phone_number'] = $user->phone_number ?? null;
-                $userPayload['is_verified']  = isset($user->active) ? (bool) $user->active : false;
                 $userPayload['created_at']   = $user->created_at ?? null;
                 $userPayload['last_active']  = $user->last_active ?? null;
             }
