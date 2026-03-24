@@ -144,6 +144,9 @@ export class BusinessApplicationsComponent {
   searchTerm = '';
   showNewApplicationModal = false;
 
+  readonly pageSize = 7;
+  currentPage = 1;
+
   get filteredApplications(): Application[] {
     return this.applications.filter((app) => {
       const matchesStatus =
@@ -157,16 +160,48 @@ export class BusinessApplicationsComponent {
     });
   }
 
+  get pagedApplications(): Application[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredApplications.slice(start, start + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredApplications.length / this.pageSize));
+  }
+
+  get pageNumbers(): number[] {
+    const total = this.totalPages;
+    const current = this.currentPage;
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    if (current <= 4) return [1, 2, 3, 4, 5, -1, total];
+    if (current >= total - 3) return [1, -1, total - 4, total - 3, total - 2, total - 1, total];
+    return [1, -1, current - 1, current, current + 1, -1, total];
+  }
+
+  get paginationFrom(): number {
+    return this.filteredApplications.length === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  get paginationTo(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filteredApplications.length);
+  }
+
   get totalApplications(): number {
     return this.applications.length;
   }
 
   setStatusFilter(status: ApplicationStatus): void {
     this.selectedStatus = status;
+    this.currentPage = 1;
   }
 
   setSearchTerm(value: string): void {
     this.searchTerm = value;
+    this.currentPage = 1;
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) this.currentPage = page;
   }
 
   getFilterCount(status: ApplicationStatus): number {

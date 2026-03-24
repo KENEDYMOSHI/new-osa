@@ -130,7 +130,7 @@
     <!-- Mobile cards -->
     <div class="divide-y divide-gray-100 dark:divide-gray-800 md:hidden">
       <div
-        *ngFor="let app of filteredApplications"
+        *ngFor="let app of pagedApplications"
         class="space-y-4 px-5 py-4">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
@@ -193,7 +193,7 @@
 
         <tbody>
           <tr
-            *ngFor="let app of filteredApplications"
+            *ngFor="let app of pagedApplications"
             class="border-b border-gray-100 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/40">
             <td class="px-6 py-4">
               <div class="font-medium text-gray-900 dark:text-white">{{ app.referenceNumber }}</div>
@@ -234,6 +234,49 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="filteredApplications.length > 0" class="flex flex-col gap-3 border-t border-gray-200 px-6 py-4 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Showing <span class="font-medium text-gray-900 dark:text-white">{{ paginationFrom }}</span>–<span class="font-medium text-gray-900 dark:text-white">{{ paginationTo }}</span> of <span class="font-medium text-gray-900 dark:text-white">{{ filteredApplications.length }}</span> results
+      </p>
+      <div class="flex items-center gap-1">
+        <!-- Prev -->
+        <button
+          type="button"
+          (click)="goToPage(currentPage - 1)"
+          [disabled]="currentPage === 1"
+          class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 text-sm font-medium text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-900 disabled:pointer-events-none disabled:opacity-40 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18l-6 -6l6 -6" /></svg>
+          Prev
+        </button>
+
+        <!-- Page numbers -->
+        <ng-container *ngFor="let page of pageNumbers">
+          <span *ngIf="page === -1" class="inline-flex h-8 w-8 items-center justify-center text-sm text-gray-400 dark:text-gray-500">…</span>
+          <button
+            *ngIf="page !== -1"
+            type="button"
+            (click)="goToPage(page)"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border text-sm font-medium transition-colors"
+            [ngClass]="page === currentPage
+              ? 'border-[#F7941D] bg-[#F7941D] text-white'
+              : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-white'">
+            {{ page }}
+          </button>
+        </ng-container>
+
+        <!-- Next -->
+        <button
+          type="button"
+          (click)="goToPage(currentPage + 1)"
+          [disabled]="currentPage === totalPages"
+          class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 text-sm font-medium text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-900 disabled:pointer-events-none disabled:opacity-40 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-white">
+          Next
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18l6 -6l-6 -6" /></svg>
+        </button>
+      </div>
     </div>
   </section>
 </div>
