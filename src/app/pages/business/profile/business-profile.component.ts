@@ -24,33 +24,55 @@ export class BusinessProfileComponent implements OnInit {
   isDragging = false;
   isUploading = false;
 
+  // Edit Business Info
+  showEditBusinessModal = false;
+  isSavingBusiness = false;
+  editBusinessForm = {
+    companyName: '',
+    businessType: '',
+    tin: '',
+    businessLicenseNumber: '',
+    officePhoneNumber: '',
+    postalAddress: '',
+    region: '',
+    district: '',
+    ward: '',
+    postalCode: '',
+  };
+
   // Edit Owner
   showEditOwnerModal = false;
+  isSavingOwner = false;
   editOwnerForm = {
-    first_name: '',
-    second_name: '',
-    last_name: '',
-    phone_number: '',
-    email: '',
-    postal_address: '',
+    ownerFirstName: '',
+    ownerSecondName: '',
+    ownerLastName: '',
+    ownerPhoneNumber: '',
+    ownerEmailAddress: '',
+    ownerPostalAddress: '',
   };
 
   // Edit Contact
   showEditContactModal = false;
+  isSavingContact = false;
   editContactForm = {
-    first_name: '',
-    second_name: '',
-    last_name: '',
-    designation: '',
-    phone_number: '',
-    alternative_phone: '',
-    email: '',
+    contactFirstName: '',
+    contactSecondName: '',
+    contactLastName: '',
+    contactDesignation: '',
+    contactPhone: '',
+    contactAlternativePhone: '',
+    contactEmail: '',
   };
 
   constructor(private authService: AuthService, private businessService: BusinessRegistrationService) {}
 
   ngOnInit() {
     this.loadUserProfile();
+  }
+
+  get isPending(): boolean {
+    return !this.businessInfo?.verification_status || this.businessInfo.verification_status === 'pending';
   }
 
   getOwnerInitials(): string {
@@ -113,27 +135,21 @@ export class BusinessProfileComponent implements OnInit {
     event.stopPropagation();
     this.isDragging = false;
     const files = event.dataTransfer?.files;
-    if (files && files.length > 0) {
-      this.handleFile(files[0]);
-    }
+    if (files && files.length > 0) this.handleFile(files[0]);
   }
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.handleFile(input.files[0]);
-    }
+    if (input.files && input.files.length > 0) this.handleFile(input.files[0]);
   }
 
   handleFile(file: File) {
     const allowed = ['image/png', 'image/jpeg', 'image/webp'];
     if (!allowed.includes(file.type)) return;
-    if (file.size > 1 * 1024 * 1024) return; // 1MB limit
+    if (file.size > 1 * 1024 * 1024) return;
     this.selectedLogoFile = file;
     const reader = new FileReader();
-    reader.onload = () => {
-      this.logoPreview = reader.result as string;
-    };
+    reader.onload = () => { this.logoPreview = reader.result as string; };
     reader.readAsDataURL(file);
   }
 
@@ -166,15 +182,53 @@ export class BusinessProfileComponent implements OnInit {
     });
   }
 
+  // --- Edit Business Info ---
+  openEditBusinessModal() {
+    if (!this.isPending) return;
+    this.editBusinessForm = {
+      companyName:           this.businessInfo?.company_name            || '',
+      businessType:          this.businessInfo?.business_type           || '',
+      tin:                   this.businessInfo?.tin                     || '',
+      businessLicenseNumber: this.businessInfo?.business_license_number || '',
+      officePhoneNumber:     this.businessInfo?.office_phone_number     || '',
+      postalAddress:         this.businessInfo?.postal_address          || '',
+      region:                this.businessInfo?.region                  || '',
+      district:              this.businessInfo?.district                || '',
+      ward:                  this.businessInfo?.ward                    || '',
+      postalCode:            this.businessInfo?.postal_code             || '',
+    };
+    this.showEditBusinessModal = true;
+  }
+
+  closeEditBusinessModal() {
+    this.showEditBusinessModal = false;
+  }
+
+  saveBusinessInfo() {
+    this.isSavingBusiness = true;
+    this.businessService.updateBusinessInfo(this.editBusinessForm).subscribe({
+      next: () => {
+        this.isSavingBusiness = false;
+        this.closeEditBusinessModal();
+        this.loadUserProfile();
+      },
+      error: (err) => {
+        console.error('Save business info failed:', err);
+        this.isSavingBusiness = false;
+      }
+    });
+  }
+
   // --- Edit Owner ---
   openEditOwnerModal() {
+    if (!this.isPending) return;
     this.editOwnerForm = {
-      first_name: this.businessInfo?.owner_first_name || '',
-      second_name: this.businessInfo?.owner_second_name || '',
-      last_name: this.businessInfo?.owner_last_name || '',
-      phone_number: this.businessInfo?.owner_phone_number || '',
-      email: this.businessInfo?.owner_email_address || '',
-      postal_address: this.businessInfo?.owner_postal_address || '',
+      ownerFirstName:     this.businessInfo?.owner_first_name    || '',
+      ownerSecondName:    this.businessInfo?.owner_second_name   || '',
+      ownerLastName:      this.businessInfo?.owner_last_name     || '',
+      ownerPhoneNumber:   this.businessInfo?.owner_phone_number  || '',
+      ownerEmailAddress:  this.businessInfo?.owner_email_address || '',
+      ownerPostalAddress: this.businessInfo?.owner_postal_address|| '',
     };
     this.showEditOwnerModal = true;
   }
@@ -184,21 +238,31 @@ export class BusinessProfileComponent implements OnInit {
   }
 
   saveOwner() {
-    // TODO: API call to save owner info
-    console.log('Save owner:', this.editOwnerForm);
-    this.closeEditOwnerModal();
+    this.isSavingOwner = true;
+    this.businessService.updateBusinessInfo(this.editOwnerForm).subscribe({
+      next: () => {
+        this.isSavingOwner = false;
+        this.closeEditOwnerModal();
+        this.loadUserProfile();
+      },
+      error: (err) => {
+        console.error('Save owner failed:', err);
+        this.isSavingOwner = false;
+      }
+    });
   }
 
   // --- Edit Contact ---
   openEditContactModal() {
+    if (!this.isPending) return;
     this.editContactForm = {
-      first_name: this.contactInfo?.first_name || '',
-      second_name: this.contactInfo?.second_name || '',
-      last_name: this.contactInfo?.last_name || '',
-      designation: this.contactInfo?.designation || '',
-      phone_number: this.contactInfo?.phone_number || '',
-      alternative_phone: this.contactInfo?.alternative_phone_number || '',
-      email: this.contactInfo?.email_address || '',
+      contactFirstName:        this.contactInfo?.first_name              || '',
+      contactSecondName:       this.contactInfo?.second_name             || '',
+      contactLastName:         this.contactInfo?.last_name               || '',
+      contactDesignation:      this.contactInfo?.designation             || '',
+      contactPhone:            this.contactInfo?.phone_number            || '',
+      contactAlternativePhone: this.contactInfo?.alternative_phone_number|| '',
+      contactEmail:            this.contactInfo?.email_address           || '',
     };
     this.showEditContactModal = true;
   }
@@ -208,8 +272,17 @@ export class BusinessProfileComponent implements OnInit {
   }
 
   saveContact() {
-    // TODO: API call to save contact info
-    console.log('Save contact:', this.editContactForm);
-    this.closeEditContactModal();
+    this.isSavingContact = true;
+    this.businessService.updateBusinessInfo(this.editContactForm).subscribe({
+      next: () => {
+        this.isSavingContact = false;
+        this.closeEditContactModal();
+        this.loadUserProfile();
+      },
+      error: (err) => {
+        console.error('Save contact failed:', err);
+        this.isSavingContact = false;
+      }
+    });
   }
 }

@@ -66,6 +66,80 @@ class BusinessRegistrationController extends ResourceController
         }
     }
 
+    public function updateBusinessInfo()
+    {
+        $user = $this->getUserFromToken();
+
+        if (!$user) {
+            return $this->failUnauthorized('Unauthorized');
+        }
+
+        $data = $this->request->getJSON(true);
+
+        try {
+            $ownerModel = new BusinessOwnerInfoModel();
+            $existing   = $ownerModel->where('user_uuid', $user->uuid)->first();
+
+            if (!$existing) {
+                return $this->failNotFound('Business info not found');
+            }
+
+            # Only allow updates when pending
+            if (($existing->verification_status ?? 'pending') !== 'pending') {
+                return $this->fail('Business info can only be edited while verification is pending', 403);
+            }
+
+            $ownerData = [
+                'company_name'            => $data['companyName']           ?? $existing->company_name,
+                'business_type'           => $data['businessType']          ?? $existing->business_type,
+                'tin'                     => $data['tin']                   ?? $existing->tin,
+                'business_license_number' => $data['businessLicenseNumber'] ?? $existing->business_license_number,
+                'postal_address'          => $data['postalAddress']         ?? $existing->postal_address,
+                'office_phone_number'     => $data['officePhoneNumber']     ?? $existing->office_phone_number,
+                'region'                  => $data['region']                ?? $existing->region,
+                'district'                => $data['district']              ?? $existing->district,
+                'ward'                    => $data['ward']                  ?? $existing->ward,
+                'postal_code'             => $data['postalCode']            ?? $existing->postal_code,
+                'owner_first_name'        => $data['ownerFirstName']        ?? $existing->owner_first_name,
+                'owner_second_name'       => $data['ownerSecondName']       ?? $existing->owner_second_name,
+                'owner_last_name'         => $data['ownerLastName']         ?? $existing->owner_last_name,
+                'owner_phone_number'      => $data['ownerPhoneNumber']      ?? $existing->owner_phone_number,
+                'owner_email_address'     => $data['ownerEmailAddress']     ?? $existing->owner_email_address,
+                'owner_postal_address'    => $data['ownerPostalAddress']    ?? $existing->owner_postal_address,
+            ];
+
+            $ownerModel->update($existing->id, $ownerData);
+
+            # Update contact info if provided
+            if (isset($data['contactFirstName']) || isset($data['contactLastName']) || isset($data['contactPhone'])) {
+                $contactModel   = new BusinessContactInfoModel();
+                $existingContact = $contactModel->where('user_uuid', $user->uuid)->first();
+
+                $contactData = [
+                    'first_name'               => $data['contactFirstName']        ?? ($existingContact->first_name ?? null),
+                    'second_name'              => $data['contactSecondName']       ?? ($existingContact->second_name ?? null),
+                    'last_name'                => $data['contactLastName']         ?? ($existingContact->last_name ?? null),
+                    'designation'              => $data['contactDesignation']      ?? ($existingContact->designation ?? null),
+                    'phone_number'             => $data['contactPhone']            ?? ($existingContact->phone_number ?? null),
+                    'alternative_phone_number' => $data['contactAlternativePhone'] ?? ($existingContact->alternative_phone_number ?? null),
+                    'email_address'            => $data['contactEmail']            ?? ($existingContact->email_address ?? null),
+                ];
+
+                if ($existingContact) {
+                    $contactModel->update($existingContact->id, $contactData);
+                } else {
+                    $contactData['user_uuid'] = $user->uuid;
+                    $contactModel->insert($contactData);
+                }
+            }
+
+            return $this->respond(['message' => 'Business information updated successfully']);
+        } catch (\Exception $e) {
+            log_message('error', 'updateBusinessInfo error: ' . $e->getMessage());
+            return $this->failServerError('Failed to update business information');
+        }
+    }
+
     public function uploadLogo()
     {
         $user = $this->getUserFromToken();
