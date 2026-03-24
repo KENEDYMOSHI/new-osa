@@ -5,6 +5,7 @@ import { Router, RouterModule } from "@angular/router";
 import { SidebarService } from "../../services/sidebar.service";
 import { UserDropdownComponent } from "../../components/header/user-dropdown/user-dropdown.component";
 import { AuthService } from "../../../core/services/auth.service";
+import { BusinessRegistrationService } from "../../../services/business-registration.service";
 
 type NavItem = {
   name: string;
@@ -80,11 +81,19 @@ export class BusinessSidebarComponent implements OnInit {
   readonly isMobileOpen$;
   readonly isHovered$;
   businessName = '';
+  logoUrl: string | null = null;
+
+  showLogoModal = false;
+  logoPreview: string | null = null;
+  selectedLogoFile: File | null = null;
+  isDragging = false;
+  isUploading = false;
 
   constructor(
     public sidebarService: SidebarService,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private businessService: BusinessRegistrationService
   ) {
     this.isExpanded$ = this.sidebarService.isExpanded$;
     this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
@@ -97,6 +106,73 @@ export class BusinessSidebarComponent implements OnInit {
         if (data.user) {
           this.businessName = data.user.username?.split('_')[0] || '';
         }
+        this.logoUrl = data.businessOwnerInfo?.business_logo || null;
+      }
+    });
+  }
+
+  openLogoModal() {
+    this.showLogoModal = true;
+    this.logoPreview = null;
+    this.selectedLogoFile = null;
+  }
+
+  closeLogoModal() {
+    this.showLogoModal = false;
+    this.logoPreview = null;
+    this.selectedLogoFile = null;
+    this.isDragging = false;
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) this.handleFile(files[0]);
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) this.handleFile(input.files[0]);
+  }
+
+  handleFile(file: File) {
+    const allowed = ['image/png', 'image/jpeg', 'image/webp'];
+    if (!allowed.includes(file.type)) return;
+    if (file.size > 1 * 1024 * 1024) return;
+    this.selectedLogoFile = file;
+    const reader = new FileReader();
+    reader.onload = () => { this.logoPreview = reader.result as string; };
+    reader.readAsDataURL(file);
+  }
+
+  uploadLogo() {
+    if (!this.selectedLogoFile) return;
+    this.isUploading = true;
+    const formData = new FormData();
+    formData.append('logo', this.selectedLogoFile);
+    this.businessService.uploadLogo(formData).subscribe({
+      next: (res: any) => {
+        this.logoUrl = res.logo_url;
+        this.isUploading = false;
+        this.closeLogoModal();
+      },
+      error: (err) => {
+        console.error('Logo upload failed:', err);
+        this.isUploading = false;
       }
     });
   }
