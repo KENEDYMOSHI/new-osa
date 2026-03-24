@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
+import { BusinessRegistrationService } from '../../../services/business-registration.service';
 
 @Component({
   selector: 'app-business-profile',
@@ -46,7 +47,7 @@ export class BusinessProfileComponent implements OnInit {
     email: '',
   };
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private businessService: BusinessRegistrationService) {}
 
   ngOnInit() {
     this.loadUserProfile();
@@ -71,7 +72,7 @@ export class BusinessProfileComponent implements OnInit {
         this.user = response.user;
         this.businessInfo = response.businessOwnerInfo;
         this.contactInfo = response.businessContactInfo;
-        this.logoUrl = response.businessOwnerInfo?.logo_url || null;
+        this.logoUrl = response.businessOwnerInfo?.business_logo || null;
         this.isLoading = false;
       },
       error: (error) => {
@@ -139,19 +140,30 @@ export class BusinessProfileComponent implements OnInit {
   uploadLogo() {
     if (!this.selectedLogoFile) return;
     this.isUploading = true;
-    // TODO: Replace with actual API call
-    setTimeout(() => {
-      this.logoUrl = this.logoPreview;
-      this.isUploading = false;
-      this.closeLogoModal();
-    }, 1000);
+    const formData = new FormData();
+    formData.append('logo', this.selectedLogoFile);
+    this.businessService.uploadLogo(formData).subscribe({
+      next: (res: any) => {
+        this.logoUrl = res.logo_url;
+        this.isUploading = false;
+        this.closeLogoModal();
+      },
+      error: (err) => {
+        console.error('Logo upload failed:', err);
+        this.isUploading = false;
+      }
+    });
   }
 
   removeLogo() {
-    this.logoUrl = null;
-    this.logoPreview = null;
-    this.selectedLogoFile = null;
-    // TODO: API call to remove logo
+    this.businessService.removeLogo().subscribe({
+      next: () => {
+        this.logoUrl = null;
+        this.logoPreview = null;
+        this.selectedLogoFile = null;
+      },
+      error: (err) => console.error('Logo removal failed:', err)
+    });
   }
 
   // --- Edit Owner ---

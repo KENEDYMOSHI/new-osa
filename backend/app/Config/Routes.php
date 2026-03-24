@@ -96,6 +96,10 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->get('application-details/(:segment)', 'ApplicationReviewController::getApplicationDetails/$1');
     $routes->get('available-license-types', 'ApplicationReviewController::getAvailableLicenseTypes');
 
+    // Business Registration
+    $routes->post('business/upload-logo', 'BusinessRegistrationController::uploadLogo');
+    $routes->post('business/remove-logo', 'BusinessRegistrationController::removeLogo');
+
     // Locations (Region, District, Ward, Postal Code)
     $routes->get('locations/regions', 'LocationController::getRegions');
     $routes->get('locations/districts/(:segment)', 'LocationController::getDistricts/$1');

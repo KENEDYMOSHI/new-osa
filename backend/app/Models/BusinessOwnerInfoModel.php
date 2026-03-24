@@ -15,6 +15,7 @@ class BusinessOwnerInfoModel extends Model
     protected $allowedFields    = [
         'user_uuid',
         // Business information
+        'business_logo',
         'company_name',
         'business_type',
         'tin',

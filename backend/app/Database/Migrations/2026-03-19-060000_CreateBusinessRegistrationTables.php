@@ -39,6 +39,7 @@ class CreateBusinessRegistrationTables extends Migration
             'business_type'          => ['type' => 'varchar', 'constraint' => 50],
             'tin'                    => ['type' => 'varchar', 'constraint' => 20],
             'business_license_number' => ['type' => 'varchar', 'constraint' => 50],
+            'business_logo'          => ['type' => 'varchar', 'constraint' => 255, 'null' => true],
             'postal_address'         => ['type' => 'varchar', 'constraint' => 255, 'null' => true],
             'office_phone_number'    => ['type' => 'varchar', 'constraint' => 20, 'null' => true],
             'region'                 => ['type' => 'varchar', 'constraint' => 100, 'null' => true],
