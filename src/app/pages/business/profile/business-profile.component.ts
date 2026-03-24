@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { BusinessRegistrationService } from '../../../services/business-registration.service';
+import { District, LocationService, Ward } from '../../../services/location.service';
 
 @Component({
   selector: 'app-business-profile',
@@ -23,6 +24,11 @@ export class BusinessProfileComponent implements OnInit {
   selectedLogoFile: File | null = null;
   isDragging = false;
   isUploading = false;
+
+  // Location data
+  regions: string[] = [];
+  districts: District[] = [];
+  wards: Ward[] = [];
 
   // Edit Business Info
   showEditBusinessModal = false;
@@ -65,7 +71,11 @@ export class BusinessProfileComponent implements OnInit {
     contactEmail: '',
   };
 
-  constructor(private authService: AuthService, private businessService: BusinessRegistrationService) {}
+  constructor(
+    private authService: AuthService,
+    private businessService: BusinessRegistrationService,
+    private locationService: LocationService
+  ) {}
 
   ngOnInit() {
     this.loadUserProfile();
@@ -197,11 +207,40 @@ export class BusinessProfileComponent implements OnInit {
       ward:                  this.businessInfo?.ward                    || '',
       postalCode:            this.businessInfo?.postal_code             || '',
     };
+    this.districts = [];
+    this.wards = [];
+    this.locationService.getRegions().subscribe({ next: (r) => (this.regions = r) });
+    if (this.editBusinessForm.region) {
+      this.locationService.getDistricts(this.editBusinessForm.region).subscribe({ next: (d) => (this.districts = d) });
+    }
+    if (this.editBusinessForm.district) {
+      this.locationService.getWards(this.editBusinessForm.district).subscribe({ next: (w) => (this.wards = w) });
+    }
     this.showEditBusinessModal = true;
   }
 
   closeEditBusinessModal() {
     this.showEditBusinessModal = false;
+    this.districts = [];
+    this.wards = [];
+  }
+
+  onRegionChange(region: string) {
+    this.editBusinessForm.district = '';
+    this.editBusinessForm.ward = '';
+    this.districts = [];
+    this.wards = [];
+    if (region) {
+      this.locationService.getDistricts(region).subscribe({ next: (d) => (this.districts = d) });
+    }
+  }
+
+  onDistrictChange(district: string) {
+    this.editBusinessForm.ward = '';
+    this.wards = [];
+    if (district) {
+      this.locationService.getWards(district).subscribe({ next: (w) => (this.wards = w) });
+    }
   }
 
   saveBusinessInfo() {
