@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../../../core/services/auth.service';
 import { BusinessRegistrationService } from '../../../services/business-registration.service';
 import { District, LocationService, PostalCode, Ward } from '../../../services/location.service';
 
@@ -73,7 +72,6 @@ export class BusinessProfileComponent implements OnInit {
   };
 
   constructor(
-    private authService: AuthService,
     private businessService: BusinessRegistrationService,
     private locationService: LocationService
   ) {}
