@@ -1,0 +1,502 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-950">
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- SUCCESS STATE                                                    -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="submitted" class="flex min-h-screen items-center justify-center px-4">
+    <div class="w-full max-w-md text-center">
+      <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/10">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-600 dark:text-emerald-400">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
+        </svg>
+      </div>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Equipment Registered!</h2>
+      <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        Your equipment has been submitted for verification. Redirecting you back…
+      </p>
+      <div class="mt-6 flex justify-center">
+        <div class="h-1 w-40 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+          <div class="h-full animate-[width_2s_linear] rounded-full bg-emerald-500"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-container *ngIf="!submitted">
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- STICKY TOP BAR                                                   -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <div class="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/95">
+      <div class="mx-auto max-w-5xl px-4 sm:px-6">
+
+        <!-- Breadcrumb + title row -->
+        <div class="flex items-center gap-3 py-3.5">
+          <button type="button" (click)="goBack()"
+            class="inline-flex items-center gap-1.5 rounded-lg p-1.5 text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m15 18-6-6 6-6"/>
+            </svg>
+          </button>
+
+          <nav class="flex items-center gap-1.5 text-sm">
+            <a routerLink="/business/equipments" class="text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+              Registered Equipments
+            </a>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 dark:text-gray-600">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+            <span class="font-medium text-gray-900 dark:text-white">Add New Equipment</span>
+          </nav>
+        </div>
+
+        <!-- Step indicators -->
+        <div class="flex items-center gap-0 pb-0 overflow-x-auto">
+          <ng-container *ngFor="let step of steps; let last = last">
+            <button type="button" (click)="goToStep(step.number)"
+              class="flex shrink-0 items-center gap-2.5 border-b-2 px-4 py-3 text-sm font-medium transition-colors"
+              [ngClass]="{
+                'border-[#F7941D] text-[#F7941D]': currentStep === step.number,
+                'border-emerald-500 text-emerald-600 dark:text-emerald-400': currentStep > step.number,
+                'border-transparent text-gray-400 dark:text-gray-500': currentStep < step.number,
+                'hover:text-gray-700 dark:hover:text-gray-300': currentStep >= step.number
+              }"
+              [disabled]="currentStep < step.number">
+              <!-- Step dot -->
+              <span class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all"
+                [ngClass]="{
+                  'bg-[#F7941D] text-white': currentStep === step.number,
+                  'bg-emerald-500 text-white': currentStep > step.number,
+                  'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500': currentStep < step.number
+                }">
+                <svg *ngIf="currentStep > step.number" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 6 9 17l-5-5"/>
+                </svg>
+                <span *ngIf="currentStep <= step.number">{{ step.number }}</span>
+              </span>
+              <span class="hidden sm:inline">{{ step.label }}</span>
+            </button>
+            <!-- connector -->
+            <div *ngIf="!last" class="hidden h-px w-8 shrink-0 sm:block"
+              [ngClass]="currentStep > step.number ? 'bg-emerald-400' : 'bg-gray-200 dark:bg-gray-700'">
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- PAGE CONTENT                                                     -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+
+      <!-- ┌────────────────────────────────────────────────────────────┐ -->
+      <!-- │ STEP 1 – Select Service Type                              │ -->
+      <!-- └────────────────────────────────────────────────────────────┘ -->
+      <section *ngIf="currentStep === 1">
+        <div class="mb-6">
+          <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+            What type of equipment are you registering?
+          </h1>
+          <p class="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+            Select a service type. Each type has its own tailored registration form.
+          </p>
+        </div>
+
+        <!-- Search + category filters -->
+        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div class="relative flex-1">
+              <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                </svg>
+              </span>
+              <input type="text" [value]="serviceSearchTerm" (input)="setServiceSearch($any($event.target).value)"
+                placeholder="Search service types…"
+                class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-[#F7941D] focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-800" />
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <button type="button" (click)="setCategory('all')"
+                class="rounded-lg border px-3 py-2 text-xs font-medium transition-colors"
+                [ngClass]="activeCategory === 'all'
+                  ? 'border-[#F7941D] bg-[#FFF7ED] text-[#B45309] dark:bg-[#F7941D]/10 dark:text-[#FDBA74]'
+                  : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:border-gray-700 dark:text-gray-400'">
+                All Types
+              </button>
+              <button *ngFor="let cat of categories" type="button" (click)="setCategory(cat.key)"
+                class="rounded-lg border px-3 py-2 text-xs font-medium transition-colors"
+                [ngClass]="activeCategory === cat.key
+                  ? 'border-[#F7941D] bg-[#FFF7ED] text-[#B45309] dark:bg-[#F7941D]/10 dark:text-[#FDBA74]'
+                  : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:border-gray-700 dark:text-gray-400'">
+                {{ cat.label }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Results count -->
+          <p class="mt-4 text-xs text-gray-400 dark:text-gray-500">
+            Showing {{ filteredServiceTypes.length }} of {{ serviceTypes.length }} service types
+          </p>
+        </div>
+
+        <!-- Service cards grid -->
+        <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <button *ngFor="let st of filteredServiceTypes" type="button" (click)="selectService(st.key)"
+            class="group relative flex items-start gap-4 rounded-2xl border p-5 text-left transition-all duration-200"
+            [ngClass]="isServiceSelected(st.key)
+              ? 'border-[#F7941D] bg-[#FFF7ED] shadow-md ring-1 ring-[#F7941D]/20 dark:bg-[#F7941D]/10 dark:border-[#F7941D]/60'
+              : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700'">
+
+            <!-- Category colour circle -->
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-base font-bold transition-transform group-hover:scale-105"
+              [style.background-color]="getCategoryColor(st.key) + '18'"
+              [style.color]="getCategoryColor(st.key)">
+              {{ st.label.charAt(0) }}
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold text-gray-900 dark:text-white leading-snug">{{ st.label }}</p>
+              <p class="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                {{ getServiceConfig(st.key)?.description || '' }}
+              </p>
+              <span class="mt-2 inline-block rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                [style.background-color]="getCategoryColor(st.key) + '14'"
+                [style.color]="getCategoryColor(st.key)">
+                {{ getCategoryLabel(st.key) }}
+              </span>
+            </div>
+
+            <!-- Checkmark -->
+            <span *ngIf="isServiceSelected(st.key)"
+              class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#F7941D] text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m5 12 5 5L20 7"/>
+              </svg>
+            </span>
+          </button>
+        </div>
+
+        <!-- Empty -->
+        <div *ngIf="filteredServiceTypes.length === 0" class="py-16 text-center">
+          <p class="font-medium text-gray-900 dark:text-white">No results found</p>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Try a different keyword or category filter.</p>
+        </div>
+      </section>
+
+      <!-- ┌────────────────────────────────────────────────────────────┐ -->
+      <!-- │ STEP 2 – Equipment Details                                │ -->
+      <!-- └────────────────────────────────────────────────────────────┘ -->
+      <section *ngIf="currentStep === 2 && activeConfig">
+        <!-- Header -->
+        <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+              {{ activeConfig.serviceTypeLabel }}
+            </h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {{ activeConfig.description }}
+              Fields marked <span class="text-red-500 font-semibold">*</span> are required.
+            </p>
+          </div>
+
+          <!-- Progress pill -->
+          <div class="flex shrink-0 items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+            <div class="relative h-10 w-10">
+              <svg class="h-10 w-10 -rotate-90" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="currentColor" stroke-width="3" class="text-gray-100 dark:text-gray-800"/>
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="currentColor" stroke-width="3"
+                  stroke-dasharray="100" [attr.stroke-dashoffset]="100 - overallProgress"
+                  stroke-linecap="round"
+                  class="text-[#F7941D] transition-all duration-500"/>
+              </svg>
+              <span class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-gray-700 dark:text-gray-200">
+                {{ overallProgress }}%
+              </span>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-900 dark:text-white">{{ filledFieldCount }}/{{ totalFieldCount }}</p>
+              <p class="text-[10px] text-gray-400">fields filled</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form items -->
+        <div class="space-y-4">
+          <div *ngFor="let item of formItems; let idx = index"
+            class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+
+            <!-- Item accordion header -->
+            <button type="button" (click)="toggleItem(idx)"
+              class="flex w-full items-center justify-between gap-4 px-6 py-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <div class="flex items-center gap-3">
+                <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl text-sm font-bold"
+                  [ngClass]="expandedItemIndex === idx
+                    ? 'bg-[#F7941D] text-white'
+                    : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'">
+                  {{ idx + 1 }}
+                </span>
+                <div>
+                  <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                    {{ activeConfig.itemLabel }} #{{ idx + 1 }}
+                  </p>
+                  <p class="text-xs text-gray-400">{{ getItemProgress(idx) }}% complete</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <!-- Item progress bar -->
+                <div class="hidden sm:block h-1.5 w-20 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                  <div class="h-full rounded-full bg-[#F7941D] transition-all duration-500"
+                    [style.width.%]="getItemProgress(idx)"></div>
+                </div>
+
+                <button *ngIf="formItems.length > 1" type="button" (click)="$event.stopPropagation(); removeItem(idx)"
+                  class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                  </svg>
+                </button>
+
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="text-gray-400 transition-transform duration-200"
+                  [style.transform]="expandedItemIndex === idx ? 'rotate(180deg)' : 'rotate(0deg)'">
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
+              </div>
+            </button>
+
+            <!-- Fields -->
+            <div *ngIf="expandedItemIndex === idx" class="border-t border-gray-100 px-6 py-6 dark:border-gray-800">
+              <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+                <div *ngFor="let field of activeConfig.fields"
+                  [ngClass]="field.gridSpan === 2 ? 'sm:col-span-2' : ''">
+
+                  <label class="mb-2 flex items-center gap-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ field.label }}
+                    <span *ngIf="field.required" class="text-red-500">*</span>
+                  </label>
+
+                  <!-- TEXT -->
+                  <input *ngIf="field.type === 'text'" type="text"
+                    [value]="getFieldValue(idx, field.key)"
+                    (input)="updateField(idx, field.key, $any($event.target).value)"
+                    [placeholder]="field.placeholder || ''"
+                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-[#F7941D] focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-800" />
+
+                  <!-- NUMBER -->
+                  <input *ngIf="field.type === 'number'" type="number"
+                    [value]="getFieldValue(idx, field.key)"
+                    (input)="updateField(idx, field.key, $any($event.target).value)"
+                    [placeholder]="field.placeholder || ''"
+                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-[#F7941D] focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-800" />
+
+                  <!-- DATE -->
+                  <input *ngIf="field.type === 'date'" type="date"
+                    [value]="getFieldValue(idx, field.key)"
+                    (input)="updateField(idx, field.key, $any($event.target).value)"
+                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all focus:border-[#F7941D] focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:bg-gray-800" />
+
+                  <!-- SELECT -->
+                  <div *ngIf="field.type === 'select'" class="relative">
+                    <select
+                      [value]="getFieldValue(idx, field.key)"
+                      (change)="updateField(idx, field.key, $any($event.target).value)"
+                      class="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all focus:border-[#F7941D] focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:bg-gray-800">
+                      <option value="" disabled selected>Select {{ field.label }}…</option>
+                      <option *ngFor="let opt of field.options" [value]="opt.value">{{ opt.label }}</option>
+                    </select>
+                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m6 9 6 6 6-6"/>
+                      </svg>
+                    </span>
+                  </div>
+
+                  <!-- TEXTAREA -->
+                  <textarea *ngIf="field.type === 'textarea'"
+                    [value]="getFieldValue(idx, field.key)"
+                    (input)="updateField(idx, field.key, $any($event.target).value)"
+                    [placeholder]="field.placeholder || ''"
+                    rows="3"
+                    class="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-[#F7941D] focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-800">
+                  </textarea>
+
+                  <!-- FILE -->
+                  <label *ngIf="field.type === 'file'"
+                    class="flex cursor-pointer items-center gap-4 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 px-5 py-4 transition-colors hover:border-[#F7941D]/50 hover:bg-[#FFF7ED] dark:border-gray-700 dark:bg-gray-800 dark:hover:border-[#F7941D]/40 dark:hover:bg-[#F7941D]/5">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-gray-700">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400">
+                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/>
+                      </svg>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <p class="text-sm font-medium text-gray-700 dark:text-gray-200">
+                        {{ getFieldValue(idx, field.key) || 'Click to upload file' }}
+                      </p>
+                      <p class="mt-0.5 text-xs text-gray-400">Accepted formats: {{ field.accept || 'Any' }}</p>
+                    </div>
+                    <input type="file" class="sr-only" [accept]="field.accept || '*'"
+                      (change)="updateField(idx, field.key, $any($event.target).files?.[0]?.name || '')" />
+                  </label>
+
+                  <p *ngIf="field.hint" class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">{{ field.hint }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Another -->
+        <button *ngIf="activeConfig.allowMultiple" type="button" (click)="addItem()"
+          class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-gray-200 py-4 text-sm font-medium text-gray-400 transition-colors hover:border-[#F7941D] hover:text-[#F7941D] dark:border-gray-800 dark:text-gray-500 dark:hover:border-[#F7941D] dark:hover:text-[#F7941D]">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14"/><path d="M5 12h14"/>
+          </svg>
+          Add Another {{ activeConfig.itemLabel }}
+        </button>
+      </section>
+
+      <!-- ┌────────────────────────────────────────────────────────────┐ -->
+      <!-- │ STEP 3 – Review & Submit                                  │ -->
+      <!-- └────────────────────────────────────────────────────────────┘ -->
+      <section *ngIf="currentStep === 3 && activeConfig">
+        <div class="mb-6">
+          <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Review & Confirm
+          </h1>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Please review everything carefully before submitting your registration.
+          </p>
+        </div>
+
+        <!-- Summary header card -->
+        <div class="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+          <div class="flex items-center gap-4">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-bold"
+              [style.background-color]="getCategoryColor(selectedServiceKey) + '18'"
+              [style.color]="getCategoryColor(selectedServiceKey)">
+              {{ activeConfig.serviceTypeLabel.charAt(0) }}
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ activeConfig.serviceTypeLabel }}</p>
+              <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{{ getCategoryLabel(selectedServiceKey) }}</p>
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end gap-1">
+            <span class="rounded-xl bg-[#F7941D] px-3 py-1 text-xs font-bold text-white">
+              {{ formItems.length }} {{ activeConfig.itemLabel }}{{ formItems.length > 1 ? 's' : '' }}
+            </span>
+            <span class="text-xs text-gray-400">{{ businessName }}</span>
+          </div>
+        </div>
+
+        <!-- Item review cards -->
+        <div class="space-y-4">
+          <div *ngFor="let item of formItems; let idx = index"
+            class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+            <div class="flex items-center gap-3 border-b border-gray-100 px-6 py-4 dark:border-gray-800">
+              <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-[#F7941D] text-xs font-bold text-white">
+                {{ idx + 1 }}
+              </span>
+              <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                {{ activeConfig.itemLabel }} #{{ idx + 1 }}
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2">
+              <div *ngFor="let field of activeConfig.fields; let last = last"
+                class="border-b border-gray-50 px-6 py-3.5 dark:border-gray-800/50 last:border-0"
+                [ngClass]="{
+                  'sm:col-span-2': field.gridSpan === 2,
+                  'sm:border-r sm:border-gray-50 dark:sm:border-gray-800/50': !field.gridSpan || field.gridSpan !== 2
+                }">
+                <p class="text-xs font-medium text-gray-400">{{ field.label }}</p>
+                <p class="mt-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                  {{ getDisplayValue(idx, field) }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Declaration notice -->
+        <div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-500/20 dark:bg-amber-500/5">
+          <div class="flex gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400">
+              <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+            </svg>
+            <p class="text-sm text-amber-800 dark:text-amber-300">
+              By submitting, you confirm that all the information provided is accurate and complete. Falsification of equipment details is a violation of WMA regulations.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <!-- BOTTOM ACTION BAR                                            -->
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <div class="mt-8 flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white px-6 py-4 dark:border-gray-800 dark:bg-gray-900">
+        <div class="min-w-0">
+          <p *ngIf="currentStep === 1 && !selectedServiceKey" class="text-sm text-gray-400">
+            Select a service type to continue
+          </p>
+          <p *ngIf="currentStep === 1 && selectedServiceKey" class="truncate text-sm text-gray-600 dark:text-gray-300">
+            Selected: <strong class="text-gray-900 dark:text-white">{{ activeConfig?.serviceTypeLabel }}</strong>
+          </p>
+          <p *ngIf="currentStep === 2" class="text-sm text-gray-500 dark:text-gray-400">
+            {{ formItems.length }} {{ activeConfig?.itemLabel }}{{ formItems.length > 1 ? 's' : '' }}
+            &nbsp;·&nbsp; {{ filledFieldCount }}/{{ totalFieldCount }} fields filled
+          </p>
+          <p *ngIf="currentStep === 3" class="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+            All set — ready to register
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button *ngIf="currentStep === 1" type="button" (click)="goBack()"
+            class="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">
+            Cancel
+          </button>
+
+          <button *ngIf="currentStep > 1" type="button" (click)="prevStep()"
+            class="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m15 18-6-6 6-6"/>
+            </svg>
+            Back
+          </button>
+
+          <button *ngIf="currentStep === 1" type="button" (click)="nextStep()"
+            [disabled]="!canProceedToStep2"
+            class="inline-flex items-center gap-2 rounded-xl bg-[#F7941D] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#E6820A] disabled:cursor-not-allowed disabled:opacity-40">
+            Continue
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          </button>
+
+          <button *ngIf="currentStep === 2" type="button" (click)="nextStep()"
+            [disabled]="!canProceedToStep3"
+            class="inline-flex items-center gap-2 rounded-xl bg-[#F7941D] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#E6820A] disabled:cursor-not-allowed disabled:opacity-40">
+            Review Details
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          </button>
+
+          <button *ngIf="currentStep === 3" type="button" (click)="handleSubmit()"
+            class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 6 9 17l-5-5"/>
+            </svg>
+            Register Equipment
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </ng-container>
+</div>

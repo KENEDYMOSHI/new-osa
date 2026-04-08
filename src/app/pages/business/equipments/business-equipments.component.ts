@@ -1,11 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { getServiceTypeLabels } from '../../../shared/constants';
-import {
-  EquipmentRegistrationPayload,
-  EquipmentRegistrationWizardComponent,
-} from './forms/equipment-registration-wizard.component';
 
 type EquipmentStatus = 'all' | 'pending' | 'verified';
 type RegisteredEquipmentStatus = Exclude<EquipmentStatus, 'all'>;
@@ -26,7 +21,7 @@ type StatusFilterOption = {
 @Component({
   selector: 'app-business-equipments',
   standalone: true,
-  imports: [CommonModule, RouterModule, EquipmentRegistrationWizardComponent],
+  imports: [CommonModule, RouterModule],
   templateUrl: './business-equipments.component.html',
 })
 export class BusinessEquipmentsComponent {
@@ -125,7 +120,6 @@ export class BusinessEquipmentsComponent {
 
   selectedStatus: EquipmentStatus = 'all';
   searchTerm = '';
-  showRegistrationWizard = false;
   readonly businessName = 'NOVAS Agency Limited';
 
   get filteredEquipments(): RegisteredEquipment[] {
@@ -135,7 +129,6 @@ export class BusinessEquipmentsComponent {
       const matchesSearch =
         this.searchTerm.trim().length === 0 ||
         equipment.equipmentName.toLowerCase().includes(this.searchTerm.trim().toLowerCase());
-
       return matchesStatus && matchesSearch;
     });
   }
@@ -153,58 +146,14 @@ export class BusinessEquipmentsComponent {
   }
 
   getStatusCount(status: RegisteredEquipmentStatus): number {
-    return this.equipments.filter((equipment) => equipment.status === status).length;
+    return this.equipments.filter((e) => e.status === status).length;
   }
 
   getFilterCount(status: EquipmentStatus): number {
-    if (status === 'all') {
-      return this.totalEquipments;
-    }
-
-    return this.getStatusCount(status);
+    return status === 'all' ? this.totalEquipments : this.getStatusCount(status);
   }
 
   isActiveFilter(status: EquipmentStatus): boolean {
     return this.selectedStatus === status;
-  }
-
-  openRegistrationWizard(): void {
-    this.showRegistrationWizard = true;
-  }
-
-  closeRegistrationWizard(): void {
-    this.showRegistrationWizard = false;
-  }
-
-  registerEquipment(payload: EquipmentRegistrationPayload): void {
-    // Create equipment entries from the wizard payload
-    const newEquipments: RegisteredEquipment[] = payload.items.map((item, idx) => ({
-      equipmentName:
-        item['pumpName'] ||
-        item['tankNumber'] ||
-        item['weighbridgeName'] ||
-        item['scaleName'] ||
-        item['meterName'] ||
-        item['balanceName'] ||
-        item['weigherName'] ||
-        item['wareName'] ||
-        item['tapeName'] ||
-        item['ruleName'] ||
-        item['measureName'] ||
-        item['gaugeName'] ||
-        item['instrumentName'] ||
-        item['vehicleReg'] ||
-        item['packageName'] ||
-        `${payload.serviceTypeLabel} #${idx + 1}`,
-      serviceType: payload.serviceTypeLabel,
-      dateAdded: new Date().toISOString().slice(0, 10),
-      status: 'pending' as RegisteredEquipmentStatus,
-      businessName: this.businessName,
-    }));
-
-    this.equipments = [...newEquipments, ...this.equipments];
-    this.selectedStatus = 'all';
-    this.searchTerm = '';
-    this.closeRegistrationWizard();
   }
 }

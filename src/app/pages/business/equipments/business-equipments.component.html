@@ -22,16 +22,15 @@
     </div>
 
     <div class="flex w-full shrink-0 lg:w-auto">
-      <button
-        type="button"
-        (click)="openRegistrationWizard()"
+      <a
+        routerLink="/business/equipments/add"
         class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#F7941D] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#E6820A] focus:outline-none focus:ring-2 focus:ring-[#F7941D]/30 lg:w-auto">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 5v14" />
           <path d="M5 12h14" />
         </svg>
         <span>Add New Equipment</span>
-      </button>
+      </a>
     </div>
   </section>
 
@@ -174,8 +173,4 @@
   </section>
 </div>
 
-<app-equipment-registration-wizard
-  [visible]="showRegistrationWizard"
-  [businessName]="businessName"
-  (closeWizard)="closeRegistrationWizard()"
-  (register)="registerEquipment($event)" />
+

@@ -312,6 +312,11 @@ export const routes: Routes = [
         title: 'My Equipments | Business Portal - WMA'
       },
       {
+        path: 'equipments/add',
+        loadComponent: () => import('./pages/business/equipments/add-equipment-page/add-equipment-page.component').then(m => m.AddEquipmentPageComponent),
+        title: 'Add Equipment | Business Portal - WMA'
+      },
+      {
         path: 'applications-and-requests',
         loadComponent: () => import('./pages/business/applications/business-applications.component').then(m => m.BusinessApplicationsComponent),
         title: 'Applications & Requests | Business Portal - WMA'
