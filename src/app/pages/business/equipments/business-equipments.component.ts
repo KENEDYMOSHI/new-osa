@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { AddEquipmentModalComponent, NewEquipmentPayload } from './add-equipment-modal.component';
+import { SERVICE_TYPES, getServiceTypeLabels } from '../../../shared/constants';
 
 type EquipmentStatus = 'all' | 'pending' | 'verified';
 type RegisteredEquipmentStatus = Exclude<EquipmentStatus, 'all'>;
@@ -32,35 +33,8 @@ export class BusinessEquipmentsComponent {
     { label: 'Verified', value: 'verified' },
   ];
 
-  readonly serviceTypes: string[] = [
-    'Vehicle Tank Verification (VTV)',
-    'Weighbridge',
-    'Fixed Storage Tank',
-    'Bulk Storage Tank (BST)',
-    'Pre Packaging',
-    'Wagon Tank',
-    'Fuel pump',
-    'Flow Meter',
-    'Check pump',
-    'Pressure gauges',
-    'Proving Tank',
-    'Taximeter',
-    'Metre Rule',
-    'Tape Measure',
-    'Brim Measure system',
-    'Suspended Digital Ware',
-    'Counter scale',
-    'Platform scale',
-    'Spring Balance',
-    'Weigher',
-    'Automatic Weigher',
-    'Beam Scale',
-    'Sandy & Ballast lorry (SBL)',
-    'Other Measuring Instrument',
-    'Other Measures of Length',
-    'Domestic gas meter',
-    'Weights',
-  ];
+  /** Service types from the shared constants – labels only (for the modal dropdown). */
+  readonly serviceTypes: string[] = getServiceTypeLabels();
 
   equipments: RegisteredEquipment[] = [
     {
