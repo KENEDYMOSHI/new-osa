@@ -28,60 +28,81 @@
     <!-- STICKY TOP BAR                                                   -->
     <!-- ════════════════════════════════════════════════════════════════ -->
     <div class="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/95">
-      <div class="mx-auto max-w-5xl px-4 sm:px-6">
+      <div class="mx-auto max-w-5xl px-3 sm:px-6">
 
-        <!-- Breadcrumb + title row -->
-        <div class="flex items-center gap-3 py-3.5">
+        <!-- Nav row: back button | title | step badge (mobile) -->
+        <div class="flex h-12 items-center gap-2">
+          <!-- Back button -->
           <button type="button" (click)="goBack()"
-            class="inline-flex items-center gap-1.5 rounded-lg p-1.5 text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="m15 18-6-6 6-6"/>
             </svg>
           </button>
 
-          <nav class="flex items-center gap-1.5 text-sm">
-            <a routerLink="/business/equipments" class="text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-              Registered Equipments
-            </a>
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 dark:text-gray-600">
-              <path d="m9 18 6-6-6-6"/>
-            </svg>
-            <span class="font-medium text-gray-900 dark:text-white">Add New Equipment</span>
-          </nav>
+          <!-- Title & breadcrumb -->
+          <div class="flex min-w-0 flex-1 items-center gap-1.5">
+            <!-- On mobile: just the page title -->
+            <span class="truncate text-sm font-semibold text-gray-900 dark:text-white sm:hidden">
+              Add New Equipment
+            </span>
+            <!-- On sm+: full breadcrumb -->
+            <nav class="hidden items-center gap-1.5 text-sm sm:flex">
+              <a routerLink="/business/equipments"
+                class="shrink-0 text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                Registered Equipments
+              </a>
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-gray-300 dark:text-gray-700">
+                <path d="m9 18 6-6-6-6"/>
+              </svg>
+              <span class="font-semibold text-gray-900 dark:text-white">Add New Equipment</span>
+            </nav>
+          </div>
+
+          <!-- Mobile step counter pill -->
+          <span class="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300 sm:hidden">
+            Step {{ currentStep }}/{{ steps.length }}
+          </span>
         </div>
 
-        <!-- Step indicators -->
-        <div class="flex items-center gap-0 pb-0 overflow-x-auto">
+        <!-- Step progress bar – mobile (thin coloured line) -->
+        <div class="flex h-1 overflow-hidden rounded-full sm:hidden">
+          <div class="h-full rounded-full bg-[#F7941D] transition-all duration-500"
+            [style.width.%]="((currentStep - 1) / (steps.length - 1)) * 100 + (currentStep === steps.length ? 100 : 33)">
+          </div>
+          <div class="flex-1 bg-gray-100 dark:bg-gray-800"></div>
+        </div>
+
+        <!-- Step tabs – sm+ (tab-underline style, labels visible) -->
+        <div class="hidden items-center sm:flex">
           <ng-container *ngFor="let step of steps; let last = last">
             <button type="button" (click)="goToStep(step.number)"
-              class="flex shrink-0 items-center gap-2.5 border-b-2 px-4 py-3 text-sm font-medium transition-colors"
+              class="flex shrink-0 items-center gap-2 border-b-2 px-3 py-3 text-sm font-medium transition-colors"
               [ngClass]="{
                 'border-[#F7941D] text-[#F7941D]': currentStep === step.number,
                 'border-emerald-500 text-emerald-600 dark:text-emerald-400': currentStep > step.number,
-                'border-transparent text-gray-400 dark:text-gray-500': currentStep < step.number,
-                'hover:text-gray-700 dark:hover:text-gray-300': currentStep >= step.number
+                'border-transparent text-gray-400 dark:text-gray-500': currentStep < step.number
               }"
               [disabled]="currentStep < step.number">
-              <!-- Step dot -->
-              <span class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all"
+              <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold"
                 [ngClass]="{
                   'bg-[#F7941D] text-white': currentStep === step.number,
                   'bg-emerald-500 text-white': currentStep > step.number,
                   'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500': currentStep < step.number
                 }">
-                <svg *ngIf="currentStep > step.number" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <svg *ngIf="currentStep > step.number" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M20 6 9 17l-5-5"/>
                 </svg>
                 <span *ngIf="currentStep <= step.number">{{ step.number }}</span>
               </span>
-              <span class="hidden sm:inline">{{ step.label }}</span>
+              {{ step.label }}
             </button>
-            <!-- connector -->
-            <div *ngIf="!last" class="hidden h-px w-8 shrink-0 sm:block"
-              [ngClass]="currentStep > step.number ? 'bg-emerald-400' : 'bg-gray-200 dark:bg-gray-700'">
+            <div *ngIf="!last" class="mx-1 h-px w-6 shrink-0"
+              [ngClass]="currentStep > step.number ? 'bg-emerald-300 dark:bg-emerald-600' : 'bg-gray-200 dark:bg-gray-700'">
             </div>
           </ng-container>
         </div>
+
       </div>
     </div>
 
