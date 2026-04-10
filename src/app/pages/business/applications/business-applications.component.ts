@@ -10,5 +10,5 @@ import { NoDataComponent } from '../../../shared/components/no-data/no-data.comp
   templateUrl: './business-applications.component.html',
 })
 export class BusinessApplicationsComponent {
-  activeView: string = 'history';
+  activeView: string = '';
 }
