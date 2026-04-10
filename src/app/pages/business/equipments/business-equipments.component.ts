@@ -161,4 +161,18 @@ export class BusinessEquipmentsComponent implements OnInit {
     if (!obj) return [];
     return Object.keys(obj);
   }
+
+  getStatusClasses(status: string): string {
+    switch (status) {
+      case 'verified':
+        return 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20';
+      case 'pending':
+        return 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20';
+      case 'rejected':
+        return 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-500/10 dark:text-red-400 dark:ring-red-500/20';
+      case 'draft':
+      default:
+        return 'bg-gray-100 text-gray-700 ring-gray-500/20 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700';
+    }
+  }
 }
