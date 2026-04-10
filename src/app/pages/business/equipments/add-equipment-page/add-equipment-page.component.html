@@ -10,9 +10,9 @@
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
         </svg>
       </div>
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ successTitle }}</h2>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ successTitle | translate }}</h2>
       <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-        {{ successDescription }}
+        {{ successDescription | translate }}
       </p>
       <div class="mt-6 flex justify-center">
         <div class="h-1 w-40 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
@@ -44,24 +44,24 @@
           <div class="flex min-w-0 flex-1 items-center gap-1.5">
             <!-- On mobile: just the page title -->
             <span class="truncate text-sm font-semibold text-gray-900 dark:text-white sm:hidden">
-              {{ pageTitle }}
+              {{ pageTitle | translate }}
             </span>
             <!-- On sm+: full breadcrumb -->
             <nav class="hidden items-center gap-1.5 text-sm sm:flex">
               <a routerLink="/business/equipments"
                 class="shrink-0 text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-                Registered Equipments
+                {{ 'BUSINESS.EQUIPMENTS.TITLE' | translate }}
               </a>
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-gray-300 dark:text-gray-700">
                 <path d="m9 18 6-6-6-6"/>
               </svg>
-              <span class="font-semibold text-gray-900 dark:text-white">{{ pageTitle }}</span>
+              <span class="font-semibold text-gray-900 dark:text-white">{{ pageTitle | translate }}</span>
             </nav>
           </div>
 
           <!-- Mobile step counter pill -->
           <span class="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300 sm:hidden">
-            Step {{ currentStep }}/{{ steps.length }}
+            {{ 'BUSINESS.EQUIPMENT_PAGE.STEP' | translate }} {{ currentStep }}/{{ steps.length }}
           </span>
         </div>
 
@@ -95,7 +95,7 @@
                 </svg>
                 <span *ngIf="currentStep <= step.number">{{ step.number }}</span>
               </span>
-              {{ step.label }}
+              {{ step.label | translate }}
             </button>
             <div *ngIf="!last" class="mx-1 h-px w-6 shrink-0"
               [ngClass]="currentStep > step.number ? 'bg-emerald-300 dark:bg-emerald-600' : 'bg-gray-200 dark:bg-gray-700'">
@@ -112,7 +112,7 @@
     <div *ngIf="pageLoading" class="mx-auto flex max-w-5xl items-center justify-center px-4 py-20 sm:px-6">
       <div class="text-center">
         <div class="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#F7941D] dark:border-gray-800 dark:border-t-[#F7941D]"></div>
-        <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Loading equipment details…</p>
+        <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">{{ 'BUSINESS.EQUIPMENT_PAGE.LOADING_EQUIPMENT_DETAILS' | translate }}</p>
       </div>
     </div>
 
@@ -124,10 +124,10 @@
       <section *ngIf="currentStep === 1">
         <div class="mb-6">
           <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            {{ isEditMode ? 'Equipment Type' : 'What type of equipment are you registering?' }}
+            {{ (isEditMode ? 'BUSINESS.EQUIPMENT_PAGE.EQUIPMENT_TYPE' : 'BUSINESS.EQUIPMENT_PAGE.QUESTION_TITLE') | translate }}
           </h1>
           <p class="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
-            {{ pageDescription }}
+            {{ pageDescription | translate }}
           </p>
         </div>
 
@@ -142,7 +142,7 @@
               </span>
               <input type="text" [value]="serviceSearchTerm" (input)="setServiceSearch($any($event.target).value)"
                 [disabled]="isEditMode"
-                placeholder="Search service types…"
+                [placeholder]="'BUSINESS.EQUIPMENT_PAGE.SEARCH_SERVICE_TYPES' | translate"
                 class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-[#F7941D] focus:bg-white disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-800" />
             </div>
 
@@ -152,14 +152,14 @@
                 [ngClass]="activeCategory === 'all'
                   ? 'border-[#F7941D] bg-[#FFF7ED] text-[#B45309] dark:bg-[#F7941D]/10 dark:text-[#FDBA74]'
                   : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:border-gray-700 dark:text-gray-400'">
-                All Types
+                {{ 'BUSINESS.EQUIPMENT_PAGE.ALL_TYPES' | translate }}
               </button>
               <button *ngFor="let cat of categories" type="button" (click)="setCategory(cat.key)" [disabled]="isEditMode"
                 class="rounded-lg border px-3 py-2 text-xs font-medium transition-colors"
                 [ngClass]="activeCategory === cat.key
                   ? 'border-[#F7941D] bg-[#FFF7ED] text-[#B45309] dark:bg-[#F7941D]/10 dark:text-[#FDBA74]'
                   : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:border-gray-700 dark:text-gray-400'">
-                {{ cat.label }}
+                {{ cat.label | translate }}
               </button>
             </div>
           </div>
@@ -209,8 +209,8 @@
 
         <!-- Empty -->
         <div *ngIf="filteredServiceTypes.length === 0" class="py-16 text-center">
-          <p class="font-medium text-gray-900 dark:text-white">No results found</p>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Try a different keyword or category filter.</p>
+          <p class="font-medium text-gray-900 dark:text-white">{{ 'BUSINESS.EQUIPMENT_PAGE.NO_RESULTS' | translate }}</p>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ 'BUSINESS.EQUIPMENT_PAGE.TRY_DIFFERENT_KEYWORD' | translate }}</p>
         </div>
       </section>
 
@@ -226,7 +226,7 @@
             </h1>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {{ activeConfig.description }}
-              Fields marked <span class="text-red-500 font-semibold">*</span> are required.
+              {{ 'BUSINESS.EQUIPMENT_PAGE.FIELDS_REQUIRED_PREFIX' | translate }} <span class="text-red-500 font-semibold">*</span> {{ 'BUSINESS.EQUIPMENT_PAGE.FIELDS_REQUIRED_SUFFIX' | translate }}
             </p>
           </div>
 
@@ -246,7 +246,7 @@
             </div>
             <div>
               <p class="text-xs font-semibold text-gray-900 dark:text-white">{{ filledFieldCount }}/{{ totalFieldCount }}</p>
-              <p class="text-[10px] text-gray-400">fields filled</p>
+              <p class="text-[10px] text-gray-400">{{ 'BUSINESS.EQUIPMENT_PAGE.FIELDS_FILLED' | translate }}</p>
             </div>
           </div>
         </div>
@@ -272,7 +272,7 @@
                   <p class="text-sm font-semibold text-gray-900 dark:text-white">
                     {{ activeConfig.itemLabel }} #{{ idx + 1 }}
                   </p>
-                  <p class="text-xs text-gray-400">{{ getItemProgress(idx) }}% complete</p>
+                  <p class="text-xs text-gray-400">{{ getItemProgress(idx) }}% {{ 'BUSINESS.EQUIPMENT_PAGE.COMPLETE' | translate }}</p>
                 </div>
               </div>
 
@@ -327,7 +327,7 @@
                   <app-date-picker *ngIf="field.type === 'date'"
                     [ngModel]="getFieldValue(idx, field.key)"
                     (ngModelChange)="updateField(idx, field.key, $event)"
-                    [placeholder]="field.placeholder || 'Select date'"
+                    [placeholder]="field.placeholder || ('BUSINESS.EQUIPMENT_PAGE.SELECT_DATE' | translate)"
                     [required]="field.required || false"
                     [label]="''">
                   </app-date-picker>
@@ -338,7 +338,7 @@
                       [value]="getFieldValue(idx, field.key)"
                       (change)="updateField(idx, field.key, $any($event.target).value)"
                       class="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all focus:border-[#F7941D] focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:bg-gray-800">
-                      <option value="" disabled selected>Select {{ field.label }}…</option>
+                      <option value="" disabled selected>{{ 'BUSINESS.EQUIPMENT_PAGE.SELECT' | translate }} {{ field.label }}…</option>
                       <option *ngFor="let opt of field.options" [value]="opt.value">{{ opt.label }}</option>
                     </select>
                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400">
@@ -367,9 +367,9 @@
                     </div>
                     <div class="min-w-0 flex-1">
                       <p class="text-sm font-medium text-gray-700 dark:text-gray-200">
-                        {{ getFieldValue(idx, field.key)?.name || getFieldValue(idx, field.key) || 'Click to upload file' }}
+                        {{ getFieldValue(idx, field.key)?.name || getFieldValue(idx, field.key) || ('BUSINESS.EQUIPMENT_PAGE.CLICK_UPLOAD_FILE' | translate) }}
                       </p>
-                      <p class="mt-0.5 text-xs text-gray-400">Accepted formats: {{ field.accept || 'Any' }}</p>
+                      <p class="mt-0.5 text-xs text-gray-400">{{ 'BUSINESS.EQUIPMENT_PAGE.ACCEPTED_FORMATS' | translate }}: {{ field.accept || ('BUSINESS.EQUIPMENT_PAGE.ANY' | translate) }}</p>
                     </div>
                     <input type="file" class="sr-only" [accept]="field.accept || '*'"
                       (change)="updateFile(idx, field.key, $any($event.target).files?.[0])" />
@@ -388,7 +388,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 5v14"/><path d="M5 12h14"/>
           </svg>
-          Add Another {{ activeConfig.itemLabel }}
+          {{ 'BUSINESS.EQUIPMENT_PAGE.ADD_ANOTHER' | translate }} {{ activeConfig.itemLabel }}
         </button>
       </section>
 
@@ -398,10 +398,10 @@
       <section *ngIf="currentStep === 3 && activeConfig">
         <div class="mb-6">
           <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Review & Confirm
+            {{ 'BUSINESS.EQUIPMENT_PAGE.REVIEW_CONFIRM' | translate }}
           </h1>
           <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {{ isEditMode ? 'Please review the updated information before saving your changes.' : 'Please review everything carefully before submitting your registration.' }}
+            {{ (isEditMode ? 'BUSINESS.EQUIPMENT_PAGE.REVIEW_EDIT_DESC' : 'BUSINESS.EQUIPMENT_PAGE.REVIEW_ADD_DESC') | translate }}
           </p>
         </div>
 
@@ -463,7 +463,7 @@
               <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
             </svg>
             <p class="text-sm text-amber-800 dark:text-amber-300">
-              By submitting, you confirm that all the information provided is accurate and complete. Falsification of equipment details is a violation of WMA regulations.
+              {{ 'BUSINESS.EQUIPMENT_PAGE.DECLARATION' | translate }}
             </p>
           </div>
         </div>
@@ -475,24 +475,24 @@
       <div class="mt-8 flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white px-6 py-4 dark:border-gray-800 dark:bg-gray-900">
         <div class="min-w-0">
           <p *ngIf="currentStep === 1 && !selectedServiceKey" class="text-sm text-gray-400">
-            Select a service type to continue
+            {{ 'BUSINESS.EQUIPMENT_PAGE.SELECT_SERVICE_TO_CONTINUE' | translate }}
           </p>
           <p *ngIf="currentStep === 1 && selectedServiceKey" class="truncate text-sm text-gray-600 dark:text-gray-300">
-            Selected: <strong class="text-gray-900 dark:text-white">{{ activeConfig?.serviceTypeLabel }}</strong>
+            {{ 'BUSINESS.EQUIPMENT_PAGE.SELECTED' | translate }}: <strong class="text-gray-900 dark:text-white">{{ activeConfig?.serviceTypeLabel }}</strong>
           </p>
           <p *ngIf="currentStep === 2" class="text-sm text-gray-500 dark:text-gray-400">
             {{ formItems.length }} {{ activeConfig?.itemLabel }}{{ formItems.length > 1 ? 's' : '' }}
-            &nbsp;·&nbsp; {{ filledFieldCount }}/{{ totalFieldCount }} fields filled
+            &nbsp;·&nbsp; {{ filledFieldCount }}/{{ totalFieldCount }} {{ 'BUSINESS.EQUIPMENT_PAGE.FIELDS_FILLED' | translate }}
           </p>
           <p *ngIf="currentStep === 3" class="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
-            {{ isEditMode ? 'All set, ready to update' : 'All set, ready to register' }}
+            {{ (isEditMode ? 'BUSINESS.EQUIPMENT_PAGE.READY_TO_UPDATE' : 'BUSINESS.EQUIPMENT_PAGE.READY_TO_REGISTER') | translate }}
           </p>
         </div>
 
         <div class="flex items-center gap-3">
           <button *ngIf="currentStep === 1" type="button" (click)="goBack()"
             class="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">
-            Cancel
+            {{ 'BUSINESS.EQUIPMENT_PAGE.CANCEL' | translate }}
           </button>
 
           <button *ngIf="currentStep > 1" type="button" (click)="prevStep()"
@@ -500,13 +500,13 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="m15 18-6-6 6-6"/>
             </svg>
-            Back
+            {{ 'BUSINESS.EQUIPMENT_PAGE.BACK' | translate }}
           </button>
 
           <button *ngIf="currentStep === 1" type="button" (click)="nextStep()"
             [disabled]="!canProceedToStep2"
             class="inline-flex items-center gap-2 rounded-xl bg-[#F7941D] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#E6820A] disabled:cursor-not-allowed disabled:opacity-40">
-            Continue
+            {{ 'BUSINESS.EQUIPMENT_PAGE.CONTINUE' | translate }}
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="m9 18 6-6-6-6"/>
             </svg>
@@ -515,7 +515,7 @@
           <button *ngIf="currentStep === 2" type="button" (click)="nextStep()"
             [disabled]="!canProceedToStep3"
             class="inline-flex items-center gap-2 rounded-xl bg-[#F7941D] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#E6820A] disabled:cursor-not-allowed disabled:opacity-40">
-            Review Details
+            {{ 'BUSINESS.EQUIPMENT_PAGE.REVIEW_DETAILS' | translate }}
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="m9 18 6-6-6-6"/>
             </svg>

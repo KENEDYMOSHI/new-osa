@@ -8,6 +8,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { SERVICE_TYPES, ServiceType } from '../../../../shared/constants';
 import { EQUIPMENT_FORM_CONFIGS } from './configs';
 import { EquipmentFormConfig, FormField, ServiceCategory } from './models/form-field.model';
@@ -28,17 +29,17 @@ interface StepMeta {
 }
 
 const CATEGORY_META: Record<ServiceCategory, { label: string; color: string }> = {
-  petroleum: { label: 'Petroleum & Fuel', color: '#EF4444' },
-  weighing:  { label: 'Weighing & Mass', color: '#3B82F6' },
-  length:    { label: 'Length & Volume', color: '#8B5CF6' },
-  metering:  { label: 'Metering & Gauges', color: '#10B981' },
-  other:     { label: 'Other', color: '#6B7280' },
+  petroleum: { label: 'BUSINESS.WIZARD.CATEGORIES.PETROLEUM', color: '#EF4444' },
+  weighing:  { label: 'BUSINESS.WIZARD.CATEGORIES.WEIGHING', color: '#3B82F6' },
+  length:    { label: 'BUSINESS.WIZARD.CATEGORIES.LENGTH', color: '#8B5CF6' },
+  metering:  { label: 'BUSINESS.WIZARD.CATEGORIES.METERING', color: '#10B981' },
+  other:     { label: 'BUSINESS.WIZARD.CATEGORIES.OTHER', color: '#6B7280' },
 };
 
 @Component({
   selector: 'app-equipment-registration-wizard',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePickerComponent],
+  imports: [CommonModule, FormsModule, DatePickerComponent, TranslateModule],
   templateUrl: './equipment-registration-wizard.component.html',
 })
 export class EquipmentRegistrationWizardComponent implements OnChanges {
@@ -55,9 +56,9 @@ export class EquipmentRegistrationWizardComponent implements OnChanges {
   activeCategory: ServiceCategory | 'all' = 'all';
 
   readonly steps: StepMeta[] = [
-    { number: 1, label: 'Select Service', description: 'Choose the type of equipment' },
-    { number: 2, label: 'Equipment Details', description: 'Fill in equipment information' },
-    { number: 3, label: 'Review & Submit', description: 'Confirm and register' },
+    { number: 1, label: 'BUSINESS.WIZARD.STEPS.SELECT_SERVICE', description: 'BUSINESS.WIZARD.STEP_DESCRIPTIONS.SELECT_SERVICE' },
+    { number: 2, label: 'BUSINESS.WIZARD.STEPS.EQUIPMENT_DETAILS', description: 'BUSINESS.WIZARD.STEP_DESCRIPTIONS.EQUIPMENT_DETAILS' },
+    { number: 3, label: 'BUSINESS.WIZARD.STEPS.REVIEW_SUBMIT', description: 'BUSINESS.WIZARD.STEP_DESCRIPTIONS.REVIEW_SUBMIT' },
   ];
 
   readonly serviceTypes: readonly ServiceType[] = SERVICE_TYPES;

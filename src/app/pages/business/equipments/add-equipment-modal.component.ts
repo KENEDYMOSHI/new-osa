@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 
 export type NewEquipmentPayload = {
   equipmentName: string;
@@ -9,7 +10,7 @@ export type NewEquipmentPayload = {
 @Component({
   selector: 'app-add-equipment-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './add-equipment-modal.component.html',
 })
 export class AddEquipmentModalComponent implements OnChanges {

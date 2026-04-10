@@ -1,13 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { BusinessRegistrationService } from '../../../services/business-registration.service';
 import { District, LocationService, PostalCode, Ward } from '../../../services/location.service';
 
 @Component({
   selector: 'app-business-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './business-profile.component.html',
 })
 export class BusinessProfileComponent implements OnInit {

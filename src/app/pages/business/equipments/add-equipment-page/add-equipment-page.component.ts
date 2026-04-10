@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { SERVICE_TYPES, ServiceType } from '../../../../shared/constants';
 import { EQUIPMENT_FORM_CONFIGS } from '../forms/configs';
 import { EquipmentFormConfig, FormField, ServiceCategory } from '../forms/models/form-field.model';
@@ -33,17 +34,17 @@ interface StepMeta {
 }
 
 const CATEGORY_META: Record<ServiceCategory, { label: string; color: string }> = {
-  petroleum: { label: 'Petroleum & Fuel', color: '#EF4444' },
-  weighing:  { label: 'Weighing & Mass',  color: '#3B82F6' },
-  length:    { label: 'Length & Volume',  color: '#8B5CF6' },
-  metering:  { label: 'Metering & Gauges', color: '#10B981' },
-  other:     { label: 'Other',             color: '#6B7280' },
+  petroleum: { label: 'BUSINESS.EQUIPMENT_PAGE.CATEGORIES.PETROLEUM', color: '#EF4444' },
+  weighing:  { label: 'BUSINESS.EQUIPMENT_PAGE.CATEGORIES.WEIGHING', color: '#3B82F6' },
+  length:    { label: 'BUSINESS.EQUIPMENT_PAGE.CATEGORIES.LENGTH', color: '#8B5CF6' },
+  metering:  { label: 'BUSINESS.EQUIPMENT_PAGE.CATEGORIES.METERING', color: '#10B981' },
+  other:     { label: 'BUSINESS.EQUIPMENT_PAGE.CATEGORIES.OTHER', color: '#6B7280' },
 };
 
 @Component({
   selector: 'app-add-equipment-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, DatePickerComponent],
+  imports: [CommonModule, RouterModule, FormsModule, DatePickerComponent, TranslateModule],
   templateUrl: './add-equipment-page.component.html',
 })
 export class AddEquipmentPageComponent implements OnInit {
@@ -68,20 +69,20 @@ export class AddEquipmentPageComponent implements OnInit {
   readonly steps: StepMeta[] = [
     {
       number: 1,
-      label: 'Select Service',
-      description: 'Choose the type of equipment you are registering',
+      label: 'BUSINESS.EQUIPMENT_PAGE.STEPS.SELECT_SERVICE',
+      description: 'BUSINESS.EQUIPMENT_PAGE.STEP_DESCRIPTIONS.SELECT_SERVICE',
       icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 0 2-2h2a2 2 0 0 0 2 2',
     },
     {
       number: 2,
-      label: 'Equipment Details',
-      description: 'Fill in the specific details for your equipment',
+      label: 'BUSINESS.EQUIPMENT_PAGE.STEPS.EQUIPMENT_DETAILS',
+      description: 'BUSINESS.EQUIPMENT_PAGE.STEP_DESCRIPTIONS.EQUIPMENT_DETAILS',
       icon: 'M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
     },
     {
       number: 3,
-      label: 'Review & Submit',
-      description: 'Review your information and confirm registration',
+      label: 'BUSINESS.EQUIPMENT_PAGE.STEPS.REVIEW_SUBMIT',
+      description: 'BUSINESS.EQUIPMENT_PAGE.STEP_DESCRIPTIONS.REVIEW_SUBMIT',
       icon: 'M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
     },
   ];
@@ -166,27 +167,33 @@ export class AddEquipmentPageComponent implements OnInit {
   }
 
   get pageTitle(): string {
-    return this.isEditMode ? 'Update Equipment' : 'Add New Equipment';
+    return this.isEditMode
+      ? 'BUSINESS.EQUIPMENT_PAGE.PAGE_TITLE_EDIT'
+      : 'BUSINESS.EQUIPMENT_PAGE.PAGE_TITLE_ADD';
   }
 
   get pageDescription(): string {
     return this.isEditMode
-      ? 'Review and update the registered equipment details before resubmission.'
-      : 'Select a service type. Each type has its own tailored registration form.';
+      ? 'BUSINESS.EQUIPMENT_PAGE.PAGE_DESCRIPTION_EDIT'
+      : 'BUSINESS.EQUIPMENT_PAGE.PAGE_DESCRIPTION_ADD';
   }
 
   get submitButtonLabel(): string {
-    return this.isEditMode ? 'Update Equipment' : 'Register Equipment';
+    return this.isEditMode
+      ? 'BUSINESS.EQUIPMENT_PAGE.UPDATE_EQUIPMENT'
+      : 'BUSINESS.EQUIPMENT_PAGE.REGISTER_EQUIPMENT';
   }
 
   get successTitle(): string {
-    return this.isEditMode ? 'Equipment Updated!' : 'Equipment Registered!';
+    return this.isEditMode
+      ? 'BUSINESS.EQUIPMENT_PAGE.SUCCESS_UPDATED_TITLE'
+      : 'BUSINESS.EQUIPMENT_PAGE.SUCCESS_REGISTERED_TITLE';
   }
 
   get successDescription(): string {
     return this.isEditMode
-      ? 'Your changes have been saved and the equipment is ready for review. Redirecting you back…'
-      : 'Your equipment has been submitted for verification. Redirecting you back…';
+      ? 'BUSINESS.EQUIPMENT_PAGE.SUCCESS_UPDATED_DESC'
+      : 'BUSINESS.EQUIPMENT_PAGE.SUCCESS_REGISTERED_DESC';
   }
 
   goToStep(step: WizardStep): void {
