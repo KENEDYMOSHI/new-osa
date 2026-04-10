@@ -271,8 +271,8 @@ export class AddEquipmentPageComponent {
     });
 
     const payload = {
-      serviceTypeKey: this.activeConfig.key,
-      serviceTypeLabel: this.activeConfig.title,
+      serviceTypeKey: this.activeConfig.serviceTypeKey,
+      serviceTypeLabel: this.activeConfig.serviceTypeLabel,
       category: this.activeConfig.category,
       items: payloadItems
     };

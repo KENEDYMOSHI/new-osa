@@ -12,7 +12,7 @@ class BusinessEquipmentController extends ResourceController
 
     public function index()
     {
-        $userUuid = $this->request->user->uuid ?? null;
+        $userUuid = $this->request->user_id ?? null;
         if (!$userUuid) {
             return $this->failUnauthorized('User not authenticated');
         }
@@ -31,7 +31,7 @@ class BusinessEquipmentController extends ResourceController
 
     public function create()
     {
-        $userUuid = $this->request->user->uuid ?? null;
+        $userUuid = $this->request->user_id ?? null;
         if (!$userUuid) {
             return $this->failUnauthorized('User not authenticated');
         }
@@ -102,7 +102,7 @@ class BusinessEquipmentController extends ResourceController
 
     public function show($id = null)
     {
-        $userUuid = $this->request->user->uuid ?? null;
+        $userUuid = $this->request->user_id ?? null;
         $equipment = $this->model->find($id);
 
         if (!$equipment || $equipment['user_uuid'] !== $userUuid) {
@@ -124,7 +124,7 @@ class BusinessEquipmentController extends ResourceController
 
     public function delete($id = null)
     {
-        $userUuid = $this->request->user->uuid ?? null;
+        $userUuid = $this->request->user_id ?? null;
         $equipment = $this->model->find($id);
 
         if (!$equipment || $equipment['user_uuid'] !== $userUuid) {
