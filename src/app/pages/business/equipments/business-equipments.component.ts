@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { EquipmentService } from '../../../core/services/equipment.service';
 import { NoDataComponent } from '../../../shared/components/no-data/no-data.component';
 
@@ -29,16 +30,16 @@ type StatusFilterOption = {
 @Component({
   selector: 'app-business-equipments',
   standalone: true,
-  imports: [CommonModule, RouterModule, NoDataComponent],
+  imports: [CommonModule, RouterModule, NoDataComponent, TranslateModule],
   templateUrl: './business-equipments.component.html',
 })
 export class BusinessEquipmentsComponent implements OnInit {
   readonly statusFilters: StatusFilterOption[] = [
-    { label: 'All', value: 'all' },
-    { label: 'Draft', value: 'draft' },
-    { label: 'Pending', value: 'pending' },
-    { label: 'Verified', value: 'verified' },
-    { label: 'Rejected', value: 'rejected' },
+    { label: 'BUSINESS.EQUIPMENTS.FILTERS.ALL', value: 'all' },
+    { label: 'BUSINESS.EQUIPMENTS.FILTERS.DRAFT', value: 'draft' },
+    { label: 'BUSINESS.EQUIPMENTS.FILTERS.PENDING', value: 'pending' },
+    { label: 'BUSINESS.EQUIPMENTS.FILTERS.VERIFIED', value: 'verified' },
+    { label: 'BUSINESS.EQUIPMENTS.FILTERS.REJECTED', value: 'rejected' },
   ];
 
   equipments: EquipmentRegistration[] = [];

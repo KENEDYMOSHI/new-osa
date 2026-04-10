@@ -28,6 +28,22 @@
 
     <!-- Right: actions -->
     <div class="flex items-center gap-3">
+      <!-- Language Switcher -->
+      <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+        <button 
+          (click)="switchLanguage('en')"
+          [ngClass]="{'bg-white dark:bg-gray-700 shadow-sm text-[#F7941D]': currentLang === 'en', 'text-gray-500': currentLang !== 'en'}"
+          class="px-2 py-1 text-xs font-bold rounded-md transition-all">
+          EN
+        </button>
+        <button 
+          (click)="switchLanguage('sw')"
+          [ngClass]="{'bg-white dark:bg-gray-700 shadow-sm text-[#F7941D]': currentLang === 'sw', 'text-gray-500': currentLang !== 'sw'}"
+          class="px-2 py-1 text-xs font-bold rounded-md transition-all">
+          SW
+        </button>
+      </div>
+
       <app-theme-toggle-button />
       <app-notification-dropdown />
       <a routerLink="/business/dashboard" class="shrink-0 size-10 rounded-full bg-white p-0.5 ring-2 ring-[#F7941D] overflow-hidden">

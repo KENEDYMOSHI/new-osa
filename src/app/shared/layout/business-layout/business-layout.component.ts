@@ -5,15 +5,18 @@ import { BusinessSidebarComponent } from '../business-sidebar/business-sidebar.c
 import { BackdropComponent } from '../backdrop/backdrop.component';
 import { RouterModule } from '@angular/router';
 import { BusinessHeaderComponent } from '../business-header/business-header.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-business-layout',
+  standalone: true,
   imports: [
     CommonModule,
     RouterModule,
     BusinessHeaderComponent,
     BusinessSidebarComponent,
-    BackdropComponent
+    BackdropComponent,
+    TranslateModule
   ],
   templateUrl: './business-layout.component.html',
 })

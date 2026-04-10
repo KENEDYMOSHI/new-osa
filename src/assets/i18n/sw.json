@@ -1,0 +1,122 @@
+{
+  "BUSINESS": {
+    "SIDEBAR": {
+      "DASHBOARD": "Dashibodi",
+      "EQUIPMENTS": "Vifaa Vyangu",
+      "APPLICATIONS": "Maombi na Matakwa",
+      "CERTIFICATES": "Vyeti na Ripoti",
+      "BILLING": "Ankara na Malipo",
+      "NOTIFICATIONS": "Taarifa",
+      "PROFILE": "Wasifu wa Biashara",
+      "SUPPORT": "Msaada / Huduma",
+      "ADD_LOGO": "Weka Nembo",
+      "LOGO_MODAL_TITLE": "Nembo ya Biashara",
+      "DROP_IMAGE": "Weka picha au bonyeza hapa kutafuta",
+      "CANCEL": "Ghairi",
+      "UPLOAD": "Pakia",
+      "UPLOADING": "Inapakia..."
+    },
+    "DASHBOARD": {
+      "WELCOME": "Karibu tena",
+      "TIN": "TIN",
+      "LAST_LOGIN": "Mara ya mwisho kuingia",
+      "SUMMARY": "Muhtasari wa Biashara",
+      "VERIFIED": "Imethibitishwa",
+      "PENDING": "Inasubiri",
+      "FAILED": "Imeshindikana",
+      "NAME": "Jina la Biashara",
+      "LICENSE_NUMBER": "Namba ya Leseni",
+      "TYPE": "Aina ya Biashara",
+      "LOCATION": "Mahali",
+      "STATS": {
+        "EQUIPMENT": "Vifaa",
+        "CERTIFICATES": "Vyeti",
+        "APPLICATIONS": "Maombi",
+        "COMPLIANCE": "Udhibiti",
+        "PENDING_VERIFICATION": "inasubiri uhakiki",
+        "UPCOMING_RENEWALS": "usasishaji unaokuja",
+        "PENDING_INSPECTION": "inasubiri ukaguzi",
+        "ACTION_ITEMS": "hatua zinazosubiri"
+      },
+      "OVERVIEW": {
+        "TITLE": "Muhtasari wa Vifaa",
+        "VIEW_ALL": "Tazama vyote",
+        "COL_TYPE": "Aina",
+        "COL_TOTAL": "Jumla",
+        "COL_VERIFIED": "Iliyothibitishwa",
+        "COL_PENDING": "Inasubiri",
+        "COL_PROGRESS": "Maendeleo"
+      },
+      "ALERTS": {
+        "TITLE": "Tahadhari",
+        "DUE_VERIFICATION": "vifaa vinavyosubiri uhakiki",
+        "WITHIN_30_DAYS": "Ndani ya siku 30 zijazo",
+        "RENEWAL_DUE": "Muda wa kusasisha cheti umefika",
+        "REGULATION_UPDATE": "Sasisho la kanuni",
+        "RULES_EFFECTIVE": "Sheria mpya za WMA kuanza kutumika"
+      },
+      "RECENT_ACTIVITY": {
+        "TITLE": "Shughuli za Hivi Karibuni",
+        "COL_DATE": "Tarehe",
+        "COL_DESCRIPTION": "Maelezo",
+        "COL_STATUS": "Hali"
+      }
+    },
+    "REGISTRATION": {
+      "TITLE": "Usajili wa Biashara / Kampuni",
+      "SUBTITLE": "Sajili biashara yako ili kupata huduma za mtandaoni za WMA kwa wafanyabiashara.",
+      "INSTRUCTIONS": "Tafadhali fuata hatua zifuatazo ili kusajili Biashara/Kampuni yako kwenye mfumo wa Huduma za Mtandaoni za WMA.",
+      "STEP1_TITLE": "1. Taarifa za Biashara/Kampuni",
+      "STEP1_DESC": "Chagua kundi la biashara/kampuni, weka utambulisho, anwani, na namba ya simu ya ofisi.",
+      "STEP2_TITLE": "2. Maelezo ya Umiliki",
+      "STEP2_DESC": "Kampuni binafsi lazima zitoe maelezo ya mmiliki na anwani ya mawasiliano.",
+      "STEP3_TITLE": "3. Maelezo ya Mtu wa Mawasiliano",
+      "STEP3_DESC": "Weka maelezo ya mtu mkuu wa mawasiliano anayehusika na mawasiliano na WMA.",
+      "STEP4_TITLE": "4. Usalama wa Akaunti",
+      "STEP4_DESC": "Tengeneza sifa za kuingilia ili kukamilisha usajili wa akaunti.",
+      "PREPARE_TITLE": "Tayarisha Maelezo Haya",
+      "PREPARE_ITEM1": "Jina la biashara au kampuni",
+      "PREPARE_ITEM2": "TIN na namba ya leseni ya biashara",
+      "PREPARE_ITEM3": "Sanduku la posta na anwani ya makazi",
+      "PREPARE_ITEM4": "Maelezo ya mmiliki kwa kampuni binafsi",
+      "PREPARE_ITEM5": "Barua pepe na namba ya simu ya mtu wa mawasiliano",
+      "BACK_TO_SELECTION": "Rudi kwenye Uchaguzi"
+    },
+    "FOOTER": {
+      "RIGHTS": "Wakala wa Vipimo. Haki zote zimehifadhiwa."
+    },
+    "EQUIPMENTS": {
+      "TITLE": "Vifaa Vilivyosajiliwa",
+      "ADD_NEW": "Ongeza Kifaa Kipya",
+      "SEARCH_PLACEHOLDER": "Tafuta kwa jina la kifaa",
+      "UPDATE_DETAILS": "Sasisha maelezo",
+      "ADDED": "Iliongezwa",
+      "NO_DATA_TITLE": "Hakuna vifaa vilivyopatikana",
+      "NO_DATA_DESC": "Badilisha kichujio cha hali au neno la utafutaji ili kuona rekodi nyingine.",
+      "CLOSE": "Funga",
+      "FILTERS": {
+        "ALL": "Zote",
+        "DRAFT": "Rasimu",
+        "PENDING": "Inasubiri",
+        "VERIFIED": "Imethibitishwa",
+        "REJECTED": "Imekataliwa"
+      }
+    },
+    "APPLICATIONS_PAGE": {
+      "TITLE": "Maombi na Matakwa",
+      "SUBTITLE": "Chagua aina ya huduma hapa chini au tazama historia ya maombi yako.",
+      "REQUEST_TECHNICIAN": "Omba Fundi Sanifu",
+      "REQUEST_TECHNICIAN_DESC": "Omba fundi mtaalamu kwa ajili ya matengenezo ya vifaa au usanidi.",
+      "REQUEST_INSPECTION": "Omba Afisa Ukaguzi",
+      "REQUEST_INSPECTION_DESC": "Panga afisa rasmi wa WMA kwa ajili ya ukaguzi wa kiufundi wa vifaa vyako.",
+      "SERVICE_HISTORY": "Tazama Historia ya Huduma",
+      "SERVICE_HISTORY_DESC": "Tazama historia na hali ya huduma zako zote ulizozitaka hapo awali.",
+      "SELECT_SERVICE": "Chagua Huduma",
+      "VIEW": "Tazama",
+      "HISTORY_TITLE": "Historia ya Maombi",
+      "HISTORY_SUBTITLE": "Tazama na fuatilia hali ya maombi yako ya sasa na yaliyopita.",
+      "NO_REQUESTS_TITLE": "Hakuna maombi yaliyopatikana",
+      "NO_REQUESTS_DESC": "Hujaomba huduma yoyote bado. Chagua moja ya huduma hapo juu ili kuanza."
+    }
+  }
+}

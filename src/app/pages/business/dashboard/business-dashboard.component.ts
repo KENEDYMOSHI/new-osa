@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { BusinessRegistrationService } from '../../../services/business-registration.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-business-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TranslateModule],
   templateUrl: './business-dashboard.component.html',
 })
 export class BusinessDashboardComponent implements OnInit {

@@ -4,21 +4,30 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ThemeToggleButtonComponent } from '../../components/common/theme-toggle/theme-toggle-button.component';
 import { NotificationDropdownComponent } from '../../components/header/notification-dropdown/notification-dropdown.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+
 @Component({
   selector: 'app-business-header',
+  standalone: true,
   imports: [
     CommonModule,
     RouterModule,
     ThemeToggleButtonComponent,
     NotificationDropdownComponent,
+    TranslateModule
   ],
   templateUrl: './business-header.component.html',
 })
 export class BusinessHeaderComponent {
   readonly isMobileOpen$;
+  currentLang: string;
 
-  constructor(public sidebarService: SidebarService) {
+  constructor(
+    public sidebarService: SidebarService,
+    private translate: TranslateService
+  ) {
     this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
+    this.currentLang = this.translate.currentLang || 'en';
   }
 
   handleToggle() {
@@ -27,5 +36,10 @@ export class BusinessHeaderComponent {
     } else {
       this.sidebarService.toggleMobileOpen();
     }
+  }
+
+  switchLanguage(lang: string) {
+    this.translate.use(lang);
+    this.currentLang = lang;
   }
 }

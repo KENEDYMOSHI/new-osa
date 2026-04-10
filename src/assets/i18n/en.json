@@ -1,0 +1,122 @@
+{
+  "BUSINESS": {
+    "SIDEBAR": {
+      "DASHBOARD": "Dashboard",
+      "EQUIPMENTS": "My Equipments",
+      "APPLICATIONS": "Applications & Requests",
+      "CERTIFICATES": "Certificates & Reports",
+      "BILLING": "Billing & Payments",
+      "NOTIFICATIONS": "Notifications",
+      "PROFILE": "Business Profile",
+      "SUPPORT": "Support / Help",
+      "ADD_LOGO": "Add Logo",
+      "LOGO_MODAL_TITLE": "Business Logo",
+      "DROP_IMAGE": "Drop image or click to browse",
+      "CANCEL": "Cancel",
+      "UPLOAD": "Upload",
+      "UPLOADING": "Uploading..."
+    },
+    "DASHBOARD": {
+      "WELCOME": "Welcome back",
+      "TIN": "TIN",
+      "LAST_LOGIN": "Last login",
+      "SUMMARY": "Business Summary",
+      "VERIFIED": "Verified",
+      "PENDING": "Pending",
+      "FAILED": "Failed",
+      "NAME": "Business Name",
+      "LICENSE_NUMBER": "License Number",
+      "TYPE": "Business Type",
+      "LOCATION": "Location",
+      "STATS": {
+        "EQUIPMENT": "Equipment",
+        "CERTIFICATES": "Certificates",
+        "APPLICATIONS": "Applications",
+        "COMPLIANCE": "Compliance",
+        "PENDING_VERIFICATION": "pending verification",
+        "UPCOMING_RENEWALS": "upcoming renewals",
+        "PENDING_INSPECTION": "pending inspection",
+        "ACTION_ITEMS": "action items remaining"
+      },
+      "OVERVIEW": {
+        "TITLE": "Equipment Overview",
+        "VIEW_ALL": "View all",
+        "COL_TYPE": "Type",
+        "COL_TOTAL": "Total",
+        "COL_VERIFIED": "Verified",
+        "COL_PENDING": "Pending",
+        "COL_PROGRESS": "Progress"
+      },
+      "ALERTS": {
+        "TITLE": "Alerts",
+        "DUE_VERIFICATION": "items due for verification",
+        "WITHIN_30_DAYS": "Within the next 30 days",
+        "RENEWAL_DUE": "Certificate renewal due",
+        "REGULATION_UPDATE": "Regulation update",
+        "RULES_EFFECTIVE": "New WMA rules effective"
+      },
+      "RECENT_ACTIVITY": {
+        "TITLE": "Recent Activity",
+        "COL_DATE": "Date",
+        "COL_DESCRIPTION": "Description",
+        "COL_STATUS": "Status"
+      }
+    },
+    "REGISTRATION": {
+      "TITLE": "Business / Company Registration",
+      "SUBTITLE": "Register your Business to access WMA online services for business operators.",
+      "INSTRUCTIONS": "Please follow the steps below to register your Business/Company on the WMA Online Services platform.",
+      "STEP1_TITLE": "1. Business/Company Information",
+      "STEP1_DESC": "Select business/company category, provide identity, address, and office phone number.",
+      "STEP2_TITLE": "2. Ownership Details",
+      "STEP2_DESC": "Private companies must provide owner details and correspondence address.",
+      "STEP3_TITLE": "3. Contact Person Details",
+      "STEP3_DESC": "Provide the primary contact person responsible for communication with WMA.",
+      "STEP4_TITLE": "4. Account Security",
+      "STEP4_DESC": "Create login credentials to complete account registration.",
+      "PREPARE_TITLE": "Prepare These Details",
+      "PREPARE_ITEM1": "Business or company name",
+      "PREPARE_ITEM2": "TIN and business license number",
+      "PREPARE_ITEM3": "Postal and physical address",
+      "PREPARE_ITEM4": "Owner details for private companies",
+      "PREPARE_ITEM5": "Contact person email and phone number",
+      "BACK_TO_SELECTION": "Back to Selection"
+    },
+    "FOOTER": {
+      "RIGHTS": "Weights and Measures Agency. All rights reserved."
+    },
+    "EQUIPMENTS": {
+      "TITLE": "Registered Equipments",
+      "ADD_NEW": "Add New Equipment",
+      "SEARCH_PLACEHOLDER": "Search by equipment name",
+      "UPDATE_DETAILS": "Update details",
+      "ADDED": "Added",
+      "NO_DATA_TITLE": "No equipments found",
+      "NO_DATA_DESC": "Change the status filter or search term to view other records.",
+      "CLOSE": "Close",
+      "FILTERS": {
+        "ALL": "All",
+        "DRAFT": "Draft",
+        "PENDING": "Pending",
+        "VERIFIED": "Verified",
+        "REJECTED": "Rejected"
+      }
+    },
+    "APPLICATIONS_PAGE": {
+      "TITLE": "Applications & Requests",
+      "SUBTITLE": "Choose a service request type below or view your request history.",
+      "REQUEST_TECHNICIAN": "Request Technician",
+      "REQUEST_TECHNICIAN_DESC": "Request an expert technician for equipment repairs, maintenance, or configuration.",
+      "REQUEST_INSPECTION": "Request Inspection Officer",
+      "REQUEST_INSPECTION_DESC": "Schedule an official WMA officer for technical inspection of your equipments.",
+      "SERVICE_HISTORY": "View Service History",
+      "SERVICE_HISTORY_DESC": "View the history and status of all your previously requested services.",
+      "SELECT_SERVICE": "Select Service",
+      "VIEW": "View",
+      "HISTORY_TITLE": "Request History",
+      "HISTORY_SUBTITLE": "View and track the status of your past and current requests.",
+      "NO_REQUESTS_TITLE": "No requests found",
+      "NO_REQUESTS_DESC": "You haven't made any requests yet. Select one of the services above to get started."
+    }
+  }
+}

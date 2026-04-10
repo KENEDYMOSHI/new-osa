@@ -42,7 +42,7 @@
       <img *ngIf="logoUrl" [src]="logoUrl" alt="Business Logo" class="w-full h-full object-cover" />
       <div *ngIf="!logoUrl" class="w-full h-full flex flex-col items-center justify-center bg-white/5 group-hover:bg-white/10 transition-colors">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-white/30 group-hover:text-white/50 transition-colors"><path d="M15 8h.01"/><path d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z"/><path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5"/><path d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3"/></svg>
-        <span class="text-[9px] text-white/25 mt-1">Add Logo</span>
+        <span class="text-[9px] text-white/25 mt-1">{{ 'BUSINESS.SIDEBAR.ADD_LOGO' | translate }}</span>
       </div>
       <div *ngIf="logoUrl" class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg>
@@ -57,7 +57,7 @@
   <div *ngIf="showLogoModal" class="fixed inset-0 z-9999999 flex items-center justify-center bg-black/60 backdrop-blur-sm" (click)="closeLogoModal()">
     <div class="bg-[#0c0f1c] border border-white/10 rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between mb-5">
-        <h3 class="text-white font-semibold text-base">Business Logo</h3>
+        <h3 class="text-white font-semibold text-base">{{ 'BUSINESS.SIDEBAR.LOGO_MODAL_TITLE' | translate }}</h3>
         <button (click)="closeLogoModal()" class="text-white/40 hover:text-white transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
@@ -74,21 +74,21 @@
         <img *ngIf="logoPreview" [src]="logoPreview" class="w-24 h-24 object-contain rounded-lg" />
         <div *ngIf="!logoPreview" class="flex flex-col items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-white/25"><path d="M15 8h.01"/><path d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z"/><path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5"/><path d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3"/></svg>
-          <span class="text-sm text-white/40">Drop image or click to browse</span>
+          <span class="text-sm text-white/40">{{ 'BUSINESS.SIDEBAR.DROP_IMAGE' | translate }}</span>
           <span class="text-xs text-white/25">PNG, JPG, WebP · max 1MB</span>
         </div>
         <input #fileInput type="file" accept="image/png,image/jpeg,image/webp" class="hidden" (change)="onFileSelected($event)" />
       </div>
 
       <div class="flex gap-3 mt-5">
-        <button (click)="closeLogoModal()" class="flex-1 py-2 rounded-lg border border-white/15 text-white/60 hover:text-white hover:border-white/30 text-sm transition-colors">Cancel</button>
+        <button (click)="closeLogoModal()" class="flex-1 py-2 rounded-lg border border-white/15 text-white/60 hover:text-white hover:border-white/30 text-sm transition-colors">{{ 'BUSINESS.SIDEBAR.CANCEL' | translate }}</button>
         <button
           (click)="uploadLogo()"
           [disabled]="!selectedLogoFile || isUploading"
           class="flex-1 py-2 rounded-lg text-sm font-medium transition-colors"
           [ngClass]="selectedLogoFile && !isUploading ? 'bg-[#F7941D] text-white hover:bg-[#e5841a]' : 'bg-white/10 text-white/30 cursor-not-allowed'"
         >
-          {{ isUploading ? 'Uploading…' : 'Upload' }}
+          {{ (isUploading ? 'BUSINESS.SIDEBAR.UPLOADING' : 'BUSINESS.SIDEBAR.UPLOAD') | translate }}
         </button>
       </div>
     </div>
@@ -128,7 +128,7 @@
                 </span>
                 <span class="biz-menu-text">
                   @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) {
-                  {{ nav.name }}
+                  {{ nav.name | translate }}
                   }
                 </span>
               </a>
