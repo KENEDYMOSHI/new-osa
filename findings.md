@@ -17,58 +17,27 @@
 
 ---
 
-## 2. The Two Architectural Options
+## 2. Architectural Design: The One-Table JSON Schema
 
-### Option A: One Table Per Service Type (27 tables)
-
-```
-equipment_fuel_pumps         → pumpName, serialNumber, product, stickerNumber, sealNumber, ...
-equipment_weighbridges       → weighbridgeName, location, maxCapacity, minCapacity, ...
-equipment_fixed_storage_tanks → tankNumber, product, tankCapacity, inspectionChart_path, ...
-... (× 27)
-```
-
-**Pros:**
-- Each table has strongly typed, named columns
-- Standard relational approach
-
-**Cons:**
-- 27 tables to create, 27 models, 27 separate migration files
-- Hard to query across types (e.g., "show me ALL equipment for this business")
-
----
-
-### Option B: The "One-Table" JSON Architecture (💎 Superior Solution)
+Instead of creating 27 separate tables for each equipment type, we use a **Single-Table JSON Architecture**. Everything is driven by the frontend configurations.
 
 ```
 equipment_registrations      → id, user_uuid, service_type_key, equipment_data (JSON), status, ...
 ```
 
-**Pros:**
-- **Only 1 table** for ALL 27 service types and all their attachments!
-- Since each registration represents exactly **one equipment item**, querying, tracking lifecycles, and updating a single piece of equipment is incredibly straightforward. No nested arrays or child tables needed.
-- **Files as JSON attributes**: File upload paths are stored as straightforward key-value pairs directly inside the JSON, eliminating the need for a separate documents table.
-- Adding a new service type = zero database changes (just add a frontend config)
-- Single query to list all equipment: `SELECT * FROM equipment_registrations WHERE user_uuid = ?`
-- MySQL 8+ has native JSON functions for querying inside JSON if needed.
-
-**Cons:**
-- Can't enforce column-level NOT NULL in the DB for service-specific fields (validation moves entirely to the app layer).
-
----
-
-## 3. Recommended Schema — Option B (One Table)
-
-### Why this is the ultimate design for this project
+### Why this is the ultimate design for this project:
 
 1. **Your frontend is already config-driven.** The `EQUIPMENT_FORM_CONFIGS` object defines all 27 forms. The backend completely defers to this structure — the config IS the schema.
-2. **Zero Schema Migration Overhead.** Adding service type #28 or adding a new file upload requirement to an existing form requires ZERO database changes. The backend just accepts the new key in the JSON.
-3. **Cross-type queries.** The "My Equipments" page easily shows ALL equipment types in a single query since they are all rows in the same table.
-4. **One Item Per Row.** By storing exactly one equipment item per row, the data model aligns natively with how WMA officers will inspect, verify, and reject items individually.
+2. **Only 1 table** handles ALL 27 service types and all their attachments! This avoids 27 separate models, migrations, and tables.
+3. **Zero Schema Migration Overhead.** Adding service type #28 or adding a new file upload requirement requires ZERO database changes. The backend just accepts the new key in the JSON.
+4. **Files as JSON attributes:** File upload paths are stored as straightforward key-value pairs directly inside the JSON, eliminating the need for a separate documents table and JOIN queries.
+5. **Independent Lifecycles:** Since each database row represents exactly **one equipment item**, tracking lifecycles, taking verification actions, and updating a single piece of equipment is straightforward.
+6. **Cross-type queries.** The "My Equipments" page easily shows ALL equipment types in a single query since they are all rows in the same table.
+7. **Native JSON Support:** MySQL 8+ natively processes JSON (`JSON_EXTRACT`, `JSON_SEARCH`), so filtering and querying within the JSON is fast and powerful.
 
 ---
 
-## 4. Table Design
+## 3. Table Design
 
 ### `equipment_registrations` (The Everything Table)
 
@@ -98,11 +67,9 @@ CREATE TABLE `equipment_registrations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
-*(Note: There is no `equipment_documents` table. It's totally unnecessary.)*
-
 ---
 
-## 5. How `equipment_data` JSON Works
+## 4. How `equipment_data` JSON Works
 
 Because files are just another data point, the JSON elegantly stores both texts and paths. When a **Fixed Storage Tank** is submitted, the JSON in `equipment_data` looks like:
 
@@ -139,7 +106,7 @@ ORDER BY created_at DESC;
 
 ---
 
-## 6. API Design
+## 5. API Design
 
 ### Endpoints to create
 
@@ -172,7 +139,7 @@ equipment_registrations:
 
 ---
 
-## 7. Backend Files to Create
+## 6. Backend Files to Create
 
 ### New Files
 
@@ -197,7 +164,7 @@ $routes->group('business/equipments', ['filter' => 'auth'], function($routes) {
 
 ---
 
-## 8. Entity Relationship Diagram
+## 7. Entity Relationship Diagram
 
 The diagram slims down to its purest form:
 
@@ -231,7 +198,7 @@ erDiagram
 
 ---
 
-## 9. Validation Strategy
+## 8. Validation Strategy
 
 | Layer | What it validates |
 |-------|-------------------|
@@ -240,13 +207,13 @@ erDiagram
 
 ---
 
-## 10. Summary
+## 9. Summary
 
-| Decision | Choice |
-|----------|--------|
-| **Architecture** | Pure Single-Table JSON schema (The Ultimate Option B) |
+| Feature | Design Decision |
+|---------|-----------------|
+| **Architecture** | Pure Single-Table JSON schema |
 | **Tables** | **1 table ONLY**: `equipment_registrations` |
 | **File Uploads** | File paths are saved directly into the JSON `equipment_data` |
 | **Item Granularity** | Each individual equipment item gets its own independent row |
 | **Simplicity** | Completely removes the need for joins. CRUD operations are hyper-fast. |
-| **Scalability** | Adding service type #28 or modifying a file requirement = **zero backend changes** |
+| **Scalability** | Adding service type #28 or modifying a file requirement = **zero backend schema changes** |
