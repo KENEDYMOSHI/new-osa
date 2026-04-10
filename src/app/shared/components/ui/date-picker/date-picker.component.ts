@@ -53,9 +53,17 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
     this.generateCalendar();
   }
 
-  @HostListener('window:scroll', ['$event'])
-  @HostListener('window:resize', ['$event'])
-  onScrollOrResize() {
+  @HostListener('window:scroll')
+  onScroll() {
+    this.handleScrollOrResize();
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.handleScrollOrResize();
+  }
+
+  handleScrollOrResize() {
     if (this.isOpen) {
       this.calculatePosition();
     }
