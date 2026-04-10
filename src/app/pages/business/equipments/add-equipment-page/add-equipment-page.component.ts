@@ -58,7 +58,7 @@ export class AddEquipmentPageComponent implements OnInit {
 
   isEditMode = false;
   equipmentId: number | null = null;
-  editableStatuses = new Set(['pending', 'verified']);
+  editableStatuses = new Set(['draft', 'pending']);
   currentEquipmentStatus = '';
 
   readonly businessName = 'NOVAS Agency Limited';

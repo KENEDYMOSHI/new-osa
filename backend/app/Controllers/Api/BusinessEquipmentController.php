@@ -128,6 +128,10 @@ class BusinessEquipmentController extends ResourceController
             return $this->failNotFound('Equipment not found or unauthorized');
         }
 
+        if (!in_array($equipment['status'], ['draft', 'pending'], true)) {
+            return $this->failValidationErrors('Only draft or pending equipments can be updated.');
+        }
+
         $serviceTypeKey = $this->request->getPost('serviceTypeKey');
         $serviceTypeLabel = $this->request->getPost('serviceTypeLabel');
         $category = $this->request->getPost('category');
@@ -182,9 +186,9 @@ class BusinessEquipmentController extends ResourceController
                     ? $equipment['submitted_at']
                     : date('Y-m-d H:i:s'))
                 : null,
-            'verified_at' => null,
-            'verifier_id' => null,
-            'verifier_notes' => null,
+            'verified_at' => $equipment['verified_at'],
+            'verifier_id' => $equipment['verifier_id'],
+            'verifier_notes' => $equipment['verifier_notes'],
         ];
 
         $this->model->update($id, $updateData);

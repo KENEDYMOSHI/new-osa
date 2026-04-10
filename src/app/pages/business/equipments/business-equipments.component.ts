@@ -141,7 +141,7 @@ export class BusinessEquipmentsComponent implements OnInit {
   }
 
   canEditEquipment(eq: EquipmentRegistration | null): boolean {
-    return !!eq && (eq.status === 'pending' || eq.status === 'verified');
+    return !!eq && (eq.status === 'draft' || eq.status === 'pending');
   }
 
   editEquipment(eq: EquipmentRegistration | null, event?: Event): void {
