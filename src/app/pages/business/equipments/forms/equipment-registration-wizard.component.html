@@ -275,14 +275,14 @@
                     </svg>
                     <div class="min-w-0 flex-1">
                       <p class="text-sm font-medium text-gray-700 dark:text-gray-200">
-                        {{ getFieldValue(idx, field.key) || 'No file chosen' }}
+                        {{ getFieldValue(idx, field.key)?.name || getFieldValue(idx, field.key) || 'No file chosen' }}
                       </p>
                       <p class="text-xs text-gray-400">{{ field.accept || 'Any file type' }}</p>
                     </div>
                     <label class="cursor-pointer rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm ring-1 ring-gray-200 transition-colors hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:ring-gray-600">
                       Browse
                       <input type="file" class="sr-only" [accept]="field.accept || '*'"
-                        (change)="updateField(idx, field.key, $any($event.target).files?.[0]?.name || '')" />
+                        (change)="updateFile(idx, field.key, $any($event.target).files?.[0])" />
                     </label>
                   </div>
 

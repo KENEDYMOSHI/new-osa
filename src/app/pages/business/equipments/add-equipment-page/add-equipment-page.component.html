@@ -351,12 +351,12 @@
                     </div>
                     <div class="min-w-0 flex-1">
                       <p class="text-sm font-medium text-gray-700 dark:text-gray-200">
-                        {{ getFieldValue(idx, field.key) || 'Click to upload file' }}
+                        {{ getFieldValue(idx, field.key)?.name || getFieldValue(idx, field.key) || 'Click to upload file' }}
                       </p>
                       <p class="mt-0.5 text-xs text-gray-400">Accepted formats: {{ field.accept || 'Any' }}</p>
                     </div>
                     <input type="file" class="sr-only" [accept]="field.accept || '*'"
-                      (change)="updateField(idx, field.key, $any($event.target).files?.[0]?.name || '')" />
+                      (change)="updateFile(idx, field.key, $any($event.target).files?.[0])" />
                   </label>
 
                   <p *ngIf="field.hint" class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">{{ field.hint }}</p>

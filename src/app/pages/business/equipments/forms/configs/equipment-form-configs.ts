@@ -39,17 +39,15 @@ const textarea = (
 // Reusable field presets
 // ═══════════════════════════════════════════════════════════════════════
 
-const serialNumber    = text('serialNumber', 'Serial Number', 'Enter serial number');
-const stickerNumber   = text('stickerNumber', 'Sticker Number', 'Enter sticker number');
-const sealNumber      = text('sealNumber', 'Seal Number', 'Enter seal number');
-const sealSerial      = text('sealSerialNumber', 'Seal Serial Number', 'Enter seal serial number');
+const serialNumber    = text('serialNumber', 'Serial Number', 'Enter serial number', false);
+const stickerNumber   = text('stickerNumber', 'Sticker Number', 'Enter sticker number', false);
+const sealNumber      = text('sealNumber', 'Seal Number', 'Enter seal number', false);
+const sealSerial      = text('sealSerialNumber', 'Seal Serial Number', 'Enter seal serial number', false);
 const product         = sel('product', 'Product', ['Petrol', 'Diesel', 'Kerosene', 'LPG', 'Jet Fuel', 'Other']);
-const status          = sel('status', 'Status', ['Verified', 'Pending']);
-const tankStatus      = sel('tankStatus', 'Tank Status', ['Good', 'Leaking', 'Under Repair']);
-const verifyDate      = date('verificationDate', 'Verification Date');
-const nextVerifyDate  = date('nextVerificationDate', 'Next Verification Date');
-const calibDate       = date('lastCalibrationDate', 'Last Calibration Date');
-const nextCalibDate   = date('nextCalibrationDate', 'Next Calibration Date');
+const verifyDate      = date('verificationDate', 'Verification Date', false);
+const nextVerifyDate  = date('nextVerificationDate', 'Next Verification Date', false);
+const calibDate       = date('lastCalibrationDate', 'Last Calibration Date', false);
+const nextCalibDate   = date('nextCalibrationDate', 'Next Calibration Date', false);
 const maxCapacity     = num('maxCapacity', 'Maximum Capacity', 'e.g., 500 kg');
 const minCapacity     = num('minCapacity', 'Minimum Capacity', 'e.g., 1 kg');
 const scaleDivision   = text('scaleDivision', 'Scale Division', 'e.g., 0.1 kg');
@@ -82,7 +80,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       product,
       num('compartmentCapacity', 'Compartment Capacity (Litres)', 'e.g., 10000'),
       stickerNumber, sealNumber, serialNumber,
-      calibDate, nextCalibDate, status,
+      calibDate, nextCalibDate,
     ]),
 
   'weighbridge': cfg('weighbridge', 'Weighbridge', 'weighing', 'Weighbridge',
@@ -91,7 +89,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       text('location', 'Location', 'e.g., Main Entrance'),
       maxCapacity, minCapacity, scaleDivision,
       serialNumber, stickerNumber, sealNumber,
-      calibDate, nextCalibDate, status,
+      calibDate, nextCalibDate,
     ]),
 
   'fixed-storage-tank': cfg('fixed-storage-tank', 'Fixed Storage Tank', 'petroleum', 'Tank',
@@ -100,7 +98,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       product,
       num('tankCapacity', 'Tank Capacity (Litres)', 'e.g., 30000'),
       stickerNumber, sealNumber, serialNumber,
-      calibDate, nextCalibDate, tankStatus,
+      calibDate, nextCalibDate,
       file('inspectionChart', 'Upload Underground Tank Inspection Chart', '.xlsx,.xls,.pdf'),
     ]),
 
@@ -110,7 +108,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       product,
       num('tankCapacity', 'Tank Capacity (Litres)', 'e.g., 30000'),
       stickerNumber, sealNumber, serialNumber,
-      calibDate, nextCalibDate, tankStatus,
+      calibDate, nextCalibDate,
     ]),
 
   'pre-packaging': cfg('pre-packaging', 'Pre Packaging', 'other', 'Package',
@@ -121,7 +119,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       num('nominalQuantity', 'Nominal Quantity', 'e.g., 5'),
       sel('unit', 'Unit of Measurement', ['Litres (L)', 'Millilitres (mL)', 'Kilograms (kg)', 'Grams (g)']),
       stickerNumber, sealNumber, serialNumber,
-      verifyDate, nextVerifyDate, status,
+      verifyDate, nextVerifyDate,
     ]),
 
   'wagon-tank': cfg('wagon-tank', 'Wagon Tank', 'petroleum', 'Wagon Tank',
@@ -131,7 +129,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       num('tankCapacity', 'Tank Capacity (Litres)', 'e.g., 50000'),
       num('compartments', 'Number of Compartments', 'e.g., 3'),
       stickerNumber, sealNumber, serialNumber,
-      calibDate, nextCalibDate, status,
+      calibDate, nextCalibDate,
     ]),
 
   'fuel-pump': cfg('fuel-pump', 'Fuel Pump', 'petroleum', 'Pump',
@@ -141,7 +139,6 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       stickerNumber, sealNumber, sealSerial,
       sel('pumpType', 'Type of Pump', ['MC (Mechanical Counter)', 'Electronic', 'Suction', 'Other']),
       num('nozzleCount', 'No. of Nozzles', 'e.g., 4'),
-      status,
       textarea('inspectionReport', 'Inspection Report of Nozzle', 'Enter inspection details…'),
       verifyDate, nextVerifyDate,
     ]),
@@ -153,7 +150,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       text('sizeDiameter', 'Size / Diameter', 'e.g., 2 inches'),
       serialNumber, stickerNumber, sealNumber,
       text('flowRange', 'Flow Range', 'e.g., 20–200 L/min'),
-      calibDate, nextCalibDate, status,
+      calibDate, nextCalibDate,
     ]),
 
   'check-pump': cfg('check-pump', 'Check Pump', 'petroleum', 'Check Pump',
@@ -162,7 +159,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       sel('pumpType', 'Pump Type', ['Manual', 'Automatic', 'Other']),
       serialNumber, stickerNumber, sealNumber,
       num('capacity', 'Capacity (Litres)', 'e.g., 20'),
-      verifyDate, nextVerifyDate, status,
+      verifyDate, nextVerifyDate,
     ]),
 
   'pressure-gauges': cfg('pressure-gauges', 'Pressure Gauges', 'metering', 'Gauge',
@@ -172,7 +169,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       text('pressureRange', 'Pressure Range', 'e.g., 0–100 bar'),
       sel('accuracyClass', 'Accuracy Class', ['0.6', '1.0', '1.6', '2.5', '4.0']),
       serialNumber, stickerNumber, sealNumber,
-      calibDate, nextCalibDate, status,
+      calibDate, nextCalibDate,
     ]),
 
   'proving-tank': cfg('proving-tank', 'Proving Tank', 'petroleum', 'Proving Tank',
@@ -180,7 +177,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       text('tankName', 'Tank Name / ID', 'e.g., PT-001'),
       num('capacity', 'Capacity (Litres)', 'e.g., 500'),
       serialNumber, stickerNumber, sealNumber,
-      calibDate, nextCalibDate, status,
+      calibDate, nextCalibDate,
     ]),
 
   // ─── METERING ──────────────────────────────────────────────────────
@@ -192,7 +189,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       text('meterModel', 'Meter Type / Model', 'e.g., Digitax F2'),
       serialNumber, stickerNumber, sealNumber,
       text('tariffSetting', 'Tariff Setting', 'e.g., Rate A – City'),
-      verifyDate, nextVerifyDate, status,
+      verifyDate, nextVerifyDate,
     ]),
 
   'domestic-gas-meter': cfg('domestic-gas-meter', 'Domestic Gas Meter', 'metering', 'Gas Meter',
@@ -201,7 +198,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       sel('meterType', 'Meter Type', ['Diaphragm', 'Rotary', 'Turbine', 'Ultrasonic', 'Other']),
       num('maxFlowRate', 'Maximum Flow Rate (m³/h)', 'e.g., 6'),
       serialNumber, stickerNumber, sealNumber,
-      calibDate, nextCalibDate, status,
+      calibDate, nextCalibDate,
     ]),
 
   // ─── LENGTH & VOLUME ───────────────────────────────────────────────
@@ -212,7 +209,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       num('length', 'Length (metres)', 'e.g., 1'),
       sel('material', 'Material', ['Steel', 'Aluminium', 'Wood', 'Other']),
       serialNumber, stickerNumber, sealNumber,
-      verifyDate, nextVerifyDate, status,
+      verifyDate, nextVerifyDate,
     ]),
 
   'tape-measure': cfg('tape-measure', 'Tape Measure', 'length', 'Tape Measure',
@@ -221,7 +218,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       num('length', 'Length (metres)', 'e.g., 50'),
       sel('material', 'Material', ['Steel', 'Fibreglass', 'Cloth', 'Other']),
       serialNumber, stickerNumber, sealNumber,
-      verifyDate, nextVerifyDate, status,
+      verifyDate, nextVerifyDate,
     ]),
 
   'brim-measure-system': cfg('brim-measure-system', 'Brim Measure System', 'length', 'Brim Measure',
@@ -229,7 +226,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       text('measureName', 'Measure Name / ID', 'e.g., BMS-003'),
       num('capacity', 'Capacity (Litres)', 'e.g., 200'),
       serialNumber, stickerNumber, sealNumber,
-      calibDate, nextCalibDate, status,
+      calibDate, nextCalibDate,
     ]),
 
   'other-measures-of-length': cfg('other-measures-of-length', 'Other Measures of Length', 'length', 'Instrument',
@@ -238,7 +235,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       text('lengthRange', 'Length / Range', 'e.g., 0–30 m'),
       sel('material', 'Material', ['Steel', 'Aluminium', 'Fibreglass', 'Other']),
       serialNumber, stickerNumber, sealNumber,
-      verifyDate, nextVerifyDate, status,
+      verifyDate, nextVerifyDate,
     ]),
 
   // ─── WEIGHING & MASS ──────────────────────────────────────────────
@@ -248,7 +245,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       text('scaleName', 'Scale Name / ID', 'e.g., CS-015'),
       maxCapacity, minCapacity, scaleDivision,
       serialNumber, stickerNumber, sealNumber,
-      calibDate, nextCalibDate, status,
+      calibDate, nextCalibDate,
     ]),
 
   'platform-scale': cfg('platform-scale', 'Platform Scale', 'weighing', 'Scale',
@@ -257,7 +254,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       maxCapacity, minCapacity, scaleDivision,
       text('platformSize', 'Platform Size', 'e.g., 1.2 m × 1.5 m'),
       serialNumber, stickerNumber, sealNumber,
-      calibDate, nextCalibDate, status,
+      calibDate, nextCalibDate,
     ]),
 
   'spring-balance': cfg('spring-balance', 'Spring Balance', 'weighing', 'Balance',
@@ -265,7 +262,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       text('balanceName', 'Balance Name / ID', 'e.g., SB-009'),
       maxCapacity, scaleDivision,
       serialNumber, stickerNumber, sealNumber,
-      calibDate, nextCalibDate, status,
+      calibDate, nextCalibDate,
     ]),
 
   'weigher': cfg('weigher', 'Weigher', 'weighing', 'Weigher',
@@ -274,7 +271,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       sel('weigherType', 'Type', ['Bench', 'Floor', 'Hanging', 'Other']),
       maxCapacity, minCapacity, scaleDivision,
       serialNumber, stickerNumber, sealNumber,
-      calibDate, nextCalibDate, status,
+      calibDate, nextCalibDate,
     ]),
 
   'automatic-weigher': cfg('automatic-weigher', 'Automatic Weigher', 'weighing', 'Weigher',
@@ -284,7 +281,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       maxCapacity, minCapacity,
       text('speed', 'Speed / Throughput', 'e.g., 120 items/min'),
       serialNumber, stickerNumber, sealNumber,
-      calibDate, nextCalibDate, status,
+      calibDate, nextCalibDate,
     ]),
 
   'beam-scale': cfg('beam-scale', 'Beam Scale', 'weighing', 'Scale',
@@ -292,7 +289,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       text('scaleName', 'Scale Name / ID', 'e.g., BS-011'),
       maxCapacity, scaleDivision,
       serialNumber, stickerNumber, sealNumber,
-      calibDate, nextCalibDate, status,
+      calibDate, nextCalibDate,
     ]),
 
   'sbl': cfg('sbl', 'Sandy & Ballast Lorry (SBL)', 'weighing', 'Lorry',
@@ -301,7 +298,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       sel('lorryType', 'Lorry Type', ['Tipper', 'Flatbed', 'Other']),
       num('loadingCapacity', 'Loading Capacity (m³)', 'e.g., 7'),
       serialNumber, stickerNumber, sealNumber,
-      calibDate, nextCalibDate, status,
+      calibDate, nextCalibDate,
     ]),
 
   'weights': cfg('weights', 'Weights', 'weighing', 'Weight Set',
@@ -311,7 +308,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       sel('unit', 'Unit', ['kg', 'g', 'mg']),
       sel('material', 'Material', ['Stainless Steel', 'Cast Iron', 'Brass', 'Other']),
       serialNumber, stickerNumber, sealNumber,
-      verifyDate, nextVerifyDate, status,
+      verifyDate, nextVerifyDate,
     ]),
 
   // ─── OTHER ─────────────────────────────────────────────────────────
@@ -321,7 +318,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       text('wareName', 'Ware Name / ID', 'e.g., SDW-004'),
       maxCapacity, minCapacity, scaleDivision,
       serialNumber, stickerNumber, sealNumber,
-      calibDate, nextCalibDate, status,
+      calibDate, nextCalibDate,
     ]),
 
   'other-measuring-instrument': cfg('other-measuring-instrument', 'Other Measuring Instrument', 'other', 'Instrument',
@@ -330,7 +327,7 @@ export const EQUIPMENT_FORM_CONFIGS: Record<string, EquipmentFormConfig> = {
       text('instrumentType', 'Instrument Type', 'e.g., Hydrometer'),
       textarea('description', 'Description', 'Describe the instrument and its use…'),
       serialNumber, stickerNumber, sealNumber,
-      verifyDate, nextVerifyDate, status,
+      verifyDate, nextVerifyDate,
     ]),
 };
 

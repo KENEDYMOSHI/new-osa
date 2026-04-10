@@ -103,6 +103,15 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function($routes) 
     $routes->post('business/upload-logo', 'BusinessRegistrationController::uploadLogo');
     $routes->post('business/remove-logo', 'BusinessRegistrationController::removeLogo');
 
+    // Business Equipment Registration
+    $routes->group('business/equipments', ['filter' => 'auth'], function($routes) {
+        $routes->get('', 'BusinessEquipmentController::index');
+        $routes->post('', 'BusinessEquipmentController::create');
+        $routes->get('(:num)', 'BusinessEquipmentController::show/$1');
+        $routes->put('(:num)', 'BusinessEquipmentController::update/$1');
+        $routes->delete('(:num)', 'BusinessEquipmentController::delete/$1');
+    });
+
     // Locations (Region, District, Ward, Postal Code)
     $routes->get('locations/regions', 'LocationController::getRegions');
     $routes->get('locations/districts/(:segment)', 'LocationController::getDistricts/$1');

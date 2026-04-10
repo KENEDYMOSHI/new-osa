@@ -4,6 +4,7 @@ import { Router, RouterModule } from '@angular/router';
 import { SERVICE_TYPES, ServiceType } from '../../../../shared/constants';
 import { EQUIPMENT_FORM_CONFIGS } from '../forms/configs';
 import { EquipmentFormConfig, FormField, ServiceCategory } from '../forms/models/form-field.model';
+import { EquipmentService } from '../../../../core/services/equipment.service';
 
 export interface EquipmentRegistrationPayload {
   serviceTypeKey: string;
@@ -35,7 +36,9 @@ const CATEGORY_META: Record<ServiceCategory, { label: string; color: string }> =
   templateUrl: './add-equipment-page.component.html',
 })
 export class AddEquipmentPageComponent {
-  constructor(private router: Router) {}
+  loading = false;
+  
+  constructor(private router: Router, private equipmentService: EquipmentService) {}
 
   currentStep: WizardStep = 1;
   serviceSearchTerm = '';
@@ -208,6 +211,12 @@ export class AddEquipmentPageComponent {
     this.formItems[itemIndex][fieldKey] = value;
   }
 
+  updateFile(itemIndex: number, fieldKey: string, file: File): void {
+    if (file) {
+      this.formItems[itemIndex][fieldKey] = file;
+    }
+  }
+
   getFieldValue(itemIndex: number, fieldKey: string): any {
     return this.formItems[itemIndex]?.[fieldKey] ?? '';
   }
@@ -235,7 +244,7 @@ export class AddEquipmentPageComponent {
       const match = field.options.find((o) => o.value === raw);
       return match?.label ?? raw;
     }
-    if (field.type === 'file') return typeof raw === 'string' ? raw : 'File selected';
+    if (field.type === 'file') return raw?.name || (typeof raw === 'string' ? raw : 'File selected');
     return String(raw);
   }
 
@@ -243,11 +252,45 @@ export class AddEquipmentPageComponent {
 
   handleSubmit(): void {
     if (!this.activeConfig || !this.canProceedToStep3) return;
-    this.submitted = true;
-    // Navigate back after short delay to show success
-    setTimeout(() => {
-      this.router.navigate(['/business/equipments']);
-    }, 2000);
+    this.loading = true;
+    
+    // Separate files from regular text items
+    const payloadItems: any[] = [];
+    const files: any[] = [];
+    
+    this.formItems.forEach((item, itemIndex) => {
+      const cleanItem: any = {};
+      Object.keys(item).forEach(key => {
+        if (item[key] instanceof File) {
+          files.push({ itemIndex, fieldKey: key, file: item[key] });
+        } else {
+          cleanItem[key] = item[key];
+        }
+      });
+      payloadItems.push(cleanItem);
+    });
+
+    const payload = {
+      serviceTypeKey: this.activeConfig.key,
+      serviceTypeLabel: this.activeConfig.title,
+      category: this.activeConfig.category,
+      items: payloadItems
+    };
+
+    this.equipmentService.registerEquipment(payload, files).subscribe({
+      next: (res) => {
+        this.loading = false;
+        this.submitted = true;
+        setTimeout(() => {
+          this.router.navigate(['/business/equipments']);
+        }, 2000);
+      },
+      error: (err) => {
+        this.loading = false;
+        console.error('Submission failed', err);
+        // Error handling could be improved with Toast
+      }
+    });
   }
 
   goBack(): void {
