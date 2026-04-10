@@ -44,7 +44,7 @@ equipment_fixed_storage_tanks → tankNumber, product, tankCapacity, ...
 ### Option B: Single Registration Table + JSON Details (⭐ Recommended)
 
 ```
-equipment_registrations      → id, user_uuid, service_type_key, field_data (JSON), status, ...
+equipment_registrations      → id, user_uuid, service_type_key, equipment_data (JSON), status, ...
 equipment_documents          → id, registration_id, field_key, file_path, ...
 ```
 
@@ -53,7 +53,7 @@ equipment_documents          → id, registration_id, field_key, file_path, ...
 - Since each registration represents exactly **one equipment item**, querying, tracking lifecycles, and updating a single piece of equipment is incredibly straightforward. No nested arrays needed for updates.
 - Adding a new service type = zero database changes (just add a frontend config)
 - Single query to list all equipment: `SELECT * FROM equipment_registrations WHERE user_uuid = ?`
-- The JSON `field_data` column stores the service-specific fields — validated by the frontend config
+- The JSON `equipment_data` column stores the service-specific fields — validated by the frontend config
 - MySQL 8+ has native JSON functions (`JSON_EXTRACT`, `JSON_SEARCH`) for querying inside JSON
 
 **Cons:**
@@ -87,7 +87,7 @@ CREATE TABLE `equipment_registrations` (
   `service_type_key` VARCHAR(50)  NOT NULL,                   -- 'fuel-pump', 'weighbridge', etc.
   `service_type_label` VARCHAR(255) NOT NULL,                 -- 'Fuel Pump', 'Weighbridge', etc.
   `category`         VARCHAR(20)  NOT NULL,                   -- 'petroleum','weighing','length','metering','other'
-  `field_data`       JSON         NOT NULL,                   -- All service-specific fields for this item
+  `equipment_data`   JSON         NOT NULL,                   -- All service-specific fields for this item
   `status`           ENUM('draft','pending','verified','rejected') NOT NULL DEFAULT 'draft',
   `submitted_at`     DATETIME     DEFAULT NULL,
   `verified_at`      DATETIME     DEFAULT NULL,
@@ -127,9 +127,9 @@ CREATE TABLE `equipment_documents` (
 
 ---
 
-## 5. How `field_data` JSON Works
+## 5. How `equipment_data` JSON Works
 
-When the frontend submits a **Fuel Pump** registration, the JSON stored in `equipment_registrations.field_data` would look like:
+When the frontend submits a **Fuel Pump** registration, the JSON stored in `equipment_registrations.equipment_data` would look like:
 
 ```json
 {
@@ -155,10 +155,10 @@ When the frontend submits a **Fuel Pump** registration, the JSON stored in `equi
 SELECT *
 FROM equipment_registrations 
 WHERE service_type_key = 'fuel-pump'
-  AND JSON_UNQUOTE(JSON_EXTRACT(field_data, '$.product')) = 'diesel';
+  AND JSON_UNQUOTE(JSON_EXTRACT(equipment_data, '$.product')) = 'diesel';
 
 -- Find ALL equipment for a business owner  
-SELECT service_type_label, status, category, field_data
+SELECT service_type_label, status, category, equipment_data
 FROM equipment_registrations 
 WHERE user_uuid = 'abc123'
 ORDER BY created_at DESC;
@@ -209,8 +209,8 @@ Instead of creating one registration with two items inside, the backend splits t
 
 ```
 equipment_registrations:
-  row 1 => id=1, user_uuid='abc', service_type_key='fuel-pump', category='petroleum', field_data='{ "pumpName": "Forecourt Pump FP-01", ... }', status='pending'
-  row 2 => id=2, user_uuid='abc', service_type_key='fuel-pump', category='petroleum', field_data='{ "pumpName": "Forecourt Pump FP-02", ... }', status='pending'
+  row 1 => id=1, user_uuid='abc', service_type_key='fuel-pump', category='petroleum', equipment_data='{ "pumpName": "Forecourt Pump FP-01", ... }', status='pending'
+  row 2 => id=2, user_uuid='abc', service_type_key='fuel-pump', category='petroleum', equipment_data='{ "pumpName": "Forecourt Pump FP-02", ... }', status='pending'
 ```
 
 ---
@@ -263,7 +263,7 @@ erDiagram
         varchar service_type_key
         varchar service_type_label
         varchar category
-        json field_data
+        json equipment_data
         enum status
         datetime submitted_at
         datetime verified_at
@@ -292,7 +292,7 @@ Since field-level validation can't be enforced by the DB schema (the fields are 
 | Layer | What it validates |
 |-------|-------------------|
 | **Frontend** (already built) | Required fields, field types, formats — driven by `EQUIPMENT_FORM_CONFIGS` |
-| **Backend controller** | 1. `service_type_key` must be one of the 27 known keys. 2. `items` array must not be empty. 3. Each item is extracted and its JSON is stored natively into `field_data`. 4. File uploads are validated for type/size. |
+| **Backend controller** | 1. `service_type_key` must be one of the 27 known keys. 2. `items` array must not be empty. 3. Each item is extracted and its JSON is stored natively into `equipment_data`. 4. File uploads are validated for type/size. |
 
 > [!TIP]
 > Optionally, you can duplicate the field-key list on the backend as a PHP constant and validate that each item's JSON keys are a subset of the expected keys for that service type. This prevents junk data injection.
@@ -307,6 +307,6 @@ Since field-level validation can't be enforced by the DB schema (the fields are 
 | **Tables** | 2 tables: `equipment_registrations` (for equipments) and `equipment_documents` (for files) |
 | **Item Granularity** | Each individual equipment item gets its own independent row in the single table |
 | **Service type routing** | `service_type_key` column maps to the 27 frontend config keys |
-| **Item data** | `field_data` JSON column — each service type stores its own field set natively |
+| **Item data** | `equipment_data` JSON column — each service type stores its own field set natively |
 | **Validation** | Frontend config-driven + backend key/type guards |
 | **Scalability** | Adding service type #28 = **zero** database or backend code changes |
