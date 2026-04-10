@@ -10,9 +10,9 @@
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
         </svg>
       </div>
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Equipment Registered!</h2>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ successTitle }}</h2>
       <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-        Your equipment has been submitted for verification. Redirecting you back…
+        {{ successDescription }}
       </p>
       <div class="mt-6 flex justify-center">
         <div class="h-1 w-40 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
@@ -44,7 +44,7 @@
           <div class="flex min-w-0 flex-1 items-center gap-1.5">
             <!-- On mobile: just the page title -->
             <span class="truncate text-sm font-semibold text-gray-900 dark:text-white sm:hidden">
-              Add New Equipment
+              {{ pageTitle }}
             </span>
             <!-- On sm+: full breadcrumb -->
             <nav class="hidden items-center gap-1.5 text-sm sm:flex">
@@ -55,7 +55,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-gray-300 dark:text-gray-700">
                 <path d="m9 18 6-6-6-6"/>
               </svg>
-              <span class="font-semibold text-gray-900 dark:text-white">Add New Equipment</span>
+              <span class="font-semibold text-gray-900 dark:text-white">{{ pageTitle }}</span>
             </nav>
           </div>
 
@@ -109,7 +109,14 @@
     <!-- ════════════════════════════════════════════════════════════════ -->
     <!-- PAGE CONTENT                                                     -->
     <!-- ════════════════════════════════════════════════════════════════ -->
-    <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <div *ngIf="pageLoading" class="mx-auto flex max-w-5xl items-center justify-center px-4 py-20 sm:px-6">
+      <div class="text-center">
+        <div class="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#F7941D] dark:border-gray-800 dark:border-t-[#F7941D]"></div>
+        <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Loading equipment details…</p>
+      </div>
+    </div>
+
+    <div *ngIf="!pageLoading" class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
 
       <!-- ┌────────────────────────────────────────────────────────────┐ -->
       <!-- │ STEP 1 – Select Service Type                              │ -->
@@ -117,10 +124,10 @@
       <section *ngIf="currentStep === 1">
         <div class="mb-6">
           <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            What type of equipment are you registering?
+            {{ isEditMode ? 'Equipment Type' : 'What type of equipment are you registering?' }}
           </h1>
           <p class="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
-            Select a service type. Each type has its own tailored registration form.
+            {{ pageDescription }}
           </p>
         </div>
 
@@ -134,19 +141,20 @@
                 </svg>
               </span>
               <input type="text" [value]="serviceSearchTerm" (input)="setServiceSearch($any($event.target).value)"
+                [disabled]="isEditMode"
                 placeholder="Search service types…"
-                class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-[#F7941D] focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-800" />
+                class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-[#F7941D] focus:bg-white disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-800" />
             </div>
 
             <div class="flex flex-wrap gap-2">
-              <button type="button" (click)="setCategory('all')"
+              <button type="button" (click)="setCategory('all')" [disabled]="isEditMode"
                 class="rounded-lg border px-3 py-2 text-xs font-medium transition-colors"
                 [ngClass]="activeCategory === 'all'
                   ? 'border-[#F7941D] bg-[#FFF7ED] text-[#B45309] dark:bg-[#F7941D]/10 dark:text-[#FDBA74]'
                   : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:border-gray-700 dark:text-gray-400'">
                 All Types
               </button>
-              <button *ngFor="let cat of categories" type="button" (click)="setCategory(cat.key)"
+              <button *ngFor="let cat of categories" type="button" (click)="setCategory(cat.key)" [disabled]="isEditMode"
                 class="rounded-lg border px-3 py-2 text-xs font-medium transition-colors"
                 [ngClass]="activeCategory === cat.key
                   ? 'border-[#F7941D] bg-[#FFF7ED] text-[#B45309] dark:bg-[#F7941D]/10 dark:text-[#FDBA74]'
@@ -162,10 +170,13 @@
         <!-- Service cards grid -->
         <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <button *ngFor="let st of filteredServiceTypes" type="button" (click)="selectService(st.key)"
+            [disabled]="isEditMode"
             class="group relative flex items-start gap-4 rounded-2xl border p-5 text-left transition-all duration-200"
             [ngClass]="isServiceSelected(st.key)
               ? 'border-[#F7941D] bg-[#FFF7ED] shadow-md ring-1 ring-[#F7941D]/20 dark:bg-[#F7941D]/10 dark:border-[#F7941D]/60'
-              : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700'">
+              : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700'"
+            [class.cursor-default]="isEditMode"
+            [class.opacity-70]="isEditMode && !isServiceSelected(st.key)">
 
             <!-- Category colour circle -->
             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-base font-bold transition-transform group-hover:scale-105"
@@ -367,7 +378,7 @@
         </div>
 
         <!-- Add Another -->
-        <button *ngIf="activeConfig.allowMultiple" type="button" (click)="addItem()"
+        <button *ngIf="activeConfig.allowMultiple && !isEditMode" type="button" (click)="addItem()"
           class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-gray-200 py-4 text-sm font-medium text-gray-400 transition-colors hover:border-[#F7941D] hover:text-[#F7941D] dark:border-gray-800 dark:text-gray-500 dark:hover:border-[#F7941D] dark:hover:text-[#F7941D]">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 5v14"/><path d="M5 12h14"/>
@@ -385,7 +396,7 @@
             Review & Confirm
           </h1>
           <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Please review everything carefully before submitting your registration.
+            {{ isEditMode ? 'Please review the updated information before saving your changes.' : 'Please review everything carefully before submitting your registration.' }}
           </p>
         </div>
 
@@ -469,7 +480,7 @@
             &nbsp;·&nbsp; {{ filledFieldCount }}/{{ totalFieldCount }} fields filled
           </p>
           <p *ngIf="currentStep === 3" class="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
-            All set — ready to register
+            {{ isEditMode ? 'All set, ready to update' : 'All set, ready to register' }}
           </p>
         </div>
 
@@ -506,11 +517,12 @@
           </button>
 
           <button *ngIf="currentStep === 3" type="button" (click)="handleSubmit()"
-            class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700">
+            [disabled]="loading"
+            class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 6 9 17l-5-5"/>
             </svg>
-            Register Equipment
+            {{ loading ? (isEditMode ? 'Updating...' : 'Submitting...') : submitButtonLabel }}
           </button>
         </div>
       </div>

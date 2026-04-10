@@ -10,6 +10,14 @@ class BusinessEquipmentController extends ResourceController
     protected $modelName = EquipmentRegistrationModel::class;
     protected $format    = 'json';
 
+    private array $optionalFields = [
+        'stickerNumber',
+        'sealNumber',
+        'serialNumber',
+        'lastCalibrationDate',
+        'nextCalibrationDate'
+    ];
+
     public function index()
     {
         $userUuid = $this->request->user_id ?? null;
@@ -50,19 +58,10 @@ class BusinessEquipmentController extends ResourceController
             return $this->failValidationErrors('Items array is empty or invalid.');
         }
 
-        $optionalFields = ['stickerNumber', 'sealNumber', 'serialNumber', 'lastCalibrationDate', 'nextCalibrationDate'];
-
         $savedCount = 0;
         
         foreach ($items as $index => $itemData) {
-            // Check if ANY of the optional fields is missing or empty
-            $isDraft = false;
-            foreach ($optionalFields as $opt) {
-                if (!isset($itemData[$opt]) || trim($itemData[$opt]) === '') {
-                    $isDraft = true;
-                    break;
-                }
-            }
+            $isDraft = $this->shouldSaveAsDraft($itemData);
 
             // Handle file uploads for this itemIndex
             // Payload field: `files[0][inspectionChart]`
@@ -119,7 +118,87 @@ class BusinessEquipmentController extends ResourceController
     // We can implement update and delete identically.
     public function update($id = null)
     {
-        return $this->fail('Not implemented yet');
+        $userUuid = $this->request->user_id ?? null;
+        if (!$userUuid) {
+            return $this->failUnauthorized('User not authenticated');
+        }
+
+        $equipment = $this->model->find($id);
+        if (!$equipment || $equipment['user_uuid'] !== $userUuid) {
+            return $this->failNotFound('Equipment not found or unauthorized');
+        }
+
+        $serviceTypeKey = $this->request->getPost('serviceTypeKey');
+        $serviceTypeLabel = $this->request->getPost('serviceTypeLabel');
+        $category = $this->request->getPost('category');
+        $itemsJson = $this->request->getPost('items');
+
+        if (!$itemsJson) {
+            $json = $this->request->getJSON(true);
+            if (is_array($json)) {
+                $serviceTypeKey = $json['serviceTypeKey'] ?? $serviceTypeKey;
+                $serviceTypeLabel = $json['serviceTypeLabel'] ?? $serviceTypeLabel;
+                $category = $json['category'] ?? $category;
+                $items = $json['items'] ?? null;
+            }
+        } else {
+            $items = json_decode($itemsJson, true);
+        }
+
+        if (!isset($items)) {
+            return $this->failValidationErrors('Missing required fields (items)');
+        }
+
+        if (!is_array($items) || count($items) !== 1 || !is_array($items[0])) {
+            return $this->failValidationErrors('Update expects exactly one equipment item.');
+        }
+
+        if ($serviceTypeKey && $serviceTypeKey !== $equipment['service_type_key']) {
+            return $this->failValidationErrors('Changing service type is not allowed.');
+        }
+
+        $itemData = $items[0];
+        $uploadedFiles = $this->request->getFiles();
+        if (isset($uploadedFiles['files'][0])) {
+            foreach ($uploadedFiles['files'][0] as $fieldKey => $file) {
+                if ($file->isValid() && !$file->hasMoved()) {
+                    $newName = $file->getRandomName();
+                    $file->move(FCPATH . 'uploads/equipments', $newName);
+                    $itemData[$fieldKey] = 'uploads/equipments/' . $newName;
+                }
+            }
+        }
+
+        $isDraft = $this->shouldSaveAsDraft($itemData);
+        $nextStatus = $isDraft ? 'draft' : 'pending';
+
+        $updateData = [
+            'service_type_label' => $serviceTypeLabel ?: $equipment['service_type_label'],
+            'category' => $category ?: $equipment['category'],
+            'equipment_data' => json_encode($itemData),
+            'status' => $nextStatus,
+            'submitted_at' => $nextStatus === 'pending'
+                ? (($equipment['status'] === 'pending' && !empty($equipment['submitted_at']))
+                    ? $equipment['submitted_at']
+                    : date('Y-m-d H:i:s'))
+                : null,
+            'verified_at' => null,
+            'verifier_id' => null,
+            'verifier_notes' => null,
+        ];
+
+        $this->model->update($id, $updateData);
+
+        $updated = $this->model->find($id);
+        if (is_string($updated['equipment_data'])) {
+            $updated['equipment_data'] = json_decode($updated['equipment_data'], true);
+        }
+
+        return $this->respond([
+            'status' => 200,
+            'message' => 'Equipment updated successfully',
+            'data' => $updated,
+        ]);
     }
 
     public function delete($id = null)
@@ -137,5 +216,16 @@ class BusinessEquipmentController extends ResourceController
 
         $this->model->delete($id);
         return $this->respondDeleted(['id' => $id]);
+    }
+
+    private function shouldSaveAsDraft(array $itemData): bool
+    {
+        foreach ($this->optionalFields as $opt) {
+            if (!isset($itemData[$opt]) || trim((string) $itemData[$opt]) === '') {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

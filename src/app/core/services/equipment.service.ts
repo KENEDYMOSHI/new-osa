@@ -49,8 +49,19 @@ export class EquipmentService {
     return this.http.get(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
   }
 
-  updateEquipment(id: number, data: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${id}`, data, { headers: this.getHeaders() });
+  updateEquipment(id: number, payload: EquipmentRegistrationPayload, files: any[]): Observable<any> {
+    const formData = new FormData();
+    formData.append('_method', 'PUT');
+    formData.append('serviceTypeKey', payload.serviceTypeKey);
+    formData.append('serviceTypeLabel', payload.serviceTypeLabel);
+    formData.append('category', payload.category);
+    formData.append('items', JSON.stringify(payload.items));
+
+    files.forEach(f => {
+      formData.append(`files[${f.itemIndex}][${f.fieldKey}]`, f.file);
+    });
+
+    return this.http.post(`${this.apiUrl}/${id}`, formData, { headers: this.getHeaders() });
   }
 
   deleteEquipment(id: number): Observable<any> {

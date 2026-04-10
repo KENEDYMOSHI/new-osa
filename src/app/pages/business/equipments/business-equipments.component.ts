@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { EquipmentService } from '../../../core/services/equipment.service';
 import { NoDataComponent } from '../../../shared/components/no-data/no-data.component';
 
@@ -54,7 +54,10 @@ export class BusinessEquipmentsComponent implements OnInit {
   selectedEquipment: EquipmentRegistration | null = null;
   isModalOpen = false;
 
-  constructor(private equipmentService: EquipmentService) {}
+  constructor(
+    private equipmentService: EquipmentService,
+    private router: Router,
+  ) {}
 
   ngOnInit(): void {
     this.fetchEquipments();
@@ -135,6 +138,17 @@ export class BusinessEquipmentsComponent implements OnInit {
   openDetails(eq: EquipmentRegistration): void {
     this.selectedEquipment = eq;
     this.isModalOpen = true;
+  }
+
+  canEditEquipment(eq: EquipmentRegistration | null): boolean {
+    return !!eq && (eq.status === 'pending' || eq.status === 'verified');
+  }
+
+  editEquipment(eq: EquipmentRegistration | null, event?: Event): void {
+    if (!eq) return;
+    event?.stopPropagation();
+    this.closeDetails();
+    this.router.navigate(['/business/equipments', eq.id, 'edit']);
   }
 
   closeDetails(): void {

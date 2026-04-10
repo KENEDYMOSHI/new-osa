@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SERVICE_TYPES, ServiceType } from '../../../../shared/constants';
 import { EQUIPMENT_FORM_CONFIGS } from '../forms/configs';
 import { EquipmentFormConfig, FormField, ServiceCategory } from '../forms/models/form-field.model';
@@ -10,6 +10,15 @@ export interface EquipmentRegistrationPayload {
   serviceTypeKey: string;
   serviceTypeLabel: string;
   items: Record<string, any>[];
+}
+
+interface EquipmentRegistrationRecord {
+  id: number;
+  service_type_key: string;
+  service_type_label: string;
+  category: ServiceCategory;
+  equipment_data: Record<string, any>;
+  status: string;
 }
 
 type WizardStep = 1 | 2 | 3;
@@ -35,10 +44,10 @@ const CATEGORY_META: Record<ServiceCategory, { label: string; color: string }> =
   imports: [CommonModule, RouterModule],
   templateUrl: './add-equipment-page.component.html',
 })
-export class AddEquipmentPageComponent {
+export class AddEquipmentPageComponent implements OnInit {
   loading = false;
-  
-  constructor(private router: Router, private equipmentService: EquipmentService) {}
+  pageLoading = false;
+  submitted = false;
 
   currentStep: WizardStep = 1;
   serviceSearchTerm = '';
@@ -46,7 +55,11 @@ export class AddEquipmentPageComponent {
   formItems: Record<string, any>[] = [{}];
   expandedItemIndex = 0;
   activeCategory: ServiceCategory | 'all' = 'all';
-  submitted = false;
+
+  isEditMode = false;
+  equipmentId: number | null = null;
+  editableStatuses = new Set(['pending', 'verified']);
+  currentEquipmentStatus = '';
 
   readonly businessName = 'NOVAS Agency Limited';
 
@@ -78,7 +91,23 @@ export class AddEquipmentPageComponent {
     ...meta,
   }));
 
-  // ── Computed ──────────────────────────────────────────────────────
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private equipmentService: EquipmentService,
+  ) {}
+
+  ngOnInit(): void {
+    const equipmentIdParam = this.route.snapshot.paramMap.get('id');
+    if (!equipmentIdParam) {
+      return;
+    }
+
+    this.isEditMode = true;
+    this.equipmentId = Number(equipmentIdParam);
+    this.currentStep = 2;
+    this.loadEquipmentForEdit();
+  }
 
   get activeConfig(): EquipmentFormConfig | null {
     return EQUIPMENT_FORM_CONFIGS[this.selectedServiceKey] ?? null;
@@ -134,7 +163,29 @@ export class AddEquipmentPageComponent {
       : 0;
   }
 
-  // ── Step navigation ───────────────────────────────────────────────
+  get pageTitle(): string {
+    return this.isEditMode ? 'Update Equipment' : 'Add New Equipment';
+  }
+
+  get pageDescription(): string {
+    return this.isEditMode
+      ? 'Review and update the registered equipment details before resubmission.'
+      : 'Select a service type. Each type has its own tailored registration form.';
+  }
+
+  get submitButtonLabel(): string {
+    return this.isEditMode ? 'Update Equipment' : 'Register Equipment';
+  }
+
+  get successTitle(): string {
+    return this.isEditMode ? 'Equipment Updated!' : 'Equipment Registered!';
+  }
+
+  get successDescription(): string {
+    return this.isEditMode
+      ? 'Your changes have been saved and the equipment is ready for review. Redirecting you back…'
+      : 'Your equipment has been submitted for verification. Redirecting you back…';
+  }
 
   goToStep(step: WizardStep): void {
     if (step === 2 && !this.canProceedToStep2) return;
@@ -156,8 +207,6 @@ export class AddEquipmentPageComponent {
     }
   }
 
-  // ── Step 1 ────────────────────────────────────────────────────────
-
   setServiceSearch(value: string): void {
     this.serviceSearchTerm = value;
   }
@@ -167,6 +216,7 @@ export class AddEquipmentPageComponent {
   }
 
   selectService(key: string): void {
+    if (this.isEditMode) return;
     this.selectedServiceKey = key;
   }
 
@@ -188,15 +238,14 @@ export class AddEquipmentPageComponent {
     return config ? CATEGORY_META[config.category]?.label ?? 'Other' : 'Other';
   }
 
-  // ── Step 2 ────────────────────────────────────────────────────────
-
   addItem(): void {
+    if (this.isEditMode) return;
     this.formItems = [...this.formItems, {}];
     this.expandedItemIndex = this.formItems.length - 1;
   }
 
   removeItem(index: number): void {
-    if (this.formItems.length <= 1) return;
+    if (this.formItems.length <= 1 || this.isEditMode) return;
     this.formItems = this.formItems.filter((_, i) => i !== index);
     if (this.expandedItemIndex >= this.formItems.length) {
       this.expandedItemIndex = this.formItems.length - 1;
@@ -211,7 +260,7 @@ export class AddEquipmentPageComponent {
     this.formItems[itemIndex][fieldKey] = value;
   }
 
-  updateFile(itemIndex: number, fieldKey: string, file: File): void {
+  updateFile(itemIndex: number, fieldKey: string, file: File | undefined): void {
     if (file) {
       this.formItems[itemIndex][fieldKey] = file;
     }
@@ -235,8 +284,6 @@ export class AddEquipmentPageComponent {
     return total > 0 ? Math.round((filled / total) * 100) : 0;
   }
 
-  // ── Step 3 ────────────────────────────────────────────────────────
-
   getDisplayValue(itemIndex: number, field: FormField): string {
     const raw = this.getFieldValue(itemIndex, field.key);
     if (!raw || String(raw).trim().length === 0) return '—';
@@ -248,16 +295,13 @@ export class AddEquipmentPageComponent {
     return String(raw);
   }
 
-  // ── Submit ────────────────────────────────────────────────────────
-
   handleSubmit(): void {
     if (!this.activeConfig || !this.canProceedToStep3) return;
     this.loading = true;
-    
-    // Separate files from regular text items
+
     const payloadItems: any[] = [];
     const files: any[] = [];
-    
+
     this.formItems.forEach((item, itemIndex) => {
       const cleanItem: any = {};
       Object.keys(item).forEach(key => {
@@ -277,8 +321,12 @@ export class AddEquipmentPageComponent {
       items: payloadItems
     };
 
-    this.equipmentService.registerEquipment(payload, files).subscribe({
-      next: (res) => {
+    const request$ = this.isEditMode && this.equipmentId !== null
+      ? this.equipmentService.updateEquipment(this.equipmentId, payload, files)
+      : this.equipmentService.registerEquipment(payload, files);
+
+    request$.subscribe({
+      next: () => {
         this.loading = false;
         this.submitted = true;
         setTimeout(() => {
@@ -287,13 +335,43 @@ export class AddEquipmentPageComponent {
       },
       error: (err) => {
         this.loading = false;
-        console.error('Submission failed', err);
-        // Error handling could be improved with Toast
+        console.error(this.isEditMode ? 'Update failed' : 'Submission failed', err);
       }
     });
   }
 
   goBack(): void {
     this.router.navigate(['/business/equipments']);
+  }
+
+  private loadEquipmentForEdit(): void {
+    if (this.equipmentId === null) return;
+
+    this.pageLoading = true;
+    this.equipmentService.getEquipmentById(this.equipmentId).subscribe({
+      next: (equipment: EquipmentRegistrationRecord) => {
+        if (!this.editableStatuses.has(equipment.status)) {
+          this.pageLoading = false;
+          this.router.navigate(['/business/equipments']);
+          return;
+        }
+
+        this.currentEquipmentStatus = equipment.status;
+        this.selectedServiceKey = equipment.service_type_key;
+        this.activeCategory = equipment.category ?? 'all';
+        this.formItems = [this.cloneEquipmentData(equipment.equipment_data)];
+        this.expandedItemIndex = 0;
+        this.pageLoading = false;
+      },
+      error: (err) => {
+        this.pageLoading = false;
+        console.error('Failed to load equipment', err);
+        this.router.navigate(['/business/equipments']);
+      }
+    });
+  }
+
+  private cloneEquipmentData(data: Record<string, any> | null | undefined): Record<string, any> {
+    return data ? { ...data } : {};
   }
 }
