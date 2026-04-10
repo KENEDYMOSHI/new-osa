@@ -202,6 +202,12 @@ export class EquipmentRegistrationWizardComponent implements OnChanges {
     this.formItems[itemIndex][fieldKey] = value;
   }
 
+  updateFile(itemIndex: number, fieldKey: string, file: File | undefined): void {
+    if (file) {
+      this.formItems[itemIndex][fieldKey] = file;
+    }
+  }
+
   getFieldValue(itemIndex: number, fieldKey: string): any {
     return this.formItems[itemIndex]?.[fieldKey] ?? '';
   }

@@ -327,6 +327,16 @@ export const routes: Routes = [
         title: 'Applications & Requests | Business Portal - WMA'
       },
       {
+        path: 'applications-and-requests/request-technician',
+        loadComponent: () => import('./pages/business/applications/request-technician/request-technician.component').then(m => m.RequestTechnicianComponent),
+        title: 'Request Technician | Business Portal - WMA'
+      },
+      {
+        path: 'applications-and-requests/request-inspection',
+        loadComponent: () => import('./pages/business/applications/request-inspection/request-inspection.component').then(m => m.RequestInspectionComponent),
+        title: 'Request Inspection | Business Portal - WMA'
+      },
+      {
         path: 'certificates',
         loadComponent: () => import('./pages/business/dashboard/business-dashboard.component').then(m => m.BusinessDashboardComponent),
         title: 'Certificates & Reports | Business Portal - WMA'
