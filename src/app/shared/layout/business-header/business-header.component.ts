@@ -27,7 +27,10 @@ export class BusinessHeaderComponent {
     private translate: TranslateService
   ) {
     this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
-    this.currentLang = this.translate.currentLang || 'en';
+    this.currentLang =
+      (typeof localStorage !== 'undefined' && localStorage.getItem('app_language')) ||
+      this.translate.currentLang ||
+      'en';
   }
 
   handleToggle() {
@@ -39,6 +42,9 @@ export class BusinessHeaderComponent {
   }
 
   switchLanguage(lang: string) {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('app_language', lang);
+    }
     this.translate.use(lang);
     this.currentLang = lang;
   }
