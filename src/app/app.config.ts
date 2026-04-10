@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, ApplicationConfig, importProvidersFrom, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection, provideAppInitializer, inject } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
@@ -7,19 +7,6 @@ import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { firstValueFrom } from 'rxjs';
 
 import { routes } from './app.routes';
-
-function initializeTranslations(translate: TranslateService) {
-  return () => {
-    const savedLang =
-      typeof localStorage !== 'undefined'
-        ? localStorage.getItem('app_language')
-        : null;
-    const lang = savedLang || 'en';
-
-    translate.setFallbackLang('en');
-    return firstValueFrom(translate.use(lang));
-  };
-}
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -38,11 +25,16 @@ export const appConfig: ApplicationConfig = {
         lang: 'en'
       })
     ),
-    {
-      provide: APP_INITIALIZER,
-      useFactory: initializeTranslations,
-      deps: [TranslateService],
-      multi: true,
-    },
+    provideAppInitializer(() => {
+      const translate = inject(TranslateService);
+      const savedLang =
+        typeof localStorage !== 'undefined'
+          ? localStorage.getItem('app_language')
+          : null;
+      const lang = savedLang || 'en';
+
+      translate.setFallbackLang('en');
+      return firstValueFrom(translate.use(lang));
+    }),
   ]
 };
