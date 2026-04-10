@@ -13,7 +13,7 @@
 
 ### The core question
 
-> *We have 27 different service types, each with its own unique set of fields. How do we persist this data?*
+> *We have 27 different service types, each with its own unique set of fields, including file uploads. How do we persist this data elegantly?*
 
 ---
 
@@ -24,60 +24,55 @@
 ```
 equipment_fuel_pumps         → pumpName, serialNumber, product, stickerNumber, sealNumber, ...
 equipment_weighbridges       → weighbridgeName, location, maxCapacity, minCapacity, ...
-equipment_fixed_storage_tanks → tankNumber, product, tankCapacity, ...
+equipment_fixed_storage_tanks → tankNumber, product, tankCapacity, inspectionChart_path, ...
 ... (× 27)
 ```
 
 **Pros:**
 - Each table has strongly typed, named columns
-- Easy SQL queries: `SELECT * FROM equipment_fuel_pumps WHERE user_uuid = ?`
 - Standard relational approach
 
 **Cons:**
 - 27 tables to create, 27 models, 27 separate migration files
-- Adding a new service type = new migration + model + controller method
-- Many tables will have very similar columns (serialNumber, stickerNumber, sealNumber, status appear in almost all)
 - Hard to query across types (e.g., "show me ALL equipment for this business")
 
 ---
 
-### Option B: Single Registration Table + JSON Details (⭐ Recommended)
+### Option B: The "One-Table" JSON Architecture (💎 Superior Solution)
 
 ```
 equipment_registrations      → id, user_uuid, service_type_key, equipment_data (JSON), status, ...
-equipment_documents          → id, registration_id, field_key, file_path, ...
 ```
 
 **Pros:**
-- Only 2 tables for ALL 27 service types
-- Since each registration represents exactly **one equipment item**, querying, tracking lifecycles, and updating a single piece of equipment is incredibly straightforward. No nested arrays needed for updates.
+- **Only 1 table** for ALL 27 service types and all their attachments!
+- Since each registration represents exactly **one equipment item**, querying, tracking lifecycles, and updating a single piece of equipment is incredibly straightforward. No nested arrays or child tables needed.
+- **Files as JSON attributes**: File upload paths are stored as straightforward key-value pairs directly inside the JSON, eliminating the need for a separate documents table.
 - Adding a new service type = zero database changes (just add a frontend config)
 - Single query to list all equipment: `SELECT * FROM equipment_registrations WHERE user_uuid = ?`
-- The JSON `equipment_data` column stores the service-specific fields — validated by the frontend config
-- MySQL 8+ has native JSON functions (`JSON_EXTRACT`, `JSON_SEARCH`) for querying inside JSON
+- MySQL 8+ has native JSON functions for querying inside JSON if needed.
 
 **Cons:**
-- Can't enforce column-level NOT NULL in the DB for service-specific fields (validation moves to app layer)
+- Can't enforce column-level NOT NULL in the DB for service-specific fields (validation moves entirely to the app layer).
 
 ---
 
-## 3. Recommended Schema — Option B
+## 3. Recommended Schema — Option B (One Table)
 
-### Why Option B wins for this project
+### Why this is the ultimate design for this project
 
-1. **Your frontend is already config-driven.** The `EQUIPMENT_FORM_CONFIGS` object defines all 27 forms. The backend should mirror this philosophy — the config IS the schema.
-2. **27 tables is unsustainable.** Each new service type the WMA adds would require a database migration, a new PHP Model, and controller changes. With Option B, it's zero backend work.
-3. **Cross-type queries are essential.** The "My Equipments" page needs to show ALL equipment types in a single list. With separate tables, you'd need 27 UNION queries or a complex aggregation.
-4. **Your existing codebase uses this pattern.** The `pattern_application_instruments` table already stores instrument-specific data in a similar flexible way.
-5. **One Item Per Registration.** By storing exactly one equipment item per row, the data model perfectly aligns with individual equipment lifecycles (each equipment item will get verified, calibrated, or rejected independently over time).
+1. **Your frontend is already config-driven.** The `EQUIPMENT_FORM_CONFIGS` object defines all 27 forms. The backend completely defers to this structure — the config IS the schema.
+2. **Zero Schema Migration Overhead.** Adding service type #28 or adding a new file upload requirement to an existing form requires ZERO database changes. The backend just accepts the new key in the JSON.
+3. **Cross-type queries.** The "My Equipments" page easily shows ALL equipment types in a single query since they are all rows in the same table.
+4. **One Item Per Row.** By storing exactly one equipment item per row, the data model aligns natively with how WMA officers will inspect, verify, and reject items individually.
 
 ---
 
-## 4. Table Designs
+## 4. Table Design
 
-### Table 1: `equipment_registrations` (The main table)
+### `equipment_registrations` (The Everything Table)
 
-One row per individual equipment item. Even if a business owner registers "3 Fuel Pumps" in one go via the wizard, the backend will split them and treat this as **3 separate rows** here.
+One row per individual equipment item. Even if a business owner registers "3 Fuel Pumps" in one go via the wizard, the backend splits them and saves **3 separate rows**. File paths uploaded during registration sit naturally inside the JSON.
 
 ```sql
 CREATE TABLE `equipment_registrations` (
@@ -87,7 +82,7 @@ CREATE TABLE `equipment_registrations` (
   `service_type_key` VARCHAR(50)  NOT NULL,                   -- 'fuel-pump', 'weighbridge', etc.
   `service_type_label` VARCHAR(255) NOT NULL,                 -- 'Fuel Pump', 'Weighbridge', etc.
   `category`         VARCHAR(20)  NOT NULL,                   -- 'petroleum','weighing','length','metering','other'
-  `equipment_data`   JSON         NOT NULL,                   -- All service-specific fields for this item
+  `equipment_data`   JSON         NOT NULL,                   -- ALL text fields AND file paths
   `status`           ENUM('draft','pending','verified','rejected') NOT NULL DEFAULT 'draft',
   `submitted_at`     DATETIME     DEFAULT NULL,
   `verified_at`      DATETIME     DEFAULT NULL,
@@ -103,58 +98,36 @@ CREATE TABLE `equipment_registrations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
-### Table 2: `equipment_documents` (File uploads)
-
-One row per uploaded file. Keeps binary file references separate from JSON data block.
-
-```sql
-CREATE TABLE `equipment_documents` (
-  `id`               INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `registration_id`  INT UNSIGNED NOT NULL,                   -- FK → equipment_registrations.id
-  `field_key`        VARCHAR(50)  NOT NULL,                   -- Which form field this file belongs to
-  `original_name`    VARCHAR(255) NOT NULL,
-  `file_path`        VARCHAR(500) NOT NULL,                   -- Server path: uploads/equipment/...
-  `mime_type`        VARCHAR(100) DEFAULT NULL,
-  `file_size`        INT UNSIGNED DEFAULT NULL,               -- Bytes
-  `created_at`       DATETIME     DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_registration` (`registration_id`),
-  CONSTRAINT `fk_docs_registration`
-    FOREIGN KEY (`registration_id`) REFERENCES `equipment_registrations`(`id`)
-    ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-```
+*(Note: There is no `equipment_documents` table. It's totally unnecessary.)*
 
 ---
 
 ## 5. How `equipment_data` JSON Works
 
-When the frontend submits a **Fuel Pump** registration, the JSON stored in `equipment_registrations.equipment_data` would look like:
+Because files are just another data point, the JSON elegantly stores both texts and paths. When a **Fixed Storage Tank** is submitted, the JSON in `equipment_data` looks like:
 
 ```json
 {
-  "pumpName": "Forecourt Pump FP-01",
-  "serialNumber": "SN-12345",
+  "tankNumber": "FST-001",
   "product": "diesel",
+  "tankCapacity": "30000",
   "stickerNumber": "STK-6789",
   "sealNumber": "SEAL-001",
-  "sealSerialNumber": "SS-001",
-  "pumpType": "electronic",
-  "nozzleCount": "4",
-  "status": "verified",
-  "inspectionReport": "All nozzles pass accuracy test…",
-  "verificationDate": "2026-03-15",
-  "nextVerificationDate": "2027-03-15"
+  "tankStatus": "Good",
+  "lastCalibrationDate": "2026-01-10",
+  "nextCalibrationDate": "2027-01-10",
+  "inspectionChart": "uploads/equipments/2026/04/fst-chart-001.pdf" 
 }
 ```
+*^ See how `inspectionChart` just holds the path? Clean and perfect.*
 
 ### Querying inside JSON (MySQL 8+)
 
 ```sql
--- Find all fuel pumps with product = diesel
+-- Find all fixed storage tanks with product = diesel
 SELECT *
 FROM equipment_registrations 
-WHERE service_type_key = 'fuel-pump'
+WHERE service_type_key = 'fixed-storage-tank'
   AND JSON_UNQUOTE(JSON_EXTRACT(equipment_data, '$.product')) = 'diesel';
 
 -- Find ALL equipment for a business owner  
@@ -172,45 +145,29 @@ ORDER BY created_at DESC;
 
 | Method | Route | Purpose |
 |--------|-------|---------|
-| `POST`   | `/api/business/equipments` | Submit a new equipment registration (can handle an array of items) |
+| `POST`   | `/api/business/equipments` | Submit a new equipment registration (handles array of items + files via multipart form) |
 | `GET`    | `/api/business/equipments` | List all registrations for current user |
 | `GET`    | `/api/business/equipments/:id` | Get registration detail |
 | `PUT`    | `/api/business/equipments/:id` | Update a specific registration |
 | `DELETE` | `/api/business/equipments/:id` | Delete a draft registration |
-| `POST`   | `/api/business/equipments/:id/documents` | Upload a file for a specific equipment registration |
 
-### POST payload example (frontend sends this)
+### POST payload (frontend)
 
-```json
-{
-  "serviceTypeKey": "fuel-pump",
-  "serviceTypeLabel": "Fuel Pump",
-  "category": "petroleum",
-  "items": [
-    {
-      "pumpName": "Forecourt Pump FP-01",
-      "serialNumber": "SN-12345",
-      "product": "diesel",
-      ...
-    },
-    {
-      "pumpName": "Forecourt Pump FP-02",
-      "serialNumber": "SN-12346",
-      "product": "petrol",
-      ...
-    }
-  ]
-}
-```
+Since we have files, the frontend submits via `FormData` (multipart/form-data):
+- `serviceTypeKey`: "fixed-storage-tank"
+- `serviceTypeLabel`: "Fixed Storage Tank"
+- `category`: "petroleum"
+- `items`: `[{"tankNumber":"FST-001", "product":"diesel"...}]` (Stringified JSON)
+- `files[0][inspectionChart]`: `(File Blob)`
 
-### Backend saves it as
+### Backend processing & saving
 
-Instead of creating one registration with two items inside, the backend splits the array and creates **TWO independent records**. Each item acts as its own distinct equipment lifecycle unit:
+The backend receives the multipart form, uploads the physical files to the server, strings the new server file paths directly into the respective item's array, and splits the payload into isolated database rows:
 
 ```
 equipment_registrations:
-  row 1 => id=1, user_uuid='abc', service_type_key='fuel-pump', category='petroleum', equipment_data='{ "pumpName": "Forecourt Pump FP-01", ... }', status='pending'
-  row 2 => id=2, user_uuid='abc', service_type_key='fuel-pump', category='petroleum', equipment_data='{ "pumpName": "Forecourt Pump FP-02", ... }', status='pending'
+  row 1 => id=1, user_uuid='abc', service_type_key='fixed-storage-tank', equipment_data='{ "tankNumber": "FST-001", "inspectionChart": "uploads/..." }', status='pending'
+  row 2 => id=2, user_uuid='abc', service_type_key='fixed-storage-tank', equipment_data='{ "tankNumber": "FST-002", "inspectionChart": "uploads/..." }', status='pending'
 ```
 
 ---
@@ -221,10 +178,9 @@ equipment_registrations:
 
 | File | Purpose |
 |------|---------|
-| `app/Models/EquipmentRegistrationModel.php` | Model for `equipment_registrations` |
-| `app/Models/EquipmentDocumentModel.php` | Model for `equipment_documents` |
+| `app/Models/EquipmentRegistrationModel.php` | The ONLY Model needed for this feature |
 | `app/Controllers/Api/BusinessEquipmentController.php` | REST controller |
-| `app/Database/Migrations/2026-04-10-xxx_CreateEquipmentTables.php` | Migration for all 2 tables |
+| `app/Database/Migrations/2026-04-10-xxx_CreateEquipmentRegistrationTable.php` | The ONLY Migration needed |
 
 ### Route additions (`app/Config/Routes.php`)
 
@@ -236,7 +192,6 @@ $routes->group('business/equipments', ['filter' => 'auth'], function($routes) {
     $routes->get('(:num)', 'BusinessEquipmentController::show/$1');
     $routes->put('(:num)', 'BusinessEquipmentController::update/$1');
     $routes->delete('(:num)', 'BusinessEquipmentController::delete/$1');
-    $routes->post('(:num)/documents', 'BusinessEquipmentController::uploadDocument/$1');
 });
 ```
 
@@ -244,10 +199,11 @@ $routes->group('business/equipments', ['filter' => 'auth'], function($routes) {
 
 ## 8. Entity Relationship Diagram
 
+The diagram slims down to its purest form:
+
 ```mermaid
 erDiagram
     BUSINESS_USERS ||--o{ EQUIPMENT_REGISTRATIONS : "owns"
-    EQUIPMENT_REGISTRATIONS ||--o{ EQUIPMENT_DOCUMENTS : "has files"
 
     BUSINESS_USERS {
         int id PK
@@ -271,31 +227,16 @@ erDiagram
         text verifier_notes
         datetime created_at
     }
-
-    EQUIPMENT_DOCUMENTS {
-        int id PK
-        int registration_id FK
-        varchar field_key
-        varchar original_name
-        varchar file_path
-        varchar mime_type
-        int file_size
-    }
 ```
 
 ---
 
 ## 9. Validation Strategy
 
-Since field-level validation can't be enforced by the DB schema (the fields are inside JSON), validation happens in **two layers**:
-
 | Layer | What it validates |
 |-------|-------------------|
 | **Frontend** (already built) | Required fields, field types, formats — driven by `EQUIPMENT_FORM_CONFIGS` |
-| **Backend controller** | 1. `service_type_key` must be one of the 27 known keys. 2. `items` array must not be empty. 3. Each item is extracted and its JSON is stored natively into `equipment_data`. 4. File uploads are validated for type/size. |
-
-> [!TIP]
-> Optionally, you can duplicate the field-key list on the backend as a PHP constant and validate that each item's JSON keys are a subset of the expected keys for that service type. This prevents junk data injection.
+| **Backend controller** | 1. `service_type_key` must be known. 2. Extracts `items` JSON array. 3. Uploads files & injects paths into respective items. 4. Saves into `equipment_data`. |
 
 ---
 
@@ -303,10 +244,9 @@ Since field-level validation can't be enforced by the DB schema (the fields are 
 
 | Decision | Choice |
 |----------|--------|
-| **Architecture** | Single equipment table + JSON fields (Option B) |
-| **Tables** | 2 tables: `equipment_registrations` (for equipments) and `equipment_documents` (for files) |
-| **Item Granularity** | Each individual equipment item gets its own independent row in the single table |
-| **Service type routing** | `service_type_key` column maps to the 27 frontend config keys |
-| **Item data** | `equipment_data` JSON column — each service type stores its own field set natively |
-| **Validation** | Frontend config-driven + backend key/type guards |
-| **Scalability** | Adding service type #28 = **zero** database or backend code changes |
+| **Architecture** | Pure Single-Table JSON schema (The Ultimate Option B) |
+| **Tables** | **1 table ONLY**: `equipment_registrations` |
+| **File Uploads** | File paths are saved directly into the JSON `equipment_data` |
+| **Item Granularity** | Each individual equipment item gets its own independent row |
+| **Simplicity** | Completely removes the need for joins. CRUD operations are hyper-fast. |
+| **Scalability** | Adding service type #28 or modifying a file requirement = **zero backend changes** |
