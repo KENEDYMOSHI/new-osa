@@ -7,9 +7,11 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { SERVICE_TYPES, ServiceType } from '../../../../shared/constants';
 import { EQUIPMENT_FORM_CONFIGS } from './configs';
 import { EquipmentFormConfig, FormField, ServiceCategory } from './models/form-field.model';
+import { DatePickerComponent } from '../../../../shared/components/ui/date-picker/date-picker.component';
 
 export interface EquipmentRegistrationPayload {
   serviceTypeKey: string;
@@ -36,7 +38,7 @@ const CATEGORY_META: Record<ServiceCategory, { label: string; color: string }> =
 @Component({
   selector: 'app-equipment-registration-wizard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, DatePickerComponent],
   templateUrl: './equipment-registration-wizard.component.html',
 })
 export class EquipmentRegistrationWizardComponent implements OnChanges {

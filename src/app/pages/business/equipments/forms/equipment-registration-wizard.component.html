@@ -180,14 +180,15 @@
         <!-- Form items -->
         <div class="mt-5 space-y-4">
           <div *ngFor="let item of formItems; let idx = index"
-            class="overflow-hidden rounded-2xl transition-colors"
+            class="rounded-2xl transition-colors"
             [ngClass]="expandedItemIndex === idx
-              ? ' bg-white  dark:bg-gray-900'
-              : 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-950'">
+              ? 'overflow-visible bg-white dark:bg-gray-900'
+              : 'overflow-hidden border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-950'">
 
             <!-- Item header -->
             <button type="button" (click)="toggleItem(idx)"
-              class="flex w-full items-center justify-between gap-4 px-5 py-3.5 text-left">
+              class="flex w-full items-center justify-between gap-4 px-5 py-3.5 text-left"
+              [ngClass]="expandedItemIndex === idx ? 'rounded-t-2xl' : ''">
               <div class="flex items-center gap-3">
                 <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold"
                   [ngClass]="expandedItemIndex === idx
@@ -244,10 +245,13 @@
                     class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-[#F7941D] dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500" />
 
                   <!-- DATE -->
-                  <input *ngIf="field.type === 'date'" type="date"
-                    [value]="getFieldValue(idx, field.key)"
-                    (input)="updateField(idx, field.key, $any($event.target).value)"
-                    class="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:border-[#F7941D] dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
+                  <app-date-picker *ngIf="field.type === 'date'"
+                    [ngModel]="getFieldValue(idx, field.key)"
+                    (ngModelChange)="updateField(idx, field.key, $event)"
+                    [placeholder]="field.placeholder || 'Select date'"
+                    [required]="field.required || false"
+                    [label]="''">
+                  </app-date-picker>
 
                   <!-- SELECT -->
                   <select *ngIf="field.type === 'select'"

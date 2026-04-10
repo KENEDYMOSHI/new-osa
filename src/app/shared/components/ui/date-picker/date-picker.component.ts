@@ -1,4 +1,4 @@
-import { Component, forwardRef, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, forwardRef, Input, Output, EventEmitter, OnInit, ElementRef, HostListener } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -26,6 +26,8 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
   @Output() cleared = new EventEmitter<void>();
 
   isOpen: boolean = false;
+  dropdownPosition: 'position-down' | 'position-up' = 'position-down';
+  
   selectedDate: Date | null = null;
   startDate: Date | null = null; // For range mode
   endDate: Date | null = null;   // For range mode
@@ -44,9 +46,36 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
   private onChange: (value: any) => void = () => {};
   private onTouched: () => void = () => {};
 
+  constructor(private el: ElementRef) {}
+
   ngOnInit(): void {
     this.generateYears();
     this.generateCalendar();
+  }
+
+  @HostListener('window:scroll', ['$event'])
+  @HostListener('window:resize', ['$event'])
+  onScrollOrResize() {
+    if (this.isOpen) {
+      this.calculatePosition();
+    }
+  }
+
+  calculatePosition(): void {
+    if (!this.el) return;
+    // Delay to allow any opening animation/rendering to happen, but immediate calculation is fine
+    setTimeout(() => {
+      const rect = this.el.nativeElement.getBoundingClientRect();
+      const dropdownHeight = 350; // Approximated height of the calendar dropdown
+      const spaceBelow = window.innerHeight - rect.bottom;
+      
+      // If there's not enough space below AND there is enough space above
+      if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+        this.dropdownPosition = 'position-up';
+      } else {
+        this.dropdownPosition = 'position-down';
+      }
+    });
   }
 
   writeValue(value: any): void {
@@ -75,7 +104,9 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
 
   toggleCalendar(): void {
     this.isOpen = !this.isOpen;
-    if (!this.isOpen) {
+    if (this.isOpen) {
+      this.calculatePosition();
+    } else {
       this.onTouched();
     }
   }

@@ -36,7 +36,7 @@
     </svg>
   </div>
 
-  <div *ngIf="isOpen" class="calendar-dropdown">
+  <div *ngIf="isOpen" class="calendar-dropdown" [ngClass]="dropdownPosition">
     <div class="calendar-header">
       <button type="button" class="nav-button" (click)="previousMonth()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SERVICE_TYPES, ServiceType } from '../../../../shared/constants';
 import { EQUIPMENT_FORM_CONFIGS } from '../forms/configs';
 import { EquipmentFormConfig, FormField, ServiceCategory } from '../forms/models/form-field.model';
 import { EquipmentService } from '../../../../core/services/equipment.service';
+import { DatePickerComponent } from '../../../../shared/components/ui/date-picker/date-picker.component';
 
 export interface EquipmentRegistrationPayload {
   serviceTypeKey: string;
@@ -41,7 +43,7 @@ const CATEGORY_META: Record<ServiceCategory, { label: string; color: string }> =
 @Component({
   selector: 'app-add-equipment-page',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule, DatePickerComponent],
   templateUrl: './add-equipment-page.component.html',
 })
 export class AddEquipmentPageComponent implements OnInit {
