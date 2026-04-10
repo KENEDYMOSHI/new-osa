@@ -10,5 +10,5 @@ import { NoDataComponent } from '../../../shared/components/no-data/no-data.comp
   templateUrl: './business-applications.component.html',
 })
 export class BusinessApplicationsComponent {
-  // Logic cleared for now, as we are displaying the new cards and No Data component
+  activeView: string = 'history';
 }
