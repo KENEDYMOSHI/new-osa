@@ -91,9 +91,9 @@ CREATE TABLE `equipment_registrations` (
   `status`           ENUM('draft','pending','verified','rejected')
                      NOT NULL DEFAULT 'draft',
   `submitted_at`     DATETIME     DEFAULT NULL,
-  `reviewed_at`      DATETIME     DEFAULT NULL,
-  `reviewer_id`      INT          DEFAULT NULL,
-  `review_notes`     TEXT         DEFAULT NULL,
+  `verified_at`      DATETIME     DEFAULT NULL,
+  `verifier_id`      INT          DEFAULT NULL,
+  `verifier_notes`   TEXT         DEFAULT NULL,
   `created_at`       DATETIME     DEFAULT CURRENT_TIMESTAMP,
   `updated_at`       DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -262,7 +262,7 @@ ORDER BY er.created_at DESC;
 
 ```
 equipment_registrations:
-  id=1, user_uuid='abc', service_type_key='fuel-pump', category='petroleum', item_count=2, status='submitted'
+  id=1, user_uuid='abc', service_type_key='fuel-pump', category='petroleum', item_count=2, status='pending'
 
 equipment_items:
   id=1, registration_id=1, item_number=1, field_data='{ "pumpName": "Forecourt Pump FP-01", ... }'
