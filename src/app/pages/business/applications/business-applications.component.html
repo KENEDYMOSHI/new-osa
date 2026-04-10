@@ -30,8 +30,7 @@
   <section class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
     
     <!-- Card 1: Request Technician -->
-    <div class="group relative flex h-full cursor-pointer flex-col items-center overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-[#F7941D]/30 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-[#F7941D]/30">
-      <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-blue-500/5 transition-transform duration-500 group-hover:scale-150 dark:bg-blue-500/10"></div>
+    <div (click)="activeView = 'technician'" class="group relative flex h-full cursor-pointer flex-col items-center overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-[#F7941D]/30 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-[#F7941D]/30">
       
       <div class="relative mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-4 ring-white dark:bg-blue-500/10 dark:text-blue-400 dark:ring-gray-900">
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -54,8 +53,7 @@
     </div>
 
     <!-- Card 2: Request Inspection Officer -->
-    <div class="group relative flex h-full cursor-pointer flex-col items-center overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-[#F7941D]/30 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-[#F7941D]/30">
-      <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-emerald-500/5 transition-transform duration-500 group-hover:scale-150 dark:bg-emerald-500/10"></div>
+    <div (click)="activeView = 'inspection'" class="group relative flex h-full cursor-pointer flex-col items-center overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-[#F7941D]/30 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-[#F7941D]/30">
       
       <div class="relative mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 ring-4 ring-white dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-gray-900">
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -80,7 +78,6 @@
 
     <!-- Card 3: View Service History -->
     <div (click)="activeView = 'history'" class="group relative flex h-full cursor-pointer flex-col items-center overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-[#F7941D]/30 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-[#F7941D]/30">
-      <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-purple-500/5 transition-transform duration-500 group-hover:scale-150 dark:bg-purple-500/10"></div>
 
       <div class="relative mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 ring-4 ring-white dark:bg-purple-500/10 dark:text-purple-400 dark:ring-gray-900">
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
