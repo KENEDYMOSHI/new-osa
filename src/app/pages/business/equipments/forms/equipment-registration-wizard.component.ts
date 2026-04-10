@@ -197,9 +197,7 @@ export class EquipmentRegistrationWizardComponent implements OnChanges {
   }
 
   updateField(itemIndex: number, fieldKey: string, value: any): void {
-    const updated = [...this.formItems];
-    updated[itemIndex] = { ...updated[itemIndex], [fieldKey]: value };
-    this.formItems = updated;
+    this.formItems[itemIndex][fieldKey] = value;
   }
 
   getFieldValue(itemIndex: number, fieldKey: string): any {
