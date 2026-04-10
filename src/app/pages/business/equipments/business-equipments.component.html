@@ -156,20 +156,13 @@
         </div>
       </div>
 
-      <div *ngIf="filteredEquipments.length === 0" class="py-14 text-center">
-        <div class="mx-auto max-w-sm">
-          <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800/80">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500 dark:text-gray-400">
-              <path d="M5 12h14" />
-              <path d="M12 5v14" />
-            </svg>
-          </div>
-          <h3 class="mt-5 text-base font-semibold text-gray-900 dark:text-white">No equipments found</h3>
-          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Change the status filter or search term to view other records.
-          </p>
-        </div>
-      </div>
+      <app-no-data
+        *ngIf="filteredEquipments.length === 0"
+        title="No equipments found"
+        description="Change the status filter or search term to view other records."
+      >
+        <!-- Optional button slot if we want one later -->
+      </app-no-data>
     </div>
   </section>
 

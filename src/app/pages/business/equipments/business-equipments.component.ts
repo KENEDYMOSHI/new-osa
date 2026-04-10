@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { EquipmentService } from '../../../core/services/equipment.service';
+import { NoDataComponent } from '../../../shared/components/no-data/no-data.component';
 
 type EquipmentStatus = 'all' | 'draft' | 'pending' | 'verified' | 'rejected';
 
@@ -28,7 +29,7 @@ type StatusFilterOption = {
 @Component({
   selector: 'app-business-equipments',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NoDataComponent],
   templateUrl: './business-equipments.component.html',
 })
 export class BusinessEquipmentsComponent implements OnInit {
