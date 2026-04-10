@@ -29,7 +29,7 @@ export class BusinessHeaderComponent {
     this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
     this.currentLang =
       (typeof localStorage !== 'undefined' && localStorage.getItem('app_language')) ||
-      this.translate.currentLang ||
+      this.translate.getCurrentLang() ||
       'en';
   }
 
