@@ -88,8 +88,8 @@ CREATE TABLE `equipment_registrations` (
   `service_type_label` VARCHAR(255) NOT NULL,                 -- 'Fuel Pump', 'Weighbridge', etc.
   `category`         VARCHAR(20)  NOT NULL,                   -- 'petroleum','weighing','length','metering','other'
   `item_count`       TINYINT UNSIGNED NOT NULL DEFAULT 1,     -- How many items in this registration
-  `status`           ENUM('draft','submitted','under_review','verified','rejected','returned')
-                     NOT NULL DEFAULT 'submitted',
+  `status`           ENUM('draft','pending','verified','rejected')
+                     NOT NULL DEFAULT 'draft',
   `submitted_at`     DATETIME     DEFAULT NULL,
   `reviewed_at`      DATETIME     DEFAULT NULL,
   `reviewer_id`      INT          DEFAULT NULL,
