@@ -637,7 +637,7 @@
       "FILTER_PENDING": "Pending",
       "FILTER_PAID": "Paid",
       "FILTER_EXPIRED": "Expired",
-      "COL_DATE": "Date",
+      "COL_DATE": "Bill Date",
       "COL_PAYER": "Payer Details",
       "COL_CONTROL_NO": "Control Number",
       "COL_AMOUNT": "Bill Amount",
