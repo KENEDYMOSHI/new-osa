@@ -87,9 +87,9 @@ interface BillItem {
                 <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_DATE' | translate }}</th>
                 <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_CONTROL_NO' | translate }}</th>
                 <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_EXPIRY' | translate }}</th>
-                <th scope="col" class="px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.COL_AMOUNT' | translate }}</th>
-                <th scope="col" class="px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_PAID_AMOUNT' | translate }}</th>
-                <th scope="col" class="px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.COL_OUTSTANDING' | translate }}</th>
+                <th scope="col" class="px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.COL_AMOUNT' | translate }} (TZS)</th>
+                <th scope="col" class="px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_PAID_AMOUNT' | translate }} (TZS)</th>
+                <th scope="col" class="px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.COL_OUTSTANDING' | translate }} (TZS)</th>
                 <th scope="col" class="px-5 py-4 text-center">{{ 'BUSINESS.BILLING_PAYMENTS.COL_STATUS' | translate }}</th>
                 <th scope="col" class="px-5 py-4 text-center">Action</th>
               </tr>
