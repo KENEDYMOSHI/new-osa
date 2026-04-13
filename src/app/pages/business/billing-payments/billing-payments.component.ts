@@ -78,150 +78,105 @@ interface BillItem {
         </div>
       </div>
 
-      <!-- DESKTOP TABLE HYBRID VIEW -->
-      <div class="hidden lg:block overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <table class="w-full text-left text-sm text-gray-500 dark:text-gray-400">
-          <thead class="bg-gray-50/80 text-xs font-semibold uppercase text-gray-700 dark:bg-gray-800/80 dark:text-gray-300 border-b border-gray-200 dark:border-gray-800">
-            <tr>
-              <th scope="col" class="px-6 py-4"># / {{ 'BUSINESS.BILLING_PAYMENTS.COL_DATE' | translate }}</th>
-              <th scope="col" class="px-6 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_PAYER' | translate }}</th>
-              <th scope="col" class="px-6 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_CONTROL_NO' | translate }}</th>
-              <th scope="col" class="px-6 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.COL_AMOUNT' | translate }} (TZS)</th>
-              <th scope="col" class="px-6 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_STATUS' | translate }}</th>
-              <th scope="col" class="px-6 py-4 text-right"></th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-            <tr *ngFor="let bill of filteredBills" class="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
-              <td class="px-6 py-4 align-top whitespace-nowrap">
-                <div class="flex items-start gap-3">
-                  <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full" [ngClass]="getStatusBgShape(bill.status)">
-                    <i [class]="getStatusIcon(bill.status)" class="text-[16px]"></i>
-                  </div>
-                  <div>
-                    <p class="font-medium text-gray-900 dark:text-white">{{ bill.dateGenerated }}</p>
-                    <p class="mt-1 text-xs text-gray-500">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_EXPIRY' | translate }}: <span class="font-medium" [ngClass]="bill.status === 'expired' ? 'text-red-500' : ''">{{ bill.expiryDate }}</span></p>
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4 align-top">
-                <p class="font-bold text-gray-900 dark:text-white">{{ bill.payerName }}</p>
-                <div class="mt-1 flex items-center gap-2 text-xs text-gray-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                  {{ bill.phoneNumber }}
-                </div>
-                <p class="mt-2 text-xs text-gray-500">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_GENERATED_BY' | translate }}: <span class="text-gray-700 dark:text-gray-300">{{ bill.generatedBy }}</span></p>
-              </td>
-              <td class="px-6 py-4 align-top">
-                <div class="flex items-center gap-2">
-                  <span class="inline-flex items-center rounded bg-gray-100 px-2.5 py-1 font-mono text-sm font-bold text-gray-800 dark:bg-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
-                    {{ bill.controlNumber }}
-                  </span>
-                  <button class="text-gray-400 hover:text-[#F7941D] transition-colors" title="Copy to clipboard">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
-                  </button>
-                </div>
-                <p class="mt-2 text-xs font-medium text-[#F7941D]">{{ bill.descriptionKey | translate }}</p>
-              </td>
-              <td class="px-6 py-4 text-right align-top">
-                <p class="font-bold text-gray-900 dark:text-white">{{ bill.billAmount | number }}</p>
-                <div class="mt-1 space-y-0.5 text-xs">
-                  <p class="text-emerald-600 block">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_PAID_AMOUNT' | translate }}: {{ bill.paidAmount | number }}</p>
-                  <p class="text-red-500 font-medium block border-t border-gray-100 dark:border-gray-800 pt-0.5 mt-1">{{ 'BUSINESS.BILLING_PAYMENTS.COL_OUTSTANDING' | translate }}: {{ bill.outstanding | number }}</p>
-                </div>
-              </td>
-              <td class="px-6 py-4 align-top">
-                 <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold" [ngClass]="getStatusBadge(bill.status)">
-                    <span class="mr-1.5 h-1.5 w-1.5 rounded-full" [ngClass]="getStatusDot(bill.status)"></span>
-                    {{ getStatusText(bill.status) | translate }}
-                  </span>
-              </td>
-              <td class="px-6 py-4 text-right align-top space-y-2">
-                <button *ngIf="bill.status === 'pending'" class="w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#F7941D] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-[#E6820A] transition-colors">
-                  {{ 'BUSINESS.BILLING_PAYMENTS.BTN_PAY_NOW' | translate }}
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </button>
-                
-                <button *ngIf="bill.status === 'paid'" class="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                  {{ 'BUSINESS.BILLING_PAYMENTS.BTN_DOWNLOAD_RECEIPT' | translate }}
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="filteredBills.length === 0">
-               <td colspan="6" class="px-6 py-12 text-center text-sm text-gray-500">
-                  <div class="flex flex-col items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 mb-3"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                    No bills found matching your criteria.
-                  </div>
-               </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- MOBILE CARD VIEW -->
-      <div class="lg:hidden space-y-4">
-        <div *ngFor="let bill of filteredBills" class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-           <div class="border-b border-gray-100 dark:border-gray-800 p-4 flex items-center justify-between bg-gray-50/50 dark:bg-gray-800/30">
-              <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider" [ngClass]="getStatusBadge(bill.status)">
-                 {{ getStatusText(bill.status) | translate }}
-              </span>
-              <p class="text-xs text-gray-500 font-medium">{{ bill.dateGenerated }}</p>
-           </div>
-           
-           <div class="p-4 space-y-4">
-              <!-- Control Number & Amount -->
-              <div class="flex justify-between items-start">
-                 <div>
-                    <p class="text-[10px] font-semibold uppercase text-gray-500 mb-1">{{ 'BUSINESS.BILLING_PAYMENTS.COL_CONTROL_NO' | translate }}</p>
-                    <div class="flex items-center gap-2">
-                      <span class="inline-flex items-center rounded bg-gray-100 px-2 py-1 font-mono text-base font-bold text-gray-900 dark:bg-gray-800 dark:text-gray-100">
-                        {{ bill.controlNumber }}
-                      </span>
+      <!-- STANDARD RESPONSIVE TABLE -->
+      <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+            <thead class="bg-[#1C2434] text-xs font-semibold text-white">
+              <tr>
+                <th scope="col" class="px-5 py-4 w-4"></th>
+                <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_DATE' | translate }}</th>
+                <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_PAYER' | translate }}</th>
+                <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_PHONE' | translate }}</th>
+                <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_CONTROL_NO' | translate }}</th>
+                <th scope="col" class="px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.COL_AMOUNT' | translate }}</th>
+                <th scope="col" class="px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_PAID_AMOUNT' | translate }}</th>
+                <th scope="col" class="px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.COL_OUTSTANDING' | translate }}</th>
+                <th scope="col" class="px-5 py-4 text-center">{{ 'BUSINESS.BILLING_PAYMENTS.COL_STATUS' | translate }}</th>
+                <th scope="col" class="px-5 py-4 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+              <ng-container *ngFor="let bill of filteredBills">
+                <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
+                  <!-- Status Icon Indicator -->
+                  <td class="pl-5 py-4 pr-1">
+                    <div class="flex h-6 w-6 items-center justify-center rounded-full" [ngClass]="getStatusBgShape(bill.status)">
+                      <i [class]="getStatusIcon(bill.status)" class="text-[12px]"></i>
                     </div>
-                 </div>
-                 <div class="text-right">
-                    <p class="text-[10px] font-semibold uppercase text-gray-500 mb-1">TOTAL (TZS)</p>
-                    <p class="text-lg font-black text-gray-900 dark:text-white">{{ bill.billAmount | number }}</p>
-                 </div>
-              </div>
+                  </td>
+                  
+                  <td class="px-5 py-4">
+                    <p class="font-medium text-gray-900 dark:text-white">{{ bill.dateGenerated }}</p>
+                  </td>
+                  
+                  <td class="px-5 py-4">
+                    <p class="font-bold text-gray-900 dark:text-white">{{ bill.payerName }}</p>
+                  </td>
 
-              <!-- Breakdown -->
-              <div class="rounded-xl bg-gray-50 p-3 dark:bg-gray-800/50 space-y-2">
-                 <div class="flex justify-between text-xs">
-                    <span class="text-gray-500">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_PAID_AMOUNT' | translate }}:</span>
-                    <span class="font-medium text-emerald-600">{{ bill.paidAmount | number }}</span>
-                 </div>
-                 <div class="flex justify-between text-xs border-t border-dashed border-gray-200 pt-2 dark:border-gray-700">
-                    <span class="text-gray-500 font-semibold">{{ 'BUSINESS.BILLING_PAYMENTS.COL_OUTSTANDING' | translate }}:</span>
-                    <span class="font-bold text-red-500">{{ bill.outstanding | number }}</span>
-                 </div>
-              </div>
+                  <td class="px-5 py-4">
+                    <span class="text-gray-600 dark:text-gray-400">{{ bill.phoneNumber }}</span>
+                  </td>
 
-              <!-- Payer Info -->
-              <div>
-                 <p class="text-[10px] font-semibold uppercase text-gray-500 mb-1">{{ 'BUSINESS.BILLING_PAYMENTS.COL_PAYER' | translate }}</p>
-                 <p class="text-sm font-bold text-gray-900 dark:text-white">{{ bill.payerName }}</p>
-                 <p class="text-xs text-gray-500 flex items-center gap-1.5 mt-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    {{ bill.phoneNumber }}
-                 </p>
-              </div>
-           </div>
+                  <td class="px-5 py-4">
+                    <span class="font-mono font-bold text-gray-800 dark:text-gray-200">
+                      {{ bill.controlNumber }}
+                    </span>
+                  </td>
 
-           <!-- Actions -->
-           <div class="p-4 border-t border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900">
-              <button *ngIf="bill.status === 'pending'" class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#F7941D] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#E6820A] transition-colors">
-                  {{ 'BUSINESS.BILLING_PAYMENTS.BTN_PAY_NOW' | translate }}
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-              </button>
-                
-              <button *ngIf="bill.status === 'paid'" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                  {{ 'BUSINESS.BILLING_PAYMENTS.BTN_DOWNLOAD_RECEIPT' | translate }}
-              </button>
-           </div>
+                  <td class="px-5 py-4 text-right font-medium text-gray-900 dark:text-white">
+                    {{ bill.billAmount | number }}
+                  </td>
+
+                  <td class="px-5 py-4 text-right font-medium text-gray-900 dark:text-white">
+                    {{ bill.paidAmount | number }}
+                  </td>
+
+                  <td class="px-5 py-4 text-right font-bold text-gray-900 dark:text-white" [ngClass]="{'text-red-500': bill.outstanding > 0}">
+                    {{ bill.outstanding | number }}
+                  </td>
+
+                  <td class="px-5 py-4 text-center">
+                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold" [ngClass]="getStatusBadge(bill.status)">
+                      {{ getStatusText(bill.status) | translate }}
+                    </span>
+                  </td>
+                  
+                  <td class="px-5 py-4 text-center">
+                    <button *ngIf="bill.status === 'pending'" class="inline-flex items-center justify-center gap-1.5 rounded-md bg-[#F7941D] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-[#E6820A] transition-colors">
+                      Pay
+                    </button>
+                    <button *ngIf="bill.status === 'paid'" class="inline-flex items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+                      Receipt
+                    </button>
+                  </td>
+                </tr>
+                <!-- Sub-row for extra details if required to match mockup formatting -->
+                <tr class="bg-gray-50/30 dark:bg-gray-900 border-none">
+                  <td class="pl-5">&nbsp;</td>
+                  <td colspan="2" class="px-5 pb-3">
+                    <p class="text-[11px] text-gray-500 dark:text-gray-400">
+                      <b>Ex. Date:</b> {{ bill.expiryDate }}
+                    </p>
+                  </td>
+                  <td colspan="7" class="px-5 pb-3">
+                    <p class="text-[11px] text-gray-500 dark:text-gray-400">
+                      <b>Desc:</b> {{ bill.descriptionKey | translate }} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Gen. By:</b> {{ bill.generatedBy }}
+                    </p>
+                  </td>
+                </tr>
+              </ng-container>
+
+              <tr *ngIf="filteredBills.length === 0">
+                 <td colspan="10" class="px-6 py-12 text-center text-sm text-gray-500">
+                    <div class="flex flex-col items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 mb-3"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                      No bills found matching your criteria.
+                    </div>
+                 </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
