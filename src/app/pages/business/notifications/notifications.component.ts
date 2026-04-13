@@ -11,9 +11,7 @@ interface NotificationItem {
   timeKey: string;
   isRead: boolean;
   isImportant: boolean;
-  icon: string;
-  colorClass: string;
-  bgClass: string;
+  iconType: string;
   link?: string;
 }
 
@@ -99,28 +97,35 @@ interface NotificationItem {
         <div class="flex-1 space-y-3">
           
           <ng-container *ngIf="filteredNotifications.length > 0; else noData">
-            <div *ngFor="let item of filteredNotifications" class="group relative flex flex-col sm:flex-row gap-4 rounded-2xl border bg-white p-4 transition-all duration-300 hover:shadow-md dark:bg-gray-900"
-              [ngClass]="item.isRead ? 'border-gray-100 dark:border-gray-800/60 shadow-sm' : 'border-[#F7941D]/20 shadow-md outline outline-1 outline-[#F7941D]/10 dark:border-[#F7941D]/30 dark:shadow-[#F7941D]/5'">
-              
-              <!-- Unread Indicator -->
-              <div *ngIf="!item.isRead" class="absolute left-[-5px] top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-[#F7941D] shadow-[0_0_8px_rgba(247,148,29,0.5)] hidden sm:block"></div>
+            <div *ngFor="let item of filteredNotifications" class="group relative flex flex-col sm:flex-row gap-4 items-start sm:items-center rounded-2xl border bg-white p-5 text-left transition-all duration-300"
+              [ngClass]="item.isRead ? 'border-gray-200 bg-white hover:border-[#F7941D]/40 hover:shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:hover:border-[#F7941D]/40' : 'border-[#F7941D]/30 bg-[#FFF7ED]/60 shadow-sm hover:shadow-md dark:bg-[#F7941D]/10 dark:border-[#F7941D]/40'">
               
               <!-- Icon -->
-              <div class="mt-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl" [ngClass]="[item.bgClass, item.colorClass]">
-                <i [class]="item.icon" class="text-xl"></i>
+              <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors group-hover:bg-[#FFF7ED] group-hover:text-[#F7941D] dark:bg-gray-800 dark:group-hover:bg-[#F7941D]/20"
+                [ngClass]="!item.isRead ? '!bg-[#F7941D] !text-white' : ''">
+                
+                <svg *ngIf="item.iconType === 'verified'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+
+                <svg *ngIf="item.iconType === 'tech'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg>
+
+                <svg *ngIf="item.iconType === 'bill'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+
+                <svg *ngIf="item.iconType === 'cert'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/></svg>
+                
+                <svg *ngIf="item.iconType === 'reject'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+
               </div>
 
               <!-- Content -->
               <div class="min-w-0 flex-1">
                 <div class="flex items-center justify-between gap-2 mb-1">
                   <div class="flex items-center gap-2">
-                    <p class="text-sm font-bold text-gray-900 dark:text-white" [ngClass]="{'opacity-80': item.isRead}">
+                    <p class="text-[15px] font-semibold text-gray-900 dark:text-white transition-colors" [ngClass]="!item.isRead ? 'text-[#F7941D] dark:text-[#F7941D]' : ''">
                       {{ item.titleKey | translate }}
                     </p>
-                    <span *ngIf="!item.isRead" class="sm:hidden rounded-full bg-[#F7941D] w-2 h-2"></span>
                     <svg *ngIf="item.isImportant" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-red-500"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
                   </div>
-                  <span class="shrink-0 text-xs text-gray-400 font-medium whitespace-nowrap">{{ item.timeKey | translate }}</span>
+                  <span class="shrink-0 text-xs text-gray-500 font-medium whitespace-nowrap">{{ item.timeKey | translate }}</span>
                 </div>
                 <p class="text-sm text-gray-600 leading-relaxed dark:text-gray-400" [ngClass]="{'opacity-80': item.isRead}">
                   {{ item.bodyKey | translate }}
@@ -170,64 +175,54 @@ export class NotificationsComponent {
     {
       id: '1',
       type: 'success',
+      iconType: 'verified',
       titleKey: 'BUSINESS.NOTIFICATIONS.NOTIF_VERIFIED_TITLE',
       bodyKey: 'BUSINESS.NOTIFICATIONS.NOTIF_VERIFIED_BODY',
       timeKey: 'BUSINESS.NOTIFICATIONS.JUST_NOW',
       isRead: false,
       isImportant: true,
-      icon: 'ti ti-checkbox',
-      colorClass: 'text-emerald-600 dark:text-emerald-400',
-      bgClass: 'bg-emerald-50 dark:bg-emerald-500/10',
       link: '/business/equipments'
     },
     {
       id: '2',
       type: 'info',
+      iconType: 'tech',
       titleKey: 'BUSINESS.NOTIFICATIONS.NOTIF_TECH_REQ_TITLE',
       bodyKey: 'BUSINESS.NOTIFICATIONS.NOTIF_TECH_REQ_BODY',
-      timeKey: '2 BUSINESS.NOTIFICATIONS.HOURS_AGO',
+      timeKey: 'BUSINESS.NOTIFICATIONS.MINS_AGO', // Just use mins ago for dummy mapping to look cleanly translated
       isRead: false,
-      isImportant: false,
-      icon: 'ti ti-helmet',
-      colorClass: 'text-blue-600 dark:text-blue-400',
-      bgClass: 'bg-blue-50 dark:bg-blue-500/10'
+      isImportant: false
     },
     {
       id: '3',
       type: 'warning',
+      iconType: 'bill',
       titleKey: 'BUSINESS.NOTIFICATIONS.NOTIF_BILL_TITLE',
       bodyKey: 'BUSINESS.NOTIFICATIONS.NOTIF_BILL_BODY',
-      timeKey: '5 BUSINESS.NOTIFICATIONS.HOURS_AGO',
+      timeKey: 'BUSINESS.NOTIFICATIONS.HOURS_AGO',
       isRead: true,
       isImportant: true,
-      icon: 'ti ti-receipt-2',
-      colorClass: 'text-[#F7941D] dark:text-[#E6820A]',
-      bgClass: 'bg-[#FFF7ED] dark:bg-[#F7941D]/10',
       link: '/business/billing-payments'
     },
     {
       id: '4',
       type: 'success',
+      iconType: 'cert',
       titleKey: 'BUSINESS.NOTIFICATIONS.NOTIF_CERT_TITLE',
       bodyKey: 'BUSINESS.NOTIFICATIONS.NOTIF_CERT_BODY',
       timeKey: 'BUSINESS.NOTIFICATIONS.YESTERDAY',
       isRead: true,
-      isImportant: false,
-      icon: 'ti ti-file-certificate',
-      colorClass: 'text-purple-600 dark:text-purple-400',
-      bgClass: 'bg-purple-50 dark:bg-purple-500/10'
+      isImportant: false
     },
     {
       id: '5',
       type: 'error',
+      iconType: 'reject',
       titleKey: 'BUSINESS.NOTIFICATIONS.NOTIF_REJECTED_TITLE',
       bodyKey: 'BUSINESS.NOTIFICATIONS.NOTIF_REJECTED_BODY',
       timeKey: '3 BUSINESS.NOTIFICATIONS.DAYS_AGO',
       isRead: true,
-      isImportant: true,
-      icon: 'ti ti-alert-circle',
-      colorClass: 'text-rose-600 dark:text-rose-400',
-      bgClass: 'bg-rose-50 dark:bg-rose-500/10'
+      isImportant: true
     }
   ];
 
