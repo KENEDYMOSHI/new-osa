@@ -130,8 +130,8 @@ interface BillItem {
                   </td>
 
                   <td class="border border-dotted border-gray-300 px-5 py-4 text-center dark:border-gray-700">
-                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold capitalize" [ngClass]="getStatusBadge(bill.status)">
-                      {{ bill.status }}
+                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold" [ngClass]="getStatusBadge(bill.status)">
+                      {{ getStatusText(bill.status) | translate }}
                     </span>
                   </td>
                   
