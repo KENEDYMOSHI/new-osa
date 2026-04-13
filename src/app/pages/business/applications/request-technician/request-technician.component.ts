@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 
 type WizardStep = 1 | 2 | 3;
 
@@ -14,7 +15,7 @@ interface StepMeta {
 @Component({
   selector: 'app-request-technician',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, TranslateModule],
   template: `
   <div class="min-h-screen bg-gray-50 dark:bg-gray-950">
 
@@ -26,9 +27,9 @@ interface StepMeta {
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
           </svg>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Request Submitted!</h2>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ 'BUSINESS.REQUEST_TECHNICIAN.SUCCESS_TITLE' | translate }}</h2>
         <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          Your request for a technician has been received. Redirecting you back...
+          {{ 'BUSINESS.REQUEST_TECHNICIAN.SUCCESS_DESC' | translate }}
         </p>
         <div class="mt-6 flex justify-center">
           <div class="h-1 w-40 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
@@ -57,23 +58,23 @@ interface StepMeta {
             <!-- Title & breadcrumb -->
             <div class="flex min-w-0 flex-1 items-center gap-1.5">
               <span class="truncate text-sm font-semibold text-gray-900 dark:text-white sm:hidden">
-                Request Technician
+                {{ 'BUSINESS.REQUEST_TECHNICIAN.PAGE_TITLE' | translate }}
               </span>
               <nav class="hidden items-center gap-1.5 text-sm sm:flex">
                 <a routerLink="/business/applications-and-requests"
                   class="shrink-0 text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-                  Applications & Requests
+                  {{ 'BUSINESS.REQUEST_TECHNICIAN.BREADCRUMB_APPLICATIONS' | translate }}
                 </a>
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-gray-300 dark:text-gray-700">
                   <path d="m9 18 6-6-6-6"/>
                 </svg>
-                <span class="font-semibold text-gray-900 dark:text-white">Request Technician</span>
+                <span class="font-semibold text-gray-900 dark:text-white">{{ 'BUSINESS.REQUEST_TECHNICIAN.PAGE_TITLE' | translate }}</span>
               </nav>
             </div>
 
             <!-- Mobile step counter pill -->
             <span class="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300 sm:hidden">
-              Step {{ currentStep }}/{{ steps.length }}
+              {{ 'BUSINESS.REQUEST_TECHNICIAN.STEP' | translate }} {{ currentStep }}/{{ steps.length }}
             </span>
           </div>
 
@@ -107,7 +108,7 @@ interface StepMeta {
                   </svg>
                   <span *ngIf="currentStep <= step.number">{{ step.number }}</span>
                 </span>
-                {{ step.label }}
+                {{ step.label | translate }}
               </button>
               <div *ngIf="!last" class="mx-1 h-px w-6 shrink-0"
                 [ngClass]="currentStep > step.number ? 'bg-emerald-300 dark:bg-emerald-600' : 'bg-gray-200 dark:bg-gray-700'">
@@ -124,32 +125,32 @@ interface StepMeta {
         <!-- STEP 1 -->
         <section *ngIf="currentStep === 1">
           <div class="mb-6">
-            <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">What type of technician do you need?</h1>
-            <p class="mt-1.5 text-sm text-gray-500 dark:text-gray-400">Select the area of expertise required for your request.</p>
+            <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ 'BUSINESS.REQUEST_TECHNICIAN.Q1_TITLE' | translate }}</h1>
+            <p class="mt-1.5 text-sm text-gray-500 dark:text-gray-400">{{ 'BUSINESS.REQUEST_TECHNICIAN.Q1_DESC' | translate }}</p>
           </div>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <button type="button" (click)="selectedType = 'repair'"
               class="group relative flex items-start gap-4 rounded-2xl border p-5 text-left transition-all duration-200"
               [ngClass]="selectedType === 'repair' ? 'border-[#F7941D] bg-[#FFF7ED] shadow-md ring-1 ring-[#F7941D]/20 dark:bg-[#F7941D]/10 dark:border-[#F7941D]/60' : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700'">
               <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold text-gray-900 dark:text-white">Repair & Maintenance</p>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Fixing broken equipment or regular maintenance.</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ 'BUSINESS.REQUEST_TECHNICIAN.TYPE_REPAIR' | translate }}</p>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ 'BUSINESS.REQUEST_TECHNICIAN.TYPE_REPAIR_DESC' | translate }}</p>
               </div>
             </button>
             <button type="button" (click)="selectedType = 'calibration'"
               class="group relative flex items-start gap-4 rounded-2xl border p-5 text-left transition-all duration-200"
               [ngClass]="selectedType === 'calibration' ? 'border-[#F7941D] bg-[#FFF7ED] shadow-md ring-1 ring-[#F7941D]/20 dark:bg-[#F7941D]/10 dark:border-[#F7941D]/60' : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700'">
               <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold text-gray-900 dark:text-white">Calibration</p>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Calibrating weighing or measuring equipment.</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ 'BUSINESS.REQUEST_TECHNICIAN.TYPE_CALIBRATION' | translate }}</p>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ 'BUSINESS.REQUEST_TECHNICIAN.TYPE_CALIBRATION_DESC' | translate }}</p>
               </div>
             </button>
             <button type="button" (click)="selectedType = 'installation'"
               class="group relative flex items-start gap-4 rounded-2xl border p-5 text-left transition-all duration-200"
               [ngClass]="selectedType === 'installation' ? 'border-[#F7941D] bg-[#FFF7ED] shadow-md ring-1 ring-[#F7941D]/20 dark:bg-[#F7941D]/10 dark:border-[#F7941D]/60' : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700'">
               <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold text-gray-900 dark:text-white">Installation</p>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Setting up new equipment.</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ 'BUSINESS.REQUEST_TECHNICIAN.TYPE_INSTALLATION' | translate }}</p>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ 'BUSINESS.REQUEST_TECHNICIAN.TYPE_INSTALLATION_DESC' | translate }}</p>
               </div>
             </button>
           </div>
@@ -158,22 +159,22 @@ interface StepMeta {
         <!-- STEP 2 -->
         <section *ngIf="currentStep === 2">
           <div class="mb-6">
-            <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Request Details</h1>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Provide specifics so we can dispatch the right expert.</p>
+            <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ 'BUSINESS.REQUEST_TECHNICIAN.DETAILS_TITLE' | translate }}</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ 'BUSINESS.REQUEST_TECHNICIAN.DETAILS_DESC' | translate }}</p>
           </div>
           <div class="space-y-4 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div class="sm:col-span-2">
-                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Description of Issue</label>
+                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ 'BUSINESS.REQUEST_TECHNICIAN.LABEL_DESC' | translate }}</label>
                 <textarea rows="3" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all focus:border-[#F7941D] focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white"></textarea>
               </div>
               <div>
-                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Preferred Date</label>
+                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ 'BUSINESS.REQUEST_TECHNICIAN.LABEL_DATE' | translate }}</label>
                 <input type="date" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all focus:border-[#F7941D] focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
               </div>
               <div>
-                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Location</label>
-                <input type="text" placeholder="e.g. Workshop A" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all focus:border-[#F7941D] focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
+                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ 'BUSINESS.REQUEST_TECHNICIAN.LABEL_LOCATION' | translate }}</label>
+                <input type="text" [placeholder]="'BUSINESS.REQUEST_TECHNICIAN.PLACEHOLDER_LOCATION' | translate" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all focus:border-[#F7941D] focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
               </div>
             </div>
           </div>
@@ -182,37 +183,37 @@ interface StepMeta {
         <!-- STEP 3 -->
         <section *ngIf="currentStep === 3">
           <div class="mb-6">
-            <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Review & Confirm</h1>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Review your request details before submitting.</p>
+            <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ 'BUSINESS.REQUEST_TECHNICIAN.REVIEW_TITLE' | translate }}</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ 'BUSINESS.REQUEST_TECHNICIAN.REVIEW_DESC' | translate }}</p>
           </div>
           <div class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-            <p class="text-sm font-medium text-gray-900 dark:text-white">Everything looks good. You can submit your request!</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ 'BUSINESS.REQUEST_TECHNICIAN.READY_TO_SUBMIT' | translate }}</p>
           </div>
         </section>
 
         <!-- BOTTOM ACTION BAR -->
         <div class="mt-8 flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white px-6 py-4 dark:border-gray-800 dark:bg-gray-900">
           <div class="min-w-0">
-            <p *ngIf="currentStep === 1" class="text-sm text-gray-400">Step 1 of 3</p>
-            <p *ngIf="currentStep === 2" class="text-sm text-gray-500">Step 2 of 3</p>
-            <p *ngIf="currentStep === 3" class="text-sm text-emerald-600 font-medium">Ready to submit</p>
+            <p *ngIf="currentStep === 1" class="text-sm text-gray-400">{{ 'BUSINESS.REQUEST_TECHNICIAN.STEP' | translate }} 1 {{ 'BUSINESS.REQUEST_TECHNICIAN.OF' | translate }} 3</p>
+            <p *ngIf="currentStep === 2" class="text-sm text-gray-500">{{ 'BUSINESS.REQUEST_TECHNICIAN.STEP' | translate }} 2 {{ 'BUSINESS.REQUEST_TECHNICIAN.OF' | translate }} 3</p>
+            <p *ngIf="currentStep === 3" class="text-sm text-emerald-600 font-medium">{{ 'BUSINESS.REQUEST_TECHNICIAN.READY_STATUS' | translate }}</p>
           </div>
           <div class="flex items-center gap-3">
             <button *ngIf="currentStep === 1" type="button" (click)="goBack()"
               class="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">
-              Cancel
+              {{ 'BUSINESS.REQUEST_TECHNICIAN.BTN_CANCEL' | translate }}
             </button>
             <button *ngIf="currentStep > 1" type="button" (click)="prevStep()"
               class="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">
-              Back
+              {{ 'BUSINESS.REQUEST_TECHNICIAN.BTN_BACK' | translate }}
             </button>
             <button *ngIf="currentStep < 3" type="button" (click)="nextStep()" [disabled]="currentStep === 1 && !selectedType"
               class="inline-flex items-center gap-2 rounded-xl bg-[#F7941D] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#E6820A] disabled:opacity-50">
-              Continue
+              {{ 'BUSINESS.REQUEST_TECHNICIAN.BTN_CONTINUE' | translate }}
             </button>
             <button *ngIf="currentStep === 3" type="button" (click)="submit()"
               class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700">
-              Submit Request
+              {{ 'BUSINESS.REQUEST_TECHNICIAN.BTN_SUBMIT' | translate }}
             </button>
           </div>
         </div>
@@ -228,9 +229,9 @@ export class RequestTechnicianComponent {
   selectedType = '';
 
   steps: StepMeta[] = [
-    { number: 1, label: 'Service Type', description: 'Select the service needed' },
-    { number: 2, label: 'Details', description: 'Provide request specifics' },
-    { number: 3, label: 'Review', description: 'Review and submit' }
+    { number: 1, label: 'BUSINESS.REQUEST_TECHNICIAN.STEP_1_LABEL', description: 'BUSINESS.REQUEST_TECHNICIAN.STEP_1_DESC' },
+    { number: 2, label: 'BUSINESS.REQUEST_TECHNICIAN.STEP_2_LABEL', description: 'BUSINESS.REQUEST_TECHNICIAN.STEP_2_DESC' },
+    { number: 3, label: 'BUSINESS.REQUEST_TECHNICIAN.STEP_3_LABEL', description: 'BUSINESS.REQUEST_TECHNICIAN.STEP_3_DESC' }
   ];
 
   constructor(private router: Router) {}
