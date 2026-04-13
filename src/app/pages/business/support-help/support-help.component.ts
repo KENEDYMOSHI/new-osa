@@ -119,20 +119,30 @@ interface StepMeta {
             <button *ngFor="let category of issueCategories" type="button" (click)="selectedType = category.value"
               class="group relative flex items-start gap-4 rounded-2xl border p-5 text-left transition-all duration-300"
               [ngClass]="selectedType === category.value ? 'border-[#F7941D] bg-[#FFF7ED] shadow-md ring-2 ring-[#F7941D]/20 dark:bg-[#F7941D]/10 dark:border-[#F7941D]/60' : 'border-gray-200 bg-white hover:border-[#F7941D]/40 hover:shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:hover:border-[#F7941D]/40'">
-              <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-50 text-gray-500 transition-colors group-hover:bg-[#FFF7ED] group-hover:text-[#F7941D] dark:bg-gray-800 dark:group-hover:bg-[#F7941D]/20"
+              <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors group-hover:bg-[#FFF7ED] group-hover:text-[#F7941D] dark:bg-gray-800 dark:group-hover:bg-[#F7941D]/20"
                 [ngClass]="{'bg-[#F7941D] text-white group-hover:bg-[#F7941D] group-hover:text-white dark:bg-[#F7941D] dark:text-white dark:group-hover:bg-[#F7941D]': selectedType === category.value}">
-                <i [class]="category.icon" class="text-lg"></i>
+                
+                <svg *ngIf="category.value === 'new_equipment'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+
+                <svg *ngIf="category.value === 'reverification'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+                
+                <svg *ngIf="category.value === 'request_technician'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg>
+                
+                <svg *ngIf="category.value === 'billing'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                
+                <svg *ngIf="category.value === 'other'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
               </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-base font-semibold text-gray-900 dark:text-white transition-colors"
+              <div class="min-w-0 flex-1 pl-1">
+                <p class="text-[15px] font-semibold text-gray-900 dark:text-white transition-colors"
                    [ngClass]="{'text-[#F7941D]': selectedType === category.value}">
                   {{ category.label | translate }}
                 </p>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ category.description | translate }}</p>
+                <p class="mt-1 text-xs text-gray-500 leading-relaxed dark:text-gray-400">{{ category.description | translate }}</p>
               </div>
-              <div class="absolute top-4 right-4 h-4 w-4 rounded-full border-2 transition-all"
-                [ngClass]="selectedType === category.value ? 'border-[#F7941D] bg-[#F7941D] ring-2 ring-[#F7941D]/30 ring-offset-1 dark:ring-offset-gray-900' : 'border-gray-300 dark:border-gray-600'">
-                <div class="h-full w-full rounded-full bg-white scale-[0.4]"></div>
+              <div class="ml-2 mt-1 flex shrink-0 h-[18px] w-[18px] items-center justify-center rounded-full border-2 transition-all duration-300"
+                [ngClass]="selectedType === category.value ? 'border-[#F7941D] bg-[#F7941D]' : 'border-gray-200 dark:border-gray-700'">
+                <div class="h-1.5 w-1.5 rounded-full bg-white transition-all duration-300"
+                   [ngClass]="selectedType === category.value ? 'scale-100' : 'scale-0'"></div>
               </div>
             </button>
           </div>
@@ -167,7 +177,11 @@ interface StepMeta {
             <div class="p-6 sm:p-8">
               <div class="mb-8 flex items-center gap-4 border-b border-gray-100 pb-6 dark:border-gray-800">
                 <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-[#FFF7ED] text-[#F7941D] dark:bg-[#F7941D]/10">
-                  <i [class]="getSelectedCategory()?.icon" class="text-2xl"></i>
+                  <svg *ngIf="selectedType === 'new_equipment'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                  <svg *ngIf="selectedType === 'reverification'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+                  <svg *ngIf="selectedType === 'request_technician'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg>
+                  <svg *ngIf="selectedType === 'billing'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                  <svg *ngIf="selectedType === 'other'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
                 </div>
                 <div>
                   <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ 'BUSINESS.SUPPORT_HELP.SELECTED_ISSUE' | translate }}</p>
