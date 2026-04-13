@@ -81,55 +81,55 @@ interface BillItem {
       <!-- STANDARD RESPONSIVE TABLE -->
       <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+          <table class="w-full text-left text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap border-collapse">
             <thead class="bg-[#1C2434] text-xs font-semibold text-white">
               <tr>
-                <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_DATE' | translate }}</th>
-                <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_CONTROL_NO' | translate }}</th>
-                <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_EXPIRY' | translate }}</th>
-                <th scope="col" class="px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.COL_AMOUNT' | translate }} (TZS)</th>
-                <th scope="col" class="px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_PAID_AMOUNT' | translate }} (TZS)</th>
-                <th scope="col" class="px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.COL_OUTSTANDING' | translate }} (TZS)</th>
-                <th scope="col" class="px-5 py-4 text-center">{{ 'BUSINESS.BILLING_PAYMENTS.COL_STATUS' | translate }}</th>
-                <th scope="col" class="px-5 py-4 text-center">Action</th>
+                <th scope="col" class="border border-dotted border-gray-600 px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_DATE' | translate }}</th>
+                <th scope="col" class="border border-dotted border-gray-600 px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_CONTROL_NO' | translate }}</th>
+                <th scope="col" class="border border-dotted border-gray-600 px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_EXPIRY' | translate }}</th>
+                <th scope="col" class="border border-dotted border-gray-600 px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.COL_AMOUNT' | translate }} (TZS)</th>
+                <th scope="col" class="border border-dotted border-gray-600 px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_PAID_AMOUNT' | translate }} (TZS)</th>
+                <th scope="col" class="border border-dotted border-gray-600 px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.COL_OUTSTANDING' | translate }} (TZS)</th>
+                <th scope="col" class="border border-dotted border-gray-600 px-5 py-4 text-center">{{ 'BUSINESS.BILLING_PAYMENTS.COL_STATUS' | translate }}</th>
+                <th scope="col" class="border border-dotted border-gray-600 px-5 py-4 text-center">Action</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody>
               <ng-container *ngFor="let bill of filteredBills">
                 <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
-                  <td class="px-5 py-4">
+                  <td class="border border-dotted border-gray-300 px-5 py-4 dark:border-gray-700">
                     <p class="font-medium text-gray-900 dark:text-white">{{ bill.dateGenerated }}</p>
                   </td>
                   
-                  <td class="px-5 py-4">
+                  <td class="border border-dotted border-gray-300 px-5 py-4 dark:border-gray-700">
                     <span class="font-mono font-bold text-gray-800 dark:text-gray-200">
                       {{ bill.controlNumber }}
                     </span>
                   </td>
 
-                  <td class="px-5 py-4 text-gray-700 dark:text-gray-300">
+                  <td class="border border-dotted border-gray-300 px-5 py-4 text-gray-700 dark:border-gray-700 dark:text-gray-300">
                     {{ bill.expiryDate }}
                   </td>
 
-                  <td class="px-5 py-4 text-right font-medium text-gray-900 dark:text-white">
+                  <td class="border border-dotted border-gray-300 px-5 py-4 text-right font-medium text-gray-900 dark:border-gray-700 dark:text-white">
                     {{ bill.billAmount | number }}
                   </td>
 
-                  <td class="px-5 py-4 text-right font-medium text-gray-900 dark:text-white">
+                  <td class="border border-dotted border-gray-300 px-5 py-4 text-right font-medium text-gray-900 dark:border-gray-700 dark:text-white">
                     {{ bill.paidAmount | number }}
                   </td>
 
-                  <td class="px-5 py-4 text-right font-bold text-gray-900 dark:text-white" [ngClass]="{'text-red-500': bill.outstanding > 0}">
+                  <td class="border border-dotted border-gray-300 px-5 py-4 text-right font-bold text-gray-900 dark:border-gray-700 dark:text-white" [ngClass]="{'text-red-500 font-black': bill.outstanding > 0}">
                     {{ bill.outstanding | number }}
                   </td>
 
-                  <td class="px-5 py-4 text-center">
+                  <td class="border border-dotted border-gray-300 px-5 py-4 text-center dark:border-gray-700">
                     <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold capitalize" [ngClass]="getStatusBadge(bill.status)">
                       {{ bill.status }}
                     </span>
                   </td>
                   
-                  <td class="px-5 py-4 text-center">
+                  <td class="border border-dotted border-gray-300 px-5 py-4 text-center dark:border-gray-700">
                     <button *ngIf="bill.status === 'pending'" class="inline-flex items-center justify-center gap-1.5 rounded-md bg-[#F7941D] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-[#E6820A] transition-colors">
                       Pay
                     </button>
