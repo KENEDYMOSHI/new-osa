@@ -102,9 +102,15 @@ interface BillItem {
                   </td>
                   
                   <td class="border border-dotted border-gray-300 px-5 py-4 dark:border-gray-700">
-                    <span class="font-mono font-bold text-gray-800 dark:text-gray-200">
-                      {{ bill.controlNumber }}
-                    </span>
+                    <div class="flex items-center gap-2">
+                      <span class="font-mono font-bold text-gray-800 dark:text-gray-200">
+                        {{ bill.controlNumber }}
+                      </span>
+                      <button (click)="copyToClipboard(bill.controlNumber, bill.id)" class="text-gray-400 transition-colors hover:text-[#F7941D]" [title]="copiedId === bill.id ? 'Copied!' : 'Copy to clipboard'">
+                        <svg *ngIf="copiedId !== bill.id" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+                        <svg *ngIf="copiedId === bill.id" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"><path d="M20 6 9 17l-5-5"/></svg>
+                      </button>
+                    </div>
                   </td>
 
                   <td class="border border-dotted border-gray-300 px-5 py-4 text-gray-700 dark:border-gray-700 dark:text-gray-300">
@@ -160,6 +166,7 @@ interface BillItem {
 export class BillingPaymentsComponent {
   currentFilter: 'all' | 'pending' | 'paid' = 'all';
   searchQuery: string = '';
+  copiedId: string | null = null;
 
   bills: BillItem[] = [
     {
@@ -256,6 +263,16 @@ export class BillingPaymentsComponent {
 
   filterBy(filter: 'all' | 'pending' | 'paid') {
     this.currentFilter = filter;
+  }
+
+  async copyToClipboard(text: string, id: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      this.copiedId = id;
+      setTimeout(() => this.copiedId = null, 2000);
+    } catch (err) {
+      console.error('Failed to copy!', err);
+    }
   }
 
   getStatusBadge(status: string) {
