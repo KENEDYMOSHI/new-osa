@@ -101,8 +101,7 @@ interface NotificationItem {
               [ngClass]="item.isRead ? 'border-gray-200 bg-white hover:border-[#F7941D]/40 hover:shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:hover:border-[#F7941D]/40' : 'border-[#F7941D]/30 bg-[#FFF7ED]/60 shadow-sm hover:shadow-md dark:bg-[#F7941D]/10 dark:border-[#F7941D]/40'">
               
               <!-- Icon -->
-              <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors group-hover:bg-[#FFF7ED] group-hover:text-[#F7941D] dark:bg-gray-800 dark:group-hover:bg-[#F7941D]/20"
-                [ngClass]="!item.isRead ? '!bg-[#F7941D] !text-white' : ''">
+              <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors group-hover:bg-[#FFF7ED] group-hover:text-[#F7941D] dark:bg-gray-800 dark:group-hover:bg-[#F7941D]/20">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
               </div>
 
