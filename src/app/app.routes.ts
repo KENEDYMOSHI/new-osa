@@ -348,7 +348,7 @@ export const routes: Routes = [
       },
       {
         path: 'notifications',
-        loadComponent: () => import('./pages/business/dashboard/business-dashboard.component').then(m => m.BusinessDashboardComponent),
+        loadComponent: () => import('./pages/business/notifications/notifications.component').then(m => m.NotificationsComponent),
         title: 'Notifications | Business Portal - WMA'
       },
       {

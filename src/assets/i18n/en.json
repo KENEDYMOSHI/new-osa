@@ -600,6 +600,33 @@
       "ISSUE_BILLING_DESC": "Issues with invoices, receipts, or payments.",
       "ISSUE_OTHER": "Other",
       "ISSUE_OTHER_DESC": "Any other general inquiries or issues."
+    },
+    "NOTIFICATIONS": {
+      "PAGE_TITLE": "Notifications",
+      "BREADCRUMB": "Notifications",
+      "MARK_ALL_READ": "Mark all as read",
+      "FILTER_ALL": "All",
+      "FILTER_UNREAD": "Unread",
+      "FILTER_IMPORTANT": "Important",
+      "NO_NOTIFICATIONS": "No notifications yet",
+      "NO_NOTIFICATIONS_DESC": "We'll notify you when something arrives.",
+      "JUST_NOW": "Just now",
+      "HOURS_AGO": "hours ago",
+      "MINS_AGO": "mins ago",
+      "YESTERDAY": "Yesterday",
+      "DAYS_AGO": "days ago",
+      "NOTIF_VERIFIED_TITLE": "Equipment Verified",
+      "NOTIF_VERIFIED_BODY": "Your equipment 77397 has been verified successfully.",
+      "NOTIF_TECH_REQ_TITLE": "Technician Request Received",
+      "NOTIF_TECH_REQ_BODY": "Your request for a technician has been received. We are processing it.",
+      "NOTIF_BILL_TITLE": "New Invoice Created",
+      "NOTIF_BILL_BODY": "Invoice #INV-2024-089 has been generated. Please complete payment within 14 days.",
+      "NOTIF_CERT_TITLE": "Certificate Ready",
+      "NOTIF_CERT_BODY": "Certificate for Weighbridge X1 is ready for download.",
+      "NOTIF_REJECTED_TITLE": "Action Required",
+      "NOTIF_REJECTED_BODY": "Additional details required for your recent equipment registration.",
+      "VIEW_DETAILS": "View Details",
+      "NEW": "New"
     }
   }
 }

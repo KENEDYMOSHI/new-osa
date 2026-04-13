@@ -600,6 +600,33 @@
       "ISSUE_BILLING_DESC": "Matatizo ya malipo au risiti.",
       "ISSUE_OTHER": "Nyingine",
       "ISSUE_OTHER_DESC": "Maswali au matatizo mengine ya jumla."
+    },
+    "NOTIFICATIONS": {
+      "PAGE_TITLE": "Taarifa Zako",
+      "BREADCRUMB": "Taarifa",
+      "MARK_ALL_READ": "Onyesha zote zimesomwa",
+      "FILTER_ALL": "Zote",
+      "FILTER_UNREAD": "Hazijasomwa",
+      "FILTER_IMPORTANT": "Muhimu",
+      "NO_NOTIFICATIONS": "Hakuna taarifa yoyote",
+      "NO_NOTIFICATIONS_DESC": "Utapata taarifa pale jambo jipya litakapotokea.",
+      "JUST_NOW": "Sasa hivi",
+      "HOURS_AGO": "saa zilizopita",
+      "MINS_AGO": "dakika zilizopita",
+      "YESTERDAY": "Jana",
+      "DAYS_AGO": "siku zilizopita",
+      "NOTIF_VERIFIED_TITLE": "Kifaa Kimethibitishwa",
+      "NOTIF_VERIFIED_BODY": "Kifaa chako namba 77397 kimethibitishwa kikamilifu.",
+      "NOTIF_TECH_REQ_TITLE": "Ombi la Fundi Limepokelewa",
+      "NOTIF_TECH_REQ_BODY": "Ombi lako la fundi limepokelewa na linafanyiwa kazi.",
+      "NOTIF_BILL_TITLE": "Ankara Mpya Imetengenezwa",
+      "NOTIF_BILL_BODY": "Ankara namba #INV-2024-089 imetengenezwa. Tafadhali kamilisha malipo ndani ya siku 14.",
+      "NOTIF_CERT_TITLE": "Cheti Kipo Tayari",
+      "NOTIF_CERT_BODY": "Cheti cha Mzani wa Magari X1 kipo tayari kupakuliwa.",
+      "NOTIF_REJECTED_TITLE": "Hatua Inahitajika",
+      "NOTIF_REJECTED_BODY": "Maelezo ya ziada yanahitajika kwa usajili wako mpya wa kifaa.",
+      "VIEW_DETAILS": "Tazama Maelezo",
+      "NEW": "Mpya"
     }
   }
 }
