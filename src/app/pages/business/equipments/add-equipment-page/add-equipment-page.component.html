@@ -186,14 +186,14 @@
             </div>
 
             <div class="min-w-0 flex-1">
-              <p class="text-sm font-semibold text-gray-900 dark:text-white leading-snug">{{ st.label }}</p>
+              <p class="text-sm font-semibold text-gray-900 dark:text-white leading-snug">{{ st.label | translate }}</p>
               <p class="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                {{ getServiceConfig(st.key)?.description || '' }}
+                {{ (getServiceConfig(st.key)?.description || '') | translate }}
               </p>
               <span class="mt-2 inline-block rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
                 [style.background-color]="getCategoryColor(st.key) + '14'"
                 [style.color]="getCategoryColor(st.key)">
-                {{ getCategoryLabel(st.key) }}
+                {{ getCategoryLabel(st.key) | translate }}
               </span>
             </div>
 
@@ -222,10 +222,10 @@
         <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-              {{ activeConfig.serviceTypeLabel }}
+              {{ activeConfig.serviceTypeLabel | translate }}
             </h1>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {{ activeConfig.description }}
+              {{ activeConfig.description | translate }}
               {{ 'BUSINESS.EQUIPMENT_PAGE.FIELDS_REQUIRED_PREFIX' | translate }} <span class="text-red-500 font-semibold">*</span> {{ 'BUSINESS.EQUIPMENT_PAGE.FIELDS_REQUIRED_SUFFIX' | translate }}
             </p>
           </div>
@@ -270,7 +270,7 @@
                 </span>
                 <div>
                   <p class="text-sm font-semibold text-gray-900 dark:text-white">
-                    {{ activeConfig.itemLabel }} #{{ idx + 1 }}
+                    {{ activeConfig.itemLabel | translate }} #{{ idx + 1 }}
                   </p>
                   <p class="text-xs text-gray-400">{{ getItemProgress(idx) }}% {{ 'BUSINESS.EQUIPMENT_PAGE.COMPLETE' | translate }}</p>
                 </div>
@@ -305,7 +305,7 @@
                   [ngClass]="field.gridSpan === 2 ? 'sm:col-span-2' : ''">
 
                   <label class="mb-2 flex items-center gap-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {{ field.label }}
+                    {{ field.label | translate }}
                     <span *ngIf="field.required" class="text-red-500">*</span>
                   </label>
 
@@ -313,21 +313,21 @@
                   <input *ngIf="field.type === 'text'" type="text"
                     [value]="getFieldValue(idx, field.key)"
                     (input)="updateField(idx, field.key, $any($event.target).value)"
-                    [placeholder]="field.placeholder || ''"
+                    [placeholder]="(field.placeholder | translate) || ''"
                     class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-[#F7941D] focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-800" />
 
                   <!-- NUMBER -->
                   <input *ngIf="field.type === 'number'" type="number"
                     [value]="getFieldValue(idx, field.key)"
                     (input)="updateField(idx, field.key, $any($event.target).value)"
-                    [placeholder]="field.placeholder || ''"
+                    [placeholder]="(field.placeholder | translate) || ''"
                     class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-[#F7941D] focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-800" />
 
                   <!-- DATE -->
                   <app-date-picker *ngIf="field.type === 'date'"
                     [ngModel]="getFieldValue(idx, field.key)"
                     (ngModelChange)="updateField(idx, field.key, $event)"
-                    [placeholder]="field.placeholder || ('BUSINESS.EQUIPMENT_PAGE.SELECT_DATE' | translate)"
+                    [placeholder]="(field.placeholder | translate) || ('BUSINESS.EQUIPMENT_PAGE.SELECT_DATE' | translate)"
                     [required]="field.required || false"
                     [label]="''">
                   </app-date-picker>
@@ -338,8 +338,8 @@
                       [value]="getFieldValue(idx, field.key)"
                       (change)="updateField(idx, field.key, $any($event.target).value)"
                       class="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all focus:border-[#F7941D] focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:bg-gray-800">
-                      <option value="" disabled selected>{{ 'BUSINESS.EQUIPMENT_PAGE.SELECT' | translate }} {{ field.label }}…</option>
-                      <option *ngFor="let opt of field.options" [value]="opt.value">{{ opt.label }}</option>
+                      <option value="" disabled selected>{{ 'BUSINESS.EQUIPMENT_PAGE.SELECT' | translate }} {{ field.label | translate }}…</option>
+                      <option *ngFor="let opt of field.options" [value]="opt.value">{{ opt.label | translate }}</option>
                     </select>
                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -352,7 +352,7 @@
                   <textarea *ngIf="field.type === 'textarea'"
                     [value]="getFieldValue(idx, field.key)"
                     (input)="updateField(idx, field.key, $any($event.target).value)"
-                    [placeholder]="field.placeholder || ''"
+                    [placeholder]="(field.placeholder | translate) || ''"
                     rows="3"
                     class="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-[#F7941D] focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-800">
                   </textarea>
@@ -367,95 +367,94 @@
                     </div>
                     <div class="min-w-0 flex-1">
                       <p class="text-sm font-medium text-gray-700 dark:text-gray-200">
-                        {{ getFieldValue(idx, field.key)?.name || getFieldValue(idx, field.key) || ('BUSINESS.EQUIPMENT_PAGE.CLICK_UPLOAD_FILE' | translate) }}
+                        {{ (getFieldValue(idx, field.key)?.name || getFieldValue(idx, field.key) || ('BUSINESS.EQUIPMENT_PAGE.CLICK_UPLOAD_FILE' | translate)) | translate }}
                       </p>
                       <p class="mt-0.5 text-xs text-gray-400">{{ 'BUSINESS.EQUIPMENT_PAGE.ACCEPTED_FORMATS' | translate }}: {{ field.accept || ('BUSINESS.EQUIPMENT_PAGE.ANY' | translate) }}</p>
                     </div>
                     <input type="file" class="sr-only" [accept]="field.accept || '*'"
                       (change)="updateFile(idx, field.key, $any($event.target).files?.[0])" />
-                  </label>
+                    </label>
 
-                  <p *ngIf="field.hint" class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">{{ field.hint }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+                    <p *ngIf="field.hint" class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">{{ field.hint | translate }}</p>
+                    </div>
+                    </div>
+                    </div>
+                    </div>
+                    </div>
 
-        <!-- Add Another -->
-        <button *ngIf="activeConfig.allowMultiple && !isEditMode" type="button" (click)="addItem()"
-          class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-gray-200 py-4 text-sm font-medium text-gray-400 transition-colors hover:border-[#F7941D] hover:text-[#F7941D] dark:border-gray-800 dark:text-gray-500 dark:hover:border-[#F7941D] dark:hover:text-[#F7941D]">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 5v14"/><path d="M5 12h14"/>
-          </svg>
-          {{ 'BUSINESS.EQUIPMENT_PAGE.ADD_ANOTHER' | translate }} {{ activeConfig.itemLabel }}
-        </button>
-      </section>
+                    <!-- Add Another -->
+                    <button *ngIf="activeConfig.allowMultiple && !isEditMode" type="button" (click)="addItem()"
+                    class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-gray-200 py-4 text-sm font-medium text-gray-400 transition-colors hover:border-[#F7941D] hover:text-[#F7941D] dark:border-gray-800 dark:text-gray-500 dark:hover:border-[#F7941D] dark:hover:text-[#F7941D]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14"/><path d="M5 12h14"/>
+                    </svg>
+                    {{ 'BUSINESS.EQUIPMENT_PAGE.ADD_ANOTHER' | translate }} {{ activeConfig.itemLabel | translate }}
+                    </button>
+                    </section>
 
-      <!-- ┌────────────────────────────────────────────────────────────┐ -->
-      <!-- │ STEP 3 – Review & Submit                                  │ -->
-      <!-- └────────────────────────────────────────────────────────────┘ -->
-      <section *ngIf="currentStep === 3 && activeConfig">
-        <div class="mb-6">
-          <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            {{ 'BUSINESS.EQUIPMENT_PAGE.REVIEW_CONFIRM' | translate }}
-          </h1>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {{ (isEditMode ? 'BUSINESS.EQUIPMENT_PAGE.REVIEW_EDIT_DESC' : 'BUSINESS.EQUIPMENT_PAGE.REVIEW_ADD_DESC') | translate }}
-          </p>
-        </div>
+                    <!-- ┌────────────────────────────────────────────────────────────┐ -->
+                    <!-- │ STEP 3 – Review & Submit                                  │ -->
+                    <!-- └────────────────────────────────────────────────────────────┘ -->
+                    <section *ngIf="currentStep === 3 && activeConfig">
+                    <div class="mb-6">
+                    <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                    {{ 'BUSINESS.EQUIPMENT_PAGE.REVIEW_CONFIRM' | translate }}
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {{ (isEditMode ? 'BUSINESS.EQUIPMENT_PAGE.REVIEW_EDIT_DESC' : 'BUSINESS.EQUIPMENT_PAGE.REVIEW_ADD_DESC') | translate }}
+                    </p>
+                    </div>
 
-        <!-- Summary header card -->
-        <div class="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
-          <div class="flex items-center gap-4">
-            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-bold"
-              [style.background-color]="getCategoryColor(selectedServiceKey) + '18'"
-              [style.color]="getCategoryColor(selectedServiceKey)">
-              {{ activeConfig.serviceTypeLabel.charAt(0) }}
-            </div>
-            <div>
-              <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ activeConfig.serviceTypeLabel }}</p>
-              <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{{ getCategoryLabel(selectedServiceKey) }}</p>
-            </div>
-          </div>
+                    <!-- Summary header card -->
+                    <div class="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+                    <div class="flex items-center gap-4">
+                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-bold"
+                    [style.background-color]="getCategoryColor(selectedServiceKey) + '18'"
+                    [style.color]="getCategoryColor(selectedServiceKey)">
+                    {{ (activeConfig.serviceTypeLabel | translate).charAt(0) }}
+                    </div>
+                    <div>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ activeConfig.serviceTypeLabel | translate }}</p>
+                    <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{{ getCategoryLabel(selectedServiceKey) | translate }}</p>
+                    </div>
+                    </div>
 
-          <div class="flex flex-col items-end gap-1">
-            <span class="rounded-xl bg-[#F7941D] px-3 py-1 text-xs font-bold text-white">
-              {{ formItems.length }} {{ activeConfig.itemLabel }}{{ formItems.length > 1 ? 's' : '' }}
-            </span>
-            <span class="text-xs text-gray-400">{{ businessName }}</span>
-          </div>
-        </div>
+                    <div class="flex flex-col items-end gap-1">
+                    <span class="rounded-xl bg-[#F7941D] px-3 py-1 text-xs font-bold text-white">
+                    {{ formItems.length }} {{ activeConfig.itemLabel | translate }}{{ formItems.length > 1 ? 's' : '' }}
+                    </span>
+                    <span class="text-xs text-gray-400">{{ businessName }}</span>
+                    </div>
+                    </div>
 
-        <!-- Item review cards -->
-        <div class="space-y-4">
-          <div *ngFor="let item of formItems; let idx = index"
-            class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-            <div class="flex items-center gap-3 border-b border-gray-100 px-6 py-4 dark:border-gray-800">
-              <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-[#F7941D] text-xs font-bold text-white">
-                {{ idx + 1 }}
-              </span>
-              <p class="text-sm font-semibold text-gray-900 dark:text-white">
-                {{ activeConfig.itemLabel }} #{{ idx + 1 }}
-              </p>
-            </div>
+                    <!-- Item review cards -->
+                    <div class="space-y-4">
+                    <div *ngFor="let item of formItems; let idx = index"
+                    class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+                    <div class="flex items-center gap-3 border-b border-gray-100 px-6 py-4 dark:border-gray-800">
+                    <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-[#F7941D] text-xs font-bold text-white">
+                    {{ idx + 1 }}
+                    </span>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                    {{ activeConfig.itemLabel | translate }} #{{ idx + 1 }}
+                    </p>
+                    </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2">
-              <div *ngFor="let field of activeConfig.fields; let last = last"
-                class="border-b border-gray-50 px-6 py-3.5 dark:border-gray-800/50 last:border-0"
-                [ngClass]="{
-                  'sm:col-span-2': field.gridSpan === 2,
-                  'sm:border-r sm:border-gray-50 dark:sm:border-gray-800/50': !field.gridSpan || field.gridSpan !== 2
-                }">
-                <p class="text-xs font-medium text-gray-400">{{ field.label }}</p>
-                <p class="mt-0.5 text-sm font-medium text-gray-900 dark:text-white">
-                  {{ getDisplayValue(idx, field) }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
+                    <div class="grid grid-cols-1 sm:grid-cols-2">
+                    <div *ngFor="let field of activeConfig.fields; let last = last"
+                    class="border-b border-gray-50 px-6 py-3.5 dark:border-gray-800/50 last:border-0"
+                    [ngClass]="{
+                    'sm:col-span-2': field.gridSpan === 2,
+                    'sm:border-r sm:border-gray-50 dark:sm:border-gray-800/50': !field.gridSpan || field.gridSpan !== 2
+                    }">
+                    <p class="text-xs font-medium text-gray-400">{{ field.label | translate }}</p>
+                    <p class="mt-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                    {{ getDisplayValue(idx, field) | translate }}
+                    </p>
+                    </div>
+                    </div>
+                    </div>
+                    </div>
         <!-- Declaration notice -->
         <div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-500/20 dark:bg-amber-500/5">
           <div class="flex gap-3">

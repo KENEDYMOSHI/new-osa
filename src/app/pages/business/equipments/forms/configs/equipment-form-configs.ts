@@ -39,18 +39,18 @@ const textarea = (
 // Reusable field presets
 // ═══════════════════════════════════════════════════════════════════════
 
-const serialNumber    = text('serialNumber', 'Serial Number', 'Enter serial number', false);
-const stickerNumber   = text('stickerNumber', 'Sticker Number', 'Enter sticker number', false);
-const sealNumber      = text('sealNumber', 'Seal Number', 'Enter seal number', false);
-const sealSerial      = text('sealSerialNumber', 'Seal Serial Number', 'Enter seal serial number', false);
-const product         = sel('product', 'Product', ['Petrol', 'Diesel', 'Kerosene', 'LPG', 'Jet Fuel', 'Other']);
-const verifyDate      = date('verificationDate', 'Verification Date', false);
-const nextVerifyDate  = date('nextVerificationDate', 'Next Verification Date', false);
-const calibDate       = date('lastCalibrationDate', 'Last Calibration Date', false);
-const nextCalibDate   = date('nextCalibrationDate', 'Next Calibration Date', false);
-const maxCapacity     = num('maxCapacity', 'Maximum Capacity', 'e.g., 500 kg');
-const minCapacity     = num('minCapacity', 'Minimum Capacity', 'e.g., 1 kg');
-const scaleDivision   = text('scaleDivision', 'Scale Division', 'e.g., 0.1 kg');
+const serialNumber    = text('serialNumber', 'BUSINESS.EQUIPMENT_PAGE.FIELDS.SERIAL_NUMBER', 'Enter serial number', false);
+const stickerNumber   = text('stickerNumber', 'BUSINESS.EQUIPMENT_PAGE.FIELDS.STICKER_NUMBER', 'Enter sticker number', false);
+const sealNumber      = text('sealNumber', 'BUSINESS.EQUIPMENT_PAGE.FIELDS.SEAL_NUMBER', 'Enter seal number', false);
+const sealSerial      = text('sealSerialNumber', 'BUSINESS.EQUIPMENT_PAGE.FIELDS.SEAL_SERIAL', 'Enter seal serial number', false);
+const product         = sel('product', 'BUSINESS.EQUIPMENT_PAGE.FIELDS.PRODUCT', ['Petrol', 'Diesel', 'Kerosene', 'LPG', 'Jet Fuel', 'Other']);
+const verifyDate      = date('verificationDate', 'BUSINESS.EQUIPMENT_PAGE.FIELDS.VERIFICATION_DATE', false);
+const nextVerifyDate  = date('nextVerificationDate', 'BUSINESS.EQUIPMENT_PAGE.FIELDS.NEXT_VERIFICATION_DATE', false);
+const calibDate       = date('lastCalibrationDate', 'BUSINESS.EQUIPMENT_PAGE.FIELDS.CALIBRATION_DATE', false);
+const nextCalibDate   = date('nextCalibrationDate', 'BUSINESS.EQUIPMENT_PAGE.FIELDS.NEXT_CALIBRATION_DATE', false);
+const maxCapacity     = num('maxCapacity', 'BUSINESS.EQUIPMENT_PAGE.FIELDS.MAX_CAPACITY', 'e.g., 500 kg');
+const minCapacity     = num('minCapacity', 'BUSINESS.EQUIPMENT_PAGE.FIELDS.MIN_CAPACITY', 'e.g., 1 kg');
+const scaleDivision   = text('scaleDivision', 'BUSINESS.EQUIPMENT_PAGE.FIELDS.SCALE_DIVISION', 'e.g., 0.1 kg');
 
 // ── Config shorthand ──
 const cfg = (
