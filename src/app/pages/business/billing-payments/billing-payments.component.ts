@@ -117,15 +117,15 @@ interface BillItem {
                     {{ bill.expiryDate }}
                   </td>
 
-                  <td class="border border-dotted border-gray-300 px-5 py-4 text-right font-medium text-gray-900 dark:border-gray-700 dark:text-white">
+                  <td class="border border-dotted border-gray-300 px-5 py-4 text-right text-gray-900 dark:border-gray-700 dark:text-white">
                     {{ bill.billAmount | number }}
                   </td>
 
-                  <td class="border border-dotted border-gray-300 px-5 py-4 text-right font-medium text-gray-900 dark:border-gray-700 dark:text-white">
+                  <td class="border border-dotted border-gray-300 px-5 py-4 text-right text-gray-900 dark:border-gray-700 dark:text-white">
                     {{ bill.paidAmount | number }}
                   </td>
 
-                  <td class="border border-dotted border-gray-300 px-5 py-4 text-right font-bold text-gray-900 dark:border-gray-700 dark:text-white" [ngClass]="{'text-red-500 font-black': bill.outstanding > 0}">
+                  <td class="border border-dotted border-gray-300 px-5 py-4 text-right text-gray-900 dark:border-gray-700 dark:text-white" [ngClass]="{'text-red-500': bill.outstanding > 0}">
                     {{ bill.outstanding | number }}
                   </td>
 
