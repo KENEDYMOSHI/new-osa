@@ -353,7 +353,7 @@ export const routes: Routes = [
       },
       {
         path: 'support-help',
-        loadComponent: () => import('./pages/business/dashboard/business-dashboard.component').then(m => m.BusinessDashboardComponent),
+        loadComponent: () => import('./pages/business/support-help/support-help.component').then(m => m.SupportHelpComponent),
         title: 'Support & Help | Business Portal - WMA'
       },
       {
