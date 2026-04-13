@@ -255,8 +255,7 @@ export class BillingPaymentsComponent {
     if (this.searchQuery && this.searchQuery.trim() !== '') {
       const q = this.searchQuery.toLowerCase().trim();
       filtered = filtered.filter(b => 
-        b.controlNumber.includes(q) || 
-        b.payerName.toLowerCase().includes(q)
+        b.controlNumber.includes(q)
       );
     }
     

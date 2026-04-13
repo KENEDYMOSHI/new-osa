@@ -632,7 +632,7 @@
       "PAGE_TITLE": "Billing & Payments",
       "BREADCRUMB": "Billing",
       "PAGE_DESC": "Manage your Government e-Payment Gateway (GePG) bills and payment status.",
-      "SEARCH_PLACEHOLDER": "Search by control number or payer...",
+      "SEARCH_PLACEHOLDER": "Search by Control Number...",
       "FILTER_ALL": "All Bills",
       "FILTER_PENDING": "Pending",
       "FILTER_PAID": "Paid",
