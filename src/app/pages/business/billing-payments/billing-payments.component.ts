@@ -86,9 +86,8 @@ interface BillItem {
               <tr>
                 <th scope="col" class="px-5 py-4 w-4"></th>
                 <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_DATE' | translate }}</th>
-                <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_PAYER' | translate }}</th>
-                <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_PHONE' | translate }}</th>
                 <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_CONTROL_NO' | translate }}</th>
+                <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_EXPIRY' | translate }}</th>
                 <th scope="col" class="px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.COL_AMOUNT' | translate }}</th>
                 <th scope="col" class="px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_PAID_AMOUNT' | translate }}</th>
                 <th scope="col" class="px-5 py-4 text-right">{{ 'BUSINESS.BILLING_PAYMENTS.COL_OUTSTANDING' | translate }}</th>
@@ -99,10 +98,10 @@ interface BillItem {
             <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
               <ng-container *ngFor="let bill of filteredBills">
                 <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
-                  <!-- Status Icon Indicator -->
+                  <!-- Status HTML Indicator -->
                   <td class="pl-5 py-4 pr-1">
-                    <div class="flex h-6 w-6 items-center justify-center rounded-full" [ngClass]="getStatusBgShape(bill.status)">
-                      <i [class]="getStatusIcon(bill.status)" class="text-[12px]"></i>
+                    <div class="flex h-5 w-5 items-center justify-center rounded-full" [ngClass]="getStatusBgShape(bill.status)">
+                      <i [class]="getStatusIcon(bill.status)" class="text-[10px]"></i>
                     </div>
                   </td>
                   
@@ -111,17 +110,13 @@ interface BillItem {
                   </td>
                   
                   <td class="px-5 py-4">
-                    <p class="font-bold text-gray-900 dark:text-white">{{ bill.payerName }}</p>
-                  </td>
-
-                  <td class="px-5 py-4">
-                    <span class="text-gray-600 dark:text-gray-400">{{ bill.phoneNumber }}</span>
-                  </td>
-
-                  <td class="px-5 py-4">
                     <span class="font-mono font-bold text-gray-800 dark:text-gray-200">
                       {{ bill.controlNumber }}
                     </span>
+                  </td>
+
+                  <td class="px-5 py-4 text-gray-700 dark:text-gray-300">
+                    {{ bill.expiryDate }}
                   </td>
 
                   <td class="px-5 py-4 text-right font-medium text-gray-900 dark:text-white">
@@ -137,8 +132,8 @@ interface BillItem {
                   </td>
 
                   <td class="px-5 py-4 text-center">
-                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold" [ngClass]="getStatusBadge(bill.status)">
-                      {{ getStatusText(bill.status) | translate }}
+                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold capitalize" [ngClass]="getStatusBadge(bill.status)">
+                      {{ bill.status }}
                     </span>
                   </td>
                   
@@ -151,24 +146,10 @@ interface BillItem {
                     </button>
                   </td>
                 </tr>
-                <!-- Sub-row for extra details if required to match mockup formatting -->
-                <tr class="bg-gray-50/30 dark:bg-gray-900 border-none">
-                  <td class="pl-5">&nbsp;</td>
-                  <td colspan="2" class="px-5 pb-3">
-                    <p class="text-[11px] text-gray-500 dark:text-gray-400">
-                      <b>Ex. Date:</b> {{ bill.expiryDate }}
-                    </p>
-                  </td>
-                  <td colspan="7" class="px-5 pb-3">
-                    <p class="text-[11px] text-gray-500 dark:text-gray-400">
-                      <b>Desc:</b> {{ bill.descriptionKey | translate }} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Gen. By:</b> {{ bill.generatedBy }}
-                    </p>
-                  </td>
-                </tr>
               </ng-container>
 
               <tr *ngIf="filteredBills.length === 0">
-                 <td colspan="10" class="px-6 py-12 text-center text-sm text-gray-500">
+                 <td colspan="9" class="px-6 py-12 text-center text-sm text-gray-500">
                     <div class="flex flex-col items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 mb-3"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
                       No bills found matching your criteria.
