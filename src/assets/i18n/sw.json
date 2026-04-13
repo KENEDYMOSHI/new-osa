@@ -627,6 +627,37 @@
       "NOTIF_REJECTED_BODY": "Maelezo ya ziada yanahitajika kwa usajili wako mpya wa kifaa.",
       "VIEW_DETAILS": "Tazama Maelezo",
       "NEW": "Mpya"
+    },
+    "BILLING_PAYMENTS": {
+      "PAGE_TITLE": "Ankara na Malipo",
+      "BREADCRUMB": "Malipo",
+      "PAGE_DESC": "Dhibiti ankara zote za GePG (Malipo ya Serikali) na hali ya malipo yako hapa.",
+      "SEARCH_PLACEHOLDER": "Tafuta namba ya malipo (Control No) au mlipaji...",
+      "FILTER_ALL": "Ankara Zote",
+      "FILTER_PENDING": "Zinasubiri Malipo",
+      "FILTER_PAID": "Zimelipiwa",
+      "FILTER_EXPIRED": "Zimeisha Muda",
+      "COL_DATE": "Tarehe",
+      "COL_PAYER": "Taarifa za Mlipaji",
+      "COL_CONTROL_NO": "Namba ya Malipo (Control Number)",
+      "COL_AMOUNT": "Kiasi cha Ankara",
+      "COL_OUTSTANDING": "Kiasi Kilichobaki",
+      "COL_STATUS": "Hali",
+      "LBL_PHONE": "Simu",
+      "LBL_EXPIRY": "Muda wa Kuisha",
+      "LBL_GENERATED_BY": "Imetengenezwa na",
+      "LBL_PAID_AMOUNT": "Kiasi Kilicholipwa",
+      "BTN_PAY_NOW": "Jinsi ya Kulipa",
+      "BTN_DOWNLOAD_RECEIPT": "Pakua Risiti",
+      "BTN_PRINT_BILL": "Chapisha Ankara",
+      "STATUS_PENDING": "Inasubiri",
+      "STATUS_PAID": "Imelipwa",
+      "STATUS_PARTIAL": "Imelipwa Nusu",
+      "STATUS_EXPIRED": "Imeisha Muda",
+      "DESC_VERIFICATION": "Ada ya Kuhakiki Kifaa",
+      "DESC_LICENSE": "Ada ya Maombi ya Leseni",
+      "DESC_PENALTY": "Faini ya Kuchelewa Kulipa",
+      "DESC_INSPECTION": "Ada ya Ukaguzi wa Eneo"
     }
   }
 }

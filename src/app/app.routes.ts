@@ -343,7 +343,7 @@ export const routes: Routes = [
       },
       {
         path: 'billing-payments',
-        loadComponent: () => import('./pages/business/dashboard/business-dashboard.component').then(m => m.BusinessDashboardComponent),
+        loadComponent: () => import('./pages/business/billing-payments/billing-payments.component').then(m => m.BillingPaymentsComponent),
         title: 'Billing & Payments | Business Portal - WMA'
       },
       {
