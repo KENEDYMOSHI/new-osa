@@ -84,7 +84,6 @@ interface BillItem {
           <table class="w-full text-left text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
             <thead class="bg-[#1C2434] text-xs font-semibold text-white">
               <tr>
-                <th scope="col" class="px-5 py-4 w-4"></th>
                 <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_DATE' | translate }}</th>
                 <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.COL_CONTROL_NO' | translate }}</th>
                 <th scope="col" class="px-5 py-4">{{ 'BUSINESS.BILLING_PAYMENTS.LBL_EXPIRY' | translate }}</th>
@@ -98,13 +97,6 @@ interface BillItem {
             <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
               <ng-container *ngFor="let bill of filteredBills">
                 <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
-                  <!-- Status HTML Indicator -->
-                  <td class="pl-5 py-4 pr-1">
-                    <div class="flex h-5 w-5 items-center justify-center rounded-full" [ngClass]="getStatusBgShape(bill.status)">
-                      <i [class]="getStatusIcon(bill.status)" class="text-[10px]"></i>
-                    </div>
-                  </td>
-                  
                   <td class="px-5 py-4">
                     <p class="font-medium text-gray-900 dark:text-white">{{ bill.dateGenerated }}</p>
                   </td>
