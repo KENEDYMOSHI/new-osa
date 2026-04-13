@@ -338,7 +338,7 @@ export const routes: Routes = [
       },
       {
         path: 'certificates',
-        loadComponent: () => import('./pages/business/dashboard/business-dashboard.component').then(m => m.BusinessDashboardComponent),
+        loadComponent: () => import('./pages/business/certificates/business-certificates/business-certificates.component').then(m => m.BusinessCertificatesComponent),
         title: 'Certificates & Stickers | Business Portal - WMA'
       },
       {

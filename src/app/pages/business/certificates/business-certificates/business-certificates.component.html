@@ -1,0 +1,191 @@
+<div class="space-y-6">
+  <!-- Header & Breadcrumbs -->
+  <section class="flex flex-col gap-4">
+    <div class="min-w-0">
+      <nav aria-label="Breadcrumb">
+        <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <li>
+            <a routerLink="/business/dashboard" class="transition-colors hover:text-gray-900 dark:hover:text-white">
+              Dashboard
+            </a>
+          </li>
+          <li aria-hidden="true" class="text-gray-300 dark:text-gray-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18l6 -6l-6 -6" />
+            </svg>
+          </li>
+          <li class="text-gray-900 dark:text-white">Certificates & Stickers</li>
+        </ol>
+      </nav>
+      <h1 class="mt-3 text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
+        Certificates & Stickers
+      </h1>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        View and download your approved certificates and verification stickers.
+      </p>
+    </div>
+  </section>
+
+  <!-- Tabs -->
+  <div class="border-b border-gray-200 dark:border-gray-800">
+    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+      <button 
+        (click)="setTab('certificates')"
+        [class.border-[#F7941D]]="activeTab === 'certificates'"
+        [class.text-[#F7941D]]="activeTab === 'certificates'"
+        [class.border-transparent]="activeTab !== 'certificates'"
+        [class.text-gray-500]="activeTab !== 'certificates'"
+        class="whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors hover:border-[#F7941D] hover:text-[#F7941D] dark:hover:text-[#F7941D]">
+        Certificates
+        <span class="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-900 dark:bg-gray-800 dark:text-white">{{certificates.length}}</span>
+      </button>
+      <button 
+        (click)="setTab('stickers')"
+        [class.border-[#F7941D]]="activeTab === 'stickers'"
+        [class.text-[#F7941D]]="activeTab === 'stickers'"
+        [class.border-transparent]="activeTab !== 'stickers'"
+        [class.text-gray-500]="activeTab !== 'stickers'"
+        class="whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors hover:border-[#F7941D] hover:text-[#F7941D] dark:hover:text-[#F7941D]">
+        Stickers
+        <span class="ml-2 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-900 dark:bg-gray-800 dark:text-white">{{stickers.length}}</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Tab Contents -->
+  <div class="mt-6">
+    
+    <!-- Certificates Tab -->
+    <div *ngIf="activeTab === 'certificates'" class="space-y-6">
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div *ngFor="let cert of certificates" class="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all hover:border-[#F7941D]/30 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-[#F7941D]/30">
+          <div class="border-b border-gray-100 bg-gray-50/50 p-5 dark:border-gray-800 dark:bg-gray-800/20">
+            <div class="flex items-start justify-between">
+              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>
+                  <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+                  <path d="M10 9H8"/>
+                  <path d="M16 13H8"/>
+                  <path d="M16 17H8"/>
+                </svg>
+              </div>
+              <span [class.bg-green-100]="cert.status === 'Active'" [class.text-green-700]="cert.status === 'Active'"
+                    [class.bg-orange-100]="cert.status === 'Expiring Soon'" [class.text-orange-700]="cert.status === 'Expiring Soon'"
+                    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold dark:bg-opacity-20">
+                {{ cert.status }}
+              </span>
+            </div>
+            <h3 class="mt-4 text-lg font-semibold text-gray-900 dark:text-white">{{ cert.type }}</h3>
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ cert.id }}</p>
+          </div>
+          
+          <div class="flex flex-1 flex-col p-5">
+            <dl class="grid grid-cols-1 gap-y-4">
+              <div>
+                <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Instrument</dt>
+                <dd class="mt-1 text-sm font-medium text-gray-900 dark:text-white">{{ cert.instrument }}</dd>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Issue Date</dt>
+                  <dd class="mt-1 text-sm font-medium text-gray-900 dark:text-white">{{ cert.issueDate }}</dd>
+                </div>
+                <div>
+                  <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Expiry Date</dt>
+                  <dd class="mt-1 text-sm font-medium text-gray-900 dark:text-white">{{ cert.expiryDate }}</dd>
+                </div>
+              </div>
+            </dl>
+          </div>
+          
+          <div class="flex border-t border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-800/50">
+            <button class="flex w-1/2 items-center justify-center gap-2 rounded-l-lg py-2 text-sm font-medium text-gray-700 transition-colors hover:text-[#F7941D] dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+              View
+            </button>
+            <button class="flex w-1/2 items-center justify-center gap-2 rounded-r-lg py-2 text-sm font-medium text-[#F7941D] transition-colors hover:text-[#e08316]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Download
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stickers Tab -->
+    <div *ngIf="activeTab === 'stickers'" class="space-y-6">
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div *ngFor="let sticker of stickers" class="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-[#EFE8D8] shadow-sm transition-all hover:shadow-md dark:border-gray-800 dark:bg-[#1a1712]">
+          
+          <!-- Sticker Body -->
+          <div class="p-5 md:p-6 relative z-10">
+            <!-- Header section -->
+            <div class="flex items-center gap-4 border-b-2 border-gray-800 pb-4 dark:border-gray-700">
+              <img src="/images/logo/emblem-logo.png" alt="Emblem" class="h-16 w-auto object-contain" onerror="this.src='/images/coat-of-arms.png'">
+              <div class="flex-1 text-center">
+                <h4 class="text-sm md:text-base font-bold text-gray-900 uppercase leading-tight dark:text-gray-100">The United Republic of Tanzania</h4>
+                <h4 class="text-sm md:text-base font-bold text-gray-900 uppercase leading-tight dark:text-gray-100">Weights and Measures Agency</h4>
+              </div>
+            </div>
+            
+            <!-- Details section -->
+            <div class="mt-5 flex justify-between gap-4">
+              <div class="space-y-3 flex-1">
+                <div class="flex items-baseline gap-2">
+                  <span class="text-sm font-semibold text-gray-800 dark:text-gray-300">Instrument:</span>
+                  <span class="text-base font-medium text-gray-900 dark:text-white">{{ sticker.instrument }}</span>
+                </div>
+                <div class="flex items-baseline gap-2">
+                  <span class="text-sm font-semibold text-gray-800 dark:text-gray-300">Verification Date:</span>
+                  <span class="text-base font-medium text-gray-900 dark:text-white">{{ sticker.verificationDate }}</span>
+                </div>
+                <div class="flex items-baseline gap-2">
+                  <span class="text-sm font-semibold text-gray-800 dark:text-gray-300">Next Verification:</span>
+                  <span class="text-base font-medium text-gray-900 dark:text-white">{{ sticker.nextVerification }}</span>
+                </div>
+                <div class="flex items-baseline gap-2 pt-1">
+                  <span class="text-sm font-semibold text-gray-800 dark:text-gray-300">Sticker Number:</span>
+                  <span class="text-base font-bold text-gray-900 dark:text-white">{{ sticker.stickerNumber }}</span>
+                </div>
+              </div>
+              
+              <!-- Watermark/Logo on the right -->
+              <div class="hidden sm:flex flex-col items-center justify-center opacity-80 mix-blend-multiply dark:mix-blend-normal">
+                <img src="/images/wma-logo.jpg" alt="WMA Logo" class="h-24 w-auto rounded-full mix-blend-multiply grayscale-[20%] sepia-[30%]" onerror="this.src='/images/logo/sample-logo.png'">
+              </div>
+            </div>
+
+            <!-- Footer Section -->
+            <div class="mt-5 pt-4 border-t-2 border-gray-800 dark:border-gray-700 flex justify-between items-end">
+              <div class="bg-white p-1 shadow-sm rounded-sm">
+                <img src="/images/logo/sample-qr-code.png" alt="QR Code" class="h-16 w-16" onerror="this.style.display='none'">
+              </div>
+            </div>
+          </div>
+          
+          <!-- Actions overlay -->
+          <div class="absolute inset-0 z-20 flex items-center justify-center gap-4 bg-black/40 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+            <button class="flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 shadow-lg transition-transform hover:scale-105">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+              View
+            </button>
+            <button class="flex items-center gap-2 rounded-xl bg-[#F7941D] px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105 hover:bg-[#e08316]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Download
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
