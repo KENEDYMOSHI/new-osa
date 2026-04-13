@@ -120,7 +120,7 @@ interface StepMeta {
               class="group relative flex items-start gap-4 rounded-2xl border p-5 text-left transition-all duration-300"
               [ngClass]="selectedType === category.value ? 'border-[#F7941D] bg-[#FFF7ED] shadow-md ring-2 ring-[#F7941D]/20 dark:bg-[#F7941D]/10 dark:border-[#F7941D]/60' : 'border-gray-200 bg-white hover:border-[#F7941D]/40 hover:shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:hover:border-[#F7941D]/40'">
               <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors group-hover:bg-[#FFF7ED] group-hover:text-[#F7941D] dark:bg-gray-800 dark:group-hover:bg-[#F7941D]/20"
-                [ngClass]="{'bg-[#F7941D] text-white group-hover:bg-[#F7941D] group-hover:text-white dark:bg-[#F7941D] dark:text-white dark:group-hover:bg-[#F7941D]': selectedType === category.value}">
+                [ngClass]="selectedType === category.value ? '!bg-[#F7941D] !text-white' : ''">
                 
                 <svg *ngIf="category.value === 'new_equipment'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
 
