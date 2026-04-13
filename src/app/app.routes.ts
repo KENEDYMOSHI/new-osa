@@ -339,7 +339,7 @@ export const routes: Routes = [
       {
         path: 'certificates',
         loadComponent: () => import('./pages/business/dashboard/business-dashboard.component').then(m => m.BusinessDashboardComponent),
-        title: 'Certificates & Reports | Business Portal - WMA'
+        title: 'Certificates & Stickers | Business Portal - WMA'
       },
       {
         path: 'billing-payments',
