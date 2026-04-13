@@ -137,9 +137,11 @@ interface BillItem {
                   
                   <td class="border border-dotted border-gray-300 px-5 py-4 text-center dark:border-gray-700">
                     <button *ngIf="bill.status === 'pending'" class="inline-flex items-center justify-center gap-1.5 rounded-md bg-[#F7941D] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-[#E6820A] transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
                       Pay
                     </button>
                     <button *ngIf="bill.status === 'paid'" class="inline-flex items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                       Receipt
                     </button>
                   </td>
